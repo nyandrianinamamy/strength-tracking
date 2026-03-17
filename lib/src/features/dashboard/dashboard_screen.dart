@@ -84,14 +84,13 @@ class DashboardScreen extends ConsumerWidget {
         // Step 2: Stats grid with MetricCard + badge
         LayoutBuilder(
           builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 420;
             return GridView.count(
-              crossAxisCount: isWide ? 2 : 1,
+              crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               mainAxisSpacing: 12,
               crossAxisSpacing: 12,
-              childAspectRatio: isWide ? 1.35 : 2.2,
+              childAspectRatio: constraints.maxWidth >= 420 ? 1.35 : 1.1,
               children: [
                 MetricCard(
                   label: 'Workouts',
