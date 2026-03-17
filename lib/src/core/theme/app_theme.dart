@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   static const Color primary = Color(0xFF257BF4);
-  static const Color surface = Color(0xFFF4F8FD);
+  static const Color surface = Color(0xFFF8FAFD);
   static const Color surfaceStrong = Color(0xFFFFFFFF);
-  static const Color ink = Color(0xFF111827);
+  static const Color ink = Color(0xFF0F172A);
+  static const Color border = Color(0xFFE2E8F0);
+  static const Color inputBorder = Color(0xFFD5DDEA);
+  static const Color slateInactive = Color(0xFF94A3B8);
 
   static ThemeData light() {
+    final textTheme = GoogleFonts.lexendTextTheme(
+      ThemeData.light().textTheme,
+    ).apply(
+      bodyColor: ink,
+      displayColor: ink,
+    );
+
     final colorScheme = ColorScheme.fromSeed(
       seedColor: primary,
       primary: primary,
@@ -17,12 +28,10 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: surface,
-      textTheme: ThemeData.light().textTheme.apply(
-        bodyColor: ink,
-        displayColor: ink,
-      ),
+      textTheme: textTheme,
       appBarTheme: const AppBarTheme(
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: false,
         backgroundColor: surface,
         foregroundColor: ink,
@@ -31,13 +40,15 @@ class AppTheme {
         elevation: 0,
         color: surfaceStrong,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: Color(0xFFE4EAF2)),
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: border),
         ),
       ),
       chipTheme: ChipThemeData(
         side: BorderSide.none,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(999),
+        ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -47,32 +58,51 @@ class AppTheme {
           vertical: 16,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFD5DDEA)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: inputBorder),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
-          borderSide: const BorderSide(color: Color(0xFFD5DDEA)),
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: inputBorder),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: primary, width: 1.5),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surfaceStrong,
-        indicatorColor: primary.withValues(alpha: 0.12),
-        labelTextStyle: WidgetStateProperty.all(
-          const TextStyle(fontWeight: FontWeight.w700),
-        ),
+        indicatorColor: Colors.transparent,
+        labelTextStyle: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            color: isSelected ? primary : slateInactive,
+          );
+        }),
+        iconTheme: WidgetStateProperty.resolveWith((states) {
+          final isSelected = states.contains(WidgetState.selected);
+          return IconThemeData(
+            color: isSelected ? primary : slateInactive,
+          );
+        }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: surfaceStrong,
-        indicatorColor: primary.withValues(alpha: 0.12),
+        indicatorColor: Colors.transparent,
         selectedIconTheme: const IconThemeData(color: primary),
+        unselectedIconTheme: const IconThemeData(color: slateInactive),
         selectedLabelTextStyle: const TextStyle(
           color: primary,
           fontWeight: FontWeight.w700,
+          fontSize: 10,
+        ),
+        unselectedLabelTextStyle: const TextStyle(
+          color: slateInactive,
+          fontWeight: FontWeight.w700,
+          fontSize: 10,
         ),
       ),
     );
