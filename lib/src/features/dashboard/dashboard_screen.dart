@@ -203,16 +203,18 @@ class DashboardScreen extends ConsumerWidget {
                         color: Colors.white70,
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        activeSession != null
-                            ? '${state.routineById(activeSession.routineId)?.exercises.length ?? 0} exercises remaining in your live session.'
-                            : nextRoutine == null
-                                ? 'Create a routine to start training.'
-                                : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: Colors.white70),
+                      Expanded(
+                        child: Text(
+                          activeSession != null
+                              ? '${state.routineById(activeSession.routineId)?.exercises.length ?? 0} exercises remaining'
+                              : nextRoutine == null
+                                  ? 'Create a routine to start training.'
+                                  : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium
+                              ?.copyWith(color: Colors.white70),
+                        ),
                       ),
                     ],
                   ),
