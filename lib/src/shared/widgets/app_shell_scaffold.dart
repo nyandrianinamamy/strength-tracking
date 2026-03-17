@@ -11,11 +11,12 @@ class AppShellScaffold extends StatelessWidget {
   final String currentLocation;
   final Widget child;
 
-  static final _destinations = <({String label, IconData icon, String path})>[
-    (label: 'Dashboard', icon: Icons.space_dashboard_rounded, path: '/'),
-    (label: 'Routines', icon: Icons.fitness_center_rounded, path: '/routines'),
-    (label: 'Exercises', icon: Icons.list_alt_rounded, path: '/exercises'),
-    (label: 'Progress', icon: Icons.insights_rounded, path: '/progress'),
+  static final _destinations =
+      <({String label, IconData icon, IconData selectedIcon, String path})>[
+    (label: 'Dashboard', icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, path: '/'),
+    (label: 'Routines', icon: Icons.fitness_center_outlined, selectedIcon: Icons.fitness_center_rounded, path: '/routines'),
+    (label: 'Exercises', icon: Icons.list_alt_outlined, selectedIcon: Icons.list_alt_rounded, path: '/exercises'),
+    (label: 'Progress', icon: Icons.insights_outlined, selectedIcon: Icons.insights_rounded, path: '/progress'),
   ];
 
   @override
@@ -39,6 +40,7 @@ class AppShellScaffold extends StatelessWidget {
                     .map(
                       (item) => NavigationRailDestination(
                         icon: Icon(item.icon),
+                        selectedIcon: Icon(item.selectedIcon),
                         label: Text(item.label.toUpperCase()),
                       ),
                     )
@@ -77,6 +79,7 @@ class AppShellScaffold extends StatelessWidget {
             .map(
               (item) => NavigationDestination(
                 icon: Icon(item.icon),
+                selectedIcon: Icon(item.selectedIcon),
                 label: item.label.toUpperCase(),
               ),
             )
