@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
+import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class RoutineEditorScreen extends ConsumerStatefulWidget {
   const RoutineEditorScreen({super.key, this.routineId});
@@ -45,6 +47,16 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
     super.dispose();
   }
 
+  int get _estimatedDurationMin {
+    return _exercises.fold<int>(
+      0,
+      (total, exercise) =>
+          total +
+          (exercise.targetSets * 2) +
+          ((exercise.targetSets * exercise.restSeconds) ~/ 60),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appStateControllerProvider);
@@ -67,9 +79,19 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       appBar: AppBar(
         title: Text(widget.routineId == null ? 'New Routine' : 'Edit Routine'),
         actions: [
-          TextButton(
-            onPressed: _exercises.isEmpty ? null : () => _save(context),
-            child: const Text('Save'),
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilledButton(
+              onPressed: _exercises.isEmpty ? null : () => _save(context),
+              style: FilledButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              ),
+              child: const Text('Save'),
+            ),
           ),
         ],
       ),
@@ -100,31 +122,29 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
             decoration: const InputDecoration(labelText: 'Category'),
           ),
           const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'Exercises',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                ),
-              ),
-              OutlinedButton.icon(
-                onPressed: availableExercises.isEmpty
-                    ? null
-                    : () => _showExercisePicker(context, availableExercises),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Exercise'),
-              ),
-            ],
+          Text(
+            'Exercises',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 12),
           if (_exercises.isEmpty)
-            const Card(
-              child: Padding(
-                padding: EdgeInsets.all(18),
-                child: Text('Add at least one exercise to save this routine.'),
+            DashedBorderCard(
+              onTap: availableExercises.isEmpty
+                  ? null
+                  : () => _showExercisePicker(context, availableExercises),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_circle_outline,
+                      color: AppTheme.slateInactive),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tap to add exercises',
+                    style: TextStyle(color: AppTheme.slateInactive),
+                  ),
+                ],
               ),
             )
           else
@@ -132,31 +152,59 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
               final index = entry.key;
               final item = entry.value;
               final exercise = state.exerciseById(item.exerciseId);
+              final muscles =
+                  exercise?.primaryMuscles.join(', ') ?? '';
 
               return Card(
                 margin: const EdgeInsets.only(bottom: 14),
                 child: Padding(
-                  padding: const EdgeInsets.all(18),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.fitness_center,
+                                color: AppTheme.slateInactive),
+                          ),
+                          const SizedBox(width: 14),
                           Expanded(
-                            child: Text(
-                              exercise?.name ?? 'Exercise',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  exercise?.name ?? 'Exercise',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w800),
+                                ),
+                                if (muscles.isNotEmpty)
+                                  Text(
+                                    muscles,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.slateInactive,
+                                    ),
+                                  ),
+                              ],
                             ),
                           ),
                           IconButton(
+                            icon: const Icon(Icons.delete_outline,
+                                color: AppTheme.slateInactive),
                             onPressed: () {
                               setState(() {
                                 _exercises.removeAt(index);
                                 _reindexExercises();
                               });
                             },
-                            icon: const Icon(Icons.delete_outline_rounded),
                           ),
                         ],
                       ),
@@ -165,7 +213,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                         children: [
                           Expanded(
                             child: _StepperField(
-                              label: 'Sets',
+                              label: 'SETS',
                               value: item.targetSets,
                               onChanged: (value) => _updateExercise(
                                 index,
@@ -176,7 +224,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: _StepperField(
-                              label: 'Reps',
+                              label: 'REPS',
                               value: item.targetReps,
                               onChanged: (value) => _updateExercise(
                                 index,
@@ -187,9 +235,10 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: _StepperField(
-                              label: 'Rest (s)',
+                              label: 'REST',
                               value: item.restSeconds,
                               step: 15,
+                              suffix: 's',
                               onChanged: (value) => _updateExercise(
                                 index,
                                 item.copyWith(restSeconds: value),
@@ -203,6 +252,60 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 ),
               );
             }),
+          if (_exercises.isNotEmpty) ...[
+            DashedBorderCard(
+              onTap: availableExercises.isEmpty
+                  ? null
+                  : () => _showExercisePicker(context, availableExercises),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.add_circle_outline,
+                      color: AppTheme.slateInactive),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Tap to add more exercises',
+                    style: TextStyle(color: AppTheme.slateInactive),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Icon(Icons.schedule, size: 18, color: AppTheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  'Est. duration: $_estimatedDurationMin min',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.slateInactive,
+                  ),
+                ),
+                const SizedBox(width: 20),
+                Icon(Icons.fitness_center, size: 18, color: AppTheme.primary),
+                const SizedBox(width: 6),
+                Text(
+                  '${_exercises.length} exercises',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.slateInactive,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: _exercises.isEmpty ? null : () => _save(context),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(52),
+              ),
+              icon: const Icon(Icons.check_circle_outline),
+              label: Text(
+                widget.routineId == null ? 'Create Routine' : 'Save Changes',
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -278,14 +381,6 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       return;
     }
 
-    final estimatedDurationMin = _exercises.fold<int>(
-      0,
-      (total, exercise) =>
-          total +
-          (exercise.targetSets * 2) +
-          ((exercise.targetSets * exercise.restSeconds) ~/ 60),
-    );
-
     final controller = ref.read(routineControllerProvider);
 
     if (widget.routineId == null) {
@@ -293,7 +388,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
         name: name,
         category: _category,
         exercises: _exercises,
-        estimatedDurationMin: estimatedDurationMin,
+        estimatedDurationMin: _estimatedDurationMin,
       );
     } else {
       controller.update(
@@ -301,7 +396,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
         name: name,
         category: _category,
         exercises: _exercises,
-        estimatedDurationMin: estimatedDurationMin,
+        estimatedDurationMin: _estimatedDurationMin,
       );
     }
 
@@ -315,12 +410,14 @@ class _StepperField extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.step = 1,
+    this.suffix,
   });
 
   final String label;
   final int value;
   final ValueChanged<int> onChanged;
   final int step;
+  final String? suffix;
 
   @override
   Widget build(BuildContext context) {
@@ -344,24 +441,38 @@ class _StepperField extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => onChanged((value - step).clamp(step, 999)),
-                  icon: const Icon(Icons.remove_rounded),
+                GestureDetector(
+                  onTap: () => onChanged((value - step).clamp(step, 999)),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.remove, size: 16, color: AppTheme.ink),
+                  ),
                 ),
                 Expanded(
                   child: Text(
-                    '$value',
+                    suffix != null ? '$value$suffix' : '$value',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
-                IconButton(
-                  visualDensity: VisualDensity.compact,
-                  onPressed: () => onChanged(value + step),
-                  icon: const Icon(Icons.add_rounded),
+                GestureDetector(
+                  onTap: () => onChanged(value + step),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFF1F5F9),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.add, size: 16, color: AppTheme.ink),
+                  ),
                 ),
               ],
             ),
