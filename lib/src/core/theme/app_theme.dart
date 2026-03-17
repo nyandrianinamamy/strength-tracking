@@ -75,7 +75,7 @@ class AppTheme {
         indicatorColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
-          return TextStyle(
+          return GoogleFonts.lexend(
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
@@ -94,12 +94,12 @@ class AppTheme {
         indicatorColor: Colors.transparent,
         selectedIconTheme: const IconThemeData(color: primary),
         unselectedIconTheme: const IconThemeData(color: slateInactive),
-        selectedLabelTextStyle: const TextStyle(
+        selectedLabelTextStyle: GoogleFonts.lexend(
           color: primary,
           fontWeight: FontWeight.w700,
           fontSize: 10,
         ),
-        unselectedLabelTextStyle: const TextStyle(
+        unselectedLabelTextStyle: GoogleFonts.lexend(
           color: slateInactive,
           fontWeight: FontWeight.w700,
           fontSize: 10,

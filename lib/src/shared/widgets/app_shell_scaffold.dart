@@ -39,7 +39,7 @@ class AppShellScaffold extends StatelessWidget {
                     .map(
                       (item) => NavigationRailDestination(
                         icon: Icon(item.icon),
-                        label: Text(item.label),
+                        label: Text(item.label.toUpperCase()),
                       ),
                     )
                     .toList(),
@@ -77,7 +77,7 @@ class AppShellScaffold extends StatelessWidget {
             .map(
               (item) => NavigationDestination(
                 icon: Icon(item.icon),
-                label: item.label,
+                label: item.label.toUpperCase(),
               ),
             )
             .toList(),
