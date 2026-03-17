@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -37,7 +38,8 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         return true;
       }
       return routine.name.toLowerCase().contains(_query.toLowerCase());
-    }).toList()..sort((a, b) => a.name.compareTo(b.name));
+    }).toList()
+      ..sort((a, b) => a.name.compareTo(b.name));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -52,46 +54,71 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                 ),
               ),
             ),
-            FilledButton.icon(
-              onPressed: () => context.push('/routine/new'),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('New Routine'),
-            ),
           ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'Browse your saved templates, adjust the prescriptions, and start a live session from the same screen.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: Colors.black54),
         ),
         const SizedBox(height: 18),
         TextField(
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.search_rounded),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search_rounded),
             hintText: 'Search routines',
+            filled: true,
+            fillColor: const Color(0xFFF1F5F9),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
           ),
           onChanged: (value) => setState(() => _query = value.trim()),
         ),
         const SizedBox(height: 14),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: categories.map((category) {
-              final selected = category == _category;
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(category),
-                  selected: selected,
-                  onSelected: (_) => setState(() => _category = category),
-                ),
-              );
-            }).toList(),
-          ),
+        CategoryChips(
+          options: categories,
+          selected: _category,
+          onSelected: (v) => setState(() => _category = v),
         ),
         const SizedBox(height: 24),
+        DashedBorderCard(
+          onTap: () => context.push('/routine/new'),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.add, color: AppTheme.primary),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Create New Routine',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Design your own personalized training plan',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.black54,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
         if (routines.isEmpty)
           const EmptyStateCard(
             title: 'No routines match that filter',
@@ -102,91 +129,64 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
             return Card(
               margin: const EdgeInsets.only(bottom: 14),
               child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                padding: const EdgeInsets.all(14),
+                child: Row(
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                routine.name,
-                                style: Theme.of(context).textTheme.titleLarge
-                                    ?.copyWith(fontWeight: FontWeight.w900),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                '${routine.category} • ${routine.exercises.length} exercises • ${routine.estimatedDurationMin} min',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(color: Colors.black54),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'edit') {
-                              context.push('/routine/${routine.id}/edit');
-                            } else {
-                              ref
-                                  .read(routineControllerProvider)
-                                  .archive(routine.id);
-                            }
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(value: 'edit', child: Text('Edit')),
-                            PopupMenuItem(
-                              value: 'archive',
-                              child: Text('Archive'),
-                            ),
-                          ],
-                        ),
-                      ],
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.fitness_center,
+                        color: AppTheme.slateInactive,
+                      ),
                     ),
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: routine.exercises.map((item) {
-                        final exercise = state.exerciseById(item.exerciseId);
-                        return Chip(
-                          label: Text(
-                            exercise == null
-                                ? 'Exercise'
-                                : '${exercise.name} ${item.targetSets}x${item.targetReps}',
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            routine.name,
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
                           ),
-                        );
-                      }).toList(),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${routine.exercises.length} exercises • ${routine.estimatedDurationMin} min',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: Colors.black54),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 18),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () =>
-                                context.push('/routine/${routine.id}/edit'),
-                            icon: const Icon(Icons.edit_rounded),
-                            label: const Text('Edit'),
-                          ),
+                    const SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () {
+                        ref
+                            .read(routineControllerProvider)
+                            .startSession(routine.id);
+                        context.go('/workout/active');
+                      },
+                      child: Container(
+                        width: 40,
+                        height: 40,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.primary,
+                          shape: BoxShape.circle,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              ref
-                                  .read(routineControllerProvider)
-                                  .startSession(routine.id);
-                              context.go('/workout/active');
-                            },
-                            icon: const Icon(Icons.play_arrow_rounded),
-                            label: const Text('Start'),
-                          ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          color: Colors.white,
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
