@@ -1,0 +1,61 @@
+class Exercise {
+  const Exercise({
+    required this.id,
+    required this.name,
+    required this.primaryMuscles,
+    required this.equipment,
+    required this.instructions,
+    required this.archived,
+  });
+
+  final String id;
+  final String name;
+  final List<String> primaryMuscles;
+  final List<String> equipment;
+  final String instructions;
+  final bool archived;
+
+  Exercise copyWith({
+    String? id,
+    String? name,
+    List<String>? primaryMuscles,
+    List<String>? equipment,
+    String? instructions,
+    bool? archived,
+  }) {
+    return Exercise(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+      equipment: equipment ?? this.equipment,
+      instructions: instructions ?? this.instructions,
+      archived: archived ?? this.archived,
+    );
+  }
+
+  factory Exercise.fromJson(Map<String, dynamic> json) {
+    return Exercise(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      primaryMuscles: List<String>.from(
+        json['primaryMuscles'] as List<dynamic>? ?? const [],
+      ),
+      equipment: List<String>.from(
+        json['equipment'] as List<dynamic>? ?? const [],
+      ),
+      instructions: json['instructions'] as String? ?? '',
+      archived: json['archived'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'primaryMuscles': primaryMuscles,
+      'equipment': equipment,
+      'instructions': instructions,
+      'archived': archived,
+    };
+  }
+}

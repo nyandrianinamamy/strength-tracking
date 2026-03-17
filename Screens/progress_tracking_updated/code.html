@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Progress Tracking - Strength App</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#257bf4",
+                        "background-light": "#ffffff",
+                        "background-dark": "#0f172a",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Lexend', sans-serif;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #257bf433;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background-light text-slate-900 min-h-screen flex flex-col">
+<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+<div class="flex items-center p-4 justify-between max-w-2xl mx-auto w-full">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-slate-100 transition-colors cursor-pointer">
+<span class="material-symbols-outlined text-slate-900">arrow_back</span>
+</div>
+<h1 class="text-slate-900 text-lg font-bold leading-tight tracking-tight flex-1 text-center font-display">Performance Lab</h1>
+<div class="flex w-10 items-center justify-end">
+<button class="flex size-10 cursor-pointer items-center justify-center rounded-full hover:bg-slate-100 transition-colors">
+<span class="material-symbols-outlined text-slate-900">settings</span>
+</button>
+</div>
+</div>
+<nav class="flex border-b border-slate-100 px-4 gap-8 max-w-2xl mx-auto w-full">
+<a class="flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-3 pt-4" href="#">
+<span class="text-sm font-bold tracking-wide">Overview</span>
+</a>
+<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 pb-3 pt-4 hover:text-primary transition-colors" href="#">
+<span class="text-sm font-bold tracking-wide">Lifts</span>
+</a>
+<a class="flex flex-col items-center justify-center border-b-2 border-transparent text-slate-500 pb-3 pt-4 hover:text-primary transition-colors" href="#">
+<span class="text-sm font-bold tracking-wide">Volume</span>
+</a>
+</nav>
+</header>
+<main class="flex-1 overflow-y-auto max-w-2xl mx-auto w-full pb-24">
+<!-- Stats Summary Section -->
+<section class="p-4 grid grid-cols-2 gap-4">
+<div class="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col gap-1">
+<span class="text-xs font-bold text-primary uppercase tracking-widest">Workout Days</span>
+<span class="text-2xl font-bold text-slate-900">4.5</span>
+<span class="text-xs text-primary font-medium">per week average</span>
+</div>
+<div class="bg-primary/5 border border-primary/10 rounded-xl p-4 flex flex-col gap-1">
+<span class="text-xs font-bold text-primary uppercase tracking-widest">Active Streak</span>
+<span class="text-2xl font-bold text-slate-900">12 Days</span>
+<span class="text-xs text-primary font-medium">Personal Best!</span>
+</div>
+</section>
+<!-- Frequency Calendar Section -->
+<section class="p-4 space-y-4">
+<h2 class="text-slate-900 text-xl font-bold font-display">Workout Frequency</h2>
+<div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+<div class="flex items-center justify-between mb-4">
+<span class="text-sm font-bold text-slate-900">June 2024</span>
+<div class="flex gap-2">
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors">chevron_left</span>
+<span class="material-symbols-outlined text-slate-400 cursor-pointer hover:text-primary transition-colors">chevron_right</span>
+</div>
+</div>
+<div class="grid grid-cols-7 gap-2 mb-2">
+<span class="text-[10px] font-bold text-center text-slate-400 uppercase">S</span>
+<span class="text-[10px] font-bold text-center text-slate-400 uppercase">M</span>
+<span class="text-[10px] font-bold text-center text-slate-400 uppercase">T</span>
+<span class="text-[10px] font-bold text-center text-slate-400 uppercase">W</span>
+<span class="text-[10px] font-bold text-center text-slate-400 uppercase">T</span>
+<span class="text-[10px] font-bold text-center text-slate-400 uppercase">F</span>
+<span class="text-[10px] font-bold text-center text-slate-400 uppercase">S</span>
+</div>
+<div class="grid grid-cols-7 gap-2">
+<!-- Row 1 -->
+<span class="h-10 flex items-center justify-center text-sm text-slate-300">26</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-300">27</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-300">28</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-300">29</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-300">30</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-300">31</span>
+<span class="h-10 flex items-center justify-center text-sm font-bold bg-primary text-white rounded-lg">1</span>
+<!-- Row 2 -->
+<span class="h-10 flex items-center justify-center text-sm text-slate-600">2</span>
+<span class="h-10 flex items-center justify-center text-sm font-bold bg-primary/20 text-primary rounded-lg">3</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-600">4</span>
+<span class="h-10 flex items-center justify-center text-sm font-bold bg-primary/60 text-white rounded-lg">5</span>
+<span class="h-10 flex items-center justify-center text-sm font-bold bg-primary text-white rounded-lg">6</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-600">7</span>
+<span class="h-10 flex items-center justify-center text-sm font-bold bg-primary text-white rounded-lg">8</span>
+<!-- Row 3 -->
+<span class="h-10 flex items-center justify-center text-sm font-bold bg-primary text-white rounded-lg">9</span>
+<span class="h-10 flex items-center justify-center text-sm font-bold bg-primary text-white rounded-lg">10</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-600">11</span>
+<span class="h-10 flex items-center justify-center text-sm font-bold border-2 border-primary text-primary rounded-lg">12</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-600">13</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-600">14</span>
+<span class="h-10 flex items-center justify-center text-sm text-slate-600">15</span>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 pb-6 pt-3 px-6 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+<div class="max-w-2xl mx-auto flex items-center justify-between">
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">fitness_center</span>
+<span class="text-[10px] font-bold text-slate-400 group-hover:text-primary tracking-wide uppercase">Workouts</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">list_alt</span>
+<span class="text-[10px] font-bold text-slate-400 group-hover:text-primary tracking-wide uppercase">Exercises</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1">leaderboard</span>
+<span class="text-[10px] font-bold text-primary tracking-wide uppercase">Progress</span>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors">person</span>
+<span class="text-[10px] font-bold text-slate-400 group-hover:text-primary tracking-wide uppercase">Profile</span>
+</a>
+</div>
+</nav>
+</body></html>
