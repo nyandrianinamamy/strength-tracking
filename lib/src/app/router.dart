@@ -23,19 +23,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => const DashboardScreen(),
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: DashboardScreen(),
+            ),
           ),
           GoRoute(
             path: '/routines',
-            builder: (context, state) => const RoutinesScreen(),
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: RoutinesScreen(),
+            ),
           ),
           GoRoute(
             path: '/exercises',
-            builder: (context, state) => const ExercisesScreen(),
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ExercisesScreen(),
+            ),
           ),
           GoRoute(
             path: '/progress',
-            builder: (context, state) => const ProgressScreen(),
+            pageBuilder: (context, state) => const NoTransitionPage(
+              child: ProgressScreen(),
+            ),
           ),
         ],
       ),
