@@ -85,6 +85,29 @@ class WorkoutController {
     return updatedSession;
   }
 
+  WorkoutSession? goToExercise(int index) {
+    final state = _ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) {
+      return null;
+    }
+
+    final routine = state.routineById(session.routineId);
+    if (routine == null || routine.exercises.isEmpty) {
+      return null;
+    }
+
+    final clampedIndex = index.clamp(0, routine.exercises.length - 1);
+    if (clampedIndex == session.currentExerciseIndex) {
+      return session;
+    }
+
+    final updatedSession =
+        session.copyWith(currentExerciseIndex: clampedIndex);
+    _persistSession(updatedSession);
+    return updatedSession;
+  }
+
   WorkoutSession? completeSession({double? rpe}) {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
