@@ -158,9 +158,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
       appBar: AppBar(
         centerTitle: true,
         leading: IconButton(
-          tooltip: 'Discard session',
+          tooltip: 'Back to dashboard',
           onPressed: () {
-            controller.discardDraft();
             context.go('/');
           },
           icon: const Icon(Icons.close_rounded),
