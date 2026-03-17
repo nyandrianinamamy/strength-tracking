@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -61,36 +62,33 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
-        Text(
-          'Keep your exercise library clean, searchable, and ready for routine building.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(color: Colors.black54),
-        ),
         const SizedBox(height: 18),
         TextField(
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.search_rounded),
+          decoration: InputDecoration(
+            prefixIcon: const Icon(Icons.search_rounded),
             hintText: 'Search exercises or muscles',
+            filled: true,
+            fillColor: const Color(0xFFF1F5F9),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
           ),
           onChanged: (value) => setState(() => _query = value.trim()),
         ),
         const SizedBox(height: 14),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: muscles.map((muscle) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: ChoiceChip(
-                  label: Text(muscle),
-                  selected: _muscle == muscle,
-                  onSelected: (_) => setState(() => _muscle = muscle),
-                ),
-              );
-            }).toList(),
-          ),
+        CategoryChips(
+          options: muscles,
+          selected: _muscle,
+          onSelected: (v) => setState(() => _muscle = v),
         ),
         const SizedBox(height: 24),
         if (grouped.isEmpty)
@@ -104,6 +102,10 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
               padding: const EdgeInsets.only(bottom: 24),
               child: PageSection(
                 title: entry.key,
+                trailing: Text(
+                  '${entry.value.length}',
+                  style: const TextStyle(color: Colors.black54),
+                ),
                 child: Column(
                   children: entry.value.map((exercise) {
                     return Card(
@@ -113,13 +115,16 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                           horizontal: 18,
                           vertical: 8,
                         ),
-                        leading: CircleAvatar(
-                          backgroundColor: const Color(
-                            0xFF257BF4,
-                          ).withValues(alpha: 0.12),
+                        leading: Container(
+                          width: 64,
+                          height: 64,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           child: const Icon(
-                            Icons.fitness_center_rounded,
-                            color: Color(0xFF257BF4),
+                            Icons.fitness_center,
+                            color: AppTheme.slateInactive,
                           ),
                         ),
                         title: Text(
