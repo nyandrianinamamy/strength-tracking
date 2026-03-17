@@ -83,22 +83,22 @@ class MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: AppTheme.primary),
-            const SizedBox(height: 12),
+            Icon(icon, color: AppTheme.primary, size: 22),
+            const SizedBox(height: 8),
             Text(
               label.toUpperCase(),
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: Colors.black54,
                     letterSpacing: 1.1,
                     fontWeight: FontWeight.w800,
                   ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
@@ -109,11 +109,10 @@ class MetricCard extends StatelessWidget {
                     ),
               ),
             ),
-            const SizedBox(height: 4),
-            if (badge != null) ...[
-              const SizedBox(height: 4),
-              badge!,
-            ] else
+            const Spacer(),
+            if (badge != null)
+              badge!
+            else
               Text(
                 detail,
                 maxLines: 2,
