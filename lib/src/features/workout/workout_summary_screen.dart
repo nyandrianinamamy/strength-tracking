@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
@@ -47,78 +48,103 @@ class WorkoutSummaryScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [
-          Card(
-            color: const Color(0xFF111827),
-            child: Padding(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppFormatters.weekdayMonthDay(
-                      session.endedAt ?? session.startedAt,
-                    ),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: const Color(0xFF8FB9FF),
-                      fontWeight: FontWeight.w800,
+          // Hero section
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppTheme.primary, width: 4),
+                  ),
+                  child: CircleAvatar(
+                    radius: 64,
+                    backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                    child: const Icon(
+                      Icons.workspace_premium,
+                      size: 48,
+                      color: AppTheme.primary,
                     ),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    routine?.name ?? 'Workout',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  routine?.name ?? 'Workout',
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                if (prs.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    prs.isEmpty
-                        ? 'Workout logged successfully.'
-                        : 'New performance milestones detected.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.trending_up,
+                          size: 16,
+                          color: AppTheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'New Personal Record!',
+                          style:
+                              Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: AppTheme.primary,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
-          const SizedBox(height: 20),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isWide = constraints.maxWidth >= 420;
-              return GridView.count(
-                crossAxisCount: isWide ? 3 : 1,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: isWide ? 1 : 2.6,
-                children: [
-                  MetricCard(
-                    label: 'Volume',
-                    value: '${AppFormatters.decimal(totalVolume)} kg',
-                    detail: 'Across all completed sets',
-                    icon: Icons.scale_rounded,
-                  ),
-                  MetricCard(
-                    label: 'Time',
-                    value: AppFormatters.duration(duration),
-                    detail: 'Session duration',
-                    icon: Icons.timer_outlined,
-                  ),
-                  MetricCard(
-                    label: 'Exercises',
-                    value: '${routine?.exercises.length ?? 0}',
-                    detail: '${session.completedSets.length} total sets',
-                    icon: Icons.list_alt_rounded,
-                  ),
-                ],
-              );
-            },
+          const SizedBox(height: 24),
+
+          // Stats grid using StatCard
+          Row(
+            children: [
+              Expanded(
+                child: StatCard(
+                  label: 'Volume',
+                  value: '${AppFormatters.decimal(totalVolume)} kg',
+                  subtext: 'KG',
+                  showAccent: true,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: StatCard(
+                  label: 'Time',
+                  value: AppFormatters.duration(duration),
+                  subtext: 'DURATION',
+                  showAccent: true,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: StatCard(
+                  label: 'Exercises',
+                  value: '${routine?.exercises.length ?? 0}',
+                  subtext: 'TOTAL',
+                  showAccent: true,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 28),
+
+          // PR highlights - horizontal scroll
           PageSection(
             title: 'PR Highlights',
             child: prs.isEmpty
@@ -127,35 +153,63 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                     body:
                         'The workout still contributes to your volume and lift history.',
                   )
-                : Column(
-                    children: prs.map((record) {
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 18,
-                            vertical: 8,
+                : SizedBox(
+                    height: 120,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: prs.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 12),
+                      itemBuilder: (context, index) {
+                        final pr = prs[index];
+                        return Container(
+                          width: 180,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            border: Border.all(color: AppTheme.border),
+                            borderRadius: BorderRadius.circular(16),
                           ),
-                          title: Text(
-                            record.exerciseName,
-                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pr.exerciseName,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w800),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                '${AppFormatters.decimal(pr.weightKg)}kg x ${pr.reps}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      color: AppTheme.primary,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Est. 1RM: ${AppFormatters.decimal(pr.estimatedOneRepMax)}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: AppTheme.slateInactive),
+                              ),
+                            ],
                           ),
-                          subtitle: Text(
-                            '${AppFormatters.decimal(record.weightKg)} kg x ${record.reps}',
-                          ),
-                          trailing: Text(
-                            '1RM ${AppFormatters.decimal(record.estimatedOneRepMax)}',
-                            style: const TextStyle(
-                              color: Color(0xFF257BF4),
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
+                        );
+                      },
+                    ),
                   ),
           ),
           const SizedBox(height: 28),
+
+          // Exercise breakdown with set count badge
           PageSection(
             title: 'Exercise Breakdown',
             child: Column(
@@ -177,17 +231,31 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                             Expanded(
                               child: Text(
                                 exercise?.name ?? 'Exercise',
-                                style: Theme.of(context).textTheme.titleMedium
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w900),
                               ),
                             ),
-                            Text(
-                              '${sets.length} sets',
-                              style: Theme.of(context).textTheme.labelLarge
-                                  ?.copyWith(
-                                    color: const Color(0xFF257BF4),
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primary,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                '${sets.length} sets',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                              ),
                             ),
                           ],
                         ),
@@ -208,7 +276,10 @@ class WorkoutSummaryScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 28),
+
+          // RPE section with restyled card
           Card(
+            color: AppTheme.primary.withValues(alpha: 0.05),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
@@ -217,35 +288,59 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                   Text(
                     'How did it feel?',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                          fontWeight: FontWeight.w900,
+                        ),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'RPE ${rpe.toStringAsFixed(1)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF257BF4),
-                      fontWeight: FontWeight.w800,
-                    ),
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
-                  Slider(
-                    value: rpe,
-                    min: 5,
-                    max: 10,
-                    divisions: 10,
-                    onChanged: (value) {
-                      ref
-                          .read(workoutControllerProvider)
-                          .updateRpe(sessionId, value);
-                    },
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        'Easy',
+                        style:
+                            Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppTheme.slateInactive,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: rpe,
+                          min: 5,
+                          max: 10,
+                          divisions: 10,
+                          onChanged: (value) {
+                            ref
+                                .read(workoutControllerProvider)
+                                .updateRpe(sessionId, value);
+                          },
+                        ),
+                      ),
+                      Text(
+                        'Hard',
+                        style:
+                            Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppTheme.slateInactive,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                      ),
+                    ],
                   ),
                   if (session.sessionNote.isNotEmpty) ...[
                     const SizedBox(height: 12),
                     Text(
                       session.sessionNote,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyMedium?.copyWith(color: Colors.black54),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(color: Colors.black54),
                     ),
                   ],
                 ],
@@ -253,6 +348,8 @@ class WorkoutSummaryScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 24),
+
+          // Action buttons
           FilledButton.icon(
             onPressed: () => context.go('/'),
             icon: const Icon(Icons.home_rounded),
