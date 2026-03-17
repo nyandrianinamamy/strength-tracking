@@ -20,17 +20,24 @@ class ActiveWorkoutScreen extends ConsumerStatefulWidget {
       _ActiveWorkoutScreenState();
 }
 
-class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
+class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
+    with SingleTickerProviderStateMixin {
   final _weightController = TextEditingController();
   final _repsController = TextEditingController();
   final _setNoteController = TextEditingController();
   late final Timer _ticker;
   late final PageController _pageController;
   String? _lastExerciseId;
+  int _currentPage = 0;
 
   // Shared rest timer state
   DateTime? _restTimerStart;
   int _restDurationSeconds = 0;
+
+  // Swipe hint arrows
+  late final AnimationController _arrowAnimController;
+  late final Animation<double> _arrowOpacity;
+  bool _arrowsVisible = false;
 
   @override
   void initState() {
@@ -41,8 +48,18 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
 
     final state = ref.read(appStateControllerProvider);
     final session = state.activeSession;
+    _currentPage = session?.currentExerciseIndex ?? 0;
     _pageController = PageController(
-      initialPage: session?.currentExerciseIndex ?? 0,
+      initialPage: _currentPage,
+    );
+
+    _arrowAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _arrowOpacity = CurvedAnimation(
+      parent: _arrowAnimController,
+      curve: Curves.easeOut,
     );
   }
 
@@ -53,7 +70,21 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
     _repsController.dispose();
     _setNoteController.dispose();
     _pageController.dispose();
+    _arrowAnimController.dispose();
     super.dispose();
+  }
+
+  void _showArrows() {
+    if (_arrowsVisible) return;
+    _arrowsVisible = true;
+    _arrowAnimController.forward(from: 0);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        _arrowAnimController.reverse().then((_) {
+          if (mounted) _arrowsVisible = false;
+        });
+      }
+    });
   }
 
   void _resetRestTimer(int restSeconds) {
@@ -251,6 +282,23 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
               .titleMedium
               ?.copyWith(fontWeight: FontWeight.w800),
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '${_currentPage + 1}/$exerciseCount',
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
@@ -304,30 +352,95 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen> {
           ),
         ),
       ),
-      body: PageView.builder(
-        controller: _pageController,
-        itemCount: exerciseCount,
-        onPageChanged: (index) {
-          controller.goToExercise(index);
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification is ScrollStartNotification) {
+            _showArrows();
+          }
+          return false;
         },
-        itemBuilder: (context, pageIndex) {
-          return _ExercisePage(
-            key: ValueKey(pageIndex),
-            pageIndex: pageIndex,
-            routine: routine,
-            session: session,
-            state: state,
-            controller: controller,
-            weightController: _weightController,
-            repsController: _repsController,
-            setNoteController: _setNoteController,
-            lastExerciseId: _lastExerciseId,
-            onExerciseIdChanged: (id) => _lastExerciseId = id,
-            remainingRest: _remainingRest,
-            onLogSet: _resetRestTimer,
-            onShowComment: () => _showCommentDialog(context),
-          );
-        },
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: exerciseCount,
+              onPageChanged: (index) {
+                setState(() => _currentPage = index);
+                controller.goToExercise(index);
+              },
+              itemBuilder: (context, pageIndex) {
+                return _ExercisePage(
+                  key: ValueKey(pageIndex),
+                  pageIndex: pageIndex,
+                  routine: routine,
+                  session: session,
+                  state: state,
+                  controller: controller,
+                  weightController: _weightController,
+                  repsController: _repsController,
+                  setNoteController: _setNoteController,
+                  lastExerciseId: _lastExerciseId,
+                  onExerciseIdChanged: (id) => _lastExerciseId = id,
+                  remainingRest: _remainingRest,
+                  onLogSet: _resetRestTimer,
+                  onShowComment: () => _showCommentDialog(context),
+                );
+              },
+            ),
+            // Left arrow
+            Positioned(
+              left: 4,
+              top: 0,
+              bottom: 0,
+              child: FadeTransition(
+                opacity: _arrowOpacity,
+                child: Center(
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.chevron_left_rounded,
+                      size: 22,
+                      color: _currentPage > 0
+                          ? AppTheme.ink.withValues(alpha: 0.5)
+                          : AppTheme.slateInactive.withValues(alpha: 0.25),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Right arrow
+            Positioned(
+              right: 4,
+              top: 0,
+              bottom: 0,
+              child: FadeTransition(
+                opacity: _arrowOpacity,
+                child: Center(
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.chevron_right_rounded,
+                      size: 22,
+                      color: _currentPage < exerciseCount - 1
+                          ? AppTheme.ink.withValues(alpha: 0.5)
+                          : AppTheme.slateInactive.withValues(alpha: 0.25),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
