@@ -366,7 +366,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               itemCount: exerciseCount,
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
-                controller.goToExercise(index);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) controller.goToExercise(index);
+                });
               },
               itemBuilder: (context, pageIndex) {
                 return _ExercisePage(
@@ -492,7 +494,8 @@ class _ExercisePage extends StatelessWidget {
         .toList()
       ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
 
-    // Pre-fill weight/reps when switching to this exercise
+    // Pre-fill weight/reps when switching to this exercise (deferred to avoid
+    // modifying controllers during build)
     if (lastExerciseId != prescription.exerciseId) {
       onExerciseIdChanged(prescription.exerciseId);
       final lastSet = currentSets.isNotEmpty
@@ -500,11 +503,13 @@ class _ExercisePage extends StatelessWidget {
           : previousPerformance.isNotEmpty
               ? previousPerformance.first
               : null;
-      weightController.text =
-          lastSet == null ? '' : AppFormatters.decimal(lastSet.weightKg);
-      repsController.text =
-          lastSet?.reps.toString() ?? '${prescription.targetReps}';
-      setNoteController.clear();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        weightController.text =
+            lastSet == null ? '' : AppFormatters.decimal(lastSet.weightKg);
+        repsController.text =
+            lastSet?.reps.toString() ?? '${prescription.targetReps}';
+        setNoteController.clear();
+      });
     }
 
     final highestPrevWeight = previousPerformance.isEmpty
