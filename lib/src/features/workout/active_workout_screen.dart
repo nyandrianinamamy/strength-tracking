@@ -6,6 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
+import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
+import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -349,9 +352,9 @@ class _ExercisePage extends StatelessWidget {
   });
 
   final int pageIndex;
-  final dynamic routine;
-  final dynamic session;
-  final dynamic state;
+  final Routine routine;
+  final WorkoutSession session;
+  final AppState state;
   final WorkoutController controller;
   final TextEditingController weightController;
   final TextEditingController repsController;
@@ -378,7 +381,7 @@ class _ExercisePage extends StatelessWidget {
 
     // Pre-fill weight/reps when switching to this exercise
     if (lastExerciseId != prescription.exerciseId) {
-      onExerciseIdChanged(prescription.exerciseId as String);
+      onExerciseIdChanged(prescription.exerciseId);
       final lastSet = currentSets.isNotEmpty
           ? currentSets.last
           : previousPerformance.isNotEmpty
@@ -394,7 +397,7 @@ class _ExercisePage extends StatelessWidget {
     final highestPrevWeight = previousPerformance.isEmpty
         ? 0.0
         : previousPerformance
-            .map((s) => s.weightKg as double)
+            .map((s) => s.weightKg)
             .reduce((a, b) => a > b ? a : b);
 
     return ListView(
@@ -433,7 +436,7 @@ class _ExercisePage extends StatelessWidget {
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(routine.exercises.length as int, (i) {
+          children: List.generate(routine.exercises.length, (i) {
             return Container(
               width: i == pageIndex ? 8 : 6,
               height: i == pageIndex ? 8 : 6,
@@ -536,7 +539,7 @@ class _ExercisePage extends StatelessWidget {
                       note: setNoteController.text.trim(),
                     );
                     setNoteController.clear();
-                    onLogSet(prescription.restSeconds as int);
+                    onLogSet(prescription.restSeconds);
                   },
                   icon: const Icon(Icons.check_circle_outline_rounded),
                   label: const Text('LOG'),
