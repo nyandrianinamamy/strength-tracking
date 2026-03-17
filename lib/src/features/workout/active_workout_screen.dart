@@ -92,6 +92,21 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       _restTimerStart = DateTime.now();
       _restDurationSeconds = restSeconds;
     });
+    // Auto-advance page if the exercise index changed after logging a set
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final session = ref.read(appStateControllerProvider).activeSession;
+      if (session != null &&
+          _pageController.hasClients &&
+          session.currentExerciseIndex != _currentPage) {
+        setState(() => _currentPage = session.currentExerciseIndex);
+        _pageController.animateToPage(
+          session.currentExerciseIndex,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        );
+      }
+    });
   }
 
   int get _remainingRest {
@@ -252,20 +267,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final elapsedSeconds = sessionElapsed.inSeconds % 60;
     final timerText =
         '${elapsedMinutes.toString().padLeft(2, '0')}:${elapsedSeconds.toString().padLeft(2, '0')}';
-
-    // Sync page controller with state changes (e.g. auto-advance after completing all sets)
-    if (_pageController.hasClients &&
-        _pageController.page?.round() != session.currentExerciseIndex) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_pageController.hasClients) {
-          _pageController.animateToPage(
-            session.currentExerciseIndex,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        }
-      });
-    }
 
     return Scaffold(
       appBar: AppBar(
