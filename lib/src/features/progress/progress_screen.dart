@@ -31,13 +31,6 @@ class ProgressScreen extends ConsumerWidget {
                     fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Track frequency, estimated 1RM movement, and volume trends without leaving the app.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyLarge?.copyWith(color: Colors.black54),
-                ),
                 const SizedBox(height: 18),
                 const TabBar(
                   tabs: [
@@ -55,16 +48,13 @@ class ProgressScreen extends ConsumerWidget {
                 ListView(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
                   children: [
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isWide = constraints.maxWidth >= 420;
-                        return GridView.count(
-                          crossAxisCount: isWide ? 2 : 1,
+                    GridView.count(
+                          crossAxisCount: 2,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
-                          childAspectRatio: isWide ? 1.3 : 2.2,
+                          childAspectRatio: 1.6,
                           children: [
                             MetricCard(
                               label: 'Workout Days',
@@ -80,9 +70,7 @@ class ProgressScreen extends ConsumerWidget {
                               icon: Icons.bolt_rounded,
                             ),
                           ],
-                        );
-                      },
-                    ),
+                        ),
                     const SizedBox(height: 28),
                     PageSection(
                       title: 'Workout Frequency',
