@@ -54,7 +54,7 @@ class ProgressScreen extends ConsumerWidget {
                           physics: const NeverScrollableScrollPhysics(),
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
-                          childAspectRatio: 1.6,
+                          childAspectRatio: 1.1,
                           children: [
                             MetricCard(
                               label: 'Workout Days',

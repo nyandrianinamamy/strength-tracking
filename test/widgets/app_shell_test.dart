@@ -33,12 +33,12 @@ void main() {
 
     expect(find.byType(NavigationRail), findsOneWidget);
     expect(find.text('Workout Library'), findsNothing);
-    expect(find.text('Train with intent.'), findsOneWidget);
+    expect(find.text('Alex'), findsOneWidget);
 
-    await tester.tap(find.text('Exercises'));
+    await tester.tap(find.text('EXERCISES'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Exercises'), findsWidgets);
+    expect(find.text('Exercises'), findsOneWidget);
     expect(find.text('New Exercise'), findsOneWidget);
   });
 
@@ -51,6 +51,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.text('Dashboard'), findsOneWidget);
+    expect(find.text('DASHBOARD'), findsOneWidget);
   });
 }
