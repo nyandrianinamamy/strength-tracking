@@ -4,13 +4,21 @@
     "start_url": ".",
     "id": "/",
     "display": "standalone",
-    "display_override": ["window-controls-overlay", "standalone", "browser"],
+    "display_override": [
+        "window-controls-overlay",
+        "standalone",
+        "browser"
+    ],
     "background_color": "#F4F8FD",
     "theme_color": "#257BF4",
     "description": "Installable offline-first strength training tracker for routines, live workout logging, and progression analytics.",
     "orientation": "any",
     "scope": "/",
-    "categories": ["health", "sports", "productivity"],
+    "categories": [
+        "health",
+        "sports",
+        "productivity"
+    ],
     "prefer_related_applications": false,
     "icons": [
         {
