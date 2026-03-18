@@ -53,12 +53,7 @@ class FirestoreAppStateRepository implements AppStateRepository {
   FirestoreAppStateRepository({
     required this.userId,
     FirebaseFirestore? firestore,
-    String databaseId = 'main',
-  }) : _firestore = firestore ??
-            FirebaseFirestore.instanceFor(
-              app: FirebaseFirestore.instance.app,
-              databaseId: databaseId,
-            );
+  }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final String userId;
   final FirebaseFirestore _firestore;
