@@ -7,6 +7,7 @@ import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/auth/account_section.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
+import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_card.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -180,6 +181,8 @@ class DashboardScreen extends ConsumerWidget {
             );
           },
         ),
+        const SizedBox(height: 20),
+        const MuscleHeatmapCard(),
         const SizedBox(height: 28),
 
         // Step 3: Next Workout card
