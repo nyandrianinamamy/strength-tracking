@@ -20,7 +20,7 @@ class SharedPreferencesAppStateRepository implements AppStateRepository {
   Future<AppState> load() async {
     final raw = _preferences.getString(_storageKey);
     if (raw == null || raw.isEmpty) {
-      return DemoSeedData.initialState();
+      return AppState.empty();
     }
 
     return AppState.fromJson(jsonDecode(raw) as Map<String, dynamic>);
