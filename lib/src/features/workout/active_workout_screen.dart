@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -34,6 +35,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   DateTime? _restTimerStart;
   int _restDurationSeconds = 0;
 
+  // Rest timer beep flag
+  bool _restTimerBeeped = false;
+
   // Swipe hint arrows
   late final AnimationController _arrowAnimController;
   late final Animation<double> _arrowOpacity;
@@ -43,7 +47,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   void initState() {
     super.initState();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
+      if (mounted) {
+        if (_remainingRest == 0 && _restTimerStart != null && !_restTimerBeeped) {
+          _restTimerBeeped = true;
+          _playRestTimerBeep();
+        }
+        setState(() {});
+      }
     });
 
     final state = ref.read(appStateControllerProvider);
@@ -87,10 +97,18 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     });
   }
 
+  void _playRestTimerBeep() async {
+    for (int i = 0; i < 3; i++) {
+      SystemSound.play(SystemSoundType.click);
+      if (i < 2) await Future.delayed(const Duration(milliseconds: 200));
+    }
+  }
+
   void _resetRestTimer(int restSeconds) {
     setState(() {
       _restTimerStart = DateTime.now();
       _restDurationSeconds = restSeconds;
+      _restTimerBeeped = false;
     });
     // Auto-advance page if the exercise index changed after logging a set
     WidgetsBinding.instance.addPostFrameCallback((_) {

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
@@ -23,7 +24,11 @@ class AppStateController extends Notifier<AppState> {
 
   void replaceState(AppState nextState) {
     state = nextState;
-    unawaited(ref.read(appStateRepositoryProvider).save(nextState));
+    unawaited(
+      ref.read(appStateRepositoryProvider).save(nextState).catchError((e) {
+        debugPrint('Failed to save state: $e');
+      }),
+    );
   }
 
   void updateState(AppState Function(AppState currentState) update) {
