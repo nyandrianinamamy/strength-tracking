@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,8 +14,32 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  // Sign in (anonymously if no existing session)
+  User user;
+  if (FirebaseAuth.instance.currentUser != null) {
+    user = FirebaseAuth.instance.currentUser!;
+  } else {
+    final credential = await FirebaseAuth.instance.signInAnonymously();
+    user = credential.user!;
+  }
+
+  final repository = FirestoreAppStateRepository(userId: user.uid);
+
+  // Migrate from SharedPreferences if data exists
   final preferences = await SharedPreferences.getInstance();
-  final repository = SharedPreferencesAppStateRepository(preferences);
+  const migrationKey = 'strength_training_tracker_state_v1';
+  final localData = preferences.getString(migrationKey);
+  if (localData != null && localData.isNotEmpty) {
+    final localRepo = SharedPreferencesAppStateRepository(preferences);
+    final localState = await localRepo.load();
+    // Only migrate if Firestore is empty (don't overwrite cloud data)
+    final cloudState = await repository.load();
+    if (cloudState.exercises.isEmpty && cloudState.routines.isEmpty) {
+      await repository.save(localState);
+    }
+    await preferences.remove(migrationKey);
+  }
+
   final initialState = await repository.load();
 
   runApp(
