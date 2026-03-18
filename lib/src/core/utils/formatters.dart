@@ -29,6 +29,23 @@ class AppFormatters {
     return '${hours}h ${minutes}m';
   }
 
+  static const double _kgToLbs = 2.20462;
+
+  static double convertWeight(double kg, String unit) {
+    if (unit == 'lbs') return kg * _kgToLbs;
+    return kg;
+  }
+
+  static double convertToKg(double value, String unit) {
+    if (unit == 'lbs') return value / _kgToLbs;
+    return value;
+  }
+
+  static String weight(double kg, String unit) {
+    final converted = convertWeight(kg, unit);
+    return '${decimal(converted)} $unit';
+  }
+
   static String decimal(double value) {
     if (value == value.roundToDouble()) {
       return value.toStringAsFixed(0);
