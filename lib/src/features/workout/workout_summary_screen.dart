@@ -44,7 +44,41 @@ class WorkoutSummaryScreen extends ConsumerWidget {
     final rpe = session.rpe ?? 8.0;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Workout Complete')),
+      appBar: AppBar(
+        title: const Text('Workout Complete'),
+        actions: [
+          IconButton(
+            tooltip: 'Delete workout',
+            icon: const Icon(Icons.delete_outline_rounded),
+            onPressed: () {
+              showDialog(
+                context: context,
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Delete Workout?'),
+                  content: const Text(
+                    'This will permanently remove this workout and all its logged sets.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(dialogContext);
+                        ref.read(workoutControllerProvider).deleteSession(sessionId);
+                        context.go('/');
+                      },
+                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      child: const Text('Delete'),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [

@@ -139,6 +139,16 @@ class WorkoutController {
     );
   }
 
+  void deleteSession(String sessionId) {
+    _ref.read(appStateControllerProvider.notifier).updateState(
+      (state) => state.copyWith(
+        sessions: state.sessions
+            .where((s) => s.id != sessionId)
+            .toList(),
+      ),
+    );
+  }
+
   void updateSessionNote(String note) {
     final session = _ref.read(appStateControllerProvider).activeSession;
     if (session == null) {
