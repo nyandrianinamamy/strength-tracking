@@ -8,11 +8,15 @@ class AppState {
     required this.exercises,
     required this.routines,
     required this.sessions,
+    this.userName = '',
+    this.preferredUnit = 'kg',
   });
 
   final List<Exercise> exercises;
   final List<Routine> routines;
   final List<WorkoutSession> sessions;
+  final String userName;
+  final String preferredUnit;
 
   factory AppState.empty() {
     return const AppState(exercises: [], routines: [], sessions: []);
@@ -22,11 +26,15 @@ class AppState {
     List<Exercise>? exercises,
     List<Routine>? routines,
     List<WorkoutSession>? sessions,
+    String? userName,
+    String? preferredUnit,
   }) {
     return AppState(
       exercises: exercises ?? this.exercises,
       routines: routines ?? this.routines,
       sessions: sessions ?? this.sessions,
+      userName: userName ?? this.userName,
+      preferredUnit: preferredUnit ?? this.preferredUnit,
     );
   }
 
@@ -63,6 +71,8 @@ class AppState {
       sessions: (json['sessions'] as List<dynamic>? ?? const [])
           .map((item) => WorkoutSession.fromJson(item as Map<String, dynamic>))
           .toList(),
+      userName: json['userName'] as String? ?? '',
+      preferredUnit: json['preferredUnit'] as String? ?? 'kg',
     );
   }
 
@@ -71,6 +81,8 @@ class AppState {
       'exercises': exercises.map((item) => item.toJson()).toList(),
       'routines': routines.map((item) => item.toJson()).toList(),
       'sessions': sessions.map((item) => item.toJson()).toList(),
+      'userName': userName,
+      'preferredUnit': preferredUnit,
     };
   }
 }

@@ -9,7 +9,6 @@ import 'package:strength_training_tracker/src/app/app.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
-import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -54,12 +53,6 @@ Future<void> main() async {
     }
 
     initialState = await repository.load();
-
-    // If Firestore returned empty, seed with demo data
-    if (initialState.exercises.isEmpty && initialState.routines.isEmpty) {
-      initialState = DemoSeedData.initialState();
-      await repository.save(initialState);
-    }
   } catch (e) {
     // Fallback to SharedPreferences if Firebase fails
     debugPrint('Firebase init failed, falling back to local storage: $e');
