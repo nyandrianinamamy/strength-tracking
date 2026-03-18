@@ -367,6 +367,7 @@ class DemoSeedData {
       exercises: exercises,
       routines: routines,
       sessions: sessions,
+      userName: 'Alex',
     );
   }
 }

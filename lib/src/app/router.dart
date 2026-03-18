@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/features/dashboard/dashboard_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercises_screen.dart';
+import 'package:strength_training_tracker/src/features/onboarding/onboarding_screen.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routines_screen.dart';
@@ -12,7 +14,20 @@ import 'package:strength_training_tracker/src/shared/widgets/app_shell_scaffold.
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    redirect: (context, state) {
+      final appState = ref.read(initialAppStateProvider);
+      final isOnboarding = state.uri.toString() == '/onboarding';
+      final needsOnboarding = appState.userName.isEmpty;
+
+      if (needsOnboarding && !isOnboarding) return '/onboarding';
+      if (!needsOnboarding && isOnboarding) return '/';
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       ShellRoute(
         builder: (context, state, child) {
           return AppShellScaffold(
