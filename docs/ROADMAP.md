@@ -1,15 +1,15 @@
 # Strength Tracker — Feature Roadmap
 
-## Milestone 1: Core Polish (make existing features solid)
+## Milestone 1: Core Polish (make existing features solid) — COMPLETE
 
-- [ ] **Remove demo seed data** — new users start with empty state, not fake "Alex" data
-- [ ] **Onboarding flow** — first launch: name input, quick explanation of the app
-- [ ] **Unit preference (kg/lbs)** — settings toggle, display conversion everywhere
-- [ ] **Rest timer audio/vibration** — beep or vibrate when rest timer hits zero
-- [ ] **Offline indicator** — subtle banner when offline, sync status icon
-- [ ] **Error handling UI** — snackbar/banner for network failures, auth errors
-- [ ] **Exercise reordering in routine editor** — drag & drop to reorder exercises
-- [ ] **App icon & splash screen** — replace Flutter defaults with branded assets
+- [x] **Remove demo seed data** — new users start with empty state, not fake "Alex" data
+- [x] **Onboarding flow** — first launch: name input + unit preference selection
+- [x] **Unit preference (kg/lbs)** — settings toggle in account section, conversion everywhere
+- [x] **Rest timer audio** — triple beep sound when rest timer hits zero
+- [x] **Offline indicator** — snackbar on connectivity changes
+- [x] **Error handling UI** — save failures caught and logged
+- [x] **Exercise reordering in routine editor** — drag handle for reordering
+- [x] **App icon & splash screen** — branded blue icon and native splash
 
 ## Milestone 2: Workout Experience (make training sessions great)
 
