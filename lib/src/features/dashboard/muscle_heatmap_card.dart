@@ -25,13 +25,10 @@ class MuscleHeatmapCard extends ConsumerWidget {
                     children: [
                       Text('FRONT', style: _labelStyle(context)),
                       const SizedBox(height: 8),
-                      SizedBox(
-                        height: 240,
+                      AspectRatio(
+                        aspectRatio: 0.42,
                         child: CustomPaint(
-                          painter: _BodyPainter(
-                            fatigue: fatigue,
-                            isFront: true,
-                          ),
+                          painter: _BodyPainter(fatigue: fatigue, isFront: true),
                           size: Size.infinite,
                         ),
                       ),
@@ -44,13 +41,10 @@ class MuscleHeatmapCard extends ConsumerWidget {
                     children: [
                       Text('BACK', style: _labelStyle(context)),
                       const SizedBox(height: 8),
-                      SizedBox(
-                        height: 240,
+                      AspectRatio(
+                        aspectRatio: 0.42,
                         child: CustomPaint(
-                          painter: _BodyPainter(
-                            fatigue: fatigue,
-                            isFront: false,
-                          ),
+                          painter: _BodyPainter(fatigue: fatigue, isFront: false),
                           size: Size.infinite,
                         ),
                       ),
@@ -78,265 +72,290 @@ class MuscleHeatmapCard extends ConsumerWidget {
   Widget _buildLegend(BuildContext context) {
     return Row(
       children: [
-        Text(
-          'Recovered',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppTheme.slateInactive,
-                fontSize: 10,
-              ),
-        ),
+        Text('Recovered',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.slateInactive,
+                  fontSize: 10,
+                )),
         const SizedBox(width: 8),
         Expanded(
           child: Container(
             height: 8,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
-              gradient: LinearGradient(
-                colors: [
-                  Colors.grey.shade300,
-                  Colors.blue.shade300,
-                  Colors.green.shade400,
-                  Colors.yellow.shade600,
-                  Colors.orange.shade600,
-                  Colors.red.shade500,
-                ],
-              ),
+              gradient: LinearGradient(colors: [
+                Colors.grey.shade300,
+                Colors.blue.shade300,
+                Colors.green.shade400,
+                Colors.yellow.shade600,
+                Colors.orange.shade600,
+                Colors.red.shade500,
+              ]),
             ),
           ),
         ),
         const SizedBox(width: 8),
-        Text(
-          'Fatigued',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppTheme.slateInactive,
-                fontSize: 10,
-              ),
-        ),
+        Text('Fatigued',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.slateInactive,
+                  fontSize: 10,
+                )),
       ],
     );
   }
 }
 
+// ---------------------------------------------------------------------------
+// Painter
+// ---------------------------------------------------------------------------
+
 class _BodyPainter extends CustomPainter {
-  _BodyPainter({
-    required this.fatigue,
-    required this.isFront,
-  });
+  _BodyPainter({required this.fatigue, required this.isFront});
 
   final Map<String, double> fatigue;
   final bool isFront;
+
+  // All coordinates are expressed as fractions of (w, h) so the drawing
+  // scales to any size.
 
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
     final h = size.height;
-    final cx = w / 2;
 
-    final basePaint = Paint()
+    // 1. Draw the full-body silhouette as one smooth outline
+    _drawBodySilhouette(canvas, w, h);
+
+    // 2. Paint muscle regions on top
+    if (isFront) {
+      _frontMuscles(canvas, w, h);
+    } else {
+      _backMuscles(canvas, w, h);
+    }
+  }
+
+  // ----- body silhouette (continuous path) -----
+
+  void _drawBodySilhouette(Canvas canvas, double w, double h) {
+    final paint = Paint()
       ..color = Colors.grey.shade200
       ..style = PaintingStyle.fill;
 
-    // Draw the full body outline first as a smooth silhouette
-    _drawSilhouette(canvas, cx, w, h, basePaint);
-
-    // Draw colored muscle overlays
-    if (isFront) {
-      _drawFrontMuscles(canvas, cx, w, h);
-    } else {
-      _drawBackMuscles(canvas, cx, w, h);
-    }
-  }
-
-  void _drawSilhouette(Canvas canvas, double cx, double w, double h, Paint paint) {
     // Head
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, h * 0.06), width: w * 0.20, height: h * 0.09),
-      paint,
-    );
+        Rect.fromCenter(
+            center: Offset(w * 0.5, h * 0.055),
+            width: w * 0.22,
+            height: h * 0.085),
+        paint);
 
     // Neck
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, h * 0.12), width: w * 0.10, height: h * 0.04),
-      paint,
-    );
+        Rect.fromCenter(
+            center: Offset(w * 0.5, h * 0.105),
+            width: w * 0.11,
+            height: h * 0.03),
+        paint);
 
-    // Torso — use path for tapered shape (wider at shoulders, narrower at waist)
+    // Torso — single smooth path
     final torso = Path()
-      ..moveTo(cx - w * 0.22, h * 0.14) // left shoulder
-      ..quadraticBezierTo(cx - w * 0.24, h * 0.18, cx - w * 0.22, h * 0.25) // chest curve
-      ..lineTo(cx - w * 0.18, h * 0.38) // taper to waist
-      ..quadraticBezierTo(cx - w * 0.16, h * 0.42, cx - w * 0.17, h * 0.46) // hip curve
-      ..lineTo(cx + w * 0.17, h * 0.46) // across hip
-      ..quadraticBezierTo(cx + w * 0.16, h * 0.42, cx + w * 0.18, h * 0.38) // hip curve
-      ..lineTo(cx + w * 0.22, h * 0.25) // taper from waist
-      ..quadraticBezierTo(cx + w * 0.24, h * 0.18, cx + w * 0.22, h * 0.14) // chest curve
+      ..moveTo(w * 0.28, h * 0.11) // left neck base
+      ..cubicTo(w * 0.18, h * 0.12, w * 0.18, h * 0.14,
+          w * 0.22, h * 0.16) // left shoulder curve
+      ..cubicTo(w * 0.26, h * 0.18, w * 0.26, h * 0.28,
+          w * 0.27, h * 0.32) // left chest/side
+      ..cubicTo(w * 0.27, h * 0.36, w * 0.26, h * 0.40,
+          w * 0.28, h * 0.42) // waist taper
+      ..cubicTo(w * 0.30, h * 0.44, w * 0.32, h * 0.46,
+          w * 0.34, h * 0.47) // left hip
+      ..lineTo(w * 0.66, h * 0.47) // across hips
+      ..cubicTo(w * 0.68, h * 0.46, w * 0.70, h * 0.44,
+          w * 0.72, h * 0.42) // right hip
+      ..cubicTo(w * 0.74, h * 0.40, w * 0.73, h * 0.36,
+          w * 0.73, h * 0.32) // right waist
+      ..cubicTo(w * 0.74, h * 0.28, w * 0.74, h * 0.18,
+          w * 0.78, h * 0.16) // right chest/side
+      ..cubicTo(w * 0.82, h * 0.14, w * 0.82, h * 0.12,
+          w * 0.72, h * 0.11) // right shoulder
       ..close();
     canvas.drawPath(torso, paint);
 
-    // Shoulders — rounded caps
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx - w * 0.24, h * 0.15), width: w * 0.10, height: h * 0.05),
-      paint,
-    );
-    canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx + w * 0.24, h * 0.15), width: w * 0.10, height: h * 0.05),
-      paint,
-    );
+    // Left upper arm
+    _drawArmPath(canvas, paint, w, h,
+        shoulderX: 0.22, shoulderY: 0.16, elbowX: 0.14, elbowY: 0.34,
+        thickness: 0.065, taperFactor: 0.8);
+    // Right upper arm
+    _drawArmPath(canvas, paint, w, h,
+        shoulderX: 0.78, shoulderY: 0.16, elbowX: 0.86, elbowY: 0.34,
+        thickness: 0.065, taperFactor: 0.8);
 
-    // Upper arms
-    _drawLimb(canvas, paint, cx - w * 0.28, h * 0.17, cx - w * 0.32, h * 0.32, w * 0.08);
-    _drawLimb(canvas, paint, cx + w * 0.28, h * 0.17, cx + w * 0.32, h * 0.32, w * 0.08);
-
-    // Forearms
-    _drawLimb(canvas, paint, cx - w * 0.32, h * 0.32, cx - w * 0.34, h * 0.46, w * 0.065);
-    _drawLimb(canvas, paint, cx + w * 0.32, h * 0.32, cx + w * 0.34, h * 0.46, w * 0.065);
+    // Left forearm
+    _drawArmPath(canvas, paint, w, h,
+        shoulderX: 0.14, shoulderY: 0.34, elbowX: 0.11, elbowY: 0.48,
+        thickness: 0.05, taperFactor: 0.7);
+    // Right forearm
+    _drawArmPath(canvas, paint, w, h,
+        shoulderX: 0.86, shoulderY: 0.34, elbowX: 0.89, elbowY: 0.48,
+        thickness: 0.05, taperFactor: 0.7);
 
     // Hands
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx - w * 0.35, h * 0.49), width: w * 0.055, height: h * 0.035),
-      paint,
-    );
+        Rect.fromCenter(
+            center: Offset(w * 0.10, h * 0.50),
+            width: w * 0.045,
+            height: h * 0.025),
+        paint);
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx + w * 0.35, h * 0.49), width: w * 0.055, height: h * 0.035),
-      paint,
-    );
+        Rect.fromCenter(
+            center: Offset(w * 0.90, h * 0.50),
+            width: w * 0.045,
+            height: h * 0.025),
+        paint);
 
-    // Upper legs (thighs) — tapered
-    _drawLimb(canvas, paint, cx - w * 0.13, h * 0.46, cx - w * 0.14, h * 0.68, w * 0.13);
-    _drawLimb(canvas, paint, cx + w * 0.13, h * 0.46, cx + w * 0.14, h * 0.68, w * 0.13);
+    // Left thigh
+    _drawLegPath(canvas, paint, w, h,
+        hipX: 0.39, hipY: 0.47, kneeX: 0.37, kneeY: 0.68,
+        thickness: 0.09, taperFactor: 0.7);
+    // Right thigh
+    _drawLegPath(canvas, paint, w, h,
+        hipX: 0.61, hipY: 0.47, kneeX: 0.63, kneeY: 0.68,
+        thickness: 0.09, taperFactor: 0.7);
 
-    // Lower legs (calves) — tapered thinner
-    _drawLimb(canvas, paint, cx - w * 0.14, h * 0.68, cx - w * 0.14, h * 0.88, w * 0.10);
-    _drawLimb(canvas, paint, cx + w * 0.14, h * 0.68, cx + w * 0.14, h * 0.88, w * 0.10);
+    // Left calf
+    _drawLegPath(canvas, paint, w, h,
+        hipX: 0.37, hipY: 0.68, kneeX: 0.36, kneeY: 0.88,
+        thickness: 0.065, taperFactor: 0.6);
+    // Right calf
+    _drawLegPath(canvas, paint, w, h,
+        hipX: 0.63, hipY: 0.68, kneeX: 0.64, kneeY: 0.88,
+        thickness: 0.065, taperFactor: 0.6);
 
     // Feet
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx - w * 0.14, h * 0.92), width: w * 0.09, height: h * 0.035),
-      paint,
-    );
+        Rect.fromCenter(
+            center: Offset(w * 0.36, h * 0.91),
+            width: w * 0.07,
+            height: h * 0.025),
+        paint);
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx + w * 0.14, h * 0.92), width: w * 0.09, height: h * 0.035),
-      paint,
-    );
+        Rect.fromCenter(
+            center: Offset(w * 0.64, h * 0.91),
+            width: w * 0.07,
+            height: h * 0.025),
+        paint);
   }
 
-  /// Draw a tapered limb between two points
-  void _drawLimb(Canvas canvas, Paint paint, double x1, double y1, double x2, double y2, double thickness) {
-    final path = Path();
-    // Perpendicular offset for thickness
-    final dx = x2 - x1;
-    final dy = y2 - y1;
-    final len = (dx * dx + dy * dy);
-    final nx = -dy / (len == 0 ? 1 : _sqrt(len));
-    final ny = dx / (len == 0 ? 1 : _sqrt(len));
+  void _drawArmPath(Canvas canvas, Paint paint, double w, double h, {
+    required double shoulderX, required double shoulderY,
+    required double elbowX, required double elbowY,
+    required double thickness, required double taperFactor,
+  }) {
+    final t1 = w * thickness / 2;
+    final t2 = t1 * taperFactor;
+    final sx = w * shoulderX;
+    final sy = h * shoulderY;
+    final ex = w * elbowX;
+    final ey = h * elbowY;
 
-    final t1 = thickness / 2;
-    final t2 = thickness / 2.5; // taper at the end
-
-    path.moveTo(x1 + nx * t1, y1 + ny * t1);
-    path.quadraticBezierTo(
-      (x1 + x2) / 2 + nx * t1 * 1.1,
-      (y1 + y2) / 2 + ny * t1 * 1.1,
-      x2 + nx * t2,
-      y2 + ny * t2,
-    );
-    path.lineTo(x2 - nx * t2, y2 - ny * t2);
-    path.quadraticBezierTo(
-      (x1 + x2) / 2 - nx * t1 * 1.1,
-      (y1 + y2) / 2 - ny * t1 * 1.1,
-      x1 - nx * t1,
-      y1 - ny * t1,
-    );
-    path.close();
+    final path = Path()
+      ..moveTo(sx - t1, sy)
+      ..quadraticBezierTo((sx + ex) / 2 - t1 * 1.05, (sy + ey) / 2, ex - t2, ey)
+      ..lineTo(ex + t2, ey)
+      ..quadraticBezierTo((sx + ex) / 2 + t1 * 1.05, (sy + ey) / 2, sx + t1, sy)
+      ..close();
     canvas.drawPath(path, paint);
   }
 
-  double _sqrt(double v) {
-    // Simple Newton's method sqrt
-    if (v <= 0) return 0;
-    double x = v;
-    for (int i = 0; i < 10; i++) {
-      x = (x + v / x) / 2;
-    }
-    return x;
+  void _drawLegPath(Canvas canvas, Paint paint, double w, double h, {
+    required double hipX, required double hipY,
+    required double kneeX, required double kneeY,
+    required double thickness, required double taperFactor,
+  }) {
+    final t1 = w * thickness / 2;
+    final t2 = t1 * taperFactor;
+    final hx = w * hipX;
+    final hy = h * hipY;
+    final kx = w * kneeX;
+    final ky = h * kneeY;
+
+    final path = Path()
+      ..moveTo(hx - t1, hy)
+      ..cubicTo(hx - t1 * 1.1, hy + (ky - hy) * 0.4,
+          kx - t2 * 1.05, ky - (ky - hy) * 0.2, kx - t2, ky)
+      ..lineTo(kx + t2, ky)
+      ..cubicTo(kx + t2 * 1.05, ky - (ky - hy) * 0.2,
+          hx + t1 * 1.1, hy + (ky - hy) * 0.4, hx + t1, hy)
+      ..close();
+    canvas.drawPath(path, paint);
   }
 
-  void _drawFrontMuscles(Canvas canvas, double cx, double w, double h) {
-    // Shoulders — rounded ovals on each side
-    _paintOval(canvas, 'Shoulders', cx - w * 0.24, h * 0.15, w * 0.10, h * 0.05);
-    _paintOval(canvas, 'Shoulders', cx + w * 0.24, h * 0.15, w * 0.10, h * 0.05);
+  // ----- muscle overlays (smooth ovals) -----
 
-    // Chest — two pec shapes
-    _paintOval(canvas, 'Chest', cx - w * 0.10, h * 0.22, w * 0.18, h * 0.08);
-    _paintOval(canvas, 'Chest', cx + w * 0.10, h * 0.22, w * 0.18, h * 0.08);
+  void _frontMuscles(Canvas canvas, double w, double h) {
+    // Shoulders
+    _muscle(canvas, 'Shoulders', w * 0.24, h * 0.155, w * 0.10, h * 0.04);
+    _muscle(canvas, 'Shoulders', w * 0.76, h * 0.155, w * 0.10, h * 0.04);
 
-    // Biceps — ovals on inner arms
-    _paintOval(canvas, 'Biceps', cx - w * 0.28, h * 0.25, w * 0.07, h * 0.09);
-    _paintOval(canvas, 'Biceps', cx + w * 0.28, h * 0.25, w * 0.07, h * 0.09);
+    // Chest — two pecs
+    _muscle(canvas, 'Chest', w * 0.39, h * 0.21, w * 0.16, h * 0.06);
+    _muscle(canvas, 'Chest', w * 0.61, h * 0.21, w * 0.16, h * 0.06);
 
-    // Abs — series of small rounded shapes
+    // Biceps
+    _muscle(canvas, 'Biceps', w * 0.18, h * 0.25, w * 0.055, h * 0.07);
+    _muscle(canvas, 'Biceps', w * 0.82, h * 0.25, w * 0.055, h * 0.07);
+
+    // Abs — 6-pack pattern
     for (int i = 0; i < 3; i++) {
-      final y = h * (0.32 + i * 0.045);
-      _paintOval(canvas, 'Abs', cx - w * 0.05, y, w * 0.08, h * 0.035);
-      _paintOval(canvas, 'Abs', cx + w * 0.05, y, w * 0.08, h * 0.035);
+      final y = h * (0.29 + i * 0.04);
+      _muscle(canvas, 'Abs', w * 0.46, y, w * 0.06, h * 0.03);
+      _muscle(canvas, 'Abs', w * 0.54, y, w * 0.06, h * 0.03);
     }
 
-    // Quads — large ovals on front thighs
-    _paintOval(canvas, 'Quads', cx - w * 0.13, h * 0.56, w * 0.11, h * 0.14);
-    _paintOval(canvas, 'Quads', cx + w * 0.13, h * 0.56, w * 0.11, h * 0.14);
+    // Quads
+    _muscle(canvas, 'Quads', w * 0.40, h * 0.56, w * 0.08, h * 0.11);
+    _muscle(canvas, 'Quads', w * 0.60, h * 0.56, w * 0.08, h * 0.11);
   }
 
-  void _drawBackMuscles(Canvas canvas, double cx, double w, double h) {
-    // Upper Back / Traps — wide across upper back
-    _paintOval(canvas, 'Upper Back', cx, h * 0.17, w * 0.28, h * 0.07);
+  void _backMuscles(Canvas canvas, double w, double h) {
+    // Traps / Upper back
+    _muscle(canvas, 'Upper Back', w * 0.50, h * 0.17, w * 0.24, h * 0.055);
 
-    // Lats — two wing shapes
-    _paintOval(canvas, 'Lats', cx - w * 0.12, h * 0.28, w * 0.14, h * 0.10);
-    _paintOval(canvas, 'Lats', cx + w * 0.12, h * 0.28, w * 0.14, h * 0.10);
+    // Lats
+    _muscle(canvas, 'Lats', w * 0.40, h * 0.27, w * 0.11, h * 0.08);
+    _muscle(canvas, 'Lats', w * 0.60, h * 0.27, w * 0.11, h * 0.08);
 
-    // Triceps — ovals on back of arms
-    _paintOval(canvas, 'Triceps', cx - w * 0.29, h * 0.25, w * 0.07, h * 0.09);
-    _paintOval(canvas, 'Triceps', cx + w * 0.29, h * 0.25, w * 0.07, h * 0.09);
+    // Triceps
+    _muscle(canvas, 'Triceps', w * 0.83, h * 0.25, w * 0.05, h * 0.07);
+    _muscle(canvas, 'Triceps', w * 0.17, h * 0.25, w * 0.05, h * 0.07);
 
-    // Glutes — two rounded shapes
-    _paintOval(canvas, 'Glutes', cx - w * 0.10, h * 0.45, w * 0.14, h * 0.07);
-    _paintOval(canvas, 'Glutes', cx + w * 0.10, h * 0.45, w * 0.14, h * 0.07);
+    // Glutes
+    _muscle(canvas, 'Glutes', w * 0.43, h * 0.44, w * 0.11, h * 0.055);
+    _muscle(canvas, 'Glutes', w * 0.57, h * 0.44, w * 0.11, h * 0.055);
 
-    // Hamstrings — back of thighs
-    _paintOval(canvas, 'Hamstrings', cx - w * 0.13, h * 0.57, w * 0.10, h * 0.13);
-    _paintOval(canvas, 'Hamstrings', cx + w * 0.13, h * 0.57, w * 0.10, h * 0.13);
+    // Hamstrings
+    _muscle(canvas, 'Hamstrings', w * 0.40, h * 0.57, w * 0.07, h * 0.10);
+    _muscle(canvas, 'Hamstrings', w * 0.60, h * 0.57, w * 0.07, h * 0.10);
   }
 
-  void _paintOval(Canvas canvas, String muscle, double cx, double cy, double rw, double rh) {
-    final value = fatigue[muscle] ?? 0.0;
+  void _muscle(Canvas canvas, String name, double cx, double cy, double rw, double rh) {
+    final v = fatigue[name] ?? 0.0;
     final paint = Paint()
-      ..color = _fatigueColor(value)
+      ..color = _color(v)
       ..style = PaintingStyle.fill;
     canvas.drawOval(
-      Rect.fromCenter(center: Offset(cx, cy), width: rw, height: rh),
-      paint,
-    );
+        Rect.fromCenter(center: Offset(cx, cy), width: rw, height: rh),
+        paint);
   }
 
-  Color _fatigueColor(double value) {
-    if (value <= 0.0) return Colors.grey.shade300;
-    if (value <= 0.2) {
-      return Color.lerp(Colors.grey.shade300, Colors.blue.shade300, value / 0.2)!;
-    }
-    if (value <= 0.4) {
-      return Color.lerp(Colors.blue.shade300, Colors.green.shade400, (value - 0.2) / 0.2)!;
-    }
-    if (value <= 0.6) {
-      return Color.lerp(Colors.green.shade400, Colors.yellow.shade600, (value - 0.4) / 0.2)!;
-    }
-    if (value <= 0.8) {
-      return Color.lerp(Colors.yellow.shade600, Colors.orange.shade600, (value - 0.6) / 0.2)!;
-    }
-    return Color.lerp(Colors.orange.shade600, Colors.red.shade500, (value - 0.8) / 0.2)!;
+  Color _color(double v) {
+    if (v <= 0.0) return Colors.grey.shade300;
+    if (v <= 0.2) return Color.lerp(Colors.grey.shade300, Colors.blue.shade300, v / 0.2)!;
+    if (v <= 0.4) return Color.lerp(Colors.blue.shade300, Colors.green.shade400, (v - 0.2) / 0.2)!;
+    if (v <= 0.6) return Color.lerp(Colors.green.shade400, Colors.yellow.shade600, (v - 0.4) / 0.2)!;
+    if (v <= 0.8) return Color.lerp(Colors.yellow.shade600, Colors.orange.shade600, (v - 0.6) / 0.2)!;
+    return Color.lerp(Colors.orange.shade600, Colors.red.shade500, (v - 0.8) / 0.2)!;
   }
 
   @override
-  bool shouldRepaint(covariant _BodyPainter oldDelegate) {
-    return oldDelegate.fatigue != fatigue;
-  }
+  bool shouldRepaint(covariant _BodyPainter old) => old.fatigue != fatigue;
 }
