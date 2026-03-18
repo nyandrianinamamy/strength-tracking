@@ -10,3 +10,4 @@
     which will be used to determine the optimal rest time for each muscle group.
 [ ] Clicking on a date in workout frequency should show the workout for that date if it exists.
 [ ] Add images for exercises.
+[ ] Option to fill with preseed data and clear preseed data.

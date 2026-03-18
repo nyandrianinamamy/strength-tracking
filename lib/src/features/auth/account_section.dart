@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
-import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
@@ -134,29 +133,31 @@ class AccountSection extends ConsumerWidget {
             const SizedBox(height: 12),
             _AuthButton(
               icon: Icons.download_rounded,
-              label: 'Load Sample Data',
+              label: 'Load Sample Exercises & Routines',
               onTap: () {
-                final sampleState = DemoSeedData.initialState().copyWith(
-                  userName: ref.read(appStateControllerProvider).userName,
-                  preferredUnit: ref.read(appStateControllerProvider).preferredUnit,
+                final sample = DemoSeedData.initialState();
+                ref.read(appStateControllerProvider.notifier).updateState(
+                  (s) => s.copyWith(
+                    exercises: [...s.exercises, ...sample.exercises],
+                    routines: [...s.routines, ...sample.routines],
+                  ),
                 );
-                ref.read(appStateControllerProvider.notifier).replaceState(sampleState);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Sample data loaded')),
+                  const SnackBar(content: Text('Sample exercises & routines loaded')),
                 );
               },
             ),
             const SizedBox(height: 12),
             _AuthButton(
               icon: Icons.delete_outline_rounded,
-              label: 'Clear All Data',
+              label: 'Clear Exercises & Routines',
               onTap: () {
                 showDialog(
                   context: context,
                   builder: (dialogContext) => AlertDialog(
-                    title: const Text('Clear All Data?'),
-                    content: const Text('This will delete all your exercises, routines, and workout history. This cannot be undone.'),
+                    title: const Text('Clear Exercises & Routines?'),
+                    content: const Text('This will delete all exercises and routines. Your workout history will be kept.'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogContext),
@@ -166,12 +167,15 @@ class AccountSection extends ConsumerWidget {
                         onPressed: () {
                           Navigator.pop(dialogContext);
                           Navigator.pop(context);
-                          ref.read(appStateControllerProvider.notifier).replaceState(
-                            AppState.empty(),
+                          ref.read(appStateControllerProvider.notifier).updateState(
+                            (s) => s.copyWith(exercises: [], routines: []),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Exercises & routines cleared')),
                           );
                         },
                         style: TextButton.styleFrom(foregroundColor: Colors.red),
-                        child: const Text('Delete Everything'),
+                        child: const Text('Clear'),
                       ),
                     ],
                   ),
