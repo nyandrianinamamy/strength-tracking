@@ -15,7 +15,7 @@ import 'package:strength_training_tracker/src/shared/widgets/app_shell_scaffold.
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     redirect: (context, state) {
-      final appState = ref.read(initialAppStateProvider);
+      final appState = ref.read(appStateControllerProvider);
       final isOnboarding = state.uri.toString() == '/onboarding';
       final needsOnboarding = appState.userName.isEmpty;
 
