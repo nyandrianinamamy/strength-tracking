@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
 class AccountSection extends ConsumerWidget {
@@ -122,7 +124,60 @@ class AccountSection extends ConsumerWidget {
                 );
               },
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            Text(
+              'Data',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            _AuthButton(
+              icon: Icons.download_rounded,
+              label: 'Load Sample Data',
+              onTap: () {
+                final sampleState = DemoSeedData.initialState().copyWith(
+                  userName: ref.read(appStateControllerProvider).userName,
+                  preferredUnit: ref.read(appStateControllerProvider).preferredUnit,
+                );
+                ref.read(appStateControllerProvider.notifier).replaceState(sampleState);
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Sample data loaded')),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+            _AuthButton(
+              icon: Icons.delete_outline_rounded,
+              label: 'Clear All Data',
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Clear All Data?'),
+                    content: const Text('This will delete all your exercises, routines, and workout history. This cannot be undone.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          Navigator.pop(context);
+                          ref.read(appStateControllerProvider.notifier).replaceState(
+                            AppState.empty(),
+                          );
+                        },
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        child: const Text('Delete Everything'),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),

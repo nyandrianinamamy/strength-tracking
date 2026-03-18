@@ -521,9 +521,14 @@ class CategoryChips extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class WorkoutFrequencyCalendar extends StatelessWidget {
-  const WorkoutFrequencyCalendar({super.key, required this.frequency});
+  const WorkoutFrequencyCalendar({
+    super.key,
+    required this.frequency,
+    this.onDateTap,
+  });
 
   final MonthFrequency frequency;
+  final void Function(DateTime date, int workoutCount)? onDateTap;
 
   @override
   Widget build(BuildContext context) {
@@ -600,20 +605,25 @@ class WorkoutFrequencyCalendar extends StatelessWidget {
                       background == null ? AppTheme.primary : foreground;
                 }
 
-                return DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: background,
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.fromBorderSide(side),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${day.date.day}',
-                      style: TextStyle(
-                        color: foreground,
-                        fontWeight: day.workouts > 0 || day.isToday
-                            ? FontWeight.w800
-                            : FontWeight.w500,
+                return GestureDetector(
+                  onTap: day.inMonth && day.workouts > 0
+                      ? () => onDateTap?.call(day.date, day.workouts)
+                      : null,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: background,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.fromBorderSide(side),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '${day.date.day}',
+                        style: TextStyle(
+                          color: foreground,
+                          fontWeight: day.workouts > 0 || day.isToday
+                              ? FontWeight.w800
+                              : FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),

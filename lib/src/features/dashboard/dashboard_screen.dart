@@ -339,7 +339,103 @@ class DashboardScreen extends ConsumerWidget {
         // Step 5: Workout Frequency
         PageSection(
           title: 'Workout Frequency',
-          child: WorkoutFrequencyCalendar(frequency: snapshot.monthFrequency),
+          child: WorkoutFrequencyCalendar(
+            frequency: snapshot.monthFrequency,
+            onDateTap: (date, count) {
+              // Find workouts on this date
+              final dayWorkouts = state.completedSessions.where((session) {
+                final sessionDate = session.endedAt ?? session.startedAt;
+                return sessionDate.year == date.year &&
+                    sessionDate.month == date.month &&
+                    sessionDate.day == date.day;
+              }).toList();
+
+              if (dayWorkouts.isEmpty) return;
+
+              showModalBottomSheet(
+                context: context,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (_) => SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Center(
+                          child: Container(
+                            width: 40,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: AppTheme.border,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          AppFormatters.weekdayMonthDay(date),
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${dayWorkouts.length} workout${dayWorkouts.length > 1 ? 's' : ''}',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.slateInactive,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ...dayWorkouts.map((workout) {
+                          final routine = state.routineById(workout.routineId);
+                          final duration = (workout.endedAt ?? workout.startedAt)
+                              .difference(workout.startedAt);
+                          final volume = workout.completedSets.fold<double>(
+                            0,
+                            (sum, set) => sum + (set.weightKg * set.reps),
+                          );
+                          return Card(
+                            margin: const EdgeInsets.only(bottom: 10),
+                            child: ListTile(
+                              onTap: () {
+                                Navigator.pop(context);
+                                context.push('/workout/${workout.id}/summary');
+                              },
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 18,
+                                vertical: 8,
+                              ),
+                              leading: CircleAvatar(
+                                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                                child: const Icon(
+                                  Icons.fitness_center_rounded,
+                                  color: AppTheme.primary,
+                                ),
+                              ),
+                              title: Text(
+                                routine?.name ?? 'Workout',
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                              subtitle: Text(
+                                '${AppFormatters.duration(duration)} \u2022 ${workout.completedSets.length} sets',
+                              ),
+                              trailing: Text(
+                                AppFormatters.weight(volume, state.preferredUnit),
+                                style: const TextStyle(fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
         const SizedBox(height: 28),
 
