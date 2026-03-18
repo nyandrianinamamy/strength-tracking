@@ -387,6 +387,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   remainingRest: _remainingRest,
                   onLogSet: _resetRestTimer,
                   onShowComment: () => _showCommentDialog(context),
+                  preferredUnit: state.preferredUnit,
                 );
               },
             ),
@@ -465,6 +466,7 @@ class _ExercisePage extends StatelessWidget {
     required this.remainingRest,
     required this.onLogSet,
     required this.onShowComment,
+    required this.preferredUnit,
   });
 
   final int pageIndex;
@@ -480,6 +482,7 @@ class _ExercisePage extends StatelessWidget {
   final int remainingRest;
   final ValueChanged<int> onLogSet;
   final VoidCallback onShowComment;
+  final String preferredUnit;
 
   @override
   Widget build(BuildContext context) {
@@ -506,7 +509,7 @@ class _ExercisePage extends StatelessWidget {
               : null;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         weightController.text =
-            lastSet == null ? '' : AppFormatters.decimal(lastSet.weightKg);
+            lastSet == null ? '' : AppFormatters.decimal(AppFormatters.convertWeight(lastSet.weightKg, preferredUnit));
         repsController.text =
             lastSet?.reps.toString() ?? '${prescription.targetReps}';
         setNoteController.clear();
@@ -586,7 +589,7 @@ class _ExercisePage extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    'WEIGHT (KG)',
+                    'WEIGHT (${preferredUnit.toUpperCase()})',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: AppTheme.slateInactive,
                           fontWeight: FontWeight.w700,
@@ -646,9 +649,10 @@ class _ExercisePage extends StatelessWidget {
                 height: 56,
                 child: FilledButton.icon(
                   onPressed: () {
-                    final weight = double.tryParse(
+                    final rawWeight = double.tryParse(
                       weightController.text.replaceAll(',', '.'),
                     );
+                    final weight = rawWeight == null ? null : AppFormatters.convertToKg(rawWeight, preferredUnit);
                     final reps = int.tryParse(repsController.text);
                     if (weight == null || reps == null || reps <= 0) return;
 
@@ -723,7 +727,7 @@ class _ExercisePage extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 10),
                       child: ListTile(
                         title: Text(
-                          'Set ${set.setNumber}: ${AppFormatters.decimal(set.weightKg)} kg x ${set.reps}',
+                          'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
                           style:
                               const TextStyle(fontWeight: FontWeight.w800),
                         ),
@@ -754,7 +758,7 @@ class _ExercisePage extends StatelessWidget {
                         title: Row(
                           children: [
                             Text(
-                              '${AppFormatters.decimal(set.weightKg)} kg x ${set.reps}',
+                              '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
                               style: const TextStyle(
                                   fontWeight: FontWeight.w800),
                             ),

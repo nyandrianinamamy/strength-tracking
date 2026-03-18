@@ -117,8 +117,8 @@ class WorkoutSummaryScreen extends ConsumerWidget {
               Expanded(
                 child: StatCard(
                   label: 'Volume',
-                  value: '${AppFormatters.decimal(totalVolume)} kg',
-                  subtext: 'KG',
+                  value: AppFormatters.weight(totalVolume, state.preferredUnit),
+                  subtext: state.preferredUnit.toUpperCase(),
                   showAccent: true,
                 ),
               ),
@@ -183,7 +183,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${AppFormatters.decimal(pr.weightKg)}kg x ${pr.reps}',
+                                '${AppFormatters.weight(pr.weightKg, state.preferredUnit)} x ${pr.reps}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleLarge
@@ -264,7 +264,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 6),
                             child: Text(
-                              'Set ${set.setNumber}: ${AppFormatters.decimal(set.weightKg)} kg x ${set.reps}',
+                              'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, state.preferredUnit)} x ${set.reps}',
                             ),
                           );
                         }),

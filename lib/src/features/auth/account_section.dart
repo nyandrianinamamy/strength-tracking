@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
@@ -101,6 +102,26 @@ class AccountSection extends ConsumerWidget {
                     ?.copyWith(color: AppTheme.slateInactive),
               ),
             ],
+            const SizedBox(height: 24),
+            const Divider(),
+            const SizedBox(height: 16),
+            Text(
+              'Unit Preference',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'kg', label: Text('KG')),
+                ButtonSegment(value: 'lbs', label: Text('LBS')),
+              ],
+              selected: {ref.watch(appStateControllerProvider).preferredUnit},
+              onSelectionChanged: (values) {
+                ref.read(appStateControllerProvider.notifier).updateState(
+                  (s) => s.copyWith(preferredUnit: values.first),
+                );
+              },
+            ),
             const SizedBox(height: 8),
           ],
         ),

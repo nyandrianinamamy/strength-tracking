@@ -40,22 +40,27 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Welcome back,',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.slateInactive,
-                      ),
-                ),
-                Text(
-                  'Alex',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-              ],
+            Builder(
+              builder: (context) {
+                final userName = state.userName.isEmpty ? 'Athlete' : state.userName;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Welcome back,',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.slateInactive,
+                          ),
+                    ),
+                    Text(
+                      userName,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                  ],
+                );
+              },
             ),
             const Spacer(),
             Stack(
@@ -309,7 +314,7 @@ class DashboardScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '${AppFormatters.decimal(workout.totalVolumeKg)} kg',
+                              AppFormatters.weight(workout.totalVolumeKg, state.preferredUnit),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                               ),
@@ -376,7 +381,7 @@ class DashboardScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              '${AppFormatters.decimal(record.weightKg)} kg x ${record.reps}',
+                              '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps}',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                               ),

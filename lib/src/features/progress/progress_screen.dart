@@ -12,9 +12,10 @@ class ProgressScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(appStateControllerProvider);
     final snapshot = ref
         .read(progressServiceProvider)
-        .progressSnapshot(ref.watch(appStateControllerProvider));
+        .progressSnapshot(state);
 
     return DefaultTabController(
       length: 3,
@@ -95,7 +96,7 @@ class ProgressScreen extends ConsumerWidget {
                                 ),
                               ),
                               subtitle: Text(
-                                '${AppFormatters.decimal(record.weightKg)} kg x ${record.reps} • ${AppFormatters.monthDay(record.achievedAt)}',
+                                '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps} • ${AppFormatters.monthDay(record.achievedAt)}',
                               ),
                               trailing: Text(
                                 AppFormatters.decimal(
@@ -136,12 +137,12 @@ class ProgressScreen extends ConsumerWidget {
                                 _LiftChip(
                                   label: 'Best Set',
                                   value:
-                                      '${AppFormatters.decimal(lift.bestSetWeightKg)} kg x ${lift.reps}',
+                                      '${AppFormatters.weight(lift.bestSetWeightKg, state.preferredUnit)} x ${lift.reps}',
                                 ),
                                 _LiftChip(
                                   label: 'Estimated 1RM',
                                   value:
-                                      '${AppFormatters.decimal(lift.estimatedOneRepMax)} kg',
+                                      AppFormatters.weight(lift.estimatedOneRepMax, state.preferredUnit),
                                 ),
                                 _LiftChip(
                                   label: 'Achieved',
@@ -186,7 +187,7 @@ class ProgressScreen extends ConsumerWidget {
                                 ),
                               ),
                               trailing: Text(
-                                '${AppFormatters.decimal(point.totalVolumeKg)} kg',
+                                AppFormatters.weight(point.totalVolumeKg, state.preferredUnit),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w900,
                                 ),
