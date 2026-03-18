@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
+import 'package:strength_training_tracker/src/features/auth/account_section.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -60,7 +61,15 @@ class DashboardScreen extends ConsumerWidget {
             Stack(
               children: [
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                      ),
+                      builder: (_) => const AccountSection(),
+                    );
+                  },
                   icon: const Icon(Icons.notifications_none),
                 ),
                 Positioned(
