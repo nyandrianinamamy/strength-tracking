@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
@@ -148,110 +149,23 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
               ),
             )
           else
-            ..._exercises.asMap().entries.map((entry) {
-              final index = entry.key;
-              final item = entry.value;
-              final exercise = state.exerciseById(item.exerciseId);
-              final muscles =
-                  exercise?.primaryMuscles.join(', ') ?? '';
-
-              return Card(
-                margin: const EdgeInsets.only(bottom: 14),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(Icons.fitness_center,
-                                color: AppTheme.slateInactive),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  exercise?.name ?? 'Exercise',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
-                                      ?.copyWith(fontWeight: FontWeight.w800),
-                                ),
-                                if (muscles.isNotEmpty)
-                                  Text(
-                                    muscles,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppTheme.slateInactive,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete_outline,
-                                color: AppTheme.slateInactive),
-                            onPressed: () {
-                              setState(() {
-                                _exercises.removeAt(index);
-                                _reindexExercises();
-                              });
-                            },
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _StepperField(
-                              label: 'SETS',
-                              value: item.targetSets,
-                              onChanged: (value) => _updateExercise(
-                                index,
-                                item.copyWith(targetSets: value),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _StepperField(
-                              label: 'REPS',
-                              value: item.targetReps,
-                              onChanged: (value) => _updateExercise(
-                                index,
-                                item.copyWith(targetReps: value),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: _StepperField(
-                              label: 'REST',
-                              value: item.restSeconds,
-                              step: 15,
-                              suffix: 's',
-                              onChanged: (value) => _updateExercise(
-                                index,
-                                item.copyWith(restSeconds: value),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
+            ReorderableListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              onReorder: (oldIndex, newIndex) {
+                setState(() {
+                  if (newIndex > oldIndex) newIndex--;
+                  final item = _exercises.removeAt(oldIndex);
+                  _exercises.insert(newIndex, item);
+                  _reindexExercises();
+                });
+              },
+              children: [
+                for (final entry in _exercises.asMap().entries)
+                  _buildExerciseCard(context, state, entry.key, entry.value),
+              ],
+            ),
           if (_exercises.isNotEmpty) ...[
             DashedBorderCard(
               onTap: availableExercises.isEmpty
@@ -307,6 +221,119 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
             ),
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildExerciseCard(
+    BuildContext context,
+    AppState state,
+    int index,
+    RoutineExercise item,
+  ) {
+    final exercise = state.exerciseById(item.exerciseId);
+    final muscles = exercise?.primaryMuscles.join(', ') ?? '';
+
+    return Card(
+      key: ValueKey(index),
+      margin: const EdgeInsets.only(bottom: 14),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.fitness_center,
+                      color: AppTheme.slateInactive),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        exercise?.name ?? 'Exercise',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w800),
+                      ),
+                      if (muscles.isNotEmpty)
+                        Text(
+                          muscles,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.slateInactive,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline,
+                      color: AppTheme.slateInactive),
+                  onPressed: () {
+                    setState(() {
+                      _exercises.removeAt(index);
+                      _reindexExercises();
+                    });
+                  },
+                ),
+                ReorderableDragStartListener(
+                  index: index,
+                  child: const Icon(Icons.drag_handle,
+                      color: AppTheme.slateInactive),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _StepperField(
+                    label: 'SETS',
+                    value: item.targetSets,
+                    onChanged: (value) => _updateExercise(
+                      index,
+                      item.copyWith(targetSets: value),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StepperField(
+                    label: 'REPS',
+                    value: item.targetReps,
+                    onChanged: (value) => _updateExercise(
+                      index,
+                      item.copyWith(targetReps: value),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _StepperField(
+                    label: 'REST',
+                    value: item.restSeconds,
+                    step: 15,
+                    suffix: 's',
+                    onChanged: (value) => _updateExercise(
+                      index,
+                      item.copyWith(restSeconds: value),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
