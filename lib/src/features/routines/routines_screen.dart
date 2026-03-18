@@ -128,9 +128,12 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
           ...routines.map((routine) {
             return Card(
               margin: const EdgeInsets.only(bottom: 14),
-              child: Padding(
-                padding: const EdgeInsets.all(14),
-                child: Row(
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: () => context.push('/routine/${routine.id}/edit'),
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
                   children: [
                     Container(
                       width: 56,
@@ -191,6 +194,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                   ],
                 ),
               ),
+            ),
             );
           }),
       ],

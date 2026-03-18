@@ -74,13 +74,6 @@ class ProgressScreen extends ConsumerWidget {
                         ),
                     const SizedBox(height: 28),
                     PageSection(
-                      title: 'Workout Frequency',
-                      child: WorkoutFrequencyCalendar(
-                        frequency: snapshot.monthFrequency,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    PageSection(
                       title: 'Personal Records',
                       child: Column(
                         children: snapshot.personalRecords.take(6).map((

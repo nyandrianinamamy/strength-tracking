@@ -322,7 +322,8 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                   child: _StepperField(
                     label: 'REST',
                     value: item.restSeconds,
-                    step: 15,
+                    step: 10,
+                    min: 0,
                     suffix: 's',
                     onChanged: (value) => _updateExercise(
                       index,
@@ -438,6 +439,7 @@ class _StepperField extends StatelessWidget {
     required this.onChanged,
     this.step = 1,
     this.suffix,
+    this.min = 1,
   });
 
   final String label;
@@ -445,6 +447,7 @@ class _StepperField extends StatelessWidget {
   final ValueChanged<int> onChanged;
   final int step;
   final String? suffix;
+  final int min;
 
   @override
   Widget build(BuildContext context) {
@@ -469,7 +472,7 @@ class _StepperField extends StatelessWidget {
             Row(
               children: [
                 GestureDetector(
-                  onTap: () => onChanged((value - step).clamp(step, 999)),
+                  onTap: () => onChanged((value - step).clamp(min, 999)),
                   child: Container(
                     width: 28,
                     height: 28,
@@ -481,11 +484,14 @@ class _StepperField extends StatelessWidget {
                   ),
                 ),
                 Expanded(
-                  child: Text(
-                    suffix != null ? '$value$suffix' : '$value',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      suffix != null ? '$value$suffix' : '$value',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                 ),
