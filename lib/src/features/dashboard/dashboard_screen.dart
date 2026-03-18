@@ -69,10 +69,17 @@ class DashboardScreen extends ConsumerWidget {
                   onPressed: () {
                     showModalBottomSheet(
                       context: context,
+                      isScrollControlled: true,
                       shape: const RoundedRectangleBorder(
                         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                       ),
-                      builder: (_) => const AccountSection(),
+                      builder: (_) => DraggableScrollableSheet(
+                        initialChildSize: 0.7,
+                        minChildSize: 0.4,
+                        maxChildSize: 0.9,
+                        expand: false,
+                        builder: (_, __) => const AccountSection(),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.notifications_none),
