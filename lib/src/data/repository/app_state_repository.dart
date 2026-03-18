@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
@@ -46,4 +47,31 @@ class MemoryAppStateRepository implements AppStateRepository {
   }
 
   AppState get state => _state;
+}
+
+class FirestoreAppStateRepository implements AppStateRepository {
+  FirestoreAppStateRepository({
+    required this.userId,
+    FirebaseFirestore? firestore,
+  }) : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final String userId;
+  final FirebaseFirestore _firestore;
+
+  DocumentReference<Map<String, dynamic>> get _doc =>
+      _firestore.collection('users').doc(userId).collection('data').doc('state');
+
+  @override
+  Future<AppState> load() async {
+    final snapshot = await _doc.get();
+    if (!snapshot.exists || snapshot.data() == null) {
+      return AppState.empty();
+    }
+    return AppState.fromJson(snapshot.data()!);
+  }
+
+  @override
+  Future<void> save(AppState state) async {
+    await _doc.set(state.toJson());
+  }
 }
