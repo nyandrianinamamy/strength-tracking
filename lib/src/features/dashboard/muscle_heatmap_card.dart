@@ -292,49 +292,49 @@ class _BodyPainter extends CustomPainter {
   // ----- muscle overlays (smooth ovals) -----
 
   void _frontMuscles(Canvas canvas, double w, double h) {
-    // Shoulders
-    _muscle(canvas, 'Shoulders', w * 0.24, h * 0.155, w * 0.10, h * 0.04);
-    _muscle(canvas, 'Shoulders', w * 0.76, h * 0.155, w * 0.10, h * 0.04);
+    // Shoulders — small caps on top of arms
+    _muscle(canvas, 'Shoulders', w * 0.24, h * 0.155, w * 0.08, h * 0.032);
+    _muscle(canvas, 'Shoulders', w * 0.76, h * 0.155, w * 0.08, h * 0.032);
 
-    // Chest — two pecs
-    _muscle(canvas, 'Chest', w * 0.39, h * 0.21, w * 0.16, h * 0.06);
-    _muscle(canvas, 'Chest', w * 0.61, h * 0.21, w * 0.16, h * 0.06);
+    // Chest — two pecs, contained within torso
+    _muscle(canvas, 'Chest', w * 0.40, h * 0.21, w * 0.13, h * 0.045);
+    _muscle(canvas, 'Chest', w * 0.60, h * 0.21, w * 0.13, h * 0.045);
 
-    // Biceps
-    _muscle(canvas, 'Biceps', w * 0.18, h * 0.25, w * 0.055, h * 0.07);
-    _muscle(canvas, 'Biceps', w * 0.82, h * 0.25, w * 0.055, h * 0.07);
+    // Biceps — small ovals on inner upper arms
+    _muscle(canvas, 'Biceps', w * 0.18, h * 0.25, w * 0.04, h * 0.05);
+    _muscle(canvas, 'Biceps', w * 0.82, h * 0.25, w * 0.04, h * 0.05);
 
-    // Abs — 6-pack pattern
+    // Abs — compact 6-pack, tighter spacing
     for (int i = 0; i < 3; i++) {
-      final y = h * (0.29 + i * 0.04);
-      _muscle(canvas, 'Abs', w * 0.46, y, w * 0.06, h * 0.03);
-      _muscle(canvas, 'Abs', w * 0.54, y, w * 0.06, h * 0.03);
+      final y = h * (0.30 + i * 0.032);
+      _muscle(canvas, 'Abs', w * 0.47, y, w * 0.045, h * 0.024);
+      _muscle(canvas, 'Abs', w * 0.53, y, w * 0.045, h * 0.024);
     }
 
-    // Quads
-    _muscle(canvas, 'Quads', w * 0.40, h * 0.56, w * 0.08, h * 0.11);
-    _muscle(canvas, 'Quads', w * 0.60, h * 0.56, w * 0.08, h * 0.11);
+    // Quads — fit within thigh outline
+    _muscle(canvas, 'Quads', w * 0.39, h * 0.55, w * 0.06, h * 0.08);
+    _muscle(canvas, 'Quads', w * 0.61, h * 0.55, w * 0.06, h * 0.08);
   }
 
   void _backMuscles(Canvas canvas, double w, double h) {
-    // Traps / Upper back
-    _muscle(canvas, 'Upper Back', w * 0.50, h * 0.17, w * 0.24, h * 0.055);
+    // Traps / Upper back — across upper back
+    _muscle(canvas, 'Upper Back', w * 0.50, h * 0.17, w * 0.20, h * 0.04);
 
-    // Lats
-    _muscle(canvas, 'Lats', w * 0.40, h * 0.27, w * 0.11, h * 0.08);
-    _muscle(canvas, 'Lats', w * 0.60, h * 0.27, w * 0.11, h * 0.08);
+    // Lats — two wings, contained within torso
+    _muscle(canvas, 'Lats', w * 0.40, h * 0.27, w * 0.08, h * 0.06);
+    _muscle(canvas, 'Lats', w * 0.60, h * 0.27, w * 0.08, h * 0.06);
 
-    // Triceps
-    _muscle(canvas, 'Triceps', w * 0.83, h * 0.25, w * 0.05, h * 0.07);
-    _muscle(canvas, 'Triceps', w * 0.17, h * 0.25, w * 0.05, h * 0.07);
+    // Triceps — back of upper arms
+    _muscle(canvas, 'Triceps', w * 0.83, h * 0.25, w * 0.04, h * 0.05);
+    _muscle(canvas, 'Triceps', w * 0.17, h * 0.25, w * 0.04, h * 0.05);
 
-    // Glutes
-    _muscle(canvas, 'Glutes', w * 0.43, h * 0.44, w * 0.11, h * 0.055);
-    _muscle(canvas, 'Glutes', w * 0.57, h * 0.44, w * 0.11, h * 0.055);
+    // Glutes — two rounded shapes at hip level
+    _muscle(canvas, 'Glutes', w * 0.44, h * 0.44, w * 0.08, h * 0.04);
+    _muscle(canvas, 'Glutes', w * 0.56, h * 0.44, w * 0.08, h * 0.04);
 
-    // Hamstrings
-    _muscle(canvas, 'Hamstrings', w * 0.40, h * 0.57, w * 0.07, h * 0.10);
-    _muscle(canvas, 'Hamstrings', w * 0.60, h * 0.57, w * 0.07, h * 0.10);
+    // Hamstrings — back of thighs
+    _muscle(canvas, 'Hamstrings', w * 0.39, h * 0.56, w * 0.055, h * 0.08);
+    _muscle(canvas, 'Hamstrings', w * 0.61, h * 0.56, w * 0.055, h * 0.08);
   }
 
   void _muscle(Canvas canvas, String name, double cx, double cy, double rw, double rh) {
