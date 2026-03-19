@@ -1,0 +1,34 @@
+#!/bin/sh
+# Auto-increment build number in pubspec.yaml after each commit
+# Version format: X.Y.Z+BUILD where BUILD increments
+
+PUBSPEC="pubspec.yaml"
+
+if [ ! -f "$PUBSPEC" ]; then
+  exit 0
+fi
+
+# Extract current version line
+CURRENT=$(grep '^version:' "$PUBSPEC")
+if [ -z "$CURRENT" ]; then
+  exit 0
+fi
+
+# Parse build number
+BUILD=$(echo "$CURRENT" | sed 's/.*+//')
+NEW_BUILD=$((BUILD + 1))
+
+# Replace in pubspec
+VERSION_BASE=$(echo "$CURRENT" | sed 's/+.*//')
+NEW_VERSION="${VERSION_BASE}+${NEW_BUILD}"
+
+# Use platform-appropriate sed
+if [ "$(uname)" = "Darwin" ]; then
+  sed -i '' "s/^version:.*/$NEW_VERSION/" "$PUBSPEC"
+else
+  sed -i "s/^version:.*/$NEW_VERSION/" "$PUBSPEC"
+fi
+
+# Stage and amend the commit silently
+git add "$PUBSPEC"
+git commit --amend --no-edit --no-verify > /dev/null 2>&1

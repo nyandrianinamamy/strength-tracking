@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -291,6 +292,23 @@ class AccountSection extends ConsumerWidget {
                 },
               ),
             ],
+            const SizedBox(height: 24),
+            FutureBuilder<PackageInfo>(
+              future: PackageInfo.fromPlatform(),
+              builder: (context, snapshot) {
+                final version = snapshot.data;
+                if (version == null) return const SizedBox.shrink();
+                return Center(
+                  child: Text(
+                    'v${version.version}+${version.buildNumber}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.slateInactive,
+                      fontSize: 11,
+                    ),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
