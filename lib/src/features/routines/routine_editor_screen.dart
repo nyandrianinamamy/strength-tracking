@@ -364,33 +364,12 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                   SizedBox(
                     width: 80,
                     height: 36,
-                    child: TextField(
-                      textAlign: TextAlign.center,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-                      decoration: InputDecoration(
-                        hintText: '0',
-                        suffixText: state.preferredUnit,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        isDense: true,
-                      ),
-                      controller: TextEditingController(
-                        text: item.recommendedWeightKg > 0
-                            ? AppFormatters.decimal(AppFormatters.convertWeight(item.recommendedWeightKg, state.preferredUnit))
-                            : '',
-                      ),
-                      onChanged: (value) {
-                        final raw = double.tryParse(value.replaceAll(',', '.'));
-                        if (raw != null) {
-                          _updateExercise(
-                            index,
-                            item.copyWith(
-                              recommendedWeightKg: AppFormatters.convertToKg(raw, state.preferredUnit),
-                            ),
-                          );
-                        } else if (value.isEmpty) {
-                          _updateExercise(index, item.copyWith(recommendedWeightKg: 0));
-                        }
+                    child: _WeightInput(
+                      initialValue: item.recommendedWeightKg,
+                      preferredUnit: state.preferredUnit,
+                      onChanged: (kg) {
+                        _exercises[index] = item.copyWith(recommendedWeightKg: kg);
+                        _reindexExercises();
                       },
                     ),
                   ),
@@ -665,6 +644,72 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _WeightInput extends StatefulWidget {
+  const _WeightInput({
+    required this.initialValue,
+    required this.preferredUnit,
+    required this.onChanged,
+  });
+
+  final double initialValue;
+  final String preferredUnit;
+  final ValueChanged<double> onChanged;
+
+  @override
+  State<_WeightInput> createState() => _WeightInputState();
+}
+
+class _WeightInputState extends State<_WeightInput> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(
+      text: widget.initialValue > 0
+          ? AppFormatters.decimal(
+              AppFormatters.convertWeight(widget.initialValue, widget.preferredUnit))
+          : '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _save() {
+    final raw = double.tryParse(_controller.text.replaceAll(',', '.'));
+    if (raw != null && raw > 0) {
+      widget.onChanged(AppFormatters.convertToKg(raw, widget.preferredUnit));
+    } else {
+      widget.onChanged(0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      controller: _controller,
+      textAlign: TextAlign.center,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+      decoration: InputDecoration(
+        hintText: '0',
+        suffixText: widget.preferredUnit,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        isDense: true,
+      ),
+      onEditingComplete: _save,
+      onTapOutside: (_) {
+        _save();
+        FocusScope.of(context).unfocus();
+      },
     );
   }
 }
