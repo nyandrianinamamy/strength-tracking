@@ -32,12 +32,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   String? _lastExerciseId;
   int _currentPage = 0;
 
-  // Shared rest timer state
-  DateTime? _restTimerStart;
-  int _restDurationSeconds = 0;
-
-  // Rest timer beep flag
-  bool _restTimerBeeped = false;
+  // Rest timer beep tracking — tracks set count to know when a new set was logged
+  int _lastBeepedSetCount = -1;
 
   // Timed exercise countdown state
   DateTime? _timedExerciseStart;
@@ -59,10 +55,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     super.initState();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        // Rest timer beep
-        if (_remainingRest == 0 && _restTimerStart != null && !_restTimerBeeped) {
-          _restTimerBeeped = true;
-          _playRestTimerBeep();
+        // Rest timer beep — check if rest just finished
+        if (_remainingRest == 0 && _lastBeepedSetCount != _currentSetCount) {
+          // A set was logged and rest has now elapsed
+          if (_currentSetCount > 0) {
+            _playRestTimerBeep();
+          }
+          _lastBeepedSetCount = _currentSetCount;
         }
         // Auto-switch countdown
         if (_switchCountdown != null) {
@@ -193,11 +192,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   void _resetRestTimer(int restSeconds) {
-    setState(() {
-      _restTimerStart = DateTime.now();
-      _restDurationSeconds = restSeconds;
-      _restTimerBeeped = false;
-    });
+    setState(() {});
     // Auto-advance page if the exercise index changed after logging a set
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -215,9 +210,28 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   int get _remainingRest {
-    if (_restTimerStart == null) return 0;
-    final elapsed = DateTime.now().difference(_restTimerStart!).inSeconds;
-    return (_restDurationSeconds - elapsed).clamp(0, 999);
+    // Compute from persisted data so it survives app switches
+    final state = ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return 0;
+
+    final routine = state.routineById(session.routineId);
+    if (routine == null || routine.exercises.isEmpty) return 0;
+
+    final prescription = routine.exercises[_currentPage.clamp(0, routine.exercises.length - 1)];
+    final setsForExercise = session.completedSets
+        .where((s) => s.exerciseId == prescription.exerciseId)
+        .toList();
+    if (setsForExercise.isEmpty) return 0;
+
+    final lastSet = setsForExercise.last;
+    final elapsed = DateTime.now().difference(lastSet.completedAt).inSeconds;
+    return (prescription.restSeconds - elapsed).clamp(0, 999);
+  }
+
+  int get _currentSetCount {
+    final session = ref.read(appStateControllerProvider).activeSession;
+    return session?.completedSets.length ?? 0;
   }
 
   void _showCommentDialog(BuildContext context) {
