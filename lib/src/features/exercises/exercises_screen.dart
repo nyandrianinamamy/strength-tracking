@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -19,9 +20,10 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
     final muscles = [
-      'All',
+      l10n.all,
       ...{
         for (final exercise in state.exercises.where((item) => !item.archived))
           ...exercise.primaryMuscles,
@@ -30,7 +32,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
 
     final controller = ref.read(exerciseControllerProvider);
     final exercises = controller.search(_query).where((exercise) {
-      if (_muscle == 'All') {
+      if (_muscle == l10n.all) {
         return true;
       }
       return exercise.primaryMuscles.contains(_muscle);
@@ -49,7 +51,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
           children: [
             Expanded(
               child: Text(
-                'Exercises',
+                l10n.exercises,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -58,7 +60,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
             FilledButton.icon(
               onPressed: () => context.push('/exercise/new'),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('New Exercise'),
+              label: Text(l10n.newExercise),
             ),
           ],
         ),
@@ -66,7 +68,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         TextField(
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search_rounded),
-            hintText: 'Search exercises or muscles',
+            hintText: l10n.searchExercises,
             filled: true,
             fillColor: const Color(0xFFF1F5F9),
             border: OutlineInputBorder(
@@ -92,9 +94,9 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         ),
         const SizedBox(height: 24),
         if (grouped.isEmpty)
-          const EmptyStateCard(
-            title: 'No exercises found',
-            body: 'Adjust the filter or create a custom movement.',
+          EmptyStateCard(
+            title: l10n.noExercisesFound,
+            body: l10n.adjustFilter,
           )
         else
           ...grouped.entries.map((entry) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -15,6 +16,7 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
     final snapshot = ref.read(progressServiceProvider).dashboardSnapshot(state);
     final nextRoutine = snapshot.nextRoutine;
@@ -43,12 +45,12 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(width: 12),
             Builder(
               builder: (context) {
-                final userName = state.userName.isEmpty ? 'Athlete' : state.userName;
+                final userName = state.userName.isEmpty ? l10n.athlete : state.userName;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Welcome back,',
+                      l10n.welcomeBack,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: AppTheme.slateInactive,
                           ),
@@ -115,7 +117,7 @@ class DashboardScreen extends ConsumerWidget {
               childAspectRatio: constraints.maxWidth >= 420 ? 1.35 : 1.1,
               children: [
                 MetricCard(
-                  label: 'Workouts',
+                  label: l10n.workouts,
                   value: '${snapshot.totalWorkouts}',
                   detail: snapshot.workoutDelta >= 0
                       ? '+${snapshot.workoutDelta} vs last week'
@@ -154,7 +156,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 MetricCard(
-                  label: 'Recent PRs',
+                  label: l10n.recentPrs,
                   value: '${snapshot.personalRecordCount}',
                   detail: 'Estimated 1RM tracked automatically',
                   icon: Icons.workspace_premium_rounded,
@@ -167,8 +169,8 @@ class DashboardScreen extends ConsumerWidget {
                       color: AppTheme.primary,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'New',
+                    child: Text(
+                      l10n.newBadge,
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w700,
@@ -187,7 +189,7 @@ class DashboardScreen extends ConsumerWidget {
 
         // Step 3: Next Workout card
         PageSection(
-          title: activeSession != null ? 'Active Workout' : 'Next Workout',
+          title: activeSession != null ? l10n.activeWorkout : l10n.nextWorkout,
           child: Card(
             color: const Color(0xFF0F172A),
             child: Padding(
@@ -197,8 +199,8 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Text(
                     (activeSession != null
-                            ? 'Session in progress'
-                            : nextRoutine?.category ?? 'Ready to train')
+                            ? l10n.sessionInProgress
+                            : nextRoutine?.category ?? l10n.readyToTrain)
                         .toUpperCase(),
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                           color: const Color(0xFF8FB9FF),
@@ -211,7 +213,7 @@ class DashboardScreen extends ConsumerWidget {
                     activeSession != null
                         ? state.routineById(activeSession.routineId)?.name ??
                               'Workout'
-                        : nextRoutine?.name ?? 'No routine available',
+                        : nextRoutine?.name ?? l10n.noRoutineAvailable,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
@@ -232,7 +234,7 @@ class DashboardScreen extends ConsumerWidget {
                           activeSession != null
                               ? '${state.routineById(activeSession.routineId)?.exercises.length ?? 0} exercises remaining'
                               : nextRoutine == null
-                                  ? 'Create a routine to start training.'
+                                  ? l10n.createRoutineToStart
                                   : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
                           style: Theme.of(context)
                               .textTheme
@@ -268,8 +270,8 @@ class DashboardScreen extends ConsumerWidget {
                     icon: const Icon(Icons.play_arrow_rounded),
                     label: Text(
                       activeSession != null
-                          ? 'RESUME SESSION'
-                          : 'START SESSION',
+                          ? l10n.resumeSession
+                          : l10n.startSession,
                     ),
                   ),
                 ],
@@ -281,16 +283,15 @@ class DashboardScreen extends ConsumerWidget {
 
         // Step 4: Recent Workouts
         PageSection(
-          title: 'Recent Workouts',
+          title: l10n.recentWorkouts,
           action: TextButton(
             onPressed: () => context.go('/progress'),
-            child: const Text('View Progress'),
+            child: Text(l10n.viewProgress),
           ),
           child: snapshot.recentWorkouts.isEmpty
-              ? const EmptyStateCard(
-                  title: 'No completed workouts yet',
-                  body:
-                      'Start a routine and your recent sessions will appear here.',
+              ? EmptyStateCard(
+                  title: l10n.noCompletedWorkouts,
+                  body: l10n.startRoutinePrompt,
                 )
               : Column(
                   children: snapshot.recentWorkouts.map((workout) {
@@ -330,8 +331,8 @@ class DashboardScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(height: 2),
-                            const Text(
-                              'Volume',
+                            Text(
+                              l10n.volume,
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.black54,
@@ -348,7 +349,7 @@ class DashboardScreen extends ConsumerWidget {
 
         // Step 5: Workout Frequency
         PageSection(
-          title: 'Workout Frequency',
+          title: l10n.workoutFrequency,
           child: WorkoutFrequencyCalendar(
             frequency: snapshot.monthFrequency,
             onDateTap: (date, count) {
@@ -451,12 +452,11 @@ class DashboardScreen extends ConsumerWidget {
 
         // Step 6: Recent PRs
         PageSection(
-          title: 'Recent PRs',
+          title: l10n.recentPrsTitle,
           child: snapshot.recentPrs.isEmpty
-              ? const EmptyStateCard(
-                  title: 'No PRs detected yet',
-                  body:
-                      'Your strongest sets will surface here as soon as you complete a session.',
+              ? EmptyStateCard(
+                  title: l10n.noPrsYet,
+                  body: l10n.prsWillAppear,
                 )
               : Column(
                   children: snapshot.recentPrs.map((record) {

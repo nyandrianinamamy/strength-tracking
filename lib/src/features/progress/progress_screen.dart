@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
@@ -12,6 +13,7 @@ class ProgressScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
     final snapshot = ref
         .read(progressServiceProvider)
@@ -27,17 +29,17 @@ class ProgressScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Performance Lab',
+                  l10n.performanceLab,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
                 ),
                 const SizedBox(height: 18),
-                const TabBar(
+                TabBar(
                   tabs: [
-                    Tab(text: 'Overview'),
-                    Tab(text: 'Lifts'),
-                    Tab(text: 'Volume'),
+                    Tab(text: l10n.overview),
+                    Tab(text: l10n.lifts),
+                    Tab(text: l10n.volumeTab),
                   ],
                 ),
               ],
@@ -58,23 +60,23 @@ class ProgressScreen extends ConsumerWidget {
                           childAspectRatio: 0.95,
                           children: [
                             MetricCard(
-                              label: 'Workout Days',
+                              label: l10n.workoutDays,
                               value: snapshot.averageWorkoutDaysPerWeek
                                   .toStringAsFixed(1),
-                              detail: 'Per week average',
+                              detail: l10n.perWeekAverage,
                               icon: Icons.calendar_month_rounded,
                             ),
                             MetricCard(
-                              label: 'Active Streak',
+                              label: l10n.activeStreak,
                               value: '${snapshot.activeStreakDays} days',
-                              detail: 'Contiguous training streak',
+                              detail: l10n.contiguousStreak,
                               icon: Icons.bolt_rounded,
                             ),
                           ],
                         ),
                     const SizedBox(height: 28),
                     PageSection(
-                      title: 'Personal Records',
+                      title: l10n.personalRecords,
                       child: Column(
                         children: snapshot.personalRecords.take(6).map((
                           record,
@@ -155,7 +157,7 @@ class ProgressScreen extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
                   children: [
                     PageSection(
-                      title: 'Weekly Volume',
+                      title: l10n.weeklyVolume,
                       child: Card(
                         child: Padding(
                           padding: const EdgeInsets.all(18),
@@ -243,9 +245,10 @@ class _VolumeBars extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (points.isEmpty) {
-      return const EmptyStateCard(
-        title: 'No volume data yet',
-        body: 'Complete workouts to populate the weekly volume chart.',
+      final l10n = AppLocalizations.of(context)!;
+      return EmptyStateCard(
+        title: l10n.noVolumeData,
+        body: l10n.completeWorkoutsPrompt,
       );
     }
 

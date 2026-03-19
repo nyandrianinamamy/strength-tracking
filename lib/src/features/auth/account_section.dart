@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/utils/force_update.dart';
@@ -13,6 +14,7 @@ class AccountSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final authService = ref.read(authServiceProvider);
     final user = authService.currentUser;
     final isAnonymous = authService.isAnonymous;
@@ -44,8 +46,8 @@ class AccountSection extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               isAnonymous
-                  ? 'Anonymous Account'
-                  : user?.displayName ?? user?.email ?? 'Linked Account',
+                  ? l10n.anonymousAccount
+                  : user?.displayName ?? user?.email ?? l10n.linkedAccount,
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
@@ -54,7 +56,7 @@ class AccountSection extends ConsumerWidget {
             const SizedBox(height: 4),
             Text(
               isAnonymous
-                  ? 'Link an account to sync across devices'
+                  ? l10n.linkToSync
                   : user?.email ?? '',
               style: Theme.of(context)
                   .textTheme
@@ -65,7 +67,7 @@ class AccountSection extends ConsumerWidget {
             if (isAnonymous) ...[
               _AuthButton(
                 icon: Icons.g_mobiledata,
-                label: 'Link Google Account',
+                label: l10n.linkGoogle,
                 onTap: () async {
                   try {
                     await authService.linkWithGoogle();
@@ -82,7 +84,7 @@ class AccountSection extends ConsumerWidget {
               const SizedBox(height: 12),
               _AuthButton(
                 icon: Icons.apple,
-                label: 'Link Apple Account',
+                label: l10n.linkApple,
                 onTap: () async {
                   try {
                     await authService.linkWithApple();
@@ -103,7 +105,7 @@ class AccountSection extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Text(
-                      'or switch to an existing account',
+                      l10n.switchAccount,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: AppTheme.slateInactive,
                       ),
@@ -124,18 +126,18 @@ class AccountSection extends ConsumerWidget {
               const SizedBox(height: 12),
               _AuthButton(
                 icon: Icons.g_mobiledata,
-                label: 'Sign in with Google',
+                label: l10n.signInGoogle,
                 onTap: () => _signInAndReplace(context, ref, 'google'),
               ),
               const SizedBox(height: 12),
               _AuthButton(
                 icon: Icons.apple,
-                label: 'Sign in with Apple',
+                label: l10n.signInApple,
                 onTap: () => _signInAndReplace(context, ref, 'apple'),
               ),
             ] else ...[
               Text(
-                'Your data is synced across all your devices.',
+                l10n.dataSynced,
                 textAlign: TextAlign.center,
                 style: Theme.of(context)
                     .textTheme
@@ -147,7 +149,7 @@ class AccountSection extends ConsumerWidget {
             const Divider(),
             const SizedBox(height: 16),
             Text(
-              'Unit Preference',
+              l10n.unitPreference,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
@@ -183,7 +185,7 @@ class AccountSection extends ConsumerWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'Language',
+              l10n.language,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
@@ -204,13 +206,13 @@ class AccountSection extends ConsumerWidget {
             const Divider(),
             const SizedBox(height: 16),
             Text(
-              'Data',
+              l10n.data,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
             _AuthButton(
               icon: Icons.download_rounded,
-              label: 'Load Sample Exercises & Routines',
+              label: l10n.loadSampleData,
               onTap: () {
                 final sample = DemoSeedData.initialState();
                 ref.read(appStateControllerProvider.notifier).updateState(
@@ -221,24 +223,24 @@ class AccountSection extends ConsumerWidget {
                 );
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Sample exercises & routines loaded')),
+                  SnackBar(content: Text(l10n.sampleDataLoaded)),
                 );
               },
             ),
             const SizedBox(height: 12),
             _AuthButton(
               icon: Icons.delete_outline_rounded,
-              label: 'Clear Exercises & Routines',
+              label: l10n.clearData,
               onTap: () {
                 showDialog(
                   context: context,
                   builder: (dialogContext) => AlertDialog(
-                    title: const Text('Clear Exercises & Routines?'),
-                    content: const Text('This will delete all exercises and routines. Your workout history will be kept.'),
+                    title: Text(l10n.clearDataTitle),
+                    content: Text(l10n.clearDataConfirm),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogContext),
-                        child: const Text('Cancel'),
+                        child: Text(l10n.cancel),
                       ),
                       TextButton(
                         onPressed: () {
@@ -248,11 +250,11 @@ class AccountSection extends ConsumerWidget {
                             (s) => s.copyWith(exercises: [], routines: []),
                           );
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Exercises & routines cleared')),
+                            SnackBar(content: Text(l10n.dataCleared)),
                           );
                         },
                         style: TextButton.styleFrom(foregroundColor: Colors.red),
-                        child: const Text('Clear'),
+                        child: Text(l10n.clear),
                       ),
                     ],
                   ),
@@ -263,7 +265,7 @@ class AccountSection extends ConsumerWidget {
               const SizedBox(height: 12),
               _AuthButton(
                 icon: Icons.refresh_rounded,
-                label: 'Force Update App',
+                label: l10n.forceUpdateApp,
                 onTap: () async {
                   Navigator.pop(context);
                   await forceUpdateApp();
@@ -281,22 +283,21 @@ class AccountSection extends ConsumerWidget {
     WidgetRef ref,
     String provider,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Switch Account?'),
-        content: const Text(
-          'Your current anonymous data will be discarded and replaced with the data from your linked account.',
-        ),
+        title: Text(l10n.switchAccountTitle),
+        content: Text(l10n.switchAccountConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: Colors.orange),
-            child: const Text('Switch'),
+            child: Text(l10n.switchButton),
           ),
         ],
       ),
@@ -319,13 +320,13 @@ class AccountSection extends ConsumerWidget {
       if (context.mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Signed in and data restored')),
+          SnackBar(content: Text(l10n.signedInRestored)),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign in failed: $e')),
+          SnackBar(content: Text('${l10n.signInFailed}: $e')),
         );
       }
     }

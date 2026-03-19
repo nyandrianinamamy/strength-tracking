@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -19,9 +20,10 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
     final categories = [
-      'All',
+      l10n.all,
       ...{
         for (final routine in state.routines.where((item) => !item.archived))
           routine.category,
@@ -31,7 +33,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
       if (routine.archived) {
         return false;
       }
-      if (_category != 'All' && routine.category != _category) {
+      if (_category != l10n.all && routine.category != _category) {
         return false;
       }
       if (_query.isEmpty) {
@@ -48,7 +50,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
           children: [
             Expanded(
               child: Text(
-                'Workout Library',
+                l10n.workoutLibrary,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                   fontWeight: FontWeight.w900,
                 ),
@@ -60,7 +62,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         TextField(
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search_rounded),
-            hintText: 'Search routines',
+            hintText: l10n.searchRoutines,
             filled: true,
             fillColor: const Color(0xFFF1F5F9),
             border: OutlineInputBorder(
@@ -102,14 +104,14 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Create New Routine',
+                  l10n.createNewRoutine,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Design your own personalized training plan',
+                  l10n.designPlan,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.black54,
                   ),
@@ -120,9 +122,9 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         ),
         const SizedBox(height: 14),
         if (routines.isEmpty)
-          const EmptyStateCard(
-            title: 'No routines match that filter',
-            body: 'Clear the search or create a new routine template.',
+          EmptyStateCard(
+            title: l10n.noRoutinesMatch,
+            body: l10n.clearSearchPrompt,
           )
         else
           ...routines.map((routine) {

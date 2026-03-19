@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
@@ -391,6 +392,7 @@ class DigitalTimer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isReady = remaining.inSeconds <= 0;
     final minutes = remaining.inMinutes.abs().remainder(60);
     final seconds = remaining.inSeconds.abs().remainder(60);
@@ -399,7 +401,7 @@ class DigitalTimer extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'REST TIMER',
+          l10n.restTimer,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 color: AppTheme.primary,
                 fontWeight: FontWeight.w800,
@@ -417,7 +419,7 @@ class DigitalTimer extends StatelessWidget {
               color: AppTheme.primary.withValues(alpha: 0.08),
             ),
             child: Text(
-              'READY',
+              l10n.ready,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: AppTheme.primary,

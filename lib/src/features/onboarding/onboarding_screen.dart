@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -54,7 +55,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       if (mounted) {
         setState(() => _isSigningIn = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Sign in failed: $e')),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.signInFailed}: $e')),
         );
       }
     }
@@ -87,6 +88,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildWelcomePage(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Center(
@@ -106,14 +108,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             ),
             const SizedBox(height: 32),
             Text(
-              "Let's Get Started",
+              l10n.letsGetStarted,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'What should we call you?',
+              l10n.whatShouldWeCallYou,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.slateInactive,
               ),
@@ -123,8 +125,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               controller: _nameController,
               textAlign: TextAlign.center,
               style: theme.textTheme.titleLarge,
-              decoration: const InputDecoration(
-                hintText: 'Your name',
+              decoration: InputDecoration(
+                hintText: l10n.yourName,
               ),
               onChanged: (_) => setState(() {}),
             ),
@@ -141,7 +143,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Next'),
+                child: Text(l10n.next),
               ),
             ),
             const SizedBox(height: 40),
@@ -151,7 +153,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
-                    'or sign in to restore your data',
+                    l10n.orSignIn,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: AppTheme.slateInactive,
                     ),
@@ -172,7 +174,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.g_mobiledata),
-                label: const Text('Continue with Google'),
+                label: Text(l10n.continueWithGoogle),
               ),
             ),
             const SizedBox(height: 12),
@@ -187,7 +189,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                 ),
                 icon: const Icon(Icons.apple),
-                label: const Text('Continue with Apple'),
+                label: Text(l10n.continueWithApple),
               ),
             ),
             if (_isSigningIn) ...[
@@ -201,6 +203,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Widget _buildUnitsPage(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
 
     return Center(
@@ -210,14 +213,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Choose Your Unit',
+              l10n.chooseYourUnit,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 8),
             Text(
-              'You can change this anytime',
+              l10n.changeAnytime,
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppTheme.slateInactive,
               ),
@@ -229,7 +232,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: _UnitCard(
                     unit: 'kg',
                     label: 'KG',
-                    subtitle: 'Kilograms',
+                    subtitle: l10n.kilograms,
                     selected: _selectedUnit == 'kg',
                     onTap: () => setState(() => _selectedUnit = 'kg'),
                   ),
@@ -239,7 +242,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: _UnitCard(
                     unit: 'lbs',
                     label: 'LBS',
-                    subtitle: 'Pounds',
+                    subtitle: l10n.pounds,
                     selected: _selectedUnit == 'lbs',
                     onTap: () => setState(() => _selectedUnit = 'lbs'),
                   ),
@@ -258,7 +261,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Start Training'),
+                child: Text(l10n.startTraining),
               ),
             ),
           ],

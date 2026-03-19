@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -15,6 +16,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
     final session = state.sessionById(sessionId);
     if (session == null) {
@@ -45,23 +47,21 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Workout Complete'),
+        title: Text(l10n.workoutComplete),
         actions: [
           IconButton(
-            tooltip: 'Delete workout',
+            tooltip: l10n.deleteWorkout,
             icon: const Icon(Icons.delete_outline_rounded),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (dialogContext) => AlertDialog(
-                  title: const Text('Delete Workout?'),
-                  content: const Text(
-                    'This will permanently remove this workout and all its logged sets.',
-                  ),
+                  title: Text(l10n.deleteWorkout),
+                  content: Text(l10n.deleteWorkoutConfirm),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(dialogContext),
-                      child: const Text('Cancel'),
+                      child: Text(l10n.cancel),
                     ),
                     TextButton(
                       onPressed: () {
@@ -70,7 +70,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         context.go('/');
                       },
                       style: TextButton.styleFrom(foregroundColor: Colors.red),
-                      child: const Text('Delete'),
+                      child: Text(l10n.delete),
                     ),
                   ],
                 ),
@@ -129,7 +129,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'New Personal Record!',
+                          l10n.newPersonalRecord,
                           style:
                               Theme.of(context).textTheme.labelSmall?.copyWith(
                                     color: AppTheme.primary,
@@ -150,7 +150,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
             children: [
               Expanded(
                 child: StatCard(
-                  label: 'Volume',
+                  label: l10n.volume,
                   value: AppFormatters.decimal(AppFormatters.convertWeight(totalVolume, state.preferredUnit)),
                   subtext: state.preferredUnit.toUpperCase(),
                   showAccent: true,
@@ -159,7 +159,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  label: 'Time',
+                  label: l10n.time,
                   value: AppFormatters.duration(duration),
                   subtext: 'DURATION',
                   showAccent: true,
@@ -168,7 +168,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: StatCard(
-                  label: 'Exercises',
+                  label: l10n.exercises,
                   value: '${routine?.exercises.length ?? 0}',
                   subtext: 'TOTAL',
                   showAccent: true,
@@ -180,12 +180,11 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 
           // PR highlights - horizontal scroll
           PageSection(
-            title: 'PR Highlights',
+            title: l10n.prHighlights,
             child: prs.isEmpty
-                ? const EmptyStateCard(
-                    title: 'No new PRs this time',
-                    body:
-                        'The workout still contributes to your volume and lift history.',
+                ? EmptyStateCard(
+                    title: l10n.noNewPrs,
+                    body: l10n.prContributes,
                   )
                 : SizedBox(
                     height: 120,
@@ -245,7 +244,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 
           // Exercise breakdown with set count badge
           PageSection(
-            title: 'Exercise Breakdown',
+            title: l10n.exerciseBreakdown,
             child: Column(
               children: (routine?.exercises ?? const []).map((item) {
                 final exercise = state.exerciseById(item.exerciseId);
@@ -320,7 +319,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'How did it feel?',
+                    l10n.howDidItFeel,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w900,
                         ),
@@ -337,7 +336,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                   Row(
                     children: [
                       Text(
-                        'Easy',
+                        l10n.easy,
                         style:
                             Theme.of(context).textTheme.labelSmall?.copyWith(
                                   color: AppTheme.slateInactive,
@@ -358,7 +357,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        'Hard',
+                        l10n.hard,
                         style:
                             Theme.of(context).textTheme.labelSmall?.copyWith(
                                   color: AppTheme.slateInactive,
@@ -387,13 +386,13 @@ class WorkoutSummaryScreen extends ConsumerWidget {
           FilledButton.icon(
             onPressed: () => context.go('/'),
             icon: const Icon(Icons.home_rounded),
-            label: const Text('Finish & Go Home'),
+            label: Text(l10n.finishGoHome),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: () => context.go('/progress'),
             icon: const Icon(Icons.insights_rounded),
-            label: const Text('View Progress'),
+            label: Text(l10n.viewProgress),
           ),
         ],
       ),

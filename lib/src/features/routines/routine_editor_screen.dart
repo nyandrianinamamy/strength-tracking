@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -77,9 +78,11 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       _initialized = true;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.routineId == null ? 'New Routine' : 'Edit Routine'),
+        title: Text(widget.routineId == null ? l10n.newRoutine : l10n.editRoutine),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
@@ -92,7 +95,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               ),
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ),
         ],
@@ -102,18 +105,18 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Routine Name',
-              hintText: 'e.g. Upper Body Power',
+            decoration: InputDecoration(
+              labelText: l10n.routineName,
+              hintText: l10n.routineNameHint,
             ),
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _category,
-            items: const ['Strength', 'Hypertrophy', 'Mobility']
+            items: <String>[l10n.strength, l10n.hypertrophy, l10n.mobility]
                 .map(
                   (category) =>
-                      DropdownMenuItem(value: category, child: Text(category)),
+                      DropdownMenuItem<String>(value: category, child: Text(category)),
                 )
                 .toList(),
             onChanged: (value) {
@@ -121,11 +124,11 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 setState(() => _category = value);
               }
             },
-            decoration: const InputDecoration(labelText: 'Category'),
+            decoration: InputDecoration(labelText: l10n.category),
           ),
           const SizedBox(height: 24),
           Text(
-            'Exercises',
+            l10n.exercises,
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
@@ -143,7 +146,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                       color: AppTheme.slateInactive),
                   const SizedBox(width: 8),
                   Text(
-                    'Tap to add exercises',
+                    l10n.tapToAddExercises,
                     style: TextStyle(color: AppTheme.slateInactive),
                   ),
                 ],
@@ -179,7 +182,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                       color: AppTheme.slateInactive),
                   const SizedBox(width: 8),
                   Text(
-                    'Tap to add more exercises',
+                    l10n.tapToAddMore,
                     style: TextStyle(color: AppTheme.slateInactive),
                   ),
                 ],
@@ -217,7 +220,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
               ),
               icon: const Icon(Icons.check_circle_outline),
               label: Text(
-                widget.routineId == null ? 'Create Routine' : 'Save Changes',
+                widget.routineId == null ? l10n.createRoutine : l10n.saveChanges,
               ),
             ),
           ],
@@ -232,6 +235,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
     int index,
     RoutineExercise item,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final exercise = state.exerciseById(item.exerciseId);
     final muscles = exercise?.primaryMuscles.join(', ') ?? '';
 
@@ -300,7 +304,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 if (exercise?.exerciseType == 'timed') ...[
                   Expanded(
                     child: _StepperField(
-                      label: 'DURATION',
+                      label: l10n.durationLabel,
                       value: item.targetDurationSeconds ~/ 60,
                       step: 1,
                       min: 1,
@@ -314,7 +318,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 ] else ...[
                   Expanded(
                     child: _StepperField(
-                      label: 'SETS',
+                      label: l10n.sets,
                       value: item.targetSets,
                       onChanged: (value) => _updateExercise(
                         index,
@@ -325,7 +329,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                   const SizedBox(width: 10),
                   Expanded(
                     child: _StepperField(
-                      label: 'REPS',
+                      label: l10n.reps,
                       value: item.targetReps,
                       onChanged: (value) => _updateExercise(
                         index,
@@ -337,7 +341,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StepperField(
-                    label: 'REST',
+                    label: l10n.rest,
                     value: item.restSeconds,
                     step: 10,
                     min: 0,
@@ -357,7 +361,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                   Icon(Icons.fitness_center, size: 16, color: AppTheme.slateInactive),
                   const SizedBox(width: 6),
                   Text(
-                    'Recommended weight',
+                    l10n.recommendedWeight,
                     style: TextStyle(fontSize: 12, color: AppTheme.slateInactive),
                   ),
                   const Spacer(),
@@ -577,6 +581,7 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final filtered = widget.exercises.where((exercise) {
       if (_query.isEmpty) return true;
       final q = _query.toLowerCase();
@@ -595,7 +600,7 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
               autofocus: true,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search_rounded),
-                hintText: 'Search exercises...',
+                hintText: l10n.searchExercisesEllipsis,
                 filled: true,
                 fillColor: const Color(0xFFF1F5F9),
                 border: OutlineInputBorder(
@@ -631,7 +636,7 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
                   ),
                   trailing: alreadyAdded
                       ? Text(
-                          'Added',
+                          l10n.added,
                           style: TextStyle(color: AppTheme.slateInactive),
                         )
                       : const Icon(Icons.add_rounded),

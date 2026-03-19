@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -98,10 +99,12 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
       _initialized = true;
     }
 
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.exerciseId == null ? 'New Exercise' : 'Edit Exercise',
+          widget.exerciseId == null ? l10n.newExerciseTitle : l10n.editExercise,
         ),
         actions: [
           Padding(
@@ -115,7 +118,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               ),
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ),
         ],
@@ -125,9 +128,9 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Exercise Name',
-              hintText: 'e.g. Incline Dumbbell Press',
+            decoration: InputDecoration(
+              labelText: l10n.exerciseName,
+              hintText: l10n.exerciseNameHint,
             ),
           ),
           const SizedBox(height: 16),
@@ -143,7 +146,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Primary Muscles',
+            l10n.primaryMuscles,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -185,12 +188,12 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Secondary Muscles',
+            l10n.secondaryMuscles,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 4),
           Text(
-            'Muscles that assist during the movement',
+            l10n.secondaryMusclesHint,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54),
           ),
           const SizedBox(height: 12),
@@ -239,7 +242,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Equipment',
+            l10n.equipment,
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -301,10 +304,9 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
             controller: _instructionsController,
             minLines: 6,
             maxLines: null,
-            decoration: const InputDecoration(
-              labelText: 'Instructions & Form Tips',
-              hintText:
-                  'Describe setup, execution cues, and common errors to avoid.',
+            decoration: InputDecoration(
+              labelText: l10n.instructionsFormTips,
+              hintText: l10n.instructionsHint,
             ),
           ),
         ],

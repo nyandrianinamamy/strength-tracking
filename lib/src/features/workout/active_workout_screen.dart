@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -245,23 +246,24 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   void _showCommentDialog(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Set Comment'),
+          title: Text(l10n.setComment),
           content: TextField(
             controller: _setNoteController,
             autofocus: true,
             maxLines: 3,
-            decoration: const InputDecoration(
-              hintText: 'Optional cue or RPE note for this set',
+            decoration: InputDecoration(
+              hintText: l10n.setCommentHint,
             ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Done'),
+              child: Text(l10n.done),
             ),
           ],
         );
@@ -270,6 +272,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   void _showFinishConfirmation(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(workoutControllerProvider);
     showModalBottomSheet(
       context: context,
@@ -299,7 +302,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Finish Workout?',
+                  l10n.finishWorkout,
                   style: Theme.of(sheetContext)
                       .textTheme
                       .titleLarge
@@ -307,7 +310,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Your session will be saved and you can review your summary.',
+                  l10n.sessionSaved,
                   textAlign: TextAlign.center,
                   style: Theme.of(sheetContext)
                       .textTheme
@@ -327,7 +330,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     minimumSize: const Size.fromHeight(52),
                   ),
                   icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Finish & Save'),
+                  label: Text(l10n.finishSave),
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton(
@@ -335,7 +338,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
                   ),
-                  child: const Text('Keep Training'),
+                  child: Text(l10n.keepTraining),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
@@ -345,7 +348,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     context.go('/');
                   },
                   child: Text(
-                    'Discard Session',
+                    l10n.discardSession,
                     style: TextStyle(
                       color: Colors.red.shade400,
                       fontWeight: FontWeight.w600,
@@ -366,6 +369,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     Routine routine,
     int pageIndex,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final prescription = routine.exercises[pageIndex];
     final currentExercise = state.exerciseById(prescription.exerciseId);
     final currentMuscles = currentExercise?.primaryMuscles ?? [];
@@ -417,7 +421,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Text(
-                          'Swap Exercise',
+                          l10n.swapExercise,
                           style: Theme.of(context)
                               .textTheme
                               .titleMedium
@@ -440,7 +444,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         child: TextField(
                           controller: searchController,
                           decoration: InputDecoration(
-                            hintText: 'Search exercises...',
+                            hintText: l10n.searchExercisesEllipsis,
                             prefixIcon: const Icon(Icons.search, size: 20),
                             isDense: true,
                             border: OutlineInputBorder(
@@ -506,22 +510,22 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
     final session = state.activeSession;
     final controller = ref.read(workoutControllerProvider);
 
     if (session == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Active Workout')),
+        appBar: AppBar(title: Text(l10n.activeWorkout)),
         body: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
-            child: const Padding(
-              padding: EdgeInsets.all(20),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
               child: EmptyStateCard(
-                title: 'No active session',
-                body:
-                    'Start a routine from the dashboard or library to begin logging sets.',
+                title: l10n.noActiveSession,
+                body: l10n.startFromDashboard,
               ),
             ),
           ),
@@ -555,7 +559,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       appBar: AppBar(
         centerTitle: true,
         leading: IconButton(
-          tooltip: 'Back to dashboard',
+          tooltip: l10n.backToDashboard,
           onPressed: () => context.go('/'),
           icon: const Icon(Icons.close_rounded),
         ),
@@ -594,7 +598,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.swap_horiz_rounded),
-            tooltip: 'Swap exercise',
+            tooltip: l10n.swapExercise,
             onPressed: () => _showSwapPicker(context, state, routine, _currentPage),
           ),
           Container(
@@ -652,8 +656,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   color: Colors.white.withValues(alpha: 0.3),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'FINISH',
+                Text(
+                  l10n.finish,
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -787,7 +791,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                               size: 36, color: AppTheme.primary),
                           const SizedBox(height: 12),
                           Text(
-                            'Next exercise in',
+                            l10n.nextExerciseIn,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -812,7 +816,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                 _switchTargetPage = null;
                               });
                             },
-                            child: const Text('Stay Here'),
+                            child: Text(l10n.stayHere),
                           ),
                         ],
                       ),
@@ -874,6 +878,7 @@ class _ExercisePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final prescription = routine.exercises[pageIndex];
     final exercise = state.exerciseById(prescription.exerciseId);
     final currentSets = session.completedSets
@@ -938,7 +943,7 @@ class _ExercisePage extends StatelessWidget {
           const SizedBox(height: 8),
           Center(
             child: Text(
-              'COUNTDOWN',
+              l10n.countdown,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: AppTheme.primary,
                     fontWeight: FontWeight.w800,
@@ -969,7 +974,7 @@ class _ExercisePage extends StatelessWidget {
                         : prescription.targetDurationSeconds,
                   ),
                   icon: const Icon(Icons.play_arrow_rounded),
-                  label: Text(timedCountdownRemaining < prescription.targetDurationSeconds && timedCountdownRemaining > 0 ? 'Resume' : 'Start'),
+                  label: Text(timedCountdownRemaining < prescription.targetDurationSeconds && timedCountdownRemaining > 0 ? l10n.resume : l10n.start),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(120, 48),
                   ),
@@ -979,7 +984,7 @@ class _ExercisePage extends StatelessWidget {
                   OutlinedButton.icon(
                     onPressed: () => onResetTimed(prescription.targetDurationSeconds),
                     icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('Reset'),
+                    label: Text(l10n.reset),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(100, 48),
                     ),
@@ -989,7 +994,7 @@ class _ExercisePage extends StatelessWidget {
                 FilledButton.icon(
                   onPressed: onPauseTimed,
                   icon: const Icon(Icons.pause_rounded),
-                  label: const Text('Pause'),
+                  label: Text(l10n.pause),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(120, 48),
                     backgroundColor: Colors.orange.shade600,
@@ -1007,7 +1012,7 @@ class _ExercisePage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'MANUAL (MIN)',
+                      l10n.manualMin,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: AppTheme.slateInactive,
                             fontWeight: FontWeight.w700,
@@ -1049,7 +1054,7 @@ class _ExercisePage extends StatelessWidget {
                       onLogSet(prescription.restSeconds);
                     },
                     icon: const Icon(Icons.check_circle_outline_rounded),
-                    label: const Text('LOG'),
+                    label: Text(l10n.log),
                   ),
                 ),
               ),
@@ -1073,7 +1078,7 @@ class _ExercisePage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'WEIGHT (${preferredUnit.toUpperCase()})',
+                      l10n.weightUnit(preferredUnit.toUpperCase()),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: AppTheme.slateInactive,
                             fontWeight: FontWeight.w700,
@@ -1103,7 +1108,7 @@ class _ExercisePage extends StatelessWidget {
                 child: Column(
                   children: [
                     Text(
-                      'REPS',
+                      l10n.reps,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: AppTheme.slateInactive,
                             fontWeight: FontWeight.w700,
@@ -1181,8 +1186,8 @@ class _ExercisePage extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   setNoteController.text.trim().isNotEmpty
-                      ? 'COMMENT ADDED'
-                      : 'ADD COMMENT',
+                      ? l10n.commentAdded
+                      : l10n.addComment,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: setNoteController.text.trim().isNotEmpty
                             ? AppTheme.primary
@@ -1199,12 +1204,11 @@ class _ExercisePage extends StatelessWidget {
 
         // Current session sets
         PageSection(
-          title: 'Current Session Sets',
+          title: l10n.currentSessionSets,
           child: currentSets.isEmpty
-              ? const EmptyStateCard(
-                  title: 'Nothing logged yet',
-                  body:
-                      'Your sets for the current exercise will appear here.',
+              ? EmptyStateCard(
+                  title: l10n.nothingLoggedYet,
+                  body: l10n.setsWillAppear,
                 )
               : Column(
                   children: currentSets.map((set) {
@@ -1238,7 +1242,7 @@ class _ExercisePage extends StatelessWidget {
                                   ),
                                   ListTile(
                                     leading: const Icon(Icons.edit_outlined),
-                                    title: const Text('Edit Set'),
+                                    title: Text(l10n.editSet),
                                     onTap: () {
                                       Navigator.pop(sheetContext);
                                       _showEditSetDialog(
@@ -1250,7 +1254,7 @@ class _ExercisePage extends StatelessWidget {
                                   ),
                                   ListTile(
                                     leading: Icon(Icons.delete_outline, color: Colors.red.shade400),
-                                    title: Text('Delete Set', style: TextStyle(color: Colors.red.shade400)),
+                                    title: Text(l10n.deleteSet, style: TextStyle(color: Colors.red.shade400)),
                                     onTap: () {
                                       Navigator.pop(sheetContext);
                                       controller.deleteSet(set.exerciseId, set.setNumber);
@@ -1280,12 +1284,11 @@ class _ExercisePage extends StatelessWidget {
 
         // Previous performance with PB badges
         PageSection(
-          title: 'Previous Performance',
+          title: l10n.previousPerformance,
           child: previousPerformance.isEmpty
-              ? const EmptyStateCard(
-                  title: 'No history for this movement yet',
-                  body:
-                      'Once you repeat the exercise, prior sets will show here.',
+              ? EmptyStateCard(
+                  title: l10n.noHistoryYet,
+                  body: l10n.historyWillAppear,
                 )
               : Column(
                   children: previousPerformance.take(4).map((set) {
@@ -1349,6 +1352,7 @@ class _ExercisePage extends StatelessWidget {
     bool isTimed,
     String preferredUnit,
   ) {
+    final l10n = AppLocalizations.of(context)!;
     final weightCtrl = TextEditingController(
       text: isTimed
           ? '${(set.durationSeconds / 60).round()}'
@@ -1361,7 +1365,7 @@ class _ExercisePage extends StatelessWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Edit Set ${set.setNumber}'),
+          title: Text('${l10n.editSet} ${set.setNumber}'),
           content: isTimed
               ? TextField(
                   controller: weightCtrl,
@@ -1392,7 +1396,7 @@ class _ExercisePage extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             FilledButton(
               onPressed: () {
@@ -1422,7 +1426,7 @@ class _ExercisePage extends StatelessWidget {
                 }
                 Navigator.pop(dialogContext);
               },
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ],
         );
@@ -1572,6 +1576,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
   }
 
   void _showHeatmapLegend(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -1596,7 +1601,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
               ),
               const SizedBox(height: 20),
               Text(
-                'Muscle Heatmap',
+                l10n.muscleHeatmap,
                 style: Theme.of(sheetContext)
                     .textTheme
                     .titleMedium
@@ -1605,14 +1610,14 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
               const SizedBox(height: 16),
               _legendRow(
                 color: AppTheme.primary,
-                label: 'Active muscles',
-                description: 'Muscles targeted by this exercise (pulsing)',
+                label: l10n.activeMuscles,
+                description: l10n.activeMusclesDesc,
               ),
               const SizedBox(height: 12),
               _legendRow(
                 color: AppTheme.primary.withValues(alpha: 0.4),
-                label: 'Secondary muscles',
-                description: 'Assisting muscles for this exercise',
+                label: l10n.secondaryMusclesLabel,
+                description: l10n.secondaryMusclesDesc,
               ),
               const SizedBox(height: 16),
               Container(
@@ -1635,17 +1640,17 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recovered',
+                  Text(l10n.recovered,
                       style: TextStyle(
                           fontSize: 11, color: AppTheme.slateInactive)),
-                  Text('Fatigued',
+                  Text(l10n.fatigued,
                       style: TextStyle(
                           fontSize: 11, color: AppTheme.slateInactive)),
                 ],
               ),
               const SizedBox(height: 6),
               Text(
-                'Fatigue colors fade as muscles recover (~48h half-life)',
+                l10n.fatigueDecayNote,
                 style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
                       color: AppTheme.slateInactive,
                     ),
