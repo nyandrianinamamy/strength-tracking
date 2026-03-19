@@ -404,20 +404,21 @@ class DigitalTimer extends StatelessWidget {
                 color: AppTheme.primary,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
+                fontSize: 10,
               ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 6),
         if (isReady)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(10),
               border: Border.all(color: AppTheme.primary, width: 1.5),
               color: AppTheme.primary.withValues(alpha: 0.08),
             ),
             child: Text(
               'READY',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: AppTheme.primary,
                   ),
@@ -429,10 +430,10 @@ class DigitalTimer extends StatelessWidget {
             children: [
               _timerBox(context, minutes.toString().padLeft(2, '0')),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Text(
                   ':',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
                 ),
@@ -446,14 +447,14 @@ class DigitalTimer extends StatelessWidget {
 
   Widget _timerBox(BuildContext context, String text) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: AppTheme.border, width: 1.5),
       ),
       child: Text(
         text,
-        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w900,
             ),
       ),

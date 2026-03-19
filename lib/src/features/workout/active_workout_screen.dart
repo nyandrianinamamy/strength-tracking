@@ -390,6 +390,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     }
 
     final exerciseCount = routine.exercises.length;
+    final currentPrescription = routine.exercises[_currentPage.clamp(0, exerciseCount - 1)];
+    final currentExercise = state.exerciseById(currentPrescription.exerciseId);
+    final currentExerciseSets = session.completedSets
+        .where((s) => s.exerciseId == currentPrescription.exerciseId)
+        .length;
     final sessionElapsed = DateTime.now().difference(session.startedAt);
     final elapsedMinutes = sessionElapsed.inMinutes;
     final elapsedSeconds = sessionElapsed.inSeconds % 60;
@@ -410,13 +415,32 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           icon: const Icon(Icons.close_rounded),
         ),
         title: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              routine.name,
+              currentExercise?.name ?? 'Exercise',
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
                   ?.copyWith(fontWeight: FontWeight.w800),
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'SET ${currentExerciseSets + 1} OF ${currentPrescription.targetSets}',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: AppTheme.primary,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                      fontSize: 10,
+                    ),
+              ),
             ),
           ],
         ),
@@ -754,36 +778,6 @@ class _ExercisePage extends StatelessWidget {
           _ActiveMuscleHeatmap(exercise: exercise, state: state),
           const SizedBox(height: 8),
         ],
-
-        // Exercise name + set badge
-        Center(
-          child: Text(
-            exercise?.name ?? 'Exercise',
-            style: Theme.of(context)
-                .textTheme
-                .titleMedium
-                ?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'SET ${currentSets.length + 1} OF ${prescription.targetSets}',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.0,
-                  ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 8),
 
         if (exercise?.exerciseType == 'timed') ...[
           // Timed exercise: countdown timer + start/pause/reset
@@ -1351,8 +1345,7 @@ class _ActiveMuscleHeatmap extends StatelessWidget {
           data: highlightedData,
           colors: colors,
           bodyColor: const Color(0xFFE2E8F0),
-          showBorder: true,
-          borderColor: const Color(0xFF1E293B),
+          showBorder: false,
         ),
       );
     }
