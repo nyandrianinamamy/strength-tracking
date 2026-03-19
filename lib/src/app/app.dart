@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/app/router.dart';
+import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 
 final _messengerKey = GlobalKey<ScaffoldMessengerState>();
@@ -52,6 +54,14 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
+    final preferredLanguage = ref.watch(
+      appStateControllerProvider.select((s) => s.preferredLanguage),
+    );
+
+    Locale? localeOverride;
+    if (preferredLanguage.isNotEmpty) {
+      localeOverride = Locale(preferredLanguage);
+    }
 
     return MaterialApp.router(
       scaffoldMessengerKey: _messengerKey,
@@ -59,6 +69,9 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: localeOverride,
     );
   }
 }

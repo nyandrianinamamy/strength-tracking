@@ -11,6 +11,7 @@ class AppState {
     this.userName = '',
     this.preferredUnit = 'kg',
     this.bodyGender = 'male',
+    this.preferredLanguage = '',
   });
 
   final List<Exercise> exercises;
@@ -19,6 +20,7 @@ class AppState {
   final String userName;
   final String preferredUnit;
   final String bodyGender;
+  final String preferredLanguage;
 
   factory AppState.empty() {
     return const AppState(exercises: [], routines: [], sessions: []);
@@ -31,6 +33,7 @@ class AppState {
     String? userName,
     String? preferredUnit,
     String? bodyGender,
+    String? preferredLanguage,
   }) {
     return AppState(
       exercises: exercises ?? this.exercises,
@@ -39,6 +42,7 @@ class AppState {
       userName: userName ?? this.userName,
       preferredUnit: preferredUnit ?? this.preferredUnit,
       bodyGender: bodyGender ?? this.bodyGender,
+      preferredLanguage: preferredLanguage ?? this.preferredLanguage,
     );
   }
 
@@ -78,6 +82,7 @@ class AppState {
       userName: json['userName'] as String? ?? '',
       preferredUnit: json['preferredUnit'] as String? ?? 'kg',
       bodyGender: json['bodyGender'] as String? ?? 'male',
+      preferredLanguage: json['preferredLanguage'] as String? ?? '',
     );
   }
 
@@ -89,6 +94,7 @@ class AppState {
       'userName': userName,
       'preferredUnit': preferredUnit,
       'bodyGender': bodyGender,
+      'preferredLanguage': preferredLanguage,
     };
   }
 }

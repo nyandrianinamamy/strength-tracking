@@ -258,6 +258,35 @@ class WorkoutController {
     _persistSession(session.copyWith(rpe: rpe));
   }
 
+  /// Swaps the exercise at [exerciseIndex] in the active session's routine
+  /// with [newExerciseId]. This modifies the routine in-place for the current
+  /// session; the user can always swap back or edit the routine later.
+  void swapExercise(int exerciseIndex, String newExerciseId) {
+    final state = _ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return;
+
+    final routine = state.routineById(session.routineId);
+    if (routine == null) return;
+
+    if (exerciseIndex < 0 || exerciseIndex >= routine.exercises.length) return;
+
+    final updatedExercises = List.of(routine.exercises);
+    updatedExercises[exerciseIndex] = updatedExercises[exerciseIndex].copyWith(
+      exerciseId: newExerciseId,
+    );
+
+    final updatedRoutine = routine.copyWith(exercises: updatedExercises);
+
+    _ref.read(appStateControllerProvider.notifier).updateState(
+      (s) => s.copyWith(
+        routines: s.routines
+            .map((r) => r.id == updatedRoutine.id ? updatedRoutine : r)
+            .toList(),
+      ),
+    );
+  }
+
   void _persistSession(WorkoutSession updatedSession) {
     _ref
         .read(appStateControllerProvider.notifier)

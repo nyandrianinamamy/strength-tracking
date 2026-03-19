@@ -15,6 +15,7 @@ import 'package:strength_training_tracker/src/features/workout/workout_controlle
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
+import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
@@ -359,6 +360,150 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     );
   }
 
+  void _showSwapPicker(
+    BuildContext context,
+    AppState state,
+    Routine routine,
+    int pageIndex,
+  ) {
+    final prescription = routine.exercises[pageIndex];
+    final currentExercise = state.exerciseById(prescription.exerciseId);
+    final currentMuscles = currentExercise?.primaryMuscles ?? [];
+
+    final alternatives = state.exercises.where((e) {
+      if (e.archived || e.id == currentExercise?.id) return false;
+      return e.primaryMuscles.any((m) => currentMuscles.contains(m));
+    }).toList();
+
+    final searchController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            final query = searchController.text.toLowerCase();
+            final filtered = query.isEmpty
+                ? alternatives
+                : alternatives.where((e) {
+                    final name = ExerciseTranslations.displayName(context, e).toLowerCase();
+                    final muscles = e.primaryMuscles.join(' ').toLowerCase();
+                    return name.contains(query) || muscles.contains(query);
+                  }).toList();
+
+            return DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.4,
+              maxChildSize: 0.9,
+              expand: false,
+              builder: (_, scrollController) {
+                return SafeArea(
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppTheme.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          'Swap Exercise',
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      if (currentMuscles.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            currentMuscles.join(', '),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppTheme.slateInactive,
+                            ),
+                          ),
+                        ),
+                      const SizedBox(height: 12),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: TextField(
+                          controller: searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search exercises...',
+                            prefixIcon: const Icon(Icons.search, size: 20),
+                            isDense: true,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onChanged: (_) => setSheetState(() {}),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: filtered.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No matching exercises',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: AppTheme.slateInactive,
+                                  ),
+                                ),
+                              )
+                            : ListView.builder(
+                                controller: scrollController,
+                                itemCount: filtered.length,
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                itemBuilder: (_, index) {
+                                  final exercise = filtered[index];
+                                  return ListTile(
+                                    contentPadding: EdgeInsets.zero,
+                                    title: Text(
+                                      ExerciseTranslations.displayName(context, exercise),
+                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                    ),
+                                    subtitle: Text(
+                                      exercise.primaryMuscles.join(', '),
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: AppTheme.slateInactive,
+                                      ),
+                                    ),
+                                    trailing: const Icon(
+                                      Icons.swap_horiz_rounded,
+                                      color: AppTheme.primary,
+                                      size: 20,
+                                    ),
+                                    onTap: () {
+                                      final controller = ref.read(workoutControllerProvider);
+                                      controller.swapExercise(pageIndex, exercise.id);
+                                      Navigator.pop(sheetContext);
+                                    },
+                                  );
+                                },
+                              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(appStateControllerProvider);
@@ -418,7 +563,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              currentExercise?.name ?? 'Exercise',
+              currentExercise != null
+                  ? ExerciseTranslations.displayName(context, currentExercise)
+                  : 'Exercise',
               style: Theme.of(context)
                   .textTheme
                   .titleMedium
@@ -445,6 +592,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.swap_horiz_rounded),
+            tooltip: 'Swap exercise',
+            onPressed: () => _showSwapPicker(context, state, routine, _currentPage),
+          ),
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

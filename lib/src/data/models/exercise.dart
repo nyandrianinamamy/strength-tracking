@@ -8,6 +8,7 @@ class Exercise {
     required this.instructions,
     required this.archived,
     this.exerciseType = 'strength',
+    this.translationKey,
   });
 
   final String id;
@@ -18,6 +19,7 @@ class Exercise {
   final String instructions;
   final bool archived;
   final String exerciseType;
+  final String? translationKey;
 
   Exercise copyWith({
     String? id,
@@ -28,6 +30,7 @@ class Exercise {
     String? instructions,
     bool? archived,
     String? exerciseType,
+    String? translationKey,
   }) {
     return Exercise(
       id: id ?? this.id,
@@ -38,6 +41,7 @@ class Exercise {
       instructions: instructions ?? this.instructions,
       archived: archived ?? this.archived,
       exerciseType: exerciseType ?? this.exerciseType,
+      translationKey: translationKey ?? this.translationKey,
     );
   }
 
@@ -57,6 +61,7 @@ class Exercise {
       instructions: json['instructions'] as String? ?? '',
       archived: json['archived'] as bool? ?? false,
       exerciseType: json['exerciseType'] as String? ?? 'strength',
+      translationKey: json['translationKey'] as String?,
     );
   }
 
@@ -70,6 +75,7 @@ class Exercise {
       'instructions': instructions,
       'archived': archived,
       'exerciseType': exerciseType,
+      if (translationKey != null) 'translationKey': translationKey,
     };
   }
 }
