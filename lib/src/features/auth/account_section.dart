@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/utils/force_update.dart';
+import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
@@ -94,6 +95,43 @@ class AccountSection extends ConsumerWidget {
                     }
                   }
                 },
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  const Expanded(child: Divider()),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'or switch to an existing account',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.slateInactive,
+                      ),
+                    ),
+                  ),
+                  const Expanded(child: Divider()),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'This will discard your current data and load the linked account\'s data.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Colors.orange.shade700,
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 12),
+              _AuthButton(
+                icon: Icons.g_mobiledata,
+                label: 'Sign in with Google',
+                onTap: () => _signInAndReplace(context, ref, 'google'),
+              ),
+              const SizedBox(height: 12),
+              _AuthButton(
+                icon: Icons.apple,
+                label: 'Sign in with Apple',
+                onTap: () => _signInAndReplace(context, ref, 'apple'),
               ),
             ] else ...[
               Text(
@@ -199,6 +237,61 @@ class AccountSection extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _signInAndReplace(
+    BuildContext context,
+    WidgetRef ref,
+    String provider,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Switch Account?'),
+        content: const Text(
+          'Your current anonymous data will be discarded and replaced with the data from your linked account.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            child: const Text('Switch'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      final user = provider == 'google'
+          ? await authService.signInWithGoogle()
+          : await authService.signInWithApple();
+
+      // Load data from the signed-in account's Firestore
+      final repository = FirestoreAppStateRepository(userId: user.uid);
+      final cloudState = await repository.load();
+
+      ref.read(appStateControllerProvider.notifier).replaceState(cloudState);
+
+      if (context.mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Signed in and data restored')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign in failed: $e')),
+        );
+      }
+    }
   }
 }
 
