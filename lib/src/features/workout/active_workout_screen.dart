@@ -607,7 +607,45 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
 
     final routine = state.routineById(session.routineId);
     if (routine == null || routine.exercises.isEmpty) {
-      return const SizedBox.shrink();
+      return Scaffold(
+        appBar: AppBar(title: Text(l10n.activeWorkout)),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.orange),
+                const SizedBox(height: 16),
+                Text(
+                  'Session has no valid routine',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'The routine for this session may have been deleted. Discard this session to continue.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.slateInactive,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: () {
+                    controller.discardDraft();
+                    context.go('/');
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                  label: Text(l10n.discardSession),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     final exerciseCount = routine.exercises.length;
