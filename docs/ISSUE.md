@@ -6,6 +6,7 @@
 [x] Workout frequency duplicated, no need for it in progress page
 [x] Clicking outside of weight and reps input should close the keyboard
 [x] Exercises and routines not showing in French language (filter sentinel fix)
+[x] Stale PRs showing "Exercise" for deleted exercises
 
 ## Features
 [x] Clicking on a date in workout frequency should show the workout for that date if it exists.
@@ -30,10 +31,17 @@
 [x] Light and dark theme (Auto/Light/Dark toggle in account settings)
 [x] Show title for body heat map in dashboard
 [x] Swiping left when last exercise should propose to add a new exercise or finish
+[x] Dashboard heatmap info icon explaining colors and calculation
+[x] Clear workout history button
+[x] Auto-increment version number on commit
 [ ] Add images for exercises
-[ ] Apple watch companion
-[ ] Dashboard heatmap add info icon to explain the colors and how the heatmap is calculated.
-[ ] History deletion
+[ ] Apple Watch companion:
+    - Rest timer visible on wrist
+    - Current set info (Set 3/4 — Exercise — Weight × Reps)
+    - Quick log set (tap to confirm pre-filled weight/reps)
+    - Session elapsed timer
+    - Next exercise preview
+    - Requires: native Swift WatchOS app, Watch Connectivity, platform channels
 
 ## Refactor
 [x] New active exercise UI with body heatmap, exercise name in AppBar, compact rest timer
