@@ -1040,42 +1040,69 @@ class _ExercisePage extends StatelessWidget {
                 )
               : Column(
                   children: currentSets.map((set) {
-                    return Dismissible(
-                      key: ValueKey('${set.exerciseId}-${set.setNumber}'),
-                      direction: DismissDirection.endToStart,
-                      background: Container(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        decoration: BoxDecoration(
-                          color: Colors.red.shade400,
-                          borderRadius: BorderRadius.circular(16),
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      child: ListTile(
+                        onTap: () => _showEditSetDialog(
+                          context,
+                          controller,
+                          set,
+                          exercise?.exerciseType == 'timed',
+                          preferredUnit,
                         ),
-                        alignment: Alignment.centerRight,
-                        padding: const EdgeInsets.only(right: 20),
-                        child: const Icon(Icons.delete_outline, color: Colors.white),
-                      ),
-                      onDismissed: (_) {
-                        controller.deleteSet(set.exerciseId, set.setNumber);
-                      },
-                      child: Card(
-                        margin: const EdgeInsets.only(bottom: 10),
-                        child: ListTile(
-                          onTap: () => _showEditSetDialog(
-                            context,
-                            controller,
-                            set,
-                            exercise?.exerciseType == 'timed',
-                            preferredUnit,
-                          ),
-                          title: Text(
-                            set.durationSeconds > 0
-                                ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
-                                : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
-                            style:
-                                const TextStyle(fontWeight: FontWeight.w800),
-                          ),
-                          subtitle: Text(AppFormatters.time(set.completedAt)),
-                          trailing: Icon(Icons.edit_outlined, size: 16, color: AppTheme.slateInactive),
+                        onLongPress: () {
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                            ),
+                            builder: (sheetContext) => SafeArea(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    width: 40, height: 4,
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.border,
+                                      borderRadius: BorderRadius.circular(2),
+                                    ),
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.edit_outlined),
+                                    title: const Text('Edit Set'),
+                                    onTap: () {
+                                      Navigator.pop(sheetContext);
+                                      _showEditSetDialog(
+                                        context, controller, set,
+                                        exercise?.exerciseType == 'timed',
+                                        preferredUnit,
+                                      );
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: Icon(Icons.delete_outline, color: Colors.red.shade400),
+                                    title: Text('Delete Set', style: TextStyle(color: Colors.red.shade400)),
+                                    onTap: () {
+                                      Navigator.pop(sheetContext);
+                                      controller.deleteSet(set.exerciseId, set.setNumber);
+                                    },
+                                  ),
+                                  const SizedBox(height: 8),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                        title: Text(
+                          set.durationSeconds > 0
+                              ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
+                              : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                          style:
+                              const TextStyle(fontWeight: FontWeight.w800),
                         ),
+                        subtitle: Text(AppFormatters.time(set.completedAt)),
+                        trailing: Icon(Icons.more_vert, size: 18, color: AppTheme.slateInactive),
                       ),
                     );
                   }).toList(),
