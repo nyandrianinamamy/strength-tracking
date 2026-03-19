@@ -1,8 +1,15 @@
 #!/bin/sh
 # Auto-increment build number in pubspec.yaml after each commit
-# Version format: X.Y.Z+BUILD where BUILD increments
+# The bumped version is staged and included in the NEXT commit
+# (not the current one, to avoid amend loops)
 
 PUBSPEC="pubspec.yaml"
+LOCK_FILE="/tmp/.git-post-commit-lock"
+
+# Prevent recursive execution
+if [ -f "$LOCK_FILE" ]; then
+  exit 0
+fi
 
 if [ ! -f "$PUBSPEC" ]; then
   exit 0
@@ -29,6 +36,8 @@ else
   sed -i "s/^version:.*/$NEW_VERSION/" "$PUBSPEC"
 fi
 
-# Stage and amend the commit silently
+# Create lock, amend commit, remove lock
+touch "$LOCK_FILE"
 git add "$PUBSPEC"
 git commit --amend --no-edit --no-verify > /dev/null 2>&1
+rm -f "$LOCK_FILE"
