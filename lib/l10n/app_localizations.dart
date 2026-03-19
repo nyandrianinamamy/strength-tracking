@@ -1633,6 +1633,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Language'**
   String get language;
+
+  /// No description provided for @front.
+  ///
+  /// In en, this message translates to:
+  /// **'FRONT'**
+  String get front;
+
+  /// No description provided for @back.
+  ///
+  /// In en, this message translates to:
+  /// **'BACK'**
+  String get back;
+
+  /// No description provided for @muscleFatigueMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Fatigue Map'**
+  String get muscleFatigueMap;
+
+  /// No description provided for @heatmapDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'This heatmap shows how much each muscle group has been trained recently.'**
+  String get heatmapDescription;
+
+  /// No description provided for @howItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get howItWorks;
+
+  /// No description provided for @heatmapVolume.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume is calculated from weight × reps for each set'**
+  String get heatmapVolume;
+
+  /// No description provided for @heatmapDecay.
+  ///
+  /// In en, this message translates to:
+  /// **'Fatigue decays over time — contribution halves every 48 hours'**
+  String get heatmapDecay;
+
+  /// No description provided for @heatmapColors.
+  ///
+  /// In en, this message translates to:
+  /// **'Colors range from gray (recovered) to red (highly fatigued)'**
+  String get heatmapColors;
+
+  /// No description provided for @heatmapSecondary.
+  ///
+  /// In en, this message translates to:
+  /// **'Secondary muscles contribute at 50% of primary muscle weight'**
+  String get heatmapSecondary;
+
+  /// No description provided for @allExercisesComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'All exercises complete!'**
+  String get allExercisesComplete;
+
+  /// No description provided for @addAnotherOrFinish.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another exercise or finish your workout.'**
+  String get addAnotherOrFinish;
+
+  /// No description provided for @addExercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Exercise'**
+  String get addExercise;
 }
 
 class _AppLocalizationsDelegate

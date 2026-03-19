@@ -1663,7 +1663,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
         }
 
         return SizedBox(
-          height: MediaQuery.of(context).size.height * 0.40,
+          height: MediaQuery.of(context).size.height * 0.42,
           child: Stack(
             children: [
               Row(

@@ -282,5 +282,18 @@
   "exercise_stair_climber": "Stair Climber",
   "exercise_elliptical": "Elliptical",
 
-  "language": "Language"
+  "language": "Language",
+
+  "front": "FRONT",
+  "back": "BACK",
+  "muscleFatigueMap": "Muscle Fatigue Map",
+  "heatmapDescription": "This heatmap shows how much each muscle group has been trained recently.",
+  "howItWorks": "How it works",
+  "heatmapVolume": "Volume is calculated from weight × reps for each set",
+  "heatmapDecay": "Fatigue decays over time — contribution halves every 48 hours",
+  "heatmapColors": "Colors range from gray (recovered) to red (highly fatigued)",
+  "heatmapSecondary": "Secondary muscles contribute at 50% of primary muscle weight",
+  "allExercisesComplete": "All exercises complete!",
+  "addAnotherOrFinish": "Add another exercise or finish your workout.",
+  "addExercise": "Add Exercise"
 }

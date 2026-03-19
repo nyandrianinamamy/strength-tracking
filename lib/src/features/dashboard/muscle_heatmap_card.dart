@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
@@ -21,6 +22,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appStateControllerProvider);
     final fatigue = ref.read(muscleHeatmapServiceProvider).computeFatigue(state);
+    final l10n = AppLocalizations.of(context)!;
 
     return Card(
       child: Padding(
@@ -34,7 +36,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                     Expanded(
                       child: Column(
                         children: [
-                          Text('FRONT', style: _labelStyle(context)),
+                          Text(l10n.front, style: _labelStyle(context)),
                           const SizedBox(height: 8),
                           AspectRatio(
                             aspectRatio: 0.5,
@@ -55,7 +57,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                     Expanded(
                       child: Column(
                         children: [
-                          Text('BACK', style: _labelStyle(context)),
+                          Text(l10n.back, style: _labelStyle(context)),
                           const SizedBox(height: 8),
                           AspectRatio(
                             aspectRatio: 0.5,
@@ -113,9 +115,10 @@ class MuscleHeatmapCard extends ConsumerWidget {
   }
 
   Widget _buildLegend(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text('Recovered',
+        Text(l10n.recovered,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: AppTheme.slateInactive,
                   fontSize: 10,
@@ -131,7 +134,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Text('Fatigued',
+        Text(l10n.fatigued,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   color: AppTheme.slateInactive,
                   fontSize: 10,
@@ -141,6 +144,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
   }
 
   void _showHeatmapInfo(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -165,7 +169,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Muscle Fatigue Map',
+                l10n.muscleFatigueMap,
                 style: Theme.of(sheetContext)
                     .textTheme
                     .titleMedium
@@ -173,27 +177,27 @@ class MuscleHeatmapCard extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'This heatmap shows how much each muscle group has been trained recently.',
+                l10n.heatmapDescription,
                 style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.slateInactive,
                     ),
               ),
               const SizedBox(height: 16),
               Text(
-                'How it works',
+                l10n.howItWorks,
                 style: Theme.of(sheetContext)
                     .textTheme
                     .titleSmall
                     ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
-              _infoRow(sheetContext, Icons.fitness_center, 'Volume is calculated from weight × reps for each set'),
+              _infoRow(sheetContext, Icons.fitness_center, l10n.heatmapVolume),
               const SizedBox(height: 6),
-              _infoRow(sheetContext, Icons.timer_outlined, 'Fatigue decays over time — contribution halves every 48 hours'),
+              _infoRow(sheetContext, Icons.timer_outlined, l10n.heatmapDecay),
               const SizedBox(height: 6),
-              _infoRow(sheetContext, Icons.palette_outlined, 'Colors range from gray (recovered) to red (highly fatigued)'),
+              _infoRow(sheetContext, Icons.palette_outlined, l10n.heatmapColors),
               const SizedBox(height: 6),
-              _infoRow(sheetContext, Icons.group_work_outlined, 'Secondary muscles contribute at 50% of primary muscle weight'),
+              _infoRow(sheetContext, Icons.group_work_outlined, l10n.heatmapSecondary),
               const SizedBox(height: 16),
               Container(
                 height: 12,
@@ -206,9 +210,9 @@ class MuscleHeatmapCard extends ConsumerWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Recovered',
+                  Text(l10n.recovered,
                       style: TextStyle(fontSize: 11, color: AppTheme.slateInactive)),
-                  Text('Fatigued',
+                  Text(l10n.fatigued,
                       style: TextStyle(fontSize: 11, color: AppTheme.slateInactive)),
                 ],
               ),

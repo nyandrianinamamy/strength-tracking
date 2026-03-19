@@ -792,4 +792,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get language => 'Language';
+
+  @override
+  String get front => 'FRONT';
+
+  @override
+  String get back => 'BACK';
+
+  @override
+  String get muscleFatigueMap => 'Muscle Fatigue Map';
+
+  @override
+  String get heatmapDescription =>
+      'This heatmap shows how much each muscle group has been trained recently.';
+
+  @override
+  String get howItWorks => 'How it works';
+
+  @override
+  String get heatmapVolume =>
+      'Volume is calculated from weight × reps for each set';
+
+  @override
+  String get heatmapDecay =>
+      'Fatigue decays over time — contribution halves every 48 hours';
+
+  @override
+  String get heatmapColors =>
+      'Colors range from gray (recovered) to red (highly fatigued)';
+
+  @override
+  String get heatmapSecondary =>
+      'Secondary muscles contribute at 50% of primary muscle weight';
+
+  @override
+  String get allExercisesComplete => 'All exercises complete!';
+
+  @override
+  String get addAnotherOrFinish =>
+      'Add another exercise or finish your workout.';
+
+  @override
+  String get addExercise => 'Add Exercise';
 }

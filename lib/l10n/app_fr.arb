@@ -282,5 +282,18 @@
   "exercise_stair_climber": "Escalier",
   "exercise_elliptical": "Elliptique",
 
-  "language": "Langue"
+  "language": "Langue",
+
+  "front": "AVANT",
+  "back": "ARRIÈRE",
+  "muscleFatigueMap": "Carte de fatigue musculaire",
+  "heatmapDescription": "Cette carte montre le niveau d'entraînement récent de chaque groupe musculaire.",
+  "howItWorks": "Comment ça marche",
+  "heatmapVolume": "Le volume est calculé à partir du poids × répétitions pour chaque série",
+  "heatmapDecay": "La fatigue diminue avec le temps — la contribution est divisée par 2 toutes les 48h",
+  "heatmapColors": "Les couleurs vont du gris (récupéré) au rouge (très fatigué)",
+  "heatmapSecondary": "Les muscles secondaires contribuent à 50% du poids des muscles principaux",
+  "allExercisesComplete": "Tous les exercices terminés !",
+  "addAnotherOrFinish": "Ajoutez un exercice ou terminez votre séance.",
+  "addExercise": "Ajouter un exercice"
 }

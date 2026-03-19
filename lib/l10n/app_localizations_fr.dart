@@ -795,4 +795,46 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get language => 'Langue';
+
+  @override
+  String get front => 'AVANT';
+
+  @override
+  String get back => 'ARRIÈRE';
+
+  @override
+  String get muscleFatigueMap => 'Carte de fatigue musculaire';
+
+  @override
+  String get heatmapDescription =>
+      'Cette carte montre le niveau d\'entraînement récent de chaque groupe musculaire.';
+
+  @override
+  String get howItWorks => 'Comment ça marche';
+
+  @override
+  String get heatmapVolume =>
+      'Le volume est calculé à partir du poids × répétitions pour chaque série';
+
+  @override
+  String get heatmapDecay =>
+      'La fatigue diminue avec le temps — la contribution est divisée par 2 toutes les 48h';
+
+  @override
+  String get heatmapColors =>
+      'Les couleurs vont du gris (récupéré) au rouge (très fatigué)';
+
+  @override
+  String get heatmapSecondary =>
+      'Les muscles secondaires contribuent à 50% du poids des muscles principaux';
+
+  @override
+  String get allExercisesComplete => 'Tous les exercices terminés !';
+
+  @override
+  String get addAnotherOrFinish =>
+      'Ajoutez un exercice ou terminez votre séance.';
+
+  @override
+  String get addExercise => 'Ajouter un exercice';
 }
