@@ -23,13 +23,13 @@
 [x] Auto-switch countdown (5s) when all sets completed for an exercise
 [x] Active exercise heatmap with pulsing active muscles + fatigue colors
 [x] Heatmap legend (info icon → bottom sheet explaining colors)
+[x] Multi language (EN/FR with full l10n, all UI strings localized)
+[x] Complete pre-seed exercises (60 exercises with translations)
+[x] Swap exercise variant (filter by same primary muscles)
 [ ] Add images for exercises
 [ ] Apple watch companion
-[ ] Multi language
-[ ] Complete pre-seed exercises
 [ ] Light and dark theme
 [ ] Show title for body heat map in dashboard
-[ ] Swap exercise variant
 [ ] Swiping left when last exercise should propose to add a new exercise or discard.
 
 ## Refactor
