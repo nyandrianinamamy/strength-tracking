@@ -5,6 +5,7 @@
 [x] No ask for install PWA (works on Chrome; iOS requires manual "Add to Home Screen")
 [x] Workout frequency duplicated, no need for it in progress page
 [x] Clicking outside of weight and reps input should close the keyboard
+[x] Exercises and routines not showing in French language (filter sentinel fix)
 
 ## Features
 [x] Clicking on a date in workout frequency should show the workout for that date if it exists.
@@ -26,11 +27,11 @@
 [x] Multi language (EN/FR with full l10n, all UI strings localized)
 [x] Complete pre-seed exercises (60 exercises with translations)
 [x] Swap exercise variant (filter by same primary muscles)
+[x] Light and dark theme (Auto/Light/Dark toggle in account settings)
+[x] Show title for body heat map in dashboard
+[x] Swiping left when last exercise should propose to add a new exercise or finish
 [ ] Add images for exercises
 [ ] Apple watch companion
-[ ] Light and dark theme
-[ ] Show title for body heat map in dashboard
-[ ] Swiping left when last exercise should propose to add a new exercise or discard.
 
 ## Refactor
 [x] New active exercise UI with body heatmap, exercise name in AppBar, compact rest timer
