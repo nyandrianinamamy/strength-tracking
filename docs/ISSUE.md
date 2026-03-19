@@ -32,6 +32,7 @@
 [x] Swiping left when last exercise should propose to add a new exercise or finish
 [ ] Add images for exercises
 [ ] Apple watch companion
+[ ] Dashboard heatmap add info icon to explain the colors and how the heatmap is calculated.
 
 ## Refactor
 [x] New active exercise UI with body heatmap, exercise name in AppBar, compact rest timer
