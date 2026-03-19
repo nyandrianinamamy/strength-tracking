@@ -12,8 +12,8 @@ import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
+import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
-import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_card.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -1312,45 +1312,50 @@ class _MiniMuscleHeatmap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fatigue = MuscleHeatmapService().computeFatigue(state);
+    final allMuscles = [...exercise.primaryMuscles, ...exercise.secondaryMuscles];
+    final sides = MuscleHeatmapService.sidesForMuscles(allMuscles);
 
-    // Determine which muscles this exercise targets (mapped to heatmap names)
-    final targetMuscles = <String>{};
-    for (final muscle in [...exercise.primaryMuscles, ...exercise.secondaryMuscles]) {
-      final mapped = MuscleHeatmapService.muscleMapping[muscle] ?? [muscle];
-      targetMuscles.addAll(mapped);
-    }
+    if (!sides.front && !sides.back) return const SizedBox.shrink();
 
-    // Determine which sides to show
-    final hasFront = targetMuscles.any(
-        (m) => MuscleHeatmapService.frontMuscles.contains(m));
-    final hasBack = targetMuscles.any(
-        (m) => MuscleHeatmapService.backMuscles.contains(m));
+    final showBoth = sides.front && sides.back;
 
-    // If exercise muscles don't map to any known heatmap muscle, skip
-    if (!hasFront && !hasBack) return const SizedBox.shrink();
-
-    final showBoth = hasFront && hasBack;
+    const colors = [
+      Color(0xFFE2E8F0),
+      Color(0xFF93C5FD),
+      Color(0xFF4ADE80),
+      Color(0xFFFBBF24),
+      Color(0xFFF97316),
+      Color(0xFFEF4444),
+    ];
 
     return SizedBox(
       height: 160,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (hasFront)
+          if (sides.front)
             AspectRatio(
-              aspectRatio: 0.42,
-              child: CustomPaint(
-                painter: BodyHeatmapPainter(fatigue: fatigue, isFront: true),
-                size: Size.infinite,
+              aspectRatio: 0.5,
+              child: BodyHeatmap(
+                side: BodySide.front,
+                gender: BodyGender.male,
+                data: fatigue,
+                colors: colors,
+                bodyColor: const Color(0xFFE2E8F0),
+                showBorder: false,
               ),
             ),
           if (showBoth) const SizedBox(width: 16),
-          if (hasBack)
+          if (sides.back)
             AspectRatio(
-              aspectRatio: 0.42,
-              child: CustomPaint(
-                painter: BodyHeatmapPainter(fatigue: fatigue, isFront: false),
-                size: Size.infinite,
+              aspectRatio: 0.5,
+              child: BodyHeatmap(
+                side: BodySide.back,
+                gender: BodyGender.male,
+                data: fatigue,
+                colors: colors,
+                bodyColor: const Color(0xFFE2E8F0),
+                showBorder: false,
               ),
             ),
         ],

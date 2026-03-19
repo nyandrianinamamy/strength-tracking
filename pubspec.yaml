@@ -44,6 +44,8 @@ dependencies:
   sign_in_with_apple: ^7.0.1
   connectivity_plus: ^6.1.2
   web: ^1.1.1
+  flutter_body_heatmap:
+    path: packages/flutter_body_heatmap
 
 dev_dependencies:
   flutter_test:

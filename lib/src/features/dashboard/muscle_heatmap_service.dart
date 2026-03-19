@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 
@@ -8,91 +9,55 @@ final muscleHeatmapServiceProvider = Provider<MuscleHeatmapService>((ref) {
 });
 
 class MuscleHeatmapService {
-  /// All recognized muscle groups for the heatmap
-  static const allMuscles = [
-    'Chest',
-    'Shoulders',
-    'Biceps',
-    'Abs',
-    'Quads',
-    'Upper Back',
-    'Lats',
-    'Triceps',
-    'Glutes',
-    'Hamstrings',
-  ];
-
-  /// Front-facing muscles
-  static const frontMuscles = [
-    'Chest',
-    'Shoulders',
-    'Biceps',
-    'Abs',
-    'Quads',
-  ];
-
-  /// Back-facing muscles
-  static const backMuscles = [
-    'Upper Back',
-    'Lats',
-    'Triceps',
-    'Glutes',
-    'Hamstrings',
-  ];
-
-  /// Maps exercise primaryMuscles names to heatmap muscle names.
-  /// The exercise model uses names like 'Back', 'Arms', 'Legs' —
-  /// we need to map those to our more specific regions.
-  static const Map<String, List<String>> muscleMapping = {
-    'Chest': ['Chest'],
-    'Back': ['Upper Back', 'Lats'],
-    'Shoulders': ['Shoulders'],
-    'Arms': ['Biceps', 'Triceps'],
-    'Biceps': ['Biceps'],
-    'Triceps': ['Triceps'],
-    'Legs': ['Quads', 'Hamstrings', 'Glutes'],
-    'Quads': ['Quads'],
-    'Hamstrings': ['Hamstrings'],
-    'Glutes': ['Glutes'],
-    'Abs': ['Abs'],
-    'Core': ['Abs'],
-    'Upper Back': ['Upper Back'],
-    'Lats': ['Lats'],
+  /// Maps exercise primaryMuscles/secondaryMuscles strings to package Muscle enum values.
+  static const Map<String, List<Muscle>> muscleMapping = {
+    'Chest': [Muscle.chest],
+    'Back': [Muscle.upperBack, Muscle.trapezius],
+    'Shoulders': [Muscle.deltoids],
+    'Arms': [Muscle.biceps, Muscle.triceps],
+    'Biceps': [Muscle.biceps],
+    'Triceps': [Muscle.triceps],
+    'Legs': [Muscle.quadriceps, Muscle.hamstring, Muscle.gluteal],
+    'Quads': [Muscle.quadriceps],
+    'Quadriceps': [Muscle.quadriceps],
+    'Hamstrings': [Muscle.hamstring],
+    'Glutes': [Muscle.gluteal],
+    'Abs': [Muscle.abs],
+    'Core': [Muscle.abs, Muscle.obliques],
+    'Upper Back': [Muscle.upperBack],
+    'Lats': [Muscle.trapezius],
+    'Forearm': [Muscle.forearm],
+    'Calves': [Muscle.calves],
   };
 
   /// Compute fatigue levels for all muscles.
-  /// Returns a map of muscle name to fatigue value (0.0 to 1.0).
-  Map<String, double> computeFatigue(AppState state) {
+  /// Returns a map of Muscle to MuscleData with intensity (0.0 to 1.0).
+  Map<Muscle, MuscleData> computeFatigue(AppState state) {
     final now = DateTime.now();
-    final rawVolume = <String, double>{};
+    final rawVolume = <Muscle, double>{};
 
     for (final session in state.completedSessions) {
       for (final set in session.completedSets) {
         final exercise = state.exerciseById(set.exerciseId);
         if (exercise == null) continue;
 
-        final volume = set.weightKg * set.reps;
+        final volume = set.weightKg * set.reps + set.durationSeconds.toDouble();
         final hoursElapsed = now.difference(set.completedAt).inMinutes / 60.0;
-
-        // Exponential decay: halves every 48 hours
         final decayFactor = _decay(hoursElapsed);
-
-        // Skip if contribution is negligible (older than ~10 days)
         if (decayFactor < 0.01) continue;
-
         final decayedVolume = volume * decayFactor;
 
-        // Map exercise muscles to heatmap muscles
+        // Primary muscles at full weight
         for (final muscle in exercise.primaryMuscles) {
-          final mapped = muscleMapping[muscle] ?? [muscle];
+          final mapped = muscleMapping[muscle] ?? [];
           for (final target in mapped) {
             rawVolume[target] = (rawVolume[target] ?? 0) + decayedVolume;
           }
         }
 
-        // Secondary muscles contribute at 50% weight
+        // Secondary muscles at 50% weight
         for (final muscle in exercise.secondaryMuscles) {
-          final mapped = muscleMapping[muscle] ?? [muscle];
+          final mapped = muscleMapping[muscle] ?? [];
           for (final target in mapped) {
             rawVolume[target] = (rawVolume[target] ?? 0) + decayedVolume * 0.5;
           }
@@ -100,18 +65,37 @@ class MuscleHeatmapService {
       }
     }
 
-    // Normalize to 0-1 range
+    // Normalize to 0-1
     final maxVolume = rawVolume.values.isEmpty
         ? 1.0
         : rawVolume.values.reduce((a, b) => a > b ? a : b);
 
-    final result = <String, double>{};
-    for (final muscle in allMuscles) {
-      final raw = rawVolume[muscle] ?? 0;
-      result[muscle] = maxVolume > 0 ? (raw / maxVolume).clamp(0.0, 1.0) : 0.0;
+    final result = <Muscle, MuscleData>{};
+    for (final entry in rawVolume.entries) {
+      final intensity = maxVolume > 0 ? (entry.value / maxVolume).clamp(0.0, 1.0) : 0.0;
+      if (intensity > 0) {
+        result[entry.key] = MuscleData(intensity: intensity);
+      }
     }
 
     return result;
+  }
+
+  /// Determines if any of the given exercise muscles appear on the front/back.
+  static ({bool front, bool back}) sidesForMuscles(List<String> muscles) {
+    const frontMuscles = {Muscle.chest, Muscle.deltoids, Muscle.biceps, Muscle.abs, Muscle.obliques, Muscle.quadriceps, Muscle.adductors, Muscle.tibialis};
+    const backMuscles = {Muscle.upperBack, Muscle.trapezius, Muscle.triceps, Muscle.gluteal, Muscle.hamstring, Muscle.calves, Muscle.lowerBack};
+
+    bool front = false, back = false;
+    for (final name in muscles) {
+      final mapped = muscleMapping[name] ?? [];
+      for (final m in mapped) {
+        if (frontMuscles.contains(m)) front = true;
+        if (backMuscles.contains(m)) back = true;
+      }
+    }
+    // Deltoids appear on both front and back
+    return (front: front, back: back);
   }
 
   /// Exponential decay: halves every 48 hours.
