@@ -191,7 +191,7 @@ Path parseSvgPath(
           final largeArc = p[j + 3] != 0;
           final sweep = p[j + 4] != 0;
           final ex = isRel ? cx + p[j + 5] : p[j + 5];
-          final ey = isRel ? cx + p[j + 6] : p[j + 6];
+          final ey = isRel ? cy + p[j + 6] : p[j + 6];
           _arcTo(
             path,
             cx,
@@ -397,6 +397,7 @@ class _PathSegment {
 List<_PathSegment> _parsePath(String d) {
   final segments = <_PathSegment>[];
   final re = RegExp(r'([MmLlHhVvCcSsQqTtAaZz])([^MmLlHhVvCcSsQqTtAaZz]*)');
+  final numRe = RegExp(r'[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?');
 
   for (final match in re.allMatches(d)) {
     final cmd = match.group(1)!;
@@ -404,10 +405,14 @@ List<_PathSegment> _parsePath(String d) {
     final params = <double>[];
 
     if (paramStr.isNotEmpty) {
-      // Parse numbers (handle negatives, decimals, comma/space separated)
-      final numRe = RegExp(r'[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?');
-      for (final numMatch in numRe.allMatches(paramStr)) {
-        params.add(double.parse(numMatch.group(0)!));
+      if (cmd == 'A' || cmd == 'a') {
+        // Arc commands need special parsing: rx ry rotation large-arc-flag sweep-flag x y
+        // Flags are always 0 or 1 and can be concatenated without separators
+        params.addAll(_parseArcParams(paramStr));
+      } else {
+        for (final numMatch in numRe.allMatches(paramStr)) {
+          params.add(double.parse(numMatch.group(0)!));
+        }
       }
     }
 
@@ -415,4 +420,45 @@ List<_PathSegment> _parsePath(String d) {
   }
 
   return segments;
+}
+
+/// Special parser for arc command parameters.
+/// Handles flag values (0/1) that can be concatenated without separators.
+List<double> _parseArcParams(String s) {
+  final result = <double>[];
+  final numRe = RegExp(r'[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?');
+  int paramIndex = 0; // 0-6 within each arc group (rx, ry, rot, flag, flag, x, y)
+
+  int pos = 0;
+  while (pos < s.length) {
+    // Skip whitespace and commas
+    while (pos < s.length && (s[pos] == ' ' || s[pos] == ',' || s[pos] == '\n' || s[pos] == '\t')) {
+      pos++;
+    }
+    if (pos >= s.length) break;
+
+    final groupIdx = paramIndex % 7;
+
+    if (groupIdx == 3 || groupIdx == 4) {
+      // Flag: must be 0 or 1, single character
+      if (s[pos] == '0' || s[pos] == '1') {
+        result.add(s[pos] == '1' ? 1.0 : 0.0);
+        pos++;
+        paramIndex++;
+        continue;
+      }
+    }
+
+    // Regular number
+    final match = numRe.matchAsPrefix(s, pos);
+    if (match != null) {
+      result.add(double.parse(match.group(0)!));
+      pos = match.end;
+      paramIndex++;
+    } else {
+      pos++; // skip unrecognized character
+    }
+  }
+
+  return result;
 }
