@@ -45,6 +45,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   bool _timedExerciseRunning = false;
   bool _timedExerciseBeeped = false;
 
+  // Auto-switch countdown when all sets completed
+  int? _switchCountdown; // null = not counting, 5..0 = counting down
+  int? _switchTargetPage;
+
   // Swipe hint arrows
   late final AnimationController _arrowAnimController;
   late final Animation<double> _arrowOpacity;
@@ -59,6 +63,23 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         if (_remainingRest == 0 && _restTimerStart != null && !_restTimerBeeped) {
           _restTimerBeeped = true;
           _playRestTimerBeep();
+        }
+        // Auto-switch countdown
+        if (_switchCountdown != null) {
+          _switchCountdown = _switchCountdown! - 1;
+          if (_switchCountdown! <= 0) {
+            final target = _switchTargetPage;
+            _switchCountdown = null;
+            _switchTargetPage = null;
+            if (target != null && _pageController.hasClients) {
+              _currentPage = target;
+              _pageController.animateToPage(
+                target,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            }
+          }
         }
         // Timed exercise auto-log when countdown reaches zero
         if (_timedExerciseRunning && _timedCountdownRemaining <= 0 && !_timedExerciseBeeped) {
@@ -184,12 +205,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       if (session != null &&
           _pageController.hasClients &&
           session.currentExerciseIndex != _currentPage) {
-        setState(() => _currentPage = session.currentExerciseIndex);
-        _pageController.animateToPage(
-          session.currentExerciseIndex,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeInOut,
-        );
+        // Start a 5-second countdown before switching
+        setState(() {
+          _switchCountdown = 5;
+          _switchTargetPage = session.currentExerciseIndex;
+        });
       }
     });
   }
@@ -533,6 +553,65 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ),
               ),
             ),
+            // Auto-switch countdown overlay
+            if (_switchCountdown != null)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.15),
+                            blurRadius: 20,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.swap_horiz_rounded,
+                              size: 36, color: AppTheme.primary),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Next exercise in',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '$_switchCountdown',
+                            style: Theme.of(context)
+                                .textTheme
+                                .displaySmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: AppTheme.primary,
+                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          OutlinedButton(
+                            onPressed: () {
+                              setState(() {
+                                _switchCountdown = null;
+                                _switchTargetPage = null;
+                              });
+                            },
+                            child: const Text('Stay Here'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
         ),
       ),
