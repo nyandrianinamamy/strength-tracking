@@ -1,10 +1,8 @@
-import 'dart:js_interop';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:web/web.dart' as web;
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/utils/force_update.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
@@ -193,20 +191,7 @@ class AccountSection extends ConsumerWidget {
                 label: 'Force Update App',
                 onTap: () async {
                   Navigator.pop(context);
-                  // Clear service worker caches and reload
-                  final cacheNames = await web.window.caches.keys().toDart;
-                  for (final name in cacheNames.toDart) {
-                    await web.window.caches.delete(name.toDart).toDart;
-                  }
-                  // Unregister service workers
-                  final registrations = await web.window.navigator.serviceWorker
-                      .getRegistrations()
-                      .toDart;
-                  for (final reg in registrations.toDart) {
-                    reg.unregister();
-                  }
-                  // Hard reload
-                  web.window.location.reload();
+                  await forceUpdateApp();
                 },
               ),
             ],
