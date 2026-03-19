@@ -107,6 +107,8 @@ class ProgressService {
     final records = <ExercisePersonalRecord>[];
 
     for (final set in session.completedSets) {
+      if (state.exerciseById(set.exerciseId) == null) continue;
+
       final e1rm = _estimatedOneRepMax(set);
       final allSets = state.completedSessions
           .where((item) => item.id != session.id)
@@ -174,9 +176,12 @@ class ProgressService {
 
     for (final session in state.completedSessions) {
       for (final set in session.completedSets) {
+        final exercise = state.exerciseById(set.exerciseId);
+        if (exercise == null) continue; // skip orphaned exercises
+
         final record = ExercisePersonalRecord(
           exerciseId: set.exerciseId,
-          exerciseName: state.exerciseById(set.exerciseId)?.name ?? 'Exercise',
+          exerciseName: exercise.name,
           weightKg: set.weightKg,
           reps: set.reps,
           estimatedOneRepMax: _estimatedOneRepMax(set),

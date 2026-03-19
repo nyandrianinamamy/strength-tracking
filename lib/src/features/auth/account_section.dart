@@ -281,6 +281,42 @@ class AccountSection extends ConsumerWidget {
                 );
               },
             ),
+            const SizedBox(height: 12),
+            _AuthButton(
+              icon: Icons.history_rounded,
+              label: 'Clear Workout History',
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('Clear Workout History?'),
+                    content: const Text(
+                      'This will delete all workout sessions and performance data. Your exercises and routines will be kept.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: Text(l10n.cancel),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                          Navigator.pop(context);
+                          ref.read(appStateControllerProvider.notifier).updateState(
+                            (s) => s.copyWith(sessions: []),
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Workout history cleared')),
+                          );
+                        },
+                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        child: Text(l10n.clear),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
             if (kIsWeb) ...[
               const SizedBox(height: 12),
               _AuthButton(
