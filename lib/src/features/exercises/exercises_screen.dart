@@ -16,7 +16,7 @@ class ExercisesScreen extends ConsumerStatefulWidget {
 
 class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   String _query = '';
-  String _muscle = 'All';
+  String? _muscle; // null means "All"
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
 
     final controller = ref.read(exerciseControllerProvider);
     final exercises = controller.search(_query).where((exercise) {
-      if (_muscle == l10n.all) {
+      if (_muscle == null) {
         return true;
       }
       return exercise.primaryMuscles.contains(_muscle);
@@ -89,8 +89,8 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         const SizedBox(height: 14),
         CategoryChips(
           options: muscles,
-          selected: _muscle,
-          onSelected: (v) => setState(() => _muscle = v),
+          selected: _muscle ?? l10n.all,
+          onSelected: (v) => setState(() => _muscle = v == l10n.all ? null : v),
         ),
         const SizedBox(height: 24),
         if (grouped.isEmpty)

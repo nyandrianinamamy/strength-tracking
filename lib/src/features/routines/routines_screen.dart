@@ -16,7 +16,7 @@ class RoutinesScreen extends ConsumerStatefulWidget {
 
 class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
   String _query = '';
-  String _category = 'All';
+  String? _category; // null means "All"
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +33,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
       if (routine.archived) {
         return false;
       }
-      if (_category != l10n.all && routine.category != _category) {
+      if (_category != null && routine.category != _category) {
         return false;
       }
       if (_query.isEmpty) {
@@ -83,8 +83,8 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         const SizedBox(height: 14),
         CategoryChips(
           options: categories,
-          selected: _category,
-          onSelected: (v) => setState(() => _category = v),
+          selected: _category ?? l10n.all,
+          onSelected: (v) => setState(() => _category = v == l10n.all ? null : v),
         ),
         const SizedBox(height: 24),
         DashedBorderCard(
