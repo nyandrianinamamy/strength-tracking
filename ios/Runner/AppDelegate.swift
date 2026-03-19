@@ -12,5 +12,10 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+
+    // Configure Watch connectivity bridge
+    if let controller = window?.rootViewController as? FlutterViewController {
+      WatchSessionManager.shared.configure(with: controller)
+    }
   }
 }

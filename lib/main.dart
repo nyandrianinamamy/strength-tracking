@@ -9,6 +9,7 @@ import 'package:strength_training_tracker/src/app/app.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -75,12 +76,25 @@ Future<void> main() async {
     }
   }
 
+  final container = ProviderContainer(
+    overrides: [
+      appStateRepositoryProvider.overrideWithValue(repository),
+      initialAppStateProvider.overrideWithValue(initialState),
+    ],
+  );
+
+  // Initialize Watch sync on iOS only
+  if (!kIsWeb) {
+    try {
+      container.read(watchSyncServiceProvider).initialize();
+    } catch (e) {
+      debugPrint('Watch sync initialization failed: $e');
+    }
+  }
+
   runApp(
-    ProviderScope(
-      overrides: [
-        appStateRepositoryProvider.overrideWithValue(repository),
-        initialAppStateProvider.overrideWithValue(initialState),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const StrengthTrainingApp(),
     ),
   );
