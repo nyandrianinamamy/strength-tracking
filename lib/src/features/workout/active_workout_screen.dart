@@ -1332,22 +1332,22 @@ class _MiniMuscleHeatmap extends StatelessWidget {
     final showBoth = hasFront && hasBack;
 
     return SizedBox(
-      height: 100,
+      height: 160,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (hasFront)
-            SizedBox(
-              width: showBoth ? 50 : 60,
+            AspectRatio(
+              aspectRatio: 0.42,
               child: CustomPaint(
                 painter: BodyHeatmapPainter(fatigue: fatigue, isFront: true),
                 size: Size.infinite,
               ),
             ),
-          if (showBoth) const SizedBox(width: 8),
+          if (showBoth) const SizedBox(width: 16),
           if (hasBack)
-            SizedBox(
-              width: showBoth ? 50 : 60,
+            AspectRatio(
+              aspectRatio: 0.42,
               child: CustomPaint(
                 painter: BodyHeatmapPainter(fatigue: fatigue, isFront: false),
                 size: Size.infinite,
