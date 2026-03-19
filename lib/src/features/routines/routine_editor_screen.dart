@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
@@ -349,6 +350,53 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 ),
               ],
             ),
+            if (exercise?.exerciseType != 'timed') ...[
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(Icons.fitness_center, size: 16, color: AppTheme.slateInactive),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Recommended weight',
+                    style: TextStyle(fontSize: 12, color: AppTheme.slateInactive),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: 80,
+                    height: 36,
+                    child: TextField(
+                      textAlign: TextAlign.center,
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                      decoration: InputDecoration(
+                        hintText: '0',
+                        suffixText: state.preferredUnit,
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        isDense: true,
+                      ),
+                      controller: TextEditingController(
+                        text: item.recommendedWeightKg > 0
+                            ? AppFormatters.decimal(AppFormatters.convertWeight(item.recommendedWeightKg, state.preferredUnit))
+                            : '',
+                      ),
+                      onChanged: (value) {
+                        final raw = double.tryParse(value.replaceAll(',', '.'));
+                        if (raw != null) {
+                          _updateExercise(
+                            index,
+                            item.copyWith(
+                              recommendedWeightKg: AppFormatters.convertToKg(raw, state.preferredUnit),
+                            ),
+                          );
+                        } else if (value.isEmpty) {
+                          _updateExercise(index, item.copyWith(recommendedWeightKg: 0));
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

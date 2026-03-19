@@ -688,10 +688,13 @@ class _ExercisePage extends StatelessWidget {
                 ? previousPerformance.first
                 : null;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          weightController.text = lastSet == null
-              ? ''
-              : AppFormatters.decimal(
-                  AppFormatters.convertWeight(lastSet.weightKg, preferredUnit));
+          weightController.text = lastSet != null
+              ? AppFormatters.decimal(
+                  AppFormatters.convertWeight(lastSet.weightKg, preferredUnit))
+              : prescription.recommendedWeightKg > 0
+              ? AppFormatters.decimal(AppFormatters.convertWeight(
+                  prescription.recommendedWeightKg, preferredUnit))
+              : '';
           repsController.text =
               lastSet?.reps.toString() ?? '${prescription.targetReps}';
           setNoteController.clear();

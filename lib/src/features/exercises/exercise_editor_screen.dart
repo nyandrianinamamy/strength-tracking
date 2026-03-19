@@ -96,7 +96,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilledButton(
-              onPressed: _muscles.isEmpty ? null : () => _save(context),
+              onPressed: (_muscles.isEmpty && _exerciseType == 'strength') ? null : () => _save(context),
               style: FilledButton.styleFrom(
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(999),
@@ -249,7 +249,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
 
   void _save(BuildContext context) {
     final name = _nameController.text.trim();
-    if (name.isEmpty || _muscles.isEmpty) {
+    if (name.isEmpty || (_muscles.isEmpty && _exerciseType == 'strength')) {
       return;
     }
 

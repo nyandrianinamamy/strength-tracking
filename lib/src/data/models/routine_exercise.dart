@@ -6,6 +6,7 @@ class RoutineExercise {
     required this.restSeconds,
     required this.order,
     this.targetDurationSeconds = 60,
+    this.recommendedWeightKg = 0,
   });
 
   final String exerciseId;
@@ -14,6 +15,7 @@ class RoutineExercise {
   final int restSeconds;
   final int order;
   final int targetDurationSeconds;
+  final double recommendedWeightKg;
 
   RoutineExercise copyWith({
     String? exerciseId,
@@ -22,6 +24,7 @@ class RoutineExercise {
     int? restSeconds,
     int? order,
     int? targetDurationSeconds,
+    double? recommendedWeightKg,
   }) {
     return RoutineExercise(
       exerciseId: exerciseId ?? this.exerciseId,
@@ -30,6 +33,7 @@ class RoutineExercise {
       restSeconds: restSeconds ?? this.restSeconds,
       order: order ?? this.order,
       targetDurationSeconds: targetDurationSeconds ?? this.targetDurationSeconds,
+      recommendedWeightKg: recommendedWeightKg ?? this.recommendedWeightKg,
     );
   }
 
@@ -41,6 +45,7 @@ class RoutineExercise {
       restSeconds: json['restSeconds'] as int,
       order: json['order'] as int,
       targetDurationSeconds: json['targetDurationSeconds'] as int? ?? 60,
+      recommendedWeightKg: (json['recommendedWeightKg'] as num?)?.toDouble() ?? 0,
     );
   }
 
@@ -52,6 +57,7 @@ class RoutineExercise {
       'restSeconds': restSeconds,
       'order': order,
       'targetDurationSeconds': targetDurationSeconds,
+      'recommendedWeightKg': recommendedWeightKg,
     };
   }
 }
