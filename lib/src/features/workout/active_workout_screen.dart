@@ -12,6 +12,9 @@ import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
+import 'package:strength_training_tracker/src/data/models/exercise.dart';
+import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_card.dart';
+import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
@@ -789,7 +792,16 @@ class _ExercisePage extends StatelessWidget {
             );
           }),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 12),
+
+        // Mini muscle heatmap for active exercise
+        if (exercise != null && exercise.primaryMuscles.isNotEmpty)
+          _MiniMuscleHeatmap(
+            exercise: exercise,
+            state: state,
+          ),
+
+        const SizedBox(height: 12),
 
         if (exercise?.exerciseType == 'timed') ...[
           // Timed exercise: countdown timer + start/pause/reset
@@ -1284,6 +1296,65 @@ class _ExercisePage extends StatelessWidget {
           ],
         );
       },
+    );
+  }
+}
+
+class _MiniMuscleHeatmap extends StatelessWidget {
+  const _MiniMuscleHeatmap({
+    required this.exercise,
+    required this.state,
+  });
+
+  final Exercise exercise;
+  final AppState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final fatigue = MuscleHeatmapService().computeFatigue(state);
+
+    // Determine which muscles this exercise targets (mapped to heatmap names)
+    final targetMuscles = <String>{};
+    for (final muscle in exercise.primaryMuscles) {
+      final mapped = MuscleHeatmapService.muscleMapping[muscle] ?? [muscle];
+      targetMuscles.addAll(mapped);
+    }
+
+    // Determine which sides to show
+    final hasFront = targetMuscles.any(
+        (m) => MuscleHeatmapService.frontMuscles.contains(m));
+    final hasBack = targetMuscles.any(
+        (m) => MuscleHeatmapService.backMuscles.contains(m));
+
+    // If exercise muscles don't map to any known heatmap muscle, skip
+    if (!hasFront && !hasBack) return const SizedBox.shrink();
+
+    final showBoth = hasFront && hasBack;
+
+    return SizedBox(
+      height: 100,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          if (hasFront)
+            SizedBox(
+              width: showBoth ? 50 : 60,
+              child: CustomPaint(
+                painter: BodyHeatmapPainter(fatigue: fatigue, isFront: true),
+                size: Size.infinite,
+              ),
+            ),
+          if (showBoth) const SizedBox(width: 8),
+          if (hasBack)
+            SizedBox(
+              width: showBoth ? 50 : 60,
+              child: CustomPaint(
+                painter: BodyHeatmapPainter(fatigue: fatigue, isFront: false),
+                size: Size.infinite,
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

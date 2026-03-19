@@ -28,7 +28,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                       AspectRatio(
                         aspectRatio: 0.42,
                         child: CustomPaint(
-                          painter: _BodyPainter(fatigue: fatigue, isFront: true),
+                          painter: BodyHeatmapPainter(fatigue: fatigue, isFront: true),
                           size: Size.infinite,
                         ),
                       ),
@@ -45,7 +45,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                         aspectRatio: 0.42,
                         child: CustomPaint(
                           painter:
-                              _BodyPainter(fatigue: fatigue, isFront: false),
+                              BodyHeatmapPainter(fatigue: fatigue, isFront: false),
                           size: Size.infinite,
                         ),
                       ),
@@ -257,8 +257,8 @@ const _backSrcH = 220.0;
 // Painter
 // ---------------------------------------------------------------------------
 
-class _BodyPainter extends CustomPainter {
-  _BodyPainter({required this.fatigue, required this.isFront});
+class BodyHeatmapPainter extends CustomPainter {
+  BodyHeatmapPainter({required this.fatigue, required this.isFront});
 
   final Map<String, double> fatigue;
   final bool isFront;
@@ -342,5 +342,5 @@ class _BodyPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _BodyPainter old) => old.fatigue != fatigue;
+  bool shouldRepaint(covariant BodyHeatmapPainter old) => old.fatigue != fatigue;
 }
