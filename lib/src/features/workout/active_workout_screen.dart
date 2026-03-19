@@ -748,6 +748,63 @@ class _ExercisePage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
+          // Manual log: type duration + LOG button
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'MANUAL (MIN)',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.slateInactive,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: weightController,
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w900),
+                      decoration: const InputDecoration(
+                        hintText: '0',
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 56,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      final minutes = int.tryParse(weightController.text);
+                      if (minutes == null || minutes <= 0) return;
+                      controller.logTimedSet(
+                        durationSeconds: minutes * 60,
+                        note: setNoteController.text.trim(),
+                      );
+                      setNoteController.clear();
+                      weightController.clear();
+                      onLogSet(prescription.restSeconds);
+                    },
+                    icon: const Icon(Icons.check_circle_outline_rounded),
+                    label: const Text('LOG'),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
         ] else ...[
           // Strength exercise: rest timer + weight/reps/log
           // Rest timer
