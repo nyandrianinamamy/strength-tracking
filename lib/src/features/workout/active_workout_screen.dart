@@ -215,18 +215,24 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final session = state.activeSession;
     if (session == null) return 0;
 
+    if (session.completedSets.isEmpty) return 0;
+
+    // Use the most recent set across ALL exercises for a shared rest timer
+    final allSets = [...session.completedSets]
+      ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    final lastSet = allSets.first;
+
+    // Find the rest seconds from the exercise that the last set belongs to
     final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) return 0;
+    if (routine == null) return 0;
 
-    final prescription = routine.exercises[_currentPage.clamp(0, routine.exercises.length - 1)];
-    final setsForExercise = session.completedSets
-        .where((s) => s.exerciseId == prescription.exerciseId)
-        .toList();
-    if (setsForExercise.isEmpty) return 0;
+    final prescription = routine.exercises
+        .where((e) => e.exerciseId == lastSet.exerciseId)
+        .firstOrNull;
+    final restSeconds = prescription?.restSeconds ?? 90;
 
-    final lastSet = setsForExercise.last;
     final elapsed = DateTime.now().difference(lastSet.completedAt).inSeconds;
-    return (prescription.restSeconds - elapsed).clamp(0, 999);
+    return (restSeconds - elapsed).clamp(0, 999);
   }
 
   int get _currentSetCount {
