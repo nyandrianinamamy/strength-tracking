@@ -4,6 +4,12 @@ A Flutter widget to display an interactive human body heatmap with highlightable
 
 **Zero external dependencies** — uses only Flutter SDK.
 
+## Screenshots
+
+| Male | Female |
+|------|--------|
+| ![Male body heatmap](screenshots/male_heatmap.png) | ![Female body heatmap](screenshots/female_heatmap.png) |
+
 ## Features
 
 - 23 anatomical muscle regions
