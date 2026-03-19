@@ -307,16 +307,31 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                   ),
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: _StepperField(
-                    label: 'REPS',
-                    value: item.targetReps,
-                    onChanged: (value) => _updateExercise(
-                      index,
-                      item.copyWith(targetReps: value),
+                if (exercise?.exerciseType == 'timed')
+                  Expanded(
+                    child: _StepperField(
+                      label: 'DURATION',
+                      value: item.targetDurationSeconds,
+                      step: 10,
+                      min: 10,
+                      suffix: 's',
+                      onChanged: (value) => _updateExercise(
+                        index,
+                        item.copyWith(targetDurationSeconds: value),
+                      ),
+                    ),
+                  )
+                else
+                  Expanded(
+                    child: _StepperField(
+                      label: 'REPS',
+                      value: item.targetReps,
+                      onChanged: (value) => _updateExercise(
+                        index,
+                        item.copyWith(targetReps: value),
+                      ),
                     ),
                   ),
-                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StepperField(

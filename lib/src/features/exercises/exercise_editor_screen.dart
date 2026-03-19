@@ -20,6 +20,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
   final _instructionsController = TextEditingController();
   final Set<String> _muscles = {};
   final Set<String> _equipment = {};
+  String _exerciseType = 'strength';
   bool _initialized = false;
 
   static const _muscleOptions = [
@@ -59,6 +60,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
       _instructionsController.text = exercise.instructions;
       _muscles.addAll(exercise.primaryMuscles);
       _equipment.addAll(exercise.equipment);
+      _exerciseType = exercise.exerciseType;
       _initialized = true;
     }
   }
@@ -80,6 +82,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         _instructionsController.text = exercise.instructions;
         _muscles.addAll(exercise.primaryMuscles);
         _equipment.addAll(exercise.equipment);
+        _exerciseType = exercise.exerciseType;
       }
       _initialized = true;
     }
@@ -115,6 +118,17 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
               labelText: 'Exercise Name',
               hintText: 'e.g. Incline Dumbbell Press',
             ),
+          ),
+          const SizedBox(height: 16),
+          SegmentedButton<String>(
+            segments: const [
+              ButtonSegment(value: 'strength', label: Text('Strength'), icon: Icon(Icons.fitness_center)),
+              ButtonSegment(value: 'timed', label: Text('Timed'), icon: Icon(Icons.timer)),
+            ],
+            selected: {_exerciseType},
+            onSelectionChanged: (values) {
+              setState(() => _exerciseType = values.first);
+            },
           ),
           const SizedBox(height: 24),
           Text(
@@ -246,6 +260,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         primaryMuscles: _muscles.toList(),
         equipment: _equipment.toList(),
         instructions: _instructionsController.text,
+        exerciseType: _exerciseType,
       );
     } else {
       controller.update(
@@ -254,6 +269,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         primaryMuscles: _muscles.toList(),
         equipment: _equipment.toList(),
         instructions: _instructionsController.text,
+        exerciseType: _exerciseType,
       );
     }
 

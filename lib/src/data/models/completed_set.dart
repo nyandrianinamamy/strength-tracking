@@ -6,6 +6,7 @@ class CompletedSet {
     required this.reps,
     required this.completedAt,
     required this.note,
+    this.durationSeconds = 0,
   });
 
   final String exerciseId;
@@ -14,6 +15,7 @@ class CompletedSet {
   final int reps;
   final DateTime completedAt;
   final String note;
+  final int durationSeconds;
 
   CompletedSet copyWith({
     String? exerciseId,
@@ -22,6 +24,7 @@ class CompletedSet {
     int? reps,
     DateTime? completedAt,
     String? note,
+    int? durationSeconds,
   }) {
     return CompletedSet(
       exerciseId: exerciseId ?? this.exerciseId,
@@ -30,6 +33,7 @@ class CompletedSet {
       reps: reps ?? this.reps,
       completedAt: completedAt ?? this.completedAt,
       note: note ?? this.note,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
     );
   }
 
@@ -41,6 +45,7 @@ class CompletedSet {
       reps: json['reps'] as int,
       completedAt: DateTime.parse(json['completedAt'] as String),
       note: json['note'] as String? ?? '',
+      durationSeconds: json['durationSeconds'] as int? ?? 0,
     );
   }
 
@@ -52,6 +57,7 @@ class CompletedSet {
       'reps': reps,
       'completedAt': completedAt.toIso8601String(),
       'note': note,
+      'durationSeconds': durationSeconds,
     };
   }
 }

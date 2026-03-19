@@ -36,6 +36,7 @@ class ExerciseController {
     required List<String> primaryMuscles,
     required List<String> equipment,
     required String instructions,
+    String exerciseType = 'strength',
   }) {
     final exercise = Exercise(
       id: 'exercise_${DateTime.now().microsecondsSinceEpoch}',
@@ -44,6 +45,7 @@ class ExerciseController {
       equipment: equipment,
       instructions: instructions.trim(),
       archived: false,
+      exerciseType: exerciseType,
     );
 
     _ref
@@ -61,6 +63,7 @@ class ExerciseController {
     required List<String> primaryMuscles,
     required List<String> equipment,
     required String instructions,
+    String exerciseType = 'strength',
   }) {
     final state = _ref.read(appStateControllerProvider);
     final exercise = state.exerciseById(exerciseId)!;
@@ -69,6 +72,7 @@ class ExerciseController {
       primaryMuscles: primaryMuscles,
       equipment: equipment,
       instructions: instructions.trim(),
+      exerciseType: exerciseType,
     );
 
     _ref

@@ -6,6 +6,7 @@ class Exercise {
     required this.equipment,
     required this.instructions,
     required this.archived,
+    this.exerciseType = 'strength',
   });
 
   final String id;
@@ -14,6 +15,7 @@ class Exercise {
   final List<String> equipment;
   final String instructions;
   final bool archived;
+  final String exerciseType;
 
   Exercise copyWith({
     String? id,
@@ -22,6 +24,7 @@ class Exercise {
     List<String>? equipment,
     String? instructions,
     bool? archived,
+    String? exerciseType,
   }) {
     return Exercise(
       id: id ?? this.id,
@@ -30,6 +33,7 @@ class Exercise {
       equipment: equipment ?? this.equipment,
       instructions: instructions ?? this.instructions,
       archived: archived ?? this.archived,
+      exerciseType: exerciseType ?? this.exerciseType,
     );
   }
 
@@ -45,6 +49,7 @@ class Exercise {
       ),
       instructions: json['instructions'] as String? ?? '',
       archived: json['archived'] as bool? ?? false,
+      exerciseType: json['exerciseType'] as String? ?? 'strength',
     );
   }
 
@@ -56,6 +61,7 @@ class Exercise {
       'equipment': equipment,
       'instructions': instructions,
       'archived': archived,
+      'exerciseType': exerciseType,
     };
   }
 }
