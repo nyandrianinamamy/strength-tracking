@@ -1,0 +1,14 @@
+name: flutter_body_heatmap
+description: A Flutter widget to display an interactive human body heatmap with highlightable muscle regions. Supports male/female body types, front/back views, and customizable colors.
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.1
+  flutter: ">=3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+flutter:
+  uses-material-design: false
