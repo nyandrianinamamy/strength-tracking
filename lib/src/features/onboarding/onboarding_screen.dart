@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -15,6 +17,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pageController = PageController();
   final _nameController = TextEditingController();
   String _selectedUnit = 'kg';
+  bool _isSigningIn = false;
 
   @override
   void dispose() {
@@ -29,6 +32,32 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
     );
+  }
+
+  Future<void> _signInWith(String provider) async {
+    setState(() => _isSigningIn = true);
+    try {
+      final authService = ref.read(authServiceProvider);
+      final user = provider == 'google'
+          ? await authService.signInWithGoogle()
+          : await authService.signInWithApple();
+
+      // Load data from the signed-in user's Firestore
+      final repository = FirestoreAppStateRepository(userId: user.uid);
+      final cloudState = await repository.load();
+
+      // Update the app state with the cloud data
+      ref.read(appStateControllerProvider.notifier).replaceState(cloudState);
+
+      if (mounted) context.go('/');
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSigningIn = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sign in failed: $e')),
+        );
+      }
+    }
   }
 
   void _startTraining() {
@@ -115,6 +144,56 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 child: const Text('Next'),
               ),
             ),
+            const SizedBox(height: 40),
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'or sign in to restore your data',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: AppTheme.slateInactive,
+                    ),
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isSigningIn ? null : () => _signInWith('google'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.g_mobiledata),
+                label: const Text('Continue with Google'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _isSigningIn ? null : () => _signInWith('apple'),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.apple),
+                label: const Text('Continue with Apple'),
+              ),
+            ),
+            if (_isSigningIn) ...[
+              const SizedBox(height: 16),
+              const CircularProgressIndicator(),
+            ],
           ],
         ),
       ),
