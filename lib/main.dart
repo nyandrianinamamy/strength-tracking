@@ -53,12 +53,26 @@ Future<void> main() async {
     }
 
     initialState = await repository.load();
+
+    // Migrate old compound muscle names to specific 1:1 names
+    final originalState = initialState;
+    initialState = _migrateMuscleNames(initialState);
+    if (initialState.exercises != originalState.exercises) {
+      await repository.save(initialState);
+    }
   } catch (e) {
     // Fallback to SharedPreferences if Firebase fails
     debugPrint('Firebase init failed, falling back to local storage: $e');
     final preferences = await SharedPreferences.getInstance();
     repository = SharedPreferencesAppStateRepository(preferences);
     initialState = await repository.load();
+
+    // Migrate old compound muscle names to specific 1:1 names
+    final originalState = initialState;
+    initialState = _migrateMuscleNames(initialState);
+    if (initialState.exercises != originalState.exercises) {
+      await repository.save(initialState);
+    }
   }
 
   runApp(
@@ -70,4 +84,54 @@ Future<void> main() async {
       child: const StrengthTrainingApp(),
     ),
   );
+}
+
+AppState _migrateMuscleNames(AppState state) {
+  const migration = <String, List<String>>{
+    'Back': ['Upper Back', 'Trapezius'],
+    'Legs': ['Quadriceps', 'Hamstrings', 'Glutes'],
+    'Arms': ['Biceps', 'Triceps'],
+    'Shoulders': ['Deltoids'],
+    'Quads': ['Quadriceps'],
+    'Core': ['Abs', 'Obliques'],
+    'Lats': ['Trapezius'],
+  };
+
+  bool changed = false;
+  final updatedExercises = state.exercises.map((exercise) {
+    final newPrimary = _expandMuscles(exercise.primaryMuscles, migration);
+    final newSecondary = _expandMuscles(exercise.secondaryMuscles, migration);
+    if (newPrimary != null || newSecondary != null) {
+      changed = true;
+      return exercise.copyWith(
+        primaryMuscles: newPrimary ?? exercise.primaryMuscles,
+        secondaryMuscles: newSecondary ?? exercise.secondaryMuscles,
+      );
+    }
+    return exercise;
+  }).toList();
+
+  if (changed) {
+    return state.copyWith(exercises: updatedExercises);
+  }
+  return state;
+}
+
+/// Returns expanded muscle list if any compound names found, null if no changes.
+List<String>? _expandMuscles(
+  List<String> muscles,
+  Map<String, List<String>> migration,
+) {
+  final hasCompound = muscles.any((m) => migration.containsKey(m));
+  if (!hasCompound) return null;
+
+  final expanded = <String>{};
+  for (final muscle in muscles) {
+    if (migration.containsKey(muscle)) {
+      expanded.addAll(migration[muscle]!);
+    } else {
+      expanded.add(muscle);
+    }
+  }
+  return expanded.toList();
 }

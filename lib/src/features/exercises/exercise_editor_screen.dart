@@ -26,15 +26,21 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
 
   static const _muscleOptions = [
     'Chest',
-    'Back',
-    'Shoulders',
+    'Upper Back',
+    'Trapezius',
+    'Deltoids',
     'Biceps',
     'Triceps',
+    'Forearm',
     'Abs',
-    'Quads',
+    'Obliques',
+    'Lower Back',
+    'Quadriceps',
     'Hamstrings',
     'Glutes',
-    'Legs',
+    'Calves',
+    'Adductors',
+    'Tibialis',
   ];
 
   static const _equipmentOptions = [

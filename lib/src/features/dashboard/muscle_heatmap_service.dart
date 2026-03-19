@@ -10,24 +10,24 @@ final muscleHeatmapServiceProvider = Provider<MuscleHeatmapService>((ref) {
 
 class MuscleHeatmapService {
   /// Maps exercise primaryMuscles/secondaryMuscles strings to package Muscle enum values.
+  /// Each name maps 1:1 to a single Muscle enum value.
   static const Map<String, List<Muscle>> muscleMapping = {
     'Chest': [Muscle.chest],
-    'Back': [Muscle.upperBack, Muscle.trapezius],
-    'Shoulders': [Muscle.deltoids],
-    'Arms': [Muscle.biceps, Muscle.triceps],
+    'Upper Back': [Muscle.upperBack],
+    'Trapezius': [Muscle.trapezius],
+    'Deltoids': [Muscle.deltoids],
     'Biceps': [Muscle.biceps],
     'Triceps': [Muscle.triceps],
-    'Legs': [Muscle.quadriceps, Muscle.hamstring, Muscle.gluteal],
-    'Quads': [Muscle.quadriceps],
+    'Forearm': [Muscle.forearm],
+    'Abs': [Muscle.abs],
+    'Obliques': [Muscle.obliques],
+    'Lower Back': [Muscle.lowerBack],
     'Quadriceps': [Muscle.quadriceps],
     'Hamstrings': [Muscle.hamstring],
     'Glutes': [Muscle.gluteal],
-    'Abs': [Muscle.abs],
-    'Core': [Muscle.abs, Muscle.obliques],
-    'Upper Back': [Muscle.upperBack],
-    'Lats': [Muscle.trapezius],
-    'Forearm': [Muscle.forearm],
     'Calves': [Muscle.calves],
+    'Adductors': [Muscle.adductors],
+    'Tibialis': [Muscle.tibialis],
   };
 
   /// Compute fatigue levels for all muscles.
@@ -83,8 +83,8 @@ class MuscleHeatmapService {
 
   /// Determines if any of the given exercise muscles appear on the front/back.
   static ({bool front, bool back}) sidesForMuscles(List<String> muscles) {
-    const frontMuscles = {Muscle.chest, Muscle.deltoids, Muscle.biceps, Muscle.abs, Muscle.obliques, Muscle.quadriceps, Muscle.adductors, Muscle.tibialis};
-    const backMuscles = {Muscle.upperBack, Muscle.trapezius, Muscle.triceps, Muscle.gluteal, Muscle.hamstring, Muscle.calves, Muscle.lowerBack};
+    const frontMuscles = {Muscle.chest, Muscle.deltoids, Muscle.biceps, Muscle.forearm, Muscle.abs, Muscle.obliques, Muscle.quadriceps, Muscle.adductors, Muscle.tibialis};
+    const backMuscles = {Muscle.upperBack, Muscle.trapezius, Muscle.deltoids, Muscle.triceps, Muscle.forearm, Muscle.gluteal, Muscle.hamstring, Muscle.calves, Muscle.lowerBack};
 
     bool front = false, back = false;
     for (final name in muscles) {

@@ -11,7 +11,8 @@ class DemoSeedData {
       const Exercise(
         id: 'bench_press',
         name: 'Barbell Bench Press',
-        primaryMuscles: ['Chest', 'Triceps'],
+        primaryMuscles: ['Chest'],
+        secondaryMuscles: ['Triceps', 'Deltoids'],
         equipment: ['Barbell', 'Bench'],
         instructions:
             'Plant your feet, retract your shoulder blades, and drive the bar in a straight line over your chest.',
@@ -20,7 +21,8 @@ class DemoSeedData {
       const Exercise(
         id: 'incline_db_press',
         name: 'Incline Dumbbell Press',
-        primaryMuscles: ['Chest', 'Shoulders'],
+        primaryMuscles: ['Chest', 'Deltoids'],
+        secondaryMuscles: ['Triceps'],
         equipment: ['Dumbbells', 'Bench'],
         instructions:
             'Keep your wrists stacked over elbows and lower the dumbbells until your upper arms are slightly below parallel.',
@@ -29,7 +31,8 @@ class DemoSeedData {
       const Exercise(
         id: 'pull_up',
         name: 'Pull Up',
-        primaryMuscles: ['Back', 'Biceps'],
+        primaryMuscles: ['Upper Back', 'Biceps'],
+        secondaryMuscles: ['Forearm', 'Trapezius'],
         equipment: ['Pull-Up Bar'],
         instructions:
             'Start from a dead hang, brace your core, and pull your chest toward the bar without kipping.',
@@ -38,7 +41,8 @@ class DemoSeedData {
       const Exercise(
         id: 'barbell_row',
         name: 'Barbell Row',
-        primaryMuscles: ['Back', 'Rear Delts'],
+        primaryMuscles: ['Upper Back', 'Trapezius'],
+        secondaryMuscles: ['Biceps', 'Forearm'],
         equipment: ['Barbell'],
         instructions:
             'Hinge to a strong torso position and row the bar toward your lower ribs without jerking.',
@@ -47,7 +51,8 @@ class DemoSeedData {
       const Exercise(
         id: 'back_squat',
         name: 'Barbell Back Squat',
-        primaryMuscles: ['Legs', 'Glutes'],
+        primaryMuscles: ['Quadriceps', 'Glutes'],
+        secondaryMuscles: ['Hamstrings', 'Lower Back'],
         equipment: ['Barbell', 'Rack'],
         instructions:
             'Brace hard, sit between your hips, and keep the bar balanced over your midfoot.',
@@ -56,7 +61,8 @@ class DemoSeedData {
       const Exercise(
         id: 'leg_press',
         name: 'Leg Press',
-        primaryMuscles: ['Legs'],
+        primaryMuscles: ['Quadriceps', 'Glutes'],
+        secondaryMuscles: ['Hamstrings'],
         equipment: ['Machine'],
         instructions:
             'Control the eccentric, keep your lower back planted, and press through the middle of your foot.',
@@ -65,7 +71,8 @@ class DemoSeedData {
       const Exercise(
         id: 'deadlift',
         name: 'Conventional Deadlift',
-        primaryMuscles: ['Back', 'Glutes', 'Hamstrings'],
+        primaryMuscles: ['Upper Back', 'Glutes', 'Hamstrings'],
+        secondaryMuscles: ['Lower Back', 'Forearm', 'Trapezius'],
         equipment: ['Barbell'],
         instructions:
             'Pull the slack out of the bar, drive through the floor, and finish by squeezing your glutes.',
@@ -74,7 +81,8 @@ class DemoSeedData {
       const Exercise(
         id: 'shoulder_press',
         name: 'Seated Dumbbell Shoulder Press',
-        primaryMuscles: ['Shoulders', 'Triceps'],
+        primaryMuscles: ['Deltoids'],
+        secondaryMuscles: ['Triceps', 'Trapezius'],
         equipment: ['Dumbbells', 'Bench'],
         instructions:
             'Keep your ribs down and press the dumbbells in a slight arc toward the midline.',
@@ -83,7 +91,8 @@ class DemoSeedData {
       const Exercise(
         id: 'plank',
         name: 'Weighted Plank',
-        primaryMuscles: ['Abs', 'Core'],
+        primaryMuscles: ['Abs', 'Obliques'],
+        secondaryMuscles: ['Lower Back'],
         equipment: ['Plate'],
         instructions:
             'Keep a straight line from shoulders to heels and breathe behind the brace.',
@@ -93,6 +102,7 @@ class DemoSeedData {
         id: 'cable_fly',
         name: 'Cable Fly',
         primaryMuscles: ['Chest'],
+        secondaryMuscles: ['Deltoids'],
         equipment: ['Cable Machine'],
         instructions:
             'Slight bend in the elbows, bring hands together in an arc, and pause at peak contraction.',
