@@ -296,32 +296,32 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
             const SizedBox(height: 14),
             Row(
               children: [
-                Expanded(
-                  child: _StepperField(
-                    label: 'SETS',
-                    value: item.targetSets,
-                    onChanged: (value) => _updateExercise(
-                      index,
-                      item.copyWith(targetSets: value),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                if (exercise?.exerciseType == 'timed')
+                if (exercise?.exerciseType == 'timed') ...[
                   Expanded(
                     child: _StepperField(
                       label: 'DURATION',
-                      value: item.targetDurationSeconds,
-                      step: 10,
-                      min: 10,
-                      suffix: 's',
+                      value: item.targetDurationSeconds ~/ 60,
+                      step: 1,
+                      min: 1,
+                      suffix: 'min',
                       onChanged: (value) => _updateExercise(
                         index,
-                        item.copyWith(targetDurationSeconds: value),
+                        item.copyWith(targetDurationSeconds: value * 60),
                       ),
                     ),
-                  )
-                else
+                  ),
+                ] else ...[
+                  Expanded(
+                    child: _StepperField(
+                      label: 'SETS',
+                      value: item.targetSets,
+                      onChanged: (value) => _updateExercise(
+                        index,
+                        item.copyWith(targetSets: value),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: _StepperField(
                       label: 'REPS',
@@ -332,6 +332,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                       ),
                     ),
                   ),
+                ],
                 const SizedBox(width: 10),
                 Expanded(
                   child: _StepperField(
@@ -384,14 +385,18 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       return;
     }
 
+    final pickedExercise = ref.read(appStateControllerProvider).exerciseById(picked);
+    final isTimed = pickedExercise?.exerciseType == 'timed';
+
     setState(() {
       _exercises = [
         ..._exercises,
         RoutineExercise(
           exerciseId: picked,
-          targetSets: 3,
-          targetReps: 8,
-          restSeconds: 90,
+          targetSets: isTimed ? 1 : 3,
+          targetReps: isTimed ? 0 : 8,
+          targetDurationSeconds: isTimed ? 60 : 60,
+          restSeconds: isTimed ? 0 : 90,
           order: _exercises.length,
         ),
       ];
