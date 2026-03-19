@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -26,6 +27,13 @@ class AuthService {
   }
 
   Future<User> linkWithGoogle() async {
+    if (kIsWeb) {
+      // On web, use popup directly via Firebase Auth
+      final provider = GoogleAuthProvider();
+      final result = await _auth.currentUser!.linkWithPopup(provider);
+      return result.user!;
+    }
+    // On iOS/Android, use google_sign_in package
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
       throw Exception('Google sign-in cancelled');
@@ -40,6 +48,12 @@ class AuthService {
   }
 
   Future<User> linkWithApple() async {
+    if (kIsWeb) {
+      final provider = OAuthProvider('apple.com')
+        ..addScope('email');
+      final result = await _auth.currentUser!.linkWithPopup(provider);
+      return result.user!;
+    }
     final appleCredential = await SignInWithApple.getAppleIDCredential(
       scopes: [AppleIDAuthorizationScopes.email],
     );
@@ -52,6 +66,11 @@ class AuthService {
   }
 
   Future<User> signInWithGoogle() async {
+    if (kIsWeb) {
+      final provider = GoogleAuthProvider();
+      final result = await _auth.signInWithPopup(provider);
+      return result.user!;
+    }
     final googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
       throw Exception('Google sign-in cancelled');
@@ -66,6 +85,12 @@ class AuthService {
   }
 
   Future<User> signInWithApple() async {
+    if (kIsWeb) {
+      final provider = OAuthProvider('apple.com')
+        ..addScope('email');
+      final result = await _auth.signInWithPopup(provider);
+      return result.user!;
+    }
     final appleCredential = await SignInWithApple.getAppleIDCredential(
       scopes: [AppleIDAuthorizationScopes.email],
     );
