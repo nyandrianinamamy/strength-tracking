@@ -393,7 +393,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final timerText =
         '${elapsedMinutes.toString().padLeft(2, '0')}:${elapsedSeconds.toString().padLeft(2, '0')}';
 
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go('/');
+      },
+      child: Scaffold(
       appBar: AppBar(
         centerTitle: true,
         leading: IconButton(
@@ -635,6 +640,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           ],
         ),
       ),
+    ),
     );
   }
 }
