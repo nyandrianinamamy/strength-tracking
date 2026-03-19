@@ -38,7 +38,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                         aspectRatio: 0.5,
                         child: BodyHeatmap(
                           side: BodySide.front,
-                          gender: BodyGender.male,
+                          gender: state.bodyGender == 'female' ? BodyGender.female : BodyGender.male,
                           data: fatigue,
                           colors: _colors,
                           bodyColor: const Color(0xFFE2E8F0),
@@ -57,7 +57,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                         aspectRatio: 0.5,
                         child: BodyHeatmap(
                           side: BodySide.back,
-                          gender: BodyGender.male,
+                          gender: state.bodyGender == 'female' ? BodyGender.female : BodyGender.male,
                           data: fatigue,
                           colors: _colors,
                           bodyColor: const Color(0xFFE2E8F0),

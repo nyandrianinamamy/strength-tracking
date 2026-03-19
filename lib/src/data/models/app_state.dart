@@ -10,6 +10,7 @@ class AppState {
     required this.sessions,
     this.userName = '',
     this.preferredUnit = 'kg',
+    this.bodyGender = 'male',
   });
 
   final List<Exercise> exercises;
@@ -17,6 +18,7 @@ class AppState {
   final List<WorkoutSession> sessions;
   final String userName;
   final String preferredUnit;
+  final String bodyGender;
 
   factory AppState.empty() {
     return const AppState(exercises: [], routines: [], sessions: []);
@@ -28,6 +30,7 @@ class AppState {
     List<WorkoutSession>? sessions,
     String? userName,
     String? preferredUnit,
+    String? bodyGender,
   }) {
     return AppState(
       exercises: exercises ?? this.exercises,
@@ -35,6 +38,7 @@ class AppState {
       sessions: sessions ?? this.sessions,
       userName: userName ?? this.userName,
       preferredUnit: preferredUnit ?? this.preferredUnit,
+      bodyGender: bodyGender ?? this.bodyGender,
     );
   }
 
@@ -73,6 +77,7 @@ class AppState {
           .toList(),
       userName: json['userName'] as String? ?? '',
       preferredUnit: json['preferredUnit'] as String? ?? 'kg',
+      bodyGender: json['bodyGender'] as String? ?? 'male',
     );
   }
 
@@ -83,6 +88,7 @@ class AppState {
       'sessions': sessions.map((item) => item.toJson()).toList(),
       'userName': userName,
       'preferredUnit': preferredUnit,
+      'bodyGender': bodyGender,
     };
   }
 }
