@@ -1,17 +1,17 @@
-//
-//  StrengthAppWatchApp.swift
-//  StrengthAppWatch Watch App
-//
-//  Created by Razafintsialonina Mamy on 19/3/26.
-//
-
 import SwiftUI
 
 @main
-struct StrengthAppWatch_Watch_AppApp: App {
+struct StrengthAppWatchApp: App {
+    @StateObject private var sessionManager = WorkoutSessionManager.shared
+
+    init() {
+        WorkoutSessionManager.shared.activate()
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(sessionManager)
         }
     }
 }
