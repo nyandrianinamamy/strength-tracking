@@ -755,6 +755,36 @@ class _ExercisePage extends StatelessWidget {
           const SizedBox(height: 8),
         ],
 
+        // Exercise name + set badge
+        Center(
+          child: Text(
+            exercise?.name ?? 'Exercise',
+            style: Theme.of(context)
+                .textTheme
+                .titleMedium
+                ?.copyWith(fontWeight: FontWeight.w900),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              'SET ${currentSets.length + 1} OF ${prescription.targetSets}',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.0,
+                  ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+
         if (exercise?.exerciseType == 'timed') ...[
           // Timed exercise: countdown timer + start/pause/reset
           const SizedBox(height: 8),
