@@ -12,6 +12,7 @@ class AppState {
     this.preferredUnit = 'kg',
     this.bodyGender = 'male',
     this.preferredLanguage = '',
+    this.preferredTheme = '',
   });
 
   final List<Exercise> exercises;
@@ -21,6 +22,7 @@ class AppState {
   final String preferredUnit;
   final String bodyGender;
   final String preferredLanguage;
+  final String preferredTheme;
 
   factory AppState.empty() {
     return const AppState(exercises: [], routines: [], sessions: []);
@@ -34,6 +36,7 @@ class AppState {
     String? preferredUnit,
     String? bodyGender,
     String? preferredLanguage,
+    String? preferredTheme,
   }) {
     return AppState(
       exercises: exercises ?? this.exercises,
@@ -43,6 +46,7 @@ class AppState {
       preferredUnit: preferredUnit ?? this.preferredUnit,
       bodyGender: bodyGender ?? this.bodyGender,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      preferredTheme: preferredTheme ?? this.preferredTheme,
     );
   }
 
@@ -83,6 +87,7 @@ class AppState {
       preferredUnit: json['preferredUnit'] as String? ?? 'kg',
       bodyGender: json['bodyGender'] as String? ?? 'male',
       preferredLanguage: json['preferredLanguage'] as String? ?? '',
+      preferredTheme: json['preferredTheme'] as String? ?? '',
     );
   }
 
@@ -95,6 +100,7 @@ class AppState {
       'preferredUnit': preferredUnit,
       'bodyGender': bodyGender,
       'preferredLanguage': preferredLanguage,
+      'preferredTheme': preferredTheme,
     };
   }
 }

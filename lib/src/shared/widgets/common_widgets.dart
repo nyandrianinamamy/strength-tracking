@@ -94,7 +94,7 @@ class MetricCard extends StatelessWidget {
             Text(
               label.toUpperCase(),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Colors.black54,
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
                     letterSpacing: 1.1,
                     fontWeight: FontWeight.w800,
                   ),
@@ -318,9 +318,9 @@ class StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
+        border: Border.all(color: Theme.of(context).dividerColor),
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -347,7 +347,7 @@ class StatCard extends StatelessWidget {
                       label.toUpperCase(),
                       style:
                           Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: Colors.black54,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.54),
                                 letterSpacing: 1.1,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -366,7 +366,7 @@ class StatCard extends StatelessWidget {
                         subtext!,
                         style:
                             Theme.of(context).textTheme.bodySmall?.copyWith(
-                                  color: Colors.black54,
+                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.54),
                                 ),
                       ),
                     ],
@@ -496,7 +496,7 @@ class CategoryChips extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppTheme.primary : Colors.white,
+                  color: isSelected ? AppTheme.primary : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     color: isSelected ? AppTheme.primary : AppTheme.border,
@@ -505,7 +505,7 @@ class CategoryChips extends StatelessWidget {
                 child: Text(
                   option,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isSelected ? Colors.white : AppTheme.ink,
+                        color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w500,
                       ),
@@ -562,7 +562,7 @@ class WorkoutFrequencyCalendar extends StatelessWidget {
                               .textTheme
                               .labelMedium
                               ?.copyWith(
-                                color: Colors.black54,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.54),
                                 fontWeight: FontWeight.w700,
                               ),
                         ),
@@ -588,7 +588,9 @@ class WorkoutFrequencyCalendar extends StatelessWidget {
 
                 Color? background;
                 Color foreground =
-                    day.inMonth ? Colors.black87 : Colors.black26;
+                    day.inMonth
+                        ? Theme.of(context).colorScheme.onSurface.withValues(alpha:0.87)
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha:0.26);
                 BorderSide side = BorderSide.none;
 
                 if (intensity > 0) {

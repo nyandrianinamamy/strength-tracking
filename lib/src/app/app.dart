@@ -10,6 +10,17 @@ import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 
 final _messengerKey = GlobalKey<ScaffoldMessengerState>();
 
+ThemeMode _resolveThemeMode(String pref) {
+  switch (pref) {
+    case 'light':
+      return ThemeMode.light;
+    case 'dark':
+      return ThemeMode.dark;
+    default:
+      return ThemeMode.system;
+  }
+}
+
 class StrengthTrainingApp extends ConsumerStatefulWidget {
   const StrengthTrainingApp({super.key});
 
@@ -57,6 +68,9 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
     final preferredLanguage = ref.watch(
       appStateControllerProvider.select((s) => s.preferredLanguage),
     );
+    final preferredTheme = ref.watch(
+      appStateControllerProvider.select((s) => s.preferredTheme),
+    );
 
     Locale? localeOverride;
     if (preferredLanguage.isNotEmpty) {
@@ -68,6 +82,8 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
       title: 'Strength Training Tracker',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
+      themeMode: _resolveThemeMode(preferredTheme),
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

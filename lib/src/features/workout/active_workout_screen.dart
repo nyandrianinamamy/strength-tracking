@@ -508,6 +508,78 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     );
   }
 
+  Widget _buildEndOfWorkoutPage(BuildContext context, WorkoutController controller) {
+    final l10n = AppLocalizations.of(context)!;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.emoji_events_rounded,
+              size: 64,
+              color: AppTheme.primary,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'All exercises complete!',
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Add another exercise or finish your workout.',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.slateInactive,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  // Navigate to routine edit to add exercises
+                  final state = ref.read(appStateControllerProvider);
+                  final session = state.activeSession;
+                  if (session != null) {
+                    context.push('/routine/${session.routineId}/edit');
+                  }
+                },
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('Add Exercise'),
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: () => _showFinishConfirmation(context),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(52),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                icon: const Icon(Icons.check_circle_outline_rounded),
+                label: Text(l10n.finishWorkout),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -563,44 +635,53 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           onPressed: () => context.go('/'),
           icon: const Icon(Icons.close_rounded),
         ),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              currentExercise != null
-                  ? ExerciseTranslations.displayName(context, currentExercise)
-                  : 'Exercise',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 2),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                'SET ${currentExerciseSets + 1} OF ${currentPrescription.targetSets}',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.primary,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                      fontSize: 10,
+        title: _currentPage >= exerciseCount
+            ? Text(
+                l10n.finishWorkout,
+                style: Theme.of(context)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              )
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    currentExercise != null
+                        ? ExerciseTranslations.displayName(context, currentExercise)
+                        : 'Exercise',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(999),
                     ),
+                    child: Text(
+                      'SET ${currentExerciseSets + 1} OF ${currentPrescription.targetSets}',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.primary,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                            fontSize: 10,
+                          ),
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.swap_horiz_rounded),
-            tooltip: l10n.swapExercise,
-            onPressed: () => _showSwapPicker(context, state, routine, _currentPage),
-          ),
+          if (_currentPage < exerciseCount)
+            IconButton(
+              icon: const Icon(Icons.swap_horiz_rounded),
+              tooltip: l10n.swapExercise,
+              onPressed: () => _showSwapPicker(context, state, routine, _currentPage),
+            ),
           Container(
             margin: const EdgeInsets.only(right: 16),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -609,7 +690,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              '${_currentPage + 1}/$exerciseCount',
+              _currentPage >= exerciseCount
+                  ? '$exerciseCount/$exerciseCount'
+                  : '${_currentPage + 1}/$exerciseCount',
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: AppTheme.primary,
                     fontWeight: FontWeight.w800,
@@ -681,14 +764,19 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           children: [
             PageView.builder(
               controller: _pageController,
-              itemCount: exerciseCount,
+              itemCount: exerciseCount + 1,
               onPageChanged: (index) {
                 setState(() => _currentPage = index);
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted) controller.goToExercise(index);
-                });
+                if (index < exerciseCount) {
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (mounted) controller.goToExercise(index);
+                  });
+                }
               },
               itemBuilder: (context, pageIndex) {
+                if (pageIndex == exerciseCount) {
+                  return _buildEndOfWorkoutPage(context, controller);
+                }
                 return _ExercisePage(
                   key: ValueKey(pageIndex),
                   pageIndex: pageIndex,

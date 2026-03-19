@@ -184,14 +184,19 @@ class DashboardScreen extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 20),
-        const MuscleHeatmapCard(),
+        const PageSection(
+          title: 'Muscle Fatigue',
+          child: MuscleHeatmapCard(),
+        ),
         const SizedBox(height: 28),
 
         // Step 3: Next Workout card
         PageSection(
           title: activeSession != null ? l10n.activeWorkout : l10n.nextWorkout,
           child: Card(
-            color: const Color(0xFF0F172A),
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF2A2A45)
+                : const Color(0xFF0F172A),
             child: Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
@@ -335,7 +340,7 @@ class DashboardScreen extends ConsumerWidget {
                               l10n.volume,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black54,
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.54),
                               ),
                             ),
                           ],

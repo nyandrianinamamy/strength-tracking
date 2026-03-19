@@ -202,6 +202,25 @@ class AccountSection extends ConsumerWidget {
                 );
               },
             ),
+            const SizedBox(height: 20),
+            Text(
+              'Theme',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: '', label: Text('Auto')),
+                ButtonSegment(value: 'light', label: Icon(Icons.light_mode, size: 18)),
+                ButtonSegment(value: 'dark', label: Icon(Icons.dark_mode, size: 18)),
+              ],
+              selected: {ref.watch(appStateControllerProvider).preferredTheme},
+              onSelectionChanged: (values) {
+                ref.read(appStateControllerProvider.notifier).updateState(
+                  (s) => s.copyWith(preferredTheme: values.first),
+                );
+              },
+            ),
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
