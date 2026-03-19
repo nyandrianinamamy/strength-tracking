@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
@@ -17,6 +18,7 @@ import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
 import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
+import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
@@ -49,6 +51,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   // Auto-switch countdown when all sets completed
   int? _switchCountdown; // null = not counting, 5..0 = counting down
   int? _switchTargetPage;
+
+  // Watch connectivity status
+  bool _watchReachable = false;
 
   // Swipe hint arrows
   late final AnimationController _arrowAnimController;
@@ -101,6 +106,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     _pageController = PageController(
       initialPage: _currentPage,
     );
+
+    // Check Watch connectivity on iOS
+    if (!kIsWeb) {
+      _checkWatchStatus();
+    }
 
     _arrowAnimController = AnimationController(
       vsync: this,
@@ -186,6 +196,20 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           if (mounted) _arrowsVisible = false;
         });
       }
+    });
+  }
+
+  Future<void> _checkWatchStatus() async {
+    if (!mounted) return;
+    try {
+      final service = ref.read(watchSyncServiceProvider);
+      final reachable = await service.isWatchReachable();
+      if (mounted) {
+        setState(() => _watchReachable = reachable);
+      }
+    } catch (_) {}
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted) _checkWatchStatus();
     });
   }
 
@@ -714,6 +738,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ],
               ),
         actions: [
+          if (!kIsWeb && _watchReachable)
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: Icon(
+                Icons.watch,
+                size: 18,
+                color: AppTheme.primary,
+              ),
+            ),
           if (_currentPage < exerciseCount)
             IconButton(
               icon: const Icon(Icons.swap_horiz_rounded),
