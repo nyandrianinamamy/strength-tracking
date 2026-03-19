@@ -151,7 +151,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
               Expanded(
                 child: StatCard(
                   label: 'Volume',
-                  value: AppFormatters.weight(totalVolume, state.preferredUnit),
+                  value: AppFormatters.decimal(AppFormatters.convertWeight(totalVolume, state.preferredUnit)),
                   subtext: state.preferredUnit.toUpperCase(),
                   showAccent: true,
                 ),
