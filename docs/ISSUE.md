@@ -28,6 +28,9 @@
 [ ] Multi language
 [ ] Complete pre-seed exercises
 [ ] Light and dark theme
+[ ] Show title for body heat map in dashboard
+[ ] Swap exercise variant
+[ ] Swiping left when last exercise should propose to add a new exercise or discard.
 
 ## Refactor
 [x] New active exercise UI with body heatmap, exercise name in AppBar, compact rest timer
