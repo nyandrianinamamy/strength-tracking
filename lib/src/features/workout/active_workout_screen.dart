@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
@@ -957,17 +958,42 @@ class _ExercisePage extends StatelessWidget {
                 )
               : Column(
                   children: currentSets.map((set) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: ListTile(
-                        title: Text(
-                          set.durationSeconds > 0
-                              ? 'Set ${set.setNumber}: ${set.durationSeconds}s'
-                              : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
-                          style:
-                              const TextStyle(fontWeight: FontWeight.w800),
+                    return Dismissible(
+                      key: ValueKey('${set.exerciseId}-${set.setNumber}'),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade400,
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        subtitle: Text(AppFormatters.time(set.completedAt)),
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        child: const Icon(Icons.delete_outline, color: Colors.white),
+                      ),
+                      onDismissed: (_) {
+                        controller.deleteSet(set.exerciseId, set.setNumber);
+                      },
+                      child: Card(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: ListTile(
+                          onTap: () => _showEditSetDialog(
+                            context,
+                            controller,
+                            set,
+                            exercise?.exerciseType == 'timed',
+                            preferredUnit,
+                          ),
+                          title: Text(
+                            set.durationSeconds > 0
+                                ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
+                                : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                            style:
+                                const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          subtitle: Text(AppFormatters.time(set.completedAt)),
+                          trailing: Icon(Icons.edit_outlined, size: 16, color: AppTheme.slateInactive),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -1035,6 +1061,94 @@ class _ExercisePage extends StatelessWidget {
                 ),
         ),
       ],
+    );
+  }
+
+  void _showEditSetDialog(
+    BuildContext context,
+    WorkoutController controller,
+    CompletedSet set,
+    bool isTimed,
+    String preferredUnit,
+  ) {
+    final weightCtrl = TextEditingController(
+      text: isTimed
+          ? '${(set.durationSeconds / 60).round()}'
+          : AppFormatters.decimal(
+              AppFormatters.convertWeight(set.weightKg, preferredUnit)),
+    );
+    final repsCtrl = TextEditingController(text: '${set.reps}');
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text('Edit Set ${set.setNumber}'),
+          content: isTimed
+              ? TextField(
+                  controller: weightCtrl,
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(labelText: 'Duration (min)'),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: weightCtrl,
+                      autofocus: true,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Weight ($preferredUnit)',
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: repsCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Reps'),
+                    ),
+                  ],
+                ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (isTimed) {
+                  final minutes = int.tryParse(weightCtrl.text);
+                  if (minutes == null || minutes <= 0) return;
+                  controller.updateSet(
+                    set.exerciseId,
+                    set.setNumber,
+                    durationSeconds: minutes * 60,
+                  );
+                } else {
+                  final rawWeight = double.tryParse(
+                    weightCtrl.text.replaceAll(',', '.'),
+                  );
+                  final weight = rawWeight == null
+                      ? null
+                      : AppFormatters.convertToKg(rawWeight, preferredUnit);
+                  final reps = int.tryParse(repsCtrl.text);
+                  if (weight == null || reps == null || reps <= 0) return;
+                  controller.updateSet(
+                    set.exerciseId,
+                    set.setNumber,
+                    weightKg: weight,
+                    reps: reps,
+                  );
+                }
+                Navigator.pop(dialogContext);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

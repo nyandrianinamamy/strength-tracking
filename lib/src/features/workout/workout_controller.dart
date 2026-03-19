@@ -109,6 +109,50 @@ class WorkoutController {
     return updatedSession;
   }
 
+  void deleteSet(String exerciseId, int setNumber) {
+    final state = _ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return;
+
+    final updatedSets = session.completedSets
+        .where((s) => !(s.exerciseId == exerciseId && s.setNumber == setNumber))
+        .toList();
+
+    // Renumber remaining sets for this exercise
+    int num = 1;
+    final renumbered = updatedSets.map((s) {
+      if (s.exerciseId == exerciseId) {
+        return s.copyWith(setNumber: num++);
+      }
+      return s;
+    }).toList();
+
+    _persistSession(session.copyWith(completedSets: renumbered));
+  }
+
+  void updateSet(String exerciseId, int setNumber, {
+    double? weightKg,
+    int? reps,
+    int? durationSeconds,
+  }) {
+    final state = _ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return;
+
+    final updatedSets = session.completedSets.map((s) {
+      if (s.exerciseId == exerciseId && s.setNumber == setNumber) {
+        return s.copyWith(
+          weightKg: weightKg ?? s.weightKg,
+          reps: reps ?? s.reps,
+          durationSeconds: durationSeconds ?? s.durationSeconds,
+        );
+      }
+      return s;
+    }).toList();
+
+    _persistSession(session.copyWith(completedSets: updatedSets));
+  }
+
   WorkoutSession? skipExercise() {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
