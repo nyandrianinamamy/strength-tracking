@@ -1,2 +1,6 @@
 .dart_tool/
 build/
+
+# Override parent .gitignore that ignores screenshots/
+!screenshots/
+!test/screenshots/

@@ -1,2 +1,5 @@
 .dart_tool/
 build/
+# Explicitly include screenshots (overrides parent .gitignore)
+!screenshots/
+!test/screenshots/
