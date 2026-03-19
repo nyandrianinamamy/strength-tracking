@@ -360,29 +360,22 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
   ) async {
     final picked = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
       showDragHandle: true,
-      builder: (context) {
-        return SafeArea(
-          child: ListView(
-            children: exercises.map((exercise) {
-              final alreadyAdded = _exercises.any(
-                (item) => item.exerciseId == exercise.id,
-              );
-              return ListTile(
-                enabled: !alreadyAdded,
-                title: Text(exercise.name as String),
-                subtitle: Text(
-                  (exercise.primaryMuscles as List<String>).join(', '),
-                ),
-                trailing: alreadyAdded
-                    ? const Text('Added')
-                    : const Icon(Icons.add_rounded),
-                onTap: alreadyAdded
-                    ? null
-                    : () => context.pop(exercise.id as String),
-              );
-            }).toList(),
-          ),
+      builder: (sheetContext) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.7,
+          minChildSize: 0.4,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (_, scrollController) {
+            return _ExercisePickerContent(
+              exercises: exercises,
+              addedExerciseIds:
+                  _exercises.map((e) => e.exerciseId).toSet(),
+              scrollController: scrollController,
+            );
+          },
         );
       },
     );
@@ -526,6 +519,98 @@ class _StepperField extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ExercisePickerContent extends StatefulWidget {
+  const _ExercisePickerContent({
+    required this.exercises,
+    required this.addedExerciseIds,
+    required this.scrollController,
+  });
+
+  final List<dynamic> exercises;
+  final Set<String> addedExerciseIds;
+  final ScrollController scrollController;
+
+  @override
+  State<_ExercisePickerContent> createState() =>
+      _ExercisePickerContentState();
+}
+
+class _ExercisePickerContentState extends State<_ExercisePickerContent> {
+  String _query = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final filtered = widget.exercises.where((exercise) {
+      if (_query.isEmpty) return true;
+      final q = _query.toLowerCase();
+      final name = (exercise.name as String).toLowerCase();
+      final muscles =
+          (exercise.primaryMuscles as List<String>).join(' ').toLowerCase();
+      return name.contains(q) || muscles.contains(q);
+    }).toList();
+
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: TextField(
+              autofocus: true,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: 'Search exercises...',
+                filled: true,
+                fillColor: const Color(0xFFF1F5F9),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              onChanged: (value) => setState(() => _query = value.trim()),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              controller: widget.scrollController,
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final exercise = filtered[index];
+                final alreadyAdded = widget.addedExerciseIds
+                    .contains(exercise.id as String);
+                return ListTile(
+                  enabled: !alreadyAdded,
+                  leading: Icon(
+                    (exercise.exerciseType as String) == 'timed'
+                        ? Icons.timer_rounded
+                        : Icons.fitness_center_rounded,
+                    color: alreadyAdded
+                        ? AppTheme.slateInactive
+                        : AppTheme.primary,
+                    size: 20,
+                  ),
+                  title: Text(exercise.name as String),
+                  subtitle: Text(
+                    (exercise.primaryMuscles as List<String>).join(', '),
+                  ),
+                  trailing: alreadyAdded
+                      ? Text(
+                          'Added',
+                          style: TextStyle(color: AppTheme.slateInactive),
+                        )
+                      : const Icon(Icons.add_rounded),
+                  onTap: alreadyAdded
+                      ? null
+                      : () => context.pop(exercise.id as String),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
