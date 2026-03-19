@@ -27,6 +27,9 @@ class ExerciseController {
       return exercise.name.toLowerCase().contains(normalized) ||
           exercise.primaryMuscles.any(
             (muscle) => muscle.toLowerCase().contains(normalized),
+          ) ||
+          exercise.secondaryMuscles.any(
+            (muscle) => muscle.toLowerCase().contains(normalized),
           );
     }).toList()..sort((a, b) => a.name.compareTo(b.name));
   }
@@ -34,6 +37,7 @@ class ExerciseController {
   Exercise create({
     required String name,
     required List<String> primaryMuscles,
+    List<String> secondaryMuscles = const [],
     required List<String> equipment,
     required String instructions,
     String exerciseType = 'strength',
@@ -42,6 +46,7 @@ class ExerciseController {
       id: 'exercise_${DateTime.now().microsecondsSinceEpoch}',
       name: name.trim(),
       primaryMuscles: primaryMuscles,
+      secondaryMuscles: secondaryMuscles,
       equipment: equipment,
       instructions: instructions.trim(),
       archived: false,
@@ -61,6 +66,7 @@ class ExerciseController {
     required String exerciseId,
     required String name,
     required List<String> primaryMuscles,
+    List<String> secondaryMuscles = const [],
     required List<String> equipment,
     required String instructions,
     String exerciseType = 'strength',
@@ -70,6 +76,7 @@ class ExerciseController {
     final updated = exercise.copyWith(
       name: name.trim(),
       primaryMuscles: primaryMuscles,
+      secondaryMuscles: secondaryMuscles,
       equipment: equipment,
       instructions: instructions.trim(),
       exerciseType: exerciseType,

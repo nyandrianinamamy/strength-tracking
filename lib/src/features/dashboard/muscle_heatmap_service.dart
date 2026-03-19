@@ -89,6 +89,14 @@ class MuscleHeatmapService {
             rawVolume[target] = (rawVolume[target] ?? 0) + decayedVolume;
           }
         }
+
+        // Secondary muscles contribute at 50% weight
+        for (final muscle in exercise.secondaryMuscles) {
+          final mapped = muscleMapping[muscle] ?? [muscle];
+          for (final target in mapped) {
+            rawVolume[target] = (rawVolume[target] ?? 0) + decayedVolume * 0.5;
+          }
+        }
       }
     }
 

@@ -19,6 +19,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
   final _nameController = TextEditingController();
   final _instructionsController = TextEditingController();
   final Set<String> _muscles = {};
+  final Set<String> _secondaryMuscles = {};
   final Set<String> _equipment = {};
   String _exerciseType = 'strength';
   bool _initialized = false;
@@ -26,12 +27,14 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
   static const _muscleOptions = [
     'Chest',
     'Back',
-    'Legs',
     'Shoulders',
-    'Arms',
+    'Biceps',
+    'Triceps',
     'Abs',
-    'Glutes',
+    'Quads',
     'Hamstrings',
+    'Glutes',
+    'Legs',
   ];
 
   static const _equipmentOptions = [
@@ -59,6 +62,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
       _nameController.text = exercise.name;
       _instructionsController.text = exercise.instructions;
       _muscles.addAll(exercise.primaryMuscles);
+      _secondaryMuscles.addAll(exercise.secondaryMuscles);
       _equipment.addAll(exercise.equipment);
       _exerciseType = exercise.exerciseType;
       _initialized = true;
@@ -81,6 +85,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         _nameController.text = exercise.name;
         _instructionsController.text = exercise.instructions;
         _muscles.addAll(exercise.primaryMuscles);
+        _secondaryMuscles.addAll(exercise.secondaryMuscles);
         _equipment.addAll(exercise.equipment);
         _exerciseType = exercise.exerciseType;
       }
@@ -174,6 +179,60 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           ),
           const SizedBox(height: 24),
           Text(
+            'Secondary Muscles',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Muscles that assist during the movement',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _muscleOptions.map((muscle) {
+              final selected = _secondaryMuscles.contains(muscle);
+              final isPrimary = _muscles.contains(muscle);
+              return GestureDetector(
+                onTap: isPrimary ? null : () {
+                  setState(() {
+                    if (selected) {
+                      _secondaryMuscles.remove(muscle);
+                    } else {
+                      _secondaryMuscles.add(muscle);
+                    }
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isPrimary
+                        ? Colors.grey.shade300
+                        : selected
+                            ? AppTheme.primary.withValues(alpha: 0.15)
+                            : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(999),
+                    border: selected ? Border.all(color: AppTheme.primary, width: 1.5) : null,
+                  ),
+                  child: Text(
+                    muscle,
+                    style: TextStyle(
+                      color: isPrimary
+                          ? Colors.grey
+                          : selected
+                              ? AppTheme.primary
+                              : AppTheme.ink,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 24),
+          Text(
             'Equipment',
             style: Theme.of(
               context,
@@ -258,6 +317,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
       controller.create(
         name: name,
         primaryMuscles: _muscles.toList(),
+        secondaryMuscles: _secondaryMuscles.toList(),
         equipment: _equipment.toList(),
         instructions: _instructionsController.text,
         exerciseType: _exerciseType,
@@ -267,6 +327,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         exerciseId: widget.exerciseId!,
         name: name,
         primaryMuscles: _muscles.toList(),
+        secondaryMuscles: _secondaryMuscles.toList(),
         equipment: _equipment.toList(),
         instructions: _instructionsController.text,
         exerciseType: _exerciseType,

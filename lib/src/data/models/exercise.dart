@@ -3,6 +3,7 @@ class Exercise {
     required this.id,
     required this.name,
     required this.primaryMuscles,
+    this.secondaryMuscles = const [],
     required this.equipment,
     required this.instructions,
     required this.archived,
@@ -12,6 +13,7 @@ class Exercise {
   final String id;
   final String name;
   final List<String> primaryMuscles;
+  final List<String> secondaryMuscles;
   final List<String> equipment;
   final String instructions;
   final bool archived;
@@ -21,6 +23,7 @@ class Exercise {
     String? id,
     String? name,
     List<String>? primaryMuscles,
+    List<String>? secondaryMuscles,
     List<String>? equipment,
     String? instructions,
     bool? archived,
@@ -30,6 +33,7 @@ class Exercise {
       id: id ?? this.id,
       name: name ?? this.name,
       primaryMuscles: primaryMuscles ?? this.primaryMuscles,
+      secondaryMuscles: secondaryMuscles ?? this.secondaryMuscles,
       equipment: equipment ?? this.equipment,
       instructions: instructions ?? this.instructions,
       archived: archived ?? this.archived,
@@ -43,6 +47,9 @@ class Exercise {
       name: json['name'] as String,
       primaryMuscles: List<String>.from(
         json['primaryMuscles'] as List<dynamic>? ?? const [],
+      ),
+      secondaryMuscles: List<String>.from(
+        json['secondaryMuscles'] as List<dynamic>? ?? const [],
       ),
       equipment: List<String>.from(
         json['equipment'] as List<dynamic>? ?? const [],
@@ -58,6 +65,7 @@ class Exercise {
       'id': id,
       'name': name,
       'primaryMuscles': primaryMuscles,
+      'secondaryMuscles': secondaryMuscles,
       'equipment': equipment,
       'instructions': instructions,
       'archived': archived,

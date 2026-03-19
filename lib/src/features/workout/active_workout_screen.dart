@@ -1315,7 +1315,7 @@ class _MiniMuscleHeatmap extends StatelessWidget {
 
     // Determine which muscles this exercise targets (mapped to heatmap names)
     final targetMuscles = <String>{};
-    for (final muscle in exercise.primaryMuscles) {
+    for (final muscle in [...exercise.primaryMuscles, ...exercise.secondaryMuscles]) {
       final mapped = MuscleHeatmapService.muscleMapping[muscle] ?? [muscle];
       targetMuscles.addAll(mapped);
     }
