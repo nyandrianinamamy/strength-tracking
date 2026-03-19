@@ -409,12 +409,16 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           onPressed: () => context.go('/'),
           icon: const Icon(Icons.close_rounded),
         ),
-        title: Text(
-          routine.name,
-          style: Theme.of(context)
-              .textTheme
-              .titleMedium
-              ?.copyWith(fontWeight: FontWeight.w800),
+        title: Column(
+          children: [
+            Text(
+              routine.name,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ],
         ),
         actions: [
           Container(
@@ -743,65 +747,13 @@ class _ExercisePage extends StatelessWidget {
             .reduce((a, b) => a > b ? a : b);
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
       children: [
-        // Exercise name + set badge
-        Center(
-          child: Text(
-            exercise?.name ?? 'Exercise',
-            style: Theme.of(context)
-                .textTheme
-                .titleLarge
-                ?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Center(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              'SET ${currentSets.length + 1} OF ${prescription.targetSets}',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.0,
-                  ),
-            ),
-          ),
-        ),
-
-        // Exercise indicator dots
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(routine.exercises.length, (i) {
-            return Container(
-              width: i == pageIndex ? 8 : 6,
-              height: i == pageIndex ? 8 : 6,
-              margin: const EdgeInsets.symmetric(horizontal: 3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: i == pageIndex
-                    ? AppTheme.primary
-                    : AppTheme.slateInactive.withValues(alpha: 0.3),
-              ),
-            );
-          }),
-        ),
-        const SizedBox(height: 12),
-
-        // Mini muscle heatmap for active exercise
-        if (exercise != null && exercise.primaryMuscles.isNotEmpty)
-          _MiniMuscleHeatmap(
-            exercise: exercise,
-            state: state,
-          ),
-
-        const SizedBox(height: 12),
+        // Muscle heatmap — fatigue colors with active muscles highlighted
+        if (exercise != null && exercise.primaryMuscles.isNotEmpty) ...[
+          _ActiveMuscleHeatmap(exercise: exercise, state: state),
+          const SizedBox(height: 8),
+        ],
 
         if (exercise?.exerciseType == 'timed') ...[
           // Timed exercise: countdown timer + start/pause/reset
@@ -1300,8 +1252,8 @@ class _ExercisePage extends StatelessWidget {
   }
 }
 
-class _MiniMuscleHeatmap extends StatelessWidget {
-  const _MiniMuscleHeatmap({
+class _ActiveMuscleHeatmap extends StatelessWidget {
+  const _ActiveMuscleHeatmap({
     required this.exercise,
     required this.state,
   });
@@ -1312,12 +1264,42 @@ class _MiniMuscleHeatmap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final fatigue = MuscleHeatmapService().computeFatigue(state);
-    final allMuscles = [...exercise.primaryMuscles, ...exercise.secondaryMuscles];
-    final sides = MuscleHeatmapService.sidesForMuscles(allMuscles);
+    final allMuscleNames = [...exercise.primaryMuscles, ...exercise.secondaryMuscles];
+    final sides = MuscleHeatmapService.sidesForMuscles(allMuscleNames);
 
     if (!sides.front && !sides.back) return const SizedBox.shrink();
 
     final showBoth = sides.front && sides.back;
+
+    // Build the set of active Muscle enums for this exercise
+    final activeMuscles = <Muscle>{};
+    for (final name in exercise.primaryMuscles) {
+      final mapped = MuscleHeatmapService.muscleMapping[name] ?? [];
+      activeMuscles.addAll(mapped);
+    }
+    final secondaryMuscles = <Muscle>{};
+    for (final name in exercise.secondaryMuscles) {
+      final mapped = MuscleHeatmapService.muscleMapping[name] ?? [];
+      secondaryMuscles.addAll(mapped);
+    }
+
+    // Override active muscles with a bright primary blue color
+    // Secondary muscles get a lighter blue
+    final highlightedData = Map<Muscle, MuscleData>.from(fatigue);
+    for (final muscle in activeMuscles) {
+      highlightedData[muscle] = MuscleData(
+        intensity: 1.0,
+        color: AppTheme.primary,
+      );
+    }
+    for (final muscle in secondaryMuscles) {
+      if (!activeMuscles.contains(muscle)) {
+        highlightedData[muscle] = MuscleData(
+          intensity: 0.7,
+          color: AppTheme.primary.withValues(alpha: 0.4),
+        );
+      }
+    }
 
     const colors = [
       Color(0xFFE2E8F0),
@@ -1328,36 +1310,31 @@ class _MiniMuscleHeatmap extends StatelessWidget {
       Color(0xFFEF4444),
     ];
 
+    Widget buildBody(BodySide side) {
+      return AspectRatio(
+        aspectRatio: 0.42,
+        child: BodyHeatmap(
+          side: side,
+          gender: state.bodyGender == 'female'
+              ? BodyGender.female
+              : BodyGender.male,
+          data: highlightedData,
+          colors: colors,
+          bodyColor: const Color(0xFFE2E8F0),
+          showBorder: true,
+          borderColor: const Color(0xFF1E293B),
+        ),
+      );
+    }
+
     return SizedBox(
-      height: 160,
+      height: 200,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (sides.front)
-            AspectRatio(
-              aspectRatio: 0.5,
-              child: BodyHeatmap(
-                side: BodySide.front,
-                gender: state.bodyGender == 'female' ? BodyGender.female : BodyGender.male,
-                data: fatigue,
-                colors: colors,
-                bodyColor: const Color(0xFFE2E8F0),
-                showBorder: false,
-              ),
-            ),
-          if (showBoth) const SizedBox(width: 16),
-          if (sides.back)
-            AspectRatio(
-              aspectRatio: 0.5,
-              child: BodyHeatmap(
-                side: BodySide.back,
-                gender: state.bodyGender == 'female' ? BodyGender.female : BodyGender.male,
-                data: fatigue,
-                colors: colors,
-                bodyColor: const Color(0xFFE2E8F0),
-                showBorder: false,
-              ),
-            ),
+          if (sides.front) buildBody(BodySide.front),
+          if (showBoth) const SizedBox(width: 12),
+          if (sides.back) buildBody(BodySide.back),
         ],
       ),
     );
