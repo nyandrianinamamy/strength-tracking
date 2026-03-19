@@ -64,6 +64,51 @@ class WorkoutController {
     return updatedSession;
   }
 
+  WorkoutSession? logTimedSet({
+    required int durationSeconds,
+    String note = '',
+  }) {
+    final state = _ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return null;
+
+    final routine = state.routineById(session.routineId);
+    if (routine == null || routine.exercises.isEmpty) return null;
+
+    final currentExercise =
+        routine.exercises[session.currentExerciseIndex.clamp(
+          0,
+          routine.exercises.length - 1,
+        )];
+    final existingSets = session.completedSets
+        .where((set) => set.exerciseId == currentExercise.exerciseId)
+        .length;
+
+    final nextSet = CompletedSet(
+      exerciseId: currentExercise.exerciseId,
+      setNumber: existingSets + 1,
+      weightKg: 0,
+      reps: 0,
+      durationSeconds: durationSeconds,
+      completedAt: DateTime.now(),
+      note: note,
+    );
+
+    var nextExerciseIndex = session.currentExerciseIndex;
+    if (existingSets + 1 >= currentExercise.targetSets &&
+        session.currentExerciseIndex < routine.exercises.length - 1) {
+      nextExerciseIndex += 1;
+    }
+
+    final updatedSession = session.copyWith(
+      currentExerciseIndex: nextExerciseIndex,
+      completedSets: [...session.completedSets, nextSet],
+    );
+
+    _persistSession(updatedSession);
+    return updatedSession;
+  }
+
   WorkoutSession? skipExercise() {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;

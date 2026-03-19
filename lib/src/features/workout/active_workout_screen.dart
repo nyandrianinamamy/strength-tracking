@@ -38,6 +38,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   // Rest timer beep flag
   bool _restTimerBeeped = false;
 
+  // Timed exercise countdown state
+  DateTime? _timedExerciseStart;
+  int _timedExerciseDuration = 0;
+  bool _timedExerciseRunning = false;
+  bool _timedExerciseBeeped = false;
+
   // Swipe hint arrows
   late final AnimationController _arrowAnimController;
   late final Animation<double> _arrowOpacity;
@@ -48,9 +54,16 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     super.initState();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
+        // Rest timer beep
         if (_remainingRest == 0 && _restTimerStart != null && !_restTimerBeeped) {
           _restTimerBeeped = true;
           _playRestTimerBeep();
+        }
+        // Timed exercise auto-log when countdown reaches zero
+        if (_timedExerciseRunning && _timedCountdownRemaining <= 0 && !_timedExerciseBeeped) {
+          _timedExerciseBeeped = true;
+          _playRestTimerBeep();
+          _autoLogTimedSet();
         }
         setState(() {});
       }
@@ -82,6 +95,59 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     _pageController.dispose();
     _arrowAnimController.dispose();
     super.dispose();
+  }
+
+  // Timed exercise helpers
+  int get _timedCountdownRemaining {
+    if (_timedExerciseStart == null || !_timedExerciseRunning) {
+      return _timedExerciseDuration;
+    }
+    final elapsed = DateTime.now().difference(_timedExerciseStart!).inSeconds;
+    return (_timedExerciseDuration - elapsed).clamp(0, 9999);
+  }
+
+  void _startTimedExercise(int durationSeconds) {
+    setState(() {
+      _timedExerciseDuration = durationSeconds;
+      _timedExerciseStart = DateTime.now();
+      _timedExerciseRunning = true;
+      _timedExerciseBeeped = false;
+    });
+  }
+
+  void _pauseTimedExercise() {
+    setState(() {
+      _timedExerciseDuration = _timedCountdownRemaining;
+      _timedExerciseStart = null;
+      _timedExerciseRunning = false;
+    });
+  }
+
+  void _resetTimedExercise(int durationSeconds) {
+    setState(() {
+      _timedExerciseDuration = durationSeconds;
+      _timedExerciseStart = null;
+      _timedExerciseRunning = false;
+      _timedExerciseBeeped = false;
+    });
+  }
+
+  void _autoLogTimedSet() {
+    final state = ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return;
+
+    final routine = state.routineById(session.routineId);
+    if (routine == null || routine.exercises.isEmpty) return;
+
+    final prescription = routine.exercises[_currentPage];
+    ref.read(workoutControllerProvider).logTimedSet(
+      durationSeconds: prescription.targetDurationSeconds,
+      note: _setNoteController.text.trim(),
+    );
+    _setNoteController.clear();
+    _resetTimedExercise(prescription.targetDurationSeconds);
+    _resetRestTimer(prescription.restSeconds);
   }
 
   void _showArrows() {
@@ -406,6 +472,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   onLogSet: _resetRestTimer,
                   onShowComment: () => _showCommentDialog(context),
                   preferredUnit: state.preferredUnit,
+                  timedCountdownRemaining: _timedCountdownRemaining,
+                  timedExerciseRunning: _timedExerciseRunning,
+                  onStartTimed: _startTimedExercise,
+                  onPauseTimed: _pauseTimedExercise,
+                  onResetTimed: _resetTimedExercise,
                 );
               },
             ),
@@ -485,6 +556,11 @@ class _ExercisePage extends StatelessWidget {
     required this.onLogSet,
     required this.onShowComment,
     required this.preferredUnit,
+    required this.timedCountdownRemaining,
+    required this.timedExerciseRunning,
+    required this.onStartTimed,
+    required this.onPauseTimed,
+    required this.onResetTimed,
   });
 
   final int pageIndex;
@@ -501,6 +577,11 @@ class _ExercisePage extends StatelessWidget {
   final ValueChanged<int> onLogSet;
   final VoidCallback onShowComment;
   final String preferredUnit;
+  final int timedCountdownRemaining;
+  final bool timedExerciseRunning;
+  final ValueChanged<int> onStartTimed;
+  final VoidCallback onPauseTimed;
+  final ValueChanged<int> onResetTimed;
 
   @override
   Widget build(BuildContext context) {
@@ -520,18 +601,27 @@ class _ExercisePage extends StatelessWidget {
     // modifying controllers during build)
     if (lastExerciseId != prescription.exerciseId) {
       onExerciseIdChanged(prescription.exerciseId);
-      final lastSet = currentSets.isNotEmpty
-          ? currentSets.last
-          : previousPerformance.isNotEmpty
-              ? previousPerformance.first
-              : null;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        weightController.text =
-            lastSet == null ? '' : AppFormatters.decimal(AppFormatters.convertWeight(lastSet.weightKg, preferredUnit));
-        repsController.text =
-            lastSet?.reps.toString() ?? '${prescription.targetReps}';
-        setNoteController.clear();
-      });
+      if (exercise?.exerciseType != 'timed') {
+        final lastSet = currentSets.isNotEmpty
+            ? currentSets.last
+            : previousPerformance.isNotEmpty
+                ? previousPerformance.first
+                : null;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          weightController.text = lastSet == null
+              ? ''
+              : AppFormatters.decimal(
+                  AppFormatters.convertWeight(lastSet.weightKg, preferredUnit));
+          repsController.text =
+              lastSet?.reps.toString() ?? '${prescription.targetReps}';
+          setNoteController.clear();
+        });
+      } else {
+        // Reset timed exercise countdown for the new exercise
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          onResetTimed(prescription.targetDurationSeconds);
+        });
+      }
     }
 
     final highestPrevWeight = previousPerformance.isEmpty
@@ -592,80 +682,148 @@ class _ExercisePage extends StatelessWidget {
         ),
         const SizedBox(height: 20),
 
-        // Rest timer
-        Center(
-          child:
-              DigitalTimer(remaining: Duration(seconds: remainingRest)),
-        ),
-        const SizedBox(height: 24),
+        if (exercise?.exerciseType == 'timed') ...[
+          // Timed exercise: countdown timer + start/pause/reset
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              'COUNTDOWN',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: AppTheme.primary,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1.5,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Center(
+            child: Text(
+              '${(timedCountdownRemaining ~/ 60).toString().padLeft(2, '0')}:${(timedCountdownRemaining % 60).toString().padLeft(2, '0')}',
+              style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: timedExerciseRunning ? AppTheme.primary : AppTheme.ink,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (!timedExerciseRunning) ...[
+                FilledButton.icon(
+                  onPressed: () => onStartTimed(
+                    timedCountdownRemaining > 0
+                        ? timedCountdownRemaining
+                        : prescription.targetDurationSeconds,
+                  ),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text(timedCountdownRemaining < prescription.targetDurationSeconds && timedCountdownRemaining > 0 ? 'Resume' : 'Start'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(120, 48),
+                  ),
+                ),
+                if (timedCountdownRemaining < prescription.targetDurationSeconds) ...[
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () => onResetTimed(prescription.targetDurationSeconds),
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('Reset'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(100, 48),
+                    ),
+                  ),
+                ],
+              ] else ...[
+                FilledButton.icon(
+                  onPressed: onPauseTimed,
+                  icon: const Icon(Icons.pause_rounded),
+                  label: const Text('Pause'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size(120, 48),
+                    backgroundColor: Colors.orange.shade600,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 20),
+        ] else ...[
+          // Strength exercise: rest timer + weight/reps/log
+          // Rest timer
+          Center(
+            child:
+                DigitalTimer(remaining: Duration(seconds: remainingRest)),
+          ),
+          const SizedBox(height: 24),
 
-        // 3-column input grid: weight, reps, log button
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Expanded(
-              child: Column(
-                children: [
-                  Text(
-                    'WEIGHT (${preferredUnit.toUpperCase()})',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.slateInactive,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.1,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: weightController,
-                    textAlign: TextAlign.center,
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w900),
-                    decoration: const InputDecoration(
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+          // 3-column input grid: weight, reps, log button
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'WEIGHT (${preferredUnit.toUpperCase()})',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.slateInactive,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                          ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                children: [
-                  Text(
-                    'REPS',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.slateInactive,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.1,
-                        ),
-                  ),
-                  const SizedBox(height: 6),
-                  TextField(
-                    controller: repsController,
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(fontWeight: FontWeight.w900),
-                    decoration: const InputDecoration(
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: weightController,
+                      textAlign: TextAlign.center,
+                      keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w900),
+                      decoration: const InputDecoration(
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: SizedBox(
-                height: 56,
-                child: FilledButton.icon(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      'REPS',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: AppTheme.slateInactive,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.1,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: repsController,
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w900),
+                      decoration: const InputDecoration(
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: SizedBox(
+                  height: 56,
+                  child: FilledButton.icon(
                   onPressed: () {
                     final rawWeight = double.tryParse(
                       weightController.text.replaceAll(',', '.'),
@@ -690,6 +848,7 @@ class _ExercisePage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
+        ], // end else (strength)
 
         // Add comment button
         GestureDetector(
@@ -745,7 +904,9 @@ class _ExercisePage extends StatelessWidget {
                       margin: const EdgeInsets.only(bottom: 10),
                       child: ListTile(
                         title: Text(
-                          'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                          set.durationSeconds > 0
+                              ? 'Set ${set.setNumber}: ${set.durationSeconds}s'
+                              : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
                           style:
                               const TextStyle(fontWeight: FontWeight.w800),
                         ),
@@ -776,7 +937,9 @@ class _ExercisePage extends StatelessWidget {
                         title: Row(
                           children: [
                             Text(
-                              '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                              set.durationSeconds > 0
+                                  ? '${set.durationSeconds}s'
+                                  : '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
                               style: const TextStyle(
                                   fontWeight: FontWeight.w800),
                             ),
