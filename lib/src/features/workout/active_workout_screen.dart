@@ -770,7 +770,9 @@ class _ExercisePage extends StatelessWidget {
             .map((s) => s.weightKg)
             .reduce((a, b) => a > b ? a : b);
 
-    return ListView(
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: ListView(
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
       children: [
         // Muscle heatmap — fatigue colors with active muscles highlighted
@@ -1184,6 +1186,7 @@ class _ExercisePage extends StatelessWidget {
                 ),
         ),
       ],
+      ),
     );
   }
 
@@ -1276,7 +1279,7 @@ class _ExercisePage extends StatelessWidget {
   }
 }
 
-class _ActiveMuscleHeatmap extends StatelessWidget {
+class _ActiveMuscleHeatmap extends StatefulWidget {
   const _ActiveMuscleHeatmap({
     required this.exercise,
     required this.state,
@@ -1286,14 +1289,37 @@ class _ActiveMuscleHeatmap extends StatelessWidget {
   final AppState state;
 
   @override
+  State<_ActiveMuscleHeatmap> createState() => _ActiveMuscleHeatmapState();
+}
+
+class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final exercise = widget.exercise;
+    final state = widget.state;
     final fatigue = MuscleHeatmapService().computeFatigue(state);
-    final allMuscleNames = [...exercise.primaryMuscles, ...exercise.secondaryMuscles];
-    final sides = MuscleHeatmapService.sidesForMuscles(allMuscleNames);
-
-    if (!sides.front && !sides.back) return const SizedBox.shrink();
-
-    final showBoth = sides.front && sides.back;
 
     // Build the set of active Muscle enums for this exercise
     final activeMuscles = <Muscle>{};
@@ -1307,59 +1333,209 @@ class _ActiveMuscleHeatmap extends StatelessWidget {
       secondaryMuscles.addAll(mapped);
     }
 
-    // Override active muscles with a bright primary blue color
-    // Secondary muscles get a lighter blue
-    final highlightedData = Map<Muscle, MuscleData>.from(fatigue);
-    for (final muscle in activeMuscles) {
-      highlightedData[muscle] = MuscleData(
-        intensity: 1.0,
-        color: AppTheme.primary,
-      );
-    }
-    for (final muscle in secondaryMuscles) {
-      if (!activeMuscles.contains(muscle)) {
-        highlightedData[muscle] = MuscleData(
-          intensity: 0.7,
-          color: AppTheme.primary.withValues(alpha: 0.4),
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, _) {
+        final pulse = _pulseAnimation.value;
+
+        // Override active muscles with pulsing primary blue
+        final highlightedData = Map<Muscle, MuscleData>.from(fatigue);
+        for (final muscle in activeMuscles) {
+          highlightedData[muscle] = MuscleData(
+            intensity: 1.0,
+            color: AppTheme.primary.withValues(alpha: pulse),
+          );
+        }
+        for (final muscle in secondaryMuscles) {
+          if (!activeMuscles.contains(muscle)) {
+            highlightedData[muscle] = MuscleData(
+              intensity: 0.7,
+              color: AppTheme.primary.withValues(alpha: pulse * 0.5),
+            );
+          }
+        }
+
+        const colors = [
+          Color(0xFFE2E8F0),
+          Color(0xFF93C5FD),
+          Color(0xFF4ADE80),
+          Color(0xFFFBBF24),
+          Color(0xFFF97316),
+          Color(0xFFEF4444),
+        ];
+
+        Widget buildBody(BodySide side) {
+          return AspectRatio(
+            aspectRatio: 0.42,
+            child: BodyHeatmap(
+              side: side,
+              gender: state.bodyGender == 'female'
+                  ? BodyGender.female
+                  : BodyGender.male,
+              data: highlightedData,
+              colors: colors,
+              bodyColor: const Color(0xFFE2E8F0),
+              showBorder: false,
+            ),
+          );
+        }
+
+        return SizedBox(
+          height: MediaQuery.of(context).size.height * 0.40,
+          child: Stack(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  buildBody(BodySide.front),
+                  const SizedBox(width: 12),
+                  buildBody(BodySide.back),
+                ],
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: GestureDetector(
+                  onTap: () => _showHeatmapLegend(context),
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.info_outline_rounded,
+                      size: 16,
+                      color: AppTheme.slateInactive,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
-      }
-    }
+      },
+    );
+  }
 
-    const colors = [
-      Color(0xFFE2E8F0),
-      Color(0xFF93C5FD),
-      Color(0xFF4ADE80),
-      Color(0xFFFBBF24),
-      Color(0xFFF97316),
-      Color(0xFFEF4444),
-    ];
-
-    Widget buildBody(BodySide side) {
-      return AspectRatio(
-        aspectRatio: 0.42,
-        child: BodyHeatmap(
-          side: side,
-          gender: state.bodyGender == 'female'
-              ? BodyGender.female
-              : BodyGender.male,
-          data: highlightedData,
-          colors: colors,
-          bodyColor: const Color(0xFFE2E8F0),
-          showBorder: false,
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 200,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (sides.front) buildBody(BodySide.front),
-          if (showBoth) const SizedBox(width: 12),
-          if (sides.back) buildBody(BodySide.back),
-        ],
+  void _showHeatmapLegend(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Muscle Heatmap',
+                style: Theme.of(sheetContext)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 16),
+              _legendRow(
+                color: AppTheme.primary,
+                label: 'Active muscles',
+                description: 'Muscles targeted by this exercise (pulsing)',
+              ),
+              const SizedBox(height: 12),
+              _legendRow(
+                color: AppTheme.primary.withValues(alpha: 0.4),
+                label: 'Secondary muscles',
+                description: 'Assisting muscles for this exercise',
+              ),
+              const SizedBox(height: 16),
+              Container(
+                height: 12,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.grey.shade300,
+                      Colors.blue.shade300,
+                      Colors.green.shade400,
+                      Colors.yellow.shade600,
+                      Colors.orange.shade600,
+                      Colors.red.shade500,
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Recovered',
+                      style: TextStyle(
+                          fontSize: 11, color: AppTheme.slateInactive)),
+                  Text('Fatigued',
+                      style: TextStyle(
+                          fontSize: 11, color: AppTheme.slateInactive)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Fatigue colors fade as muscles recover (~48h half-life)',
+                style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.slateInactive,
+                    ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _legendRow({
+    required Color color,
+    required String label,
+    required String description,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 16,
+          height: 16,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label,
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w700, fontSize: 13)),
+              Text(description,
+                  style: TextStyle(
+                      fontSize: 11, color: AppTheme.slateInactive)),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
