@@ -102,8 +102,10 @@ struct TimedExerciseView: View {
                         Text(WatchL10n.string("session", locale: locale))
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
-                        Text(elapsedSessionTime())
-                            .font(.caption2)
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            Text(elapsedSessionTime())
+                                .font(.caption2)
+                        }
                     }
                 }
                 .padding(.top, 4)
@@ -190,9 +192,16 @@ struct TimedExerciseView: View {
     }
 
     private func elapsedSessionTime() -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let start = formatter.date(from: sessionStartedAt) else { return "0:00" }
+        guard let start = parseISO8601(sessionStartedAt) else { return "0:00" }
         let elapsed = Int(Date().timeIntervalSince(start))
         return formatTime(elapsed)
+    }
+
+    private func parseISO8601(_ string: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: string) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: string)
     }
 }

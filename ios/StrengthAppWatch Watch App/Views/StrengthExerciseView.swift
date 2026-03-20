@@ -187,10 +187,17 @@ struct StrengthExerciseView: View {
     }
 
     private func elapsedSessionTime(now: Date) -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let start = formatter.date(from: sessionStartedAt) else { return "0:00" }
+        guard let start = parseISO8601(sessionStartedAt) else { return "0:00" }
         let elapsed = Int(now.timeIntervalSince(start))
         return formatTime(elapsed)
+    }
+
+    private func parseISO8601(_ string: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: string) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: string)
     }
 
     private func logSet() {
