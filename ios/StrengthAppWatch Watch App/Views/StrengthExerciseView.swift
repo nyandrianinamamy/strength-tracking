@@ -18,6 +18,8 @@ struct StrengthExerciseView: View {
     @State private var restTimerStart: Date? = nil
     @State private var restRemaining: Int = 0
     @State private var timer: Timer? = nil
+    @State private var sessionElapsed: String = "0:00"
+    @State private var sessionTimer: Timer? = nil
 
     private var nextSetNumber: Int {
         exercise.completedSets.count + 1
@@ -29,7 +31,7 @@ struct StrengthExerciseView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 8) {
+            VStack(spacing: 6) {
                 // Rest timer pill
                 if let _ = restTimerStart, restRemaining > 0 {
                     HStack(spacing: 4) {
@@ -56,71 +58,79 @@ struct StrengthExerciseView: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
 
-                // Weight and reps
-                HStack(spacing: 4) {
-                    Text(formatWeight(weight, unit: unit))
-                        .font(.title3)
-                        .bold()
-                        .foregroundColor(editingWeight ? .blue : .primary)
-                        .onTapGesture { editingWeight = true }
-
-                    Text("x")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    Text("\(reps) \(WatchL10n.string("reps", locale: locale))")
-                        .font(.title3)
-                        .bold()
-                        .foregroundColor(!editingWeight ? .blue : .primary)
-                        .onTapGesture { editingWeight = false }
-                }
-                .focusable(true)
-                .digitalCrownRotation(
-                    editingWeight
-                        ? Binding(
-                            get: { weight },
-                            set: { newValue in
-                                let clamped = max(0, newValue)
-                                if clamped != weight {
-                                    weight = clamped
-                                }
-                                if clamped <= 0 {
-                                    WKInterfaceDevice.current().play(.directionDown)
-                                }
-                            }
-                          )
-                        : Binding(
-                            get: { Double(reps) },
-                            set: { newValue in
-                                let newReps = max(1, Int(newValue))
-                                if newReps != reps {
-                                    reps = newReps
-                                }
-                                if newReps <= 1 {
-                                    WKInterfaceDevice.current().play(.directionDown)
-                                }
-                            }
-                          ),
-                    from: 0,
-                    through: editingWeight ? 500 : 100,
-                    by: editingWeight
-                        ? (unit == "lbs" ? weightIncrement / 2.20462 : weightIncrement)
-                        : 1,
-                    sensitivity: .medium
-                )
-
-                // LOG SET button
+                // Weight, reps, and LOG SET — inline row
                 if !allSetsComplete {
-                    Button(action: logSet) {
-                        VStack(spacing: 2) {
+                    HStack(spacing: 6) {
+                        // Weight field
+                        Text(formatWeight(weight, unit: unit))
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(editingWeight ? .blue : .primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(editingWeight ? Color.blue : Color.gray.opacity(0.4), lineWidth: editingWeight ? 2 : 1)
+                            )
+                            .onTapGesture { editingWeight = true }
+
+                        Text("x")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+
+                        // Reps field
+                        Text("\(reps)")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(!editingWeight ? .blue : .primary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 6)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(!editingWeight ? Color.blue : Color.gray.opacity(0.4), lineWidth: !editingWeight ? 2 : 1)
+                            )
+                            .onTapGesture { editingWeight = false }
+
+                        // LOG button
+                        Button(action: logSet) {
                             Text(WatchL10n.string("log_set", locale: locale))
-                                .font(.headline)
-                                .bold()
+                                .font(.system(size: 11, weight: .bold))
                         }
-                        .frame(maxWidth: .infinity)
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(.blue)
+                    .focusable(true)
+                    .digitalCrownRotation(
+                        editingWeight
+                            ? Binding(
+                                get: { weight },
+                                set: { newValue in
+                                    let clamped = max(0, newValue)
+                                    if clamped != weight {
+                                        weight = clamped
+                                    }
+                                    if clamped <= 0 {
+                                        WKInterfaceDevice.current().play(.directionDown)
+                                    }
+                                }
+                              )
+                            : Binding(
+                                get: { Double(reps) },
+                                set: { newValue in
+                                    let newReps = max(1, Int(newValue))
+                                    if newReps != reps {
+                                        reps = newReps
+                                    }
+                                    if newReps <= 1 {
+                                        WKInterfaceDevice.current().play(.directionDown)
+                                    }
+                                }
+                              ),
+                        from: 0,
+                        through: editingWeight ? 500 : 100,
+                        by: editingWeight
+                            ? (unit == "lbs" ? weightIncrement / 2.20462 : weightIncrement)
+                            : 1,
+                        sensitivity: .medium
+                    )
                 } else {
                     Text("✓")
                         .font(.title2)
@@ -144,7 +154,7 @@ struct StrengthExerciseView: View {
                         Text(WatchL10n.string("session", locale: locale))
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
-                        Text(elapsedSessionTime())
+                        Text(sessionElapsed)
                             .font(.caption2)
                     }
                 }
@@ -152,7 +162,14 @@ struct StrengthExerciseView: View {
             }
             .padding(.horizontal, 4)
         }
-        .onAppear { prefillValues() }
+        .onAppear {
+            prefillValues()
+            startSessionTimer()
+        }
+        .onDisappear {
+            sessionTimer?.invalidate()
+            sessionTimer = nil
+        }
         .onChange(of: exercise.completedSets.count) { _ in prefillValues() }
     }
 
@@ -166,6 +183,23 @@ struct StrengthExerciseView: View {
             weight = exercise.recommendedWeightKg
             reps = exercise.targetReps
         }
+    }
+
+    private func startSessionTimer() {
+        updateSessionElapsed()
+        sessionTimer?.invalidate()
+        sessionTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            DispatchQueue.main.async {
+                updateSessionElapsed()
+            }
+        }
+    }
+
+    private func updateSessionElapsed() {
+        let formatter = ISO8601DateFormatter()
+        guard let start = formatter.date(from: sessionStartedAt) else { return }
+        let elapsed = Int(Date().timeIntervalSince(start))
+        sessionElapsed = formatTime(elapsed)
     }
 
     private func logSet() {
@@ -206,12 +240,5 @@ struct StrengthExerciseView: View {
         let m = seconds / 60
         let s = seconds % 60
         return String(format: "%d:%02d", m, s)
-    }
-
-    private func elapsedSessionTime() -> String {
-        let formatter = ISO8601DateFormatter()
-        guard let start = formatter.date(from: sessionStartedAt) else { return "0:00" }
-        let elapsed = Int(Date().timeIntervalSince(start))
-        return formatTime(elapsed)
     }
 }

@@ -72,18 +72,32 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     private func sendToWatch(_ message: [String: Any]) {
         guard let session = session, session.isPaired else { return }
 
+        let isSessionEnd = (message["type"] as? String) == "session_end"
+
         // Try direct message if reachable
         if session.isReachable {
             session.sendMessage(message, replyHandler: nil) { error in
-                print("Direct send to Watch failed: \(error), using application context")
-                try? session.updateApplicationContext(message)
+                print("Direct send to Watch failed: \(error), using fallback")
+                if isSessionEnd {
+                    session.transferUserInfo(message)
+                } else {
+                    try? session.updateApplicationContext(message)
+                }
             }
+        } else if isSessionEnd {
+            // session_end must be delivered reliably
+            session.transferUserInfo(message)
         } else {
             do {
                 try session.updateApplicationContext(message)
             } catch {
                 print("Failed to update application context: \(error)")
             }
+        }
+
+        // Always send session_end via transferUserInfo as backup
+        if isSessionEnd {
+            session.transferUserInfo(message)
         }
     }
 
