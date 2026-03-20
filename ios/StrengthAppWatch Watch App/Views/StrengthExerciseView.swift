@@ -64,6 +64,7 @@ struct StrengthExerciseView: View {
                             Text(formatWeight(weight, unit: unit))
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundColor(editingWeight ? .blue : .primary)
+                                .frame(minWidth: 40)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 6)
                                 .background(

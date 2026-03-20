@@ -103,7 +103,7 @@ struct TimedExerciseView: View {
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
                         TimelineView(.periodic(from: .now, by: 1)) { context in
-                            Text(elapsedSessionTime())
+                            Text(elapsedSessionTime(now: context.date))
                                 .font(.caption2)
                         }
                     }
@@ -191,9 +191,9 @@ struct TimedExerciseView: View {
         return String(format: "%d:%02d", m, s)
     }
 
-    private func elapsedSessionTime() -> String {
+    private func elapsedSessionTime(now: Date) -> String {
         guard let start = parseISO8601(sessionStartedAt) else { return "0:00" }
-        let elapsed = Int(Date().timeIntervalSince(start))
+        let elapsed = Int(now.timeIntervalSince(start))
         return formatTime(elapsed)
     }
 
