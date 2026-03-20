@@ -208,6 +208,7 @@ struct StrengthExerciseView: View {
                     WKInterfaceDevice.current().play(.click)
                 }
                 if remaining <= 0 {
+                    WKInterfaceDevice.current().play(.notification)
                     timer?.invalidate()
                     timer = nil
                     restTimerStart = nil

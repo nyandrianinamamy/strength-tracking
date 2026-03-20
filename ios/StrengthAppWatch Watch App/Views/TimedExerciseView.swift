@@ -174,6 +174,7 @@ struct TimedExerciseView: View {
                     WKInterfaceDevice.current().play(.click)
                 }
                 if rem <= 0 {
+                    WKInterfaceDevice.current().play(.notification)
                     restTimer?.invalidate()
                     restTimer = nil
                     restTimerStart = nil
