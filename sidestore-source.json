@@ -1,0 +1,17 @@
+{
+  "name": "Strength Training Tracker",
+  "identifier": "com.example.strengthTrainingTracker.source",
+  "sourceURL": "https://raw.githubusercontent.com/nyandrianinamamy/strength-tracking/main/sidestore-source.json",
+  "apps": [
+    {
+      "name": "Strength Training Tracker",
+      "bundleIdentifier": "com.example.strengthTrainingTracker",
+      "developerName": "nyandrianinamamy",
+      "subtitle": "Offline-first strength training tracker",
+      "localizedDescription": "Offline-first strength training tracker for iOS with Apple Watch companion. Track workouts, sets, reps, and rest timers. Includes body heatmap, workout history, and multi-language support.",
+      "iconURL": "https://raw.githubusercontent.com/nyandrianinamamy/strength-tracking/main/assets/icon/app_icon.png",
+      "tintColor": "257BF4",
+      "versions": []
+    }
+  ]
+}
