@@ -110,6 +110,14 @@ struct TimedExerciseView: View {
             }
             .padding(.horizontal, 4)
         }
+        .onDisappear {
+            timer?.invalidate()
+            timer = nil
+            restTimer?.invalidate()
+            restTimer = nil
+            restTimerStart = nil
+            isRunning = false
+        }
     }
 
     // MARK: - Timer

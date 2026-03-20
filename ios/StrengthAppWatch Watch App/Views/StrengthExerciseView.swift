@@ -163,6 +163,11 @@ struct StrengthExerciseView: View {
             .padding(.horizontal, 4)
         }
         .onAppear { prefillValues() }
+        .onDisappear {
+            timer?.invalidate()
+            timer = nil
+            restTimerStart = nil
+        }
         .onChange(of: exercise.completedSets.count) { _ in prefillValues() }
     }
 
