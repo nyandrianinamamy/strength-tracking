@@ -18,8 +18,6 @@ struct StrengthExerciseView: View {
     @State private var restTimerStart: Date? = nil
     @State private var restRemaining: Int = 0
     @State private var timer: Timer? = nil
-    @State private var sessionElapsed: String = "0:00"
-    @State private var sessionTimer: Timer? = nil
 
     private var nextSetNumber: Int {
         exercise.completedSets.count + 1
@@ -91,7 +89,7 @@ struct StrengthExerciseView: View {
 
                         // LOG button
                         Button(action: logSet) {
-                            Text(WatchL10n.string("log_set", locale: locale))
+                            Text(WatchL10n.string("log", locale: locale))
                                 .font(.system(size: 11, weight: .bold))
                         }
                         .buttonStyle(.borderedProminent)
@@ -154,22 +152,17 @@ struct StrengthExerciseView: View {
                         Text(WatchL10n.string("session", locale: locale))
                             .font(.system(size: 9))
                             .foregroundColor(.secondary)
-                        Text(sessionElapsed)
-                            .font(.caption2)
+                        TimelineView(.periodic(from: .now, by: 1)) { context in
+                            Text(elapsedSessionTime(now: context.date))
+                                .font(.caption2)
+                        }
                     }
                 }
                 .padding(.top, 4)
             }
             .padding(.horizontal, 4)
         }
-        .onAppear {
-            prefillValues()
-            startSessionTimer()
-        }
-        .onDisappear {
-            sessionTimer?.invalidate()
-            sessionTimer = nil
-        }
+        .onAppear { prefillValues() }
         .onChange(of: exercise.completedSets.count) { _ in prefillValues() }
     }
 
@@ -185,21 +178,11 @@ struct StrengthExerciseView: View {
         }
     }
 
-    private func startSessionTimer() {
-        updateSessionElapsed()
-        sessionTimer?.invalidate()
-        sessionTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            DispatchQueue.main.async {
-                updateSessionElapsed()
-            }
-        }
-    }
-
-    private func updateSessionElapsed() {
+    private func elapsedSessionTime(now: Date) -> String {
         let formatter = ISO8601DateFormatter()
-        guard let start = formatter.date(from: sessionStartedAt) else { return }
-        let elapsed = Int(Date().timeIntervalSince(start))
-        sessionElapsed = formatTime(elapsed)
+        guard let start = formatter.date(from: sessionStartedAt) else { return "0:00" }
+        let elapsed = Int(now.timeIntervalSince(start))
+        return formatTime(elapsed)
     }
 
     private func logSet() {
