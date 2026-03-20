@@ -24,8 +24,15 @@ jobs:
       - name: Install CocoaPods dependencies
         run: cd ios && pod install
 
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "number=${TAG#v}" >> "$GITHUB_OUTPUT"
+
       - name: Build unsigned iOS app
-        run: flutter build ios --release --no-codesign
+        run: flutter build ios --release --no-codesign --build-name=${{ steps.version.outputs.number }}
 
       - name: Package IPA
         run: |
@@ -33,10 +40,6 @@ jobs:
           cp -r build/ios/iphoneos/Runner.app build/Payload/
           cd build
           zip -r -9 StrengthApp.ipa Payload
-
-      - name: Extract version from tag
-        id: version
-        run: echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
       - name: Get IPA size
         id: ipa
