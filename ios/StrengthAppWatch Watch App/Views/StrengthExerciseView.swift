@@ -87,13 +87,16 @@ struct StrengthExerciseView: View {
                             )
                             .onTapGesture { editingWeight = false }
 
+                        Spacer().frame(width: 4)
+
                         // LOG button
                         Button(action: logSet) {
                             Text(WatchL10n.string("log", locale: locale))
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: 9, weight: .bold))
                         }
                         .buttonStyle(.borderedProminent)
                         .tint(.blue)
+                        .controlSize(.small)
                     }
                     .focusable(true)
                     .digitalCrownRotation(
