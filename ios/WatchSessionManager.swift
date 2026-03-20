@@ -70,30 +70,19 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     // MARK: - Send to Watch
 
     private func sendToWatch(_ message: [String: Any]) {
-        print("WatchSessionManager: sendToWatch called, isPaired=\(session?.isPaired ?? false), isReachable=\(session?.isReachable ?? false)")
-        guard let session = session, session.isPaired else {
-            print("WatchSessionManager: session nil or not paired, aborting")
-            return
-        }
+        guard let session = session, session.isPaired else { return }
 
         // Try direct message if reachable
         if session.isReachable {
-            print("WatchSessionManager: sending direct message")
-            session.sendMessage(message, replyHandler: { reply in
-                print("WatchSessionManager: direct message delivered, reply=\(reply)")
-            }) { error in
+            session.sendMessage(message, replyHandler: nil) { error in
                 print("Direct send to Watch failed: \(error), using application context")
-                // Fall back to application context
                 try? session.updateApplicationContext(message)
             }
         } else {
-            // Use application context (delivered when Watch wakes)
-            print("WatchSessionManager: not reachable, using applicationContext")
             do {
                 try session.updateApplicationContext(message)
-                print("WatchSessionManager: applicationContext updated successfully")
             } catch {
-                print("WatchSessionManager: Failed to update application context: \(error)")
+                print("Failed to update application context: \(error)")
             }
         }
     }

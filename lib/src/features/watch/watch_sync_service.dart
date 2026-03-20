@@ -78,7 +78,6 @@ class WatchSyncService {
 
     final routine = state.routineById(session.routineId);
     if (routine == null) return;
-
     final snapshot = _buildSessionSnapshot(state, session, routine);
     _sendSessionUpdate(snapshot);
   }

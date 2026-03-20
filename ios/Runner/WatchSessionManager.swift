@@ -76,11 +76,9 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
         if session.isReachable {
             session.sendMessage(message, replyHandler: nil) { error in
                 print("Direct send to Watch failed: \(error), using application context")
-                // Fall back to application context
                 try? session.updateApplicationContext(message)
             }
         } else {
-            // Use application context (delivered when Watch wakes)
             do {
                 try session.updateApplicationContext(message)
             } catch {
