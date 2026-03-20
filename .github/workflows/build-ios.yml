@@ -54,9 +54,8 @@ jobs:
           TAG: ${{ steps.version.outputs.tag }}
           IPA_SIZE: ${{ steps.ipa.outputs.size }}
         run: |
-          VERSION="${TAG#v}"
-          DATE=$(date -u +"%Y-%m-%d")
-          DOWNLOAD_URL="https://github.com/nyandrianinamamy/strength-tracking/releases/download/${TAG}/StrengthApp.ipa"
+          export DATE=$(date -u +"%Y-%m-%d")
+          export DOWNLOAD_URL="https://github.com/nyandrianinamamy/strength-tracking/releases/download/${TAG}/StrengthApp.ipa"
 
           # Use python3 (available on macOS runners) to update the JSON
           python3 - <<'PYEOF'
