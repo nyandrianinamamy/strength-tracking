@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -361,7 +362,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
 
   Future<void> _showExercisePicker(
     BuildContext context,
-    List<dynamic> exercises,
+    List<Exercise> exercises,
   ) async {
     final picked = await showModalBottomSheet<String>(
       context: context,
@@ -540,7 +541,7 @@ class _ExercisePickerContent extends StatefulWidget {
     required this.scrollController,
   });
 
-  final List<dynamic> exercises;
+  final List<Exercise> exercises;
   final Set<String> addedExerciseIds;
   final ScrollController scrollController;
 
@@ -551,21 +552,38 @@ class _ExercisePickerContent extends StatefulWidget {
 
 class _ExercisePickerContentState extends State<_ExercisePickerContent> {
   String _query = '';
+  String? _muscle;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final muscles = [
+      l10n.all,
+      ...{
+        for (final exercise in widget.exercises) ...exercise.primaryMuscles,
+      },
+    ]..sort();
     final filtered = widget.exercises.where((exercise) {
+      if (_muscle != null && !exercise.primaryMuscles.contains(_muscle)) {
+        return false;
+      }
       if (_query.isEmpty) return true;
       final q = _query.toLowerCase();
-      final name = (exercise.name as String).toLowerCase();
-      final muscles =
-          (exercise.primaryMuscles as List<String>).join(' ').toLowerCase();
-      return name.contains(q) || muscles.contains(q);
+      final name = exercise.name.toLowerCase();
+      final primary = exercise.primaryMuscles.join(' ').toLowerCase();
+      final secondary = exercise.secondaryMuscles.join(' ').toLowerCase();
+      return name.contains(q) || primary.contains(q) || secondary.contains(q);
     }).toList();
 
-    return SafeArea(
-      child: Column(
+    return AnimatedPadding(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
@@ -584,43 +602,59 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
               onChanged: (value) => setState(() => _query = value.trim()),
             ),
           ),
-          Expanded(
-            child: ListView.builder(
-              controller: widget.scrollController,
-              itemCount: filtered.length,
-              itemBuilder: (context, index) {
-                final exercise = filtered[index];
-                final alreadyAdded = widget.addedExerciseIds
-                    .contains(exercise.id as String);
-                return ListTile(
-                  enabled: !alreadyAdded,
-                  leading: Icon(
-                    (exercise.exerciseType as String) == 'timed'
-                        ? Icons.timer_rounded
-                        : Icons.fitness_center_rounded,
-                    color: alreadyAdded
-                        ? AppTheme.slateInactive
-                        : AppTheme.primary,
-                    size: 20,
-                  ),
-                  title: Text(exercise.name as String),
-                  subtitle: Text(
-                    (exercise.primaryMuscles as List<String>).join(', '),
-                  ),
-                  trailing: alreadyAdded
-                      ? Text(
-                          l10n.added,
-                          style: TextStyle(color: AppTheme.slateInactive),
-                        )
-                      : const Icon(Icons.add_rounded),
-                  onTap: alreadyAdded
-                      ? null
-                      : () => context.pop(exercise.id as String),
-                );
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            child: CategoryChips(
+              options: muscles,
+              selected: _muscle ?? l10n.all,
+              onSelected: (value) {
+                setState(() => _muscle = value == l10n.all ? null : value);
               },
             ),
           ),
+          Expanded(
+            child: filtered.isEmpty
+                ? EmptyStateCard(
+                    title: l10n.noExercisesFound,
+                    body: l10n.adjustFilter,
+                  )
+                : ListView.builder(
+                    controller: widget.scrollController,
+                    keyboardDismissBehavior:
+                        ScrollViewKeyboardDismissBehavior.onDrag,
+                    itemCount: filtered.length,
+                    itemBuilder: (context, index) {
+                      final exercise = filtered[index];
+                      final alreadyAdded = widget.addedExerciseIds
+                          .contains(exercise.id);
+                      return ListTile(
+                        enabled: !alreadyAdded,
+                        leading: Icon(
+                          exercise.exerciseType == 'timed'
+                              ? Icons.timer_rounded
+                              : Icons.fitness_center_rounded,
+                          color: alreadyAdded
+                              ? AppTheme.slateInactive
+                              : AppTheme.primary,
+                          size: 20,
+                        ),
+                        title: Text(exercise.name),
+                        subtitle: Text(exercise.primaryMuscles.join(', ')),
+                        trailing: alreadyAdded
+                            ? Text(
+                                l10n.added,
+                                style: TextStyle(color: AppTheme.slateInactive),
+                              )
+                            : const Icon(Icons.add_rounded),
+                        onTap: alreadyAdded
+                            ? null
+                            : () => context.pop(exercise.id),
+                      );
+                    },
+                  ),
+          ),
         ],
+      ),
       ),
     );
   }
