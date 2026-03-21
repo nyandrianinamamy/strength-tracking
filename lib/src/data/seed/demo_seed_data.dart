@@ -243,6 +243,7 @@ class DemoSeedData {
         status: WorkoutSessionStatus.completed,
         startedAt: startedAt,
         endedAt: endedAt,
+        lastActivityAt: endedAt,
         currentExerciseIndex: 0,
         completedSets: completedSets,
         sessionNote: note,

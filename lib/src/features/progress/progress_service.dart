@@ -6,6 +6,7 @@ import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
+import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
 
 final progressServiceProvider = Provider<ProgressService>((ref) {
   return ProgressService();
@@ -13,6 +14,7 @@ final progressServiceProvider = Provider<ProgressService>((ref) {
 
 class ProgressService {
   DashboardSnapshot dashboardSnapshot(AppState state) {
+    const staleSessionService = StaleSessionService();
     final completedSessions = state.completedSessions;
     final recentWorkouts = completedSessions
         .take(4)
@@ -48,7 +50,9 @@ class ProgressService {
     final nextRecommendation = activeSession != null
         ? RoutineRecommendation(
             routine: state.routineById(activeSession.routineId),
-            reason: 'Session in progress',
+            reason: staleSessionService.isStale(activeSession)
+                ? 'Paused • ${staleSessionService.idleLabel(activeSession)}'
+                : 'Session in progress',
             canSkip: false,
           )
         : _pickNextRoutine(state);
@@ -63,6 +67,11 @@ class ProgressService {
       nextRoutineGroupName: nextRecommendation.groupName,
       canSkipNextRoutine: nextRecommendation.canSkip,
       activeSession: activeSession,
+      activeSessionIsStale:
+          activeSession != null && staleSessionService.isStale(activeSession),
+      activeSessionIdleLabel: activeSession == null
+          ? null
+          : staleSessionService.idleLabel(activeSession),
       recentWorkouts: recentWorkouts,
       monthFrequency: _monthFrequency(
         completedSessions,
@@ -452,6 +461,8 @@ class DashboardSnapshot {
     required this.nextRoutineGroupName,
     required this.canSkipNextRoutine,
     required this.activeSession,
+    required this.activeSessionIsStale,
+    required this.activeSessionIdleLabel,
     required this.recentWorkouts,
     required this.monthFrequency,
     required this.recentPrs,
@@ -465,6 +476,8 @@ class DashboardSnapshot {
   final String? nextRoutineGroupName;
   final bool canSkipNextRoutine;
   final WorkoutSession? activeSession;
+  final bool activeSessionIsStale;
+  final String? activeSessionIdleLabel;
   final List<RecentWorkoutSummary> recentWorkouts;
   final MonthFrequency monthFrequency;
   final List<ExercisePersonalRecord> recentPrs;

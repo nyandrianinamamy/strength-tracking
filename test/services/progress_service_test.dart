@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 
@@ -54,5 +55,29 @@ void main() {
       prs.any((record) => record.exerciseId == 'barbell_back_squat'),
       isTrue,
     );
+  });
+
+  test('dashboard snapshot marks an active session as stale', () {
+    final state = DemoSeedData.initialState().copyWith(
+      sessions: [
+        WorkoutSession(
+          id: 'session_stale',
+          routineId: 'push_day',
+          status: WorkoutSessionStatus.active,
+          startedAt: DateTime.now().subtract(const Duration(hours: 3)),
+          endedAt: null,
+          lastActivityAt: DateTime.now().subtract(const Duration(hours: 2)),
+          currentExerciseIndex: 0,
+          completedSets: const [],
+          sessionNote: '',
+          rpe: null,
+        ),
+      ],
+    );
+
+    final snapshot = service.dashboardSnapshot(state);
+
+    expect(snapshot.activeSessionIsStale, isTrue);
+    expect(snapshot.activeSessionIdleLabel, contains('idle'));
   });
 }

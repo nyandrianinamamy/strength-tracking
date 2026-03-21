@@ -203,6 +203,7 @@ AppState _stateWithSession({
         status: WorkoutSessionStatus.completed,
         startedAt: startedAt,
         endedAt: startedAt.add(const Duration(minutes: 45)),
+        lastActivityAt: startedAt.add(const Duration(minutes: 45)),
         currentExerciseIndex: 0,
         completedSets: sets,
         sessionNote: '',

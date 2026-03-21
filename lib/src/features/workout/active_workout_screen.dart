@@ -14,6 +14,7 @@ import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
+import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
@@ -39,8 +40,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   late final Timer _ticker;
   late final PageController _pageController;
   final _restTimerNotificationService = RestTimerNotificationService();
+  final _staleSessionService = const StaleSessionService();
   String? _lastExerciseId;
   int _currentPage = 0;
+  bool _staleSessionPromptShown = false;
 
   // Rest timer beep tracking — tracks set count to know when a new set was logged
   int _lastBeepedSetCount = -1;
@@ -129,6 +132,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       parent: _arrowAnimController,
       curve: Curves.easeOut,
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _maybePromptForStaleSession();
+    });
   }
 
   @override
@@ -382,6 +389,54 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(l10n.done),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _maybePromptForStaleSession() {
+    if (!mounted || _staleSessionPromptShown) {
+      return;
+    }
+
+    final session = ref.read(appStateControllerProvider).activeSession;
+    if (session == null || !_staleSessionService.isStale(session)) {
+      return;
+    }
+
+    _staleSessionPromptShown = true;
+    final idleLabel = _staleSessionService.idleLabel(session);
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Resume stale session?'),
+          content: Text(
+            'This workout has been idle for $idleLabel. You can resume it, finish it now, or discard it.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Resume'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _showFinishConfirmation(context);
+              },
+              child: const Text('Finish now'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                ref.read(workoutControllerProvider).discardDraft();
+                context.go('/');
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Discard'),
             ),
           ],
         );

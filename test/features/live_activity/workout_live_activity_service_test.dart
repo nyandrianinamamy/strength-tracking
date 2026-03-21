@@ -20,6 +20,7 @@ void main() {
         status: WorkoutSessionStatus.active,
         startedAt: now.subtract(const Duration(minutes: 18)),
         endedAt: null,
+        lastActivityAt: now.subtract(const Duration(seconds: 20)),
         currentExerciseIndex: 1,
         completedSets: [
           CompletedSet(
@@ -56,6 +57,7 @@ void main() {
         status: WorkoutSessionStatus.active,
         startedAt: now.subtract(const Duration(minutes: 18)),
         endedAt: null,
+        lastActivityAt: now.subtract(const Duration(minutes: 5)),
         currentExerciseIndex: 0,
         completedSets: [
           CompletedSet(

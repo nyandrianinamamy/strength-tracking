@@ -36,6 +36,7 @@ void main() {
       status: WorkoutSessionStatus.active,
       startedAt: DateTime(2026, 3, 21, 9),
       endedAt: null,
+      lastActivityAt: DateTime(2026, 3, 21, 9),
       currentExerciseIndex: 0,
       completedSets: const [],
       sessionNote: '',

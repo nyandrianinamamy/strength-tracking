@@ -103,12 +103,14 @@ class RoutineController {
       return active;
     }
 
+    final now = DateTime.now();
     final session = WorkoutSession(
       id: 'session_${DateTime.now().microsecondsSinceEpoch}',
       routineId: routineId,
       status: WorkoutSessionStatus.active,
-      startedAt: DateTime.now(),
+      startedAt: now,
       endedAt: null,
+      lastActivityAt: now,
       currentExerciseIndex: 0,
       completedSets: const [],
       sessionNote: '',

@@ -57,6 +57,7 @@ class WorkoutController {
     }
 
     final updatedSession = session.copyWith(
+      lastActivityAt: nextSet.completedAt,
       currentExerciseIndex: nextExerciseIndex,
       completedSets: [...session.completedSets, nextSet],
     );
@@ -102,6 +103,7 @@ class WorkoutController {
     }
 
     final updatedSession = session.copyWith(
+      lastActivityAt: nextSet.completedAt,
       currentExerciseIndex: nextExerciseIndex,
       completedSets: [...session.completedSets, nextSet],
     );
@@ -128,7 +130,12 @@ class WorkoutController {
       return s;
     }).toList();
 
-    _persistSession(session.copyWith(completedSets: renumbered));
+    _persistSession(
+      session.copyWith(
+        lastActivityAt: DateTime.now(),
+        completedSets: renumbered,
+      ),
+    );
   }
 
   void updateSet(
@@ -153,7 +160,12 @@ class WorkoutController {
       return s;
     }).toList();
 
-    _persistSession(session.copyWith(completedSets: updatedSets));
+    _persistSession(
+      session.copyWith(
+        lastActivityAt: DateTime.now(),
+        completedSets: updatedSets,
+      ),
+    );
   }
 
   WorkoutSession? skipExercise() {
@@ -172,7 +184,10 @@ class WorkoutController {
       0,
       routine.exercises.length - 1,
     );
-    final updatedSession = session.copyWith(currentExerciseIndex: nextIndex);
+    final updatedSession = session.copyWith(
+      lastActivityAt: DateTime.now(),
+      currentExerciseIndex: nextIndex,
+    );
     _persistSession(updatedSession);
     return updatedSession;
   }
@@ -194,7 +209,10 @@ class WorkoutController {
       return session;
     }
 
-    final updatedSession = session.copyWith(currentExerciseIndex: clampedIndex);
+    final updatedSession = session.copyWith(
+      lastActivityAt: DateTime.now(),
+      currentExerciseIndex: clampedIndex,
+    );
     _persistSession(updatedSession);
     return updatedSession;
   }
@@ -209,6 +227,7 @@ class WorkoutController {
     final updatedSession = session.copyWith(
       status: WorkoutSessionStatus.completed,
       endedAt: DateTime.now(),
+      lastActivityAt: DateTime.now(),
       rpe: rpe ?? session.rpe ?? 8.0,
     );
 
@@ -229,6 +248,7 @@ class WorkoutController {
       session.copyWith(
         status: WorkoutSessionStatus.discarded,
         endedAt: DateTime.now(),
+        lastActivityAt: DateTime.now(),
       ),
     );
   }
@@ -249,7 +269,12 @@ class WorkoutController {
       return;
     }
 
-    _persistSession(session.copyWith(sessionNote: note));
+    _persistSession(
+      session.copyWith(
+        lastActivityAt: DateTime.now(),
+        sessionNote: note,
+      ),
+    );
   }
 
   void updateRpe(String sessionId, double rpe) {
@@ -260,7 +285,12 @@ class WorkoutController {
       return;
     }
 
-    _persistSession(session.copyWith(rpe: rpe));
+    _persistSession(
+      session.copyWith(
+        lastActivityAt: DateTime.now(),
+        rpe: rpe,
+      ),
+    );
   }
 
   /// Swaps the exercise at [exerciseIndex] in the active session's routine
@@ -282,6 +312,7 @@ class WorkoutController {
     );
 
     final updatedRoutine = routine.copyWith(exercises: updatedExercises);
+    final updatedSession = session.copyWith(lastActivityAt: DateTime.now());
 
     _ref
         .read(appStateControllerProvider.notifier)
@@ -289,6 +320,9 @@ class WorkoutController {
           (s) => s.copyWith(
             routines: s.routines
                 .map((r) => r.id == updatedRoutine.id ? updatedRoutine : r)
+                .toList(),
+            sessions: s.sessions
+                .map((item) => item.id == updatedSession.id ? updatedSession : item)
                 .toList(),
           ),
         );

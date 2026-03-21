@@ -23,6 +23,7 @@ class DashboardScreen extends ConsumerWidget {
     final nextRoutine = snapshot.nextRoutine;
     final activeSession = snapshot.activeSession;
     final activeGroup = state.activeRoutineGroup;
+    final activeSessionIsStale = snapshot.activeSessionIsStale;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -204,7 +205,9 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Text(
                     (activeSession != null
-                            ? l10n.sessionInProgress
+                            ? activeSessionIsStale
+                                  ? 'Workout paused'
+                                  : l10n.sessionInProgress
                             : snapshot.nextRoutineGroupName ??
                                   nextRoutine?.category ??
                                   l10n.readyToTrain)
@@ -239,7 +242,10 @@ class DashboardScreen extends ConsumerWidget {
                       Expanded(
                         child: Text(
                           activeSession != null
-                              ? '${state.routineById(activeSession.routineId)?.exercises.length ?? 0} exercises remaining'
+                              ? activeSessionIsStale
+                                    ? snapshot.activeSessionIdleLabel ??
+                                          'Paused'
+                                    : '${state.routineById(activeSession.routineId)?.exercises.length ?? 0} exercises remaining'
                               : nextRoutine == null
                               ? l10n.createRoutineToStart
                               : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
@@ -285,7 +291,9 @@ class DashboardScreen extends ConsumerWidget {
                     icon: const Icon(Icons.play_arrow_rounded),
                     label: Text(
                       activeSession != null
-                          ? l10n.resumeSession
+                          ? activeSessionIsStale
+                                ? 'Review session'
+                                : l10n.resumeSession
                           : l10n.startSession,
                     ),
                   ),

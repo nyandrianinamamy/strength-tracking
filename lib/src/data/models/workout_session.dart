@@ -9,6 +9,7 @@ class WorkoutSession {
     required this.status,
     required this.startedAt,
     required this.endedAt,
+    required this.lastActivityAt,
     required this.currentExerciseIndex,
     required this.completedSets,
     required this.sessionNote,
@@ -20,6 +21,7 @@ class WorkoutSession {
   final WorkoutSessionStatus status;
   final DateTime startedAt;
   final DateTime? endedAt;
+  final DateTime? lastActivityAt;
   final int currentExerciseIndex;
   final List<CompletedSet> completedSets;
   final String sessionNote;
@@ -31,6 +33,7 @@ class WorkoutSession {
     WorkoutSessionStatus? status,
     DateTime? startedAt,
     DateTime? endedAt,
+    DateTime? lastActivityAt,
     int? currentExerciseIndex,
     List<CompletedSet>? completedSets,
     String? sessionNote,
@@ -44,6 +47,7 @@ class WorkoutSession {
       status: status ?? this.status,
       startedAt: startedAt ?? this.startedAt,
       endedAt: clearEndedAt ? null : endedAt ?? this.endedAt,
+      lastActivityAt: lastActivityAt ?? this.lastActivityAt,
       currentExerciseIndex: currentExerciseIndex ?? this.currentExerciseIndex,
       completedSets: completedSets ?? this.completedSets,
       sessionNote: sessionNote ?? this.sessionNote,
@@ -60,6 +64,9 @@ class WorkoutSession {
       endedAt: json['endedAt'] == null
           ? null
           : DateTime.parse(json['endedAt'] as String),
+      lastActivityAt: json['lastActivityAt'] == null
+          ? null
+          : DateTime.parse(json['lastActivityAt'] as String),
       currentExerciseIndex: json['currentExerciseIndex'] as int? ?? 0,
       completedSets: (json['completedSets'] as List<dynamic>? ?? const [])
           .map((item) => CompletedSet.fromJson(item as Map<String, dynamic>))
@@ -76,6 +83,7 @@ class WorkoutSession {
       'status': status.name,
       'startedAt': startedAt.toIso8601String(),
       'endedAt': endedAt?.toIso8601String(),
+      'lastActivityAt': lastActivityAt?.toIso8601String(),
       'currentExerciseIndex': currentExerciseIndex,
       'completedSets': completedSets.map((item) => item.toJson()).toList(),
       'sessionNote': sessionNote,
