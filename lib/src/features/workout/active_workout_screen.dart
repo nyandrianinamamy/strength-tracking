@@ -17,6 +17,7 @@ import 'package:strength_training_tracker/src/features/workout/workout_controlle
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
+import 'package:strength_training_tracker/src/features/notifications/rest_timer_notification_service.dart';
 import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -36,6 +37,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   final _setNoteController = TextEditingController();
   late final Timer _ticker;
   late final PageController _pageController;
+  final _restTimerNotificationService = RestTimerNotificationService();
   String? _lastExerciseId;
   int _currentPage = 0;
 
@@ -131,6 +133,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   @override
   void dispose() {
     _ticker.cancel();
+    _restTimerNotificationService.cancel();
     _weightController.dispose();
     _repsController.dispose();
     _setNoteController.dispose();
@@ -279,10 +282,37 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
 
   void _resetRestTimer(int restSeconds) {
     if (restSeconds > 0) {
+      if (kIsWeb) {
+        final state = ref.read(appStateControllerProvider);
+        final session = state.activeSession;
+        if (session != null) {
+          final routine = state.routineById(session.routineId);
+          if (routine != null && routine.exercises.isNotEmpty) {
+            final nextExerciseIndex = session.currentExerciseIndex.clamp(
+              0,
+              routine.exercises.length - 1,
+            );
+            final nextExercise = state.exerciseById(
+              routine.exercises[nextExerciseIndex].exerciseId,
+            );
+            final exerciseName =
+                nextExercise == null
+                    ? 'your workout'
+                    : ExerciseTranslations.displayName(context, nextExercise);
+            unawaited(_restTimerNotificationService.primePermission());
+            _restTimerNotificationService.scheduleRestEnd(
+              duration: Duration(seconds: restSeconds),
+              exerciseName: exerciseName,
+            );
+          }
+        }
+      }
+
       _lastHapticRestSetCount = _currentSetCount;
       _lastHapticRestSecond = restSeconds;
       unawaited(_playRestClickHaptic());
     } else {
+      _restTimerNotificationService.cancel();
       _lastHapticRestSetCount = null;
       _lastHapticRestSecond = null;
     }
