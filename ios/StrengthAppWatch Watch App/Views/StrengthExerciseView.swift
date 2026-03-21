@@ -180,7 +180,7 @@ struct StrengthExerciseView: View {
             weight = lastSet.weightKg
             reps = exercise.targetReps
         } else {
-            weight = exercise.recommendedWeightKg
+            weight = exercise.suggestedWeightKg
             reps = exercise.targetReps
         }
     }

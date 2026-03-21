@@ -49,20 +49,16 @@ class AccountSection extends ConsumerWidget {
               isAnonymous
                   ? l10n.anonymousAccount
                   : user?.displayName ?? user?.email ?? l10n.linkedAccount,
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 4),
             Text(
-              isAnonymous
-                  ? l10n.linkToSync
-                  : user?.email ?? '',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: AppTheme.slateInactive),
+              isAnonymous ? l10n.linkToSync : user?.email ?? '',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppTheme.slateInactive),
             ),
             const SizedBox(height: 24),
             if (isAnonymous) ...[
@@ -75,9 +71,9 @@ class AccountSection extends ConsumerWidget {
                     if (context.mounted) Navigator.pop(context);
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed: $e')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Failed: $e')));
                     }
                   }
                 },
@@ -92,9 +88,9 @@ class AccountSection extends ConsumerWidget {
                     if (context.mounted) Navigator.pop(context);
                   } catch (e) {
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed: $e')),
-                      );
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text('Failed: $e')));
                     }
                   }
                 },
@@ -140,10 +136,9 @@ class AccountSection extends ConsumerWidget {
               Text(
                 l10n.dataSynced,
                 textAlign: TextAlign.center,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: AppTheme.slateInactive),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppTheme.slateInactive),
               ),
             ],
             const SizedBox(height: 24),
@@ -151,7 +146,9 @@ class AccountSection extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               l10n.unitPreference,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
             SegmentedButton<String>(
@@ -161,33 +158,47 @@ class AccountSection extends ConsumerWidget {
               ],
               selected: {ref.watch(appStateControllerProvider).preferredUnit},
               onSelectionChanged: (values) {
-                ref.read(appStateControllerProvider.notifier).updateState(
-                  (s) => s.copyWith(preferredUnit: values.first),
-                );
+                ref
+                    .read(appStateControllerProvider.notifier)
+                    .updateState(
+                      (s) => s.copyWith(preferredUnit: values.first),
+                    );
               },
             ),
             const SizedBox(height: 20),
             Text(
               'Body Type',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
             SegmentedButton<String>(
               segments: const [
-                ButtonSegment(value: 'male', label: Text('Male'), icon: Icon(Icons.male, size: 18)),
-                ButtonSegment(value: 'female', label: Text('Female'), icon: Icon(Icons.female, size: 18)),
+                ButtonSegment(
+                  value: 'male',
+                  label: Text('Male'),
+                  icon: Icon(Icons.male, size: 18),
+                ),
+                ButtonSegment(
+                  value: 'female',
+                  label: Text('Female'),
+                  icon: Icon(Icons.female, size: 18),
+                ),
               ],
               selected: {ref.watch(appStateControllerProvider).bodyGender},
               onSelectionChanged: (values) {
-                ref.read(appStateControllerProvider.notifier).updateState(
-                  (s) => s.copyWith(bodyGender: values.first),
-                );
+                ref
+                    .read(appStateControllerProvider.notifier)
+                    .updateState((s) => s.copyWith(bodyGender: values.first));
               },
             ),
             const SizedBox(height: 20),
             Text(
               l10n.language,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
             SegmentedButton<String>(
@@ -196,30 +207,44 @@ class AccountSection extends ConsumerWidget {
                 ButtonSegment(value: 'en', label: Text('EN')),
                 ButtonSegment(value: 'fr', label: Text('FR')),
               ],
-              selected: {ref.watch(appStateControllerProvider).preferredLanguage},
+              selected: {
+                ref.watch(appStateControllerProvider).preferredLanguage,
+              },
               onSelectionChanged: (values) {
-                ref.read(appStateControllerProvider.notifier).updateState(
-                  (s) => s.copyWith(preferredLanguage: values.first),
-                );
+                ref
+                    .read(appStateControllerProvider.notifier)
+                    .updateState(
+                      (s) => s.copyWith(preferredLanguage: values.first),
+                    );
               },
             ),
             const SizedBox(height: 20),
             Text(
               'Theme',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
             SegmentedButton<String>(
               segments: const [
                 ButtonSegment(value: '', label: Text('Auto')),
-                ButtonSegment(value: 'light', label: Icon(Icons.light_mode, size: 18)),
-                ButtonSegment(value: 'dark', label: Icon(Icons.dark_mode, size: 18)),
+                ButtonSegment(
+                  value: 'light',
+                  label: Icon(Icons.light_mode, size: 18),
+                ),
+                ButtonSegment(
+                  value: 'dark',
+                  label: Icon(Icons.dark_mode, size: 18),
+                ),
               ],
               selected: {ref.watch(appStateControllerProvider).preferredTheme},
               onSelectionChanged: (values) {
-                ref.read(appStateControllerProvider.notifier).updateState(
-                  (s) => s.copyWith(preferredTheme: values.first),
-                );
+                ref
+                    .read(appStateControllerProvider.notifier)
+                    .updateState(
+                      (s) => s.copyWith(preferredTheme: values.first),
+                    );
               },
             ),
             const SizedBox(height: 24),
@@ -227,7 +252,9 @@ class AccountSection extends ConsumerWidget {
             const SizedBox(height: 16),
             Text(
               l10n.data,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
             _AuthButton(
@@ -235,16 +262,25 @@ class AccountSection extends ConsumerWidget {
               label: l10n.loadSampleData,
               onTap: () {
                 final sample = DemoSeedData.initialState();
-                ref.read(appStateControllerProvider.notifier).updateState(
-                  (s) => s.copyWith(
-                    exercises: [...s.exercises, ...sample.exercises],
-                    routines: [...s.routines, ...sample.routines],
-                  ),
-                );
+                ref
+                    .read(appStateControllerProvider.notifier)
+                    .updateState(
+                      (s) => s.copyWith(
+                        exercises: [...s.exercises, ...sample.exercises],
+                        routines: [...s.routines, ...sample.routines],
+                        routineGroups: [
+                          ...s.routineGroups,
+                          ...sample.routineGroups,
+                        ],
+                        activeRoutineGroupId:
+                            s.activeRoutineGroupId ??
+                            sample.activeRoutineGroupId,
+                      ),
+                    );
                 Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(l10n.sampleDataLoaded)),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(l10n.sampleDataLoaded)));
               },
             ),
             const SizedBox(height: 12),
@@ -266,14 +302,24 @@ class AccountSection extends ConsumerWidget {
                         onPressed: () {
                           Navigator.pop(dialogContext);
                           Navigator.pop(context);
-                          ref.read(appStateControllerProvider.notifier).updateState(
-                            (s) => s.copyWith(exercises: [], routines: []),
-                          );
+                          ref
+                              .read(appStateControllerProvider.notifier)
+                              .updateState(
+                                (s) => s.copyWith(
+                                  exercises: [],
+                                  routines: [],
+                                  routineGroups: [],
+                                  sessions: [],
+                                  clearActiveRoutineGroupId: true,
+                                ),
+                              );
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text(l10n.dataCleared)),
                           );
                         },
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
                         child: Text(l10n.clear),
                       ),
                     ],
@@ -302,14 +348,29 @@ class AccountSection extends ConsumerWidget {
                         onPressed: () {
                           Navigator.pop(dialogContext);
                           Navigator.pop(context);
-                          ref.read(appStateControllerProvider.notifier).updateState(
-                            (s) => s.copyWith(sessions: []),
-                          );
+                          ref
+                              .read(appStateControllerProvider.notifier)
+                              .updateState(
+                                (s) => s.copyWith(
+                                  sessions: [],
+                                  routineGroups: s.routineGroups
+                                      .map(
+                                        (group) => group.copyWith(
+                                          pendingRoutineIds: group.routineIds,
+                                        ),
+                                      )
+                                      .toList(),
+                                ),
+                              );
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Workout history cleared')),
+                            const SnackBar(
+                              content: Text('Workout history cleared'),
+                            ),
                           );
                         },
-                        style: TextButton.styleFrom(foregroundColor: Colors.red),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.red,
+                        ),
                         child: Text(l10n.clear),
                       ),
                     ],
@@ -392,15 +453,15 @@ class AccountSection extends ConsumerWidget {
 
       if (context.mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.signedInRestored)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.signedInRestored)));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${l10n.signInFailed}: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${l10n.signInFailed}: $e')));
       }
     }
   }

@@ -18,6 +18,7 @@ import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
 import 'package:strength_training_tracker/src/features/notifications/rest_timer_notification_service.dart';
+import 'package:strength_training_tracker/src/features/progress/adaptive_progression_service.dart';
 import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -974,6 +975,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     onLogSet: _resetRestTimer,
                     onShowComment: () => _showCommentDialog(context),
                     preferredUnit: state.preferredUnit,
+                    progressionService: ref.read(
+                      adaptiveProgressionServiceProvider,
+                    ),
                     timedCountdownRemaining: _timedCountdownRemaining,
                     timedExerciseRunning: _timedExerciseRunning,
                     onStartTimed: _startTimedExercise,
@@ -1119,6 +1123,7 @@ class _ExercisePage extends StatelessWidget {
     required this.onLogSet,
     required this.onShowComment,
     required this.preferredUnit,
+    required this.progressionService,
     required this.timedCountdownRemaining,
     required this.timedExerciseRunning,
     required this.onStartTimed,
@@ -1140,6 +1145,7 @@ class _ExercisePage extends StatelessWidget {
   final ValueChanged<int> onLogSet;
   final VoidCallback onShowComment;
   final String preferredUnit;
+  final AdaptiveProgressionService progressionService;
   final int timedCountdownRemaining;
   final bool timedExerciseRunning;
   final ValueChanged<int> onStartTimed;
@@ -1161,6 +1167,11 @@ class _ExercisePage extends StatelessWidget {
             .where((set) => set.exerciseId == prescription.exerciseId)
             .toList()
           ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    final suggestion = progressionService.suggestionForExercise(
+      state: state,
+      exercise: exercise,
+      prescription: prescription,
+    );
 
     // Pre-fill weight/reps when switching to this exercise (deferred to avoid
     // modifying controllers during build)
@@ -1177,10 +1188,10 @@ class _ExercisePage extends StatelessWidget {
               ? AppFormatters.decimal(
                   AppFormatters.convertWeight(lastSet.weightKg, preferredUnit),
                 )
-              : prescription.recommendedWeightKg > 0
+              : suggestion != null
               ? AppFormatters.decimal(
                   AppFormatters.convertWeight(
-                    prescription.recommendedWeightKg,
+                    suggestion.suggestedWeightKg,
                     preferredUnit,
                   ),
                 )
@@ -1352,6 +1363,13 @@ class _ExercisePage extends StatelessWidget {
             Center(
               child: DigitalTimer(remaining: Duration(seconds: remainingRest)),
             ),
+            if (currentSets.isEmpty) ...[
+              const SizedBox(height: 12),
+              _ProgressionHint(
+                suggestion: suggestion,
+                preferredUnit: preferredUnit,
+              ),
+            ],
             const SizedBox(height: 24),
 
             // 3-column input grid: weight, reps, log button
@@ -1749,6 +1767,66 @@ class _ExercisePage extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class _ProgressionHint extends StatelessWidget {
+  const _ProgressionHint({
+    required this.suggestion,
+    required this.preferredUnit,
+  });
+
+  final WeightSuggestion? suggestion;
+  final String preferredUnit;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = suggestion == null
+        ? 'No suggestion yet'
+        : 'Suggested ${AppFormatters.weight(suggestion!.suggestedWeightKg, preferredUnit)} · ${_directionLabel(suggestion!)}';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.primary.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.14)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            text,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          if (suggestion != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              suggestion!.reason,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppTheme.slateInactive,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _directionLabel(WeightSuggestion suggestion) {
+    switch (suggestion.direction) {
+      case ProgressionDirection.up:
+        return 'up from last time';
+      case ProgressionDirection.hold:
+        return 'hold steady';
+      case ProgressionDirection.down:
+        return 'slight deload';
+    }
   }
 }
 

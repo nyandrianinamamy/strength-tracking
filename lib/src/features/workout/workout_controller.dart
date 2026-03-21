@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
+import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 
 final workoutControllerProvider = Provider<WorkoutController>(
   WorkoutController.new,
@@ -130,7 +131,9 @@ class WorkoutController {
     _persistSession(session.copyWith(completedSets: renumbered));
   }
 
-  void updateSet(String exerciseId, int setNumber, {
+  void updateSet(
+    String exerciseId,
+    int setNumber, {
     double? weightKg,
     int? reps,
     int? durationSeconds,
@@ -191,8 +194,7 @@ class WorkoutController {
       return session;
     }
 
-    final updatedSession =
-        session.copyWith(currentExerciseIndex: clampedIndex);
+    final updatedSession = session.copyWith(currentExerciseIndex: clampedIndex);
     _persistSession(updatedSession);
     return updatedSession;
   }
@@ -211,6 +213,9 @@ class WorkoutController {
     );
 
     _persistSession(updatedSession);
+    _ref
+        .read(routineGroupControllerProvider)
+        .markRoutineCompleted(updatedSession.routineId);
     return updatedSession;
   }
 
@@ -229,13 +234,13 @@ class WorkoutController {
   }
 
   void deleteSession(String sessionId) {
-    _ref.read(appStateControllerProvider.notifier).updateState(
-      (state) => state.copyWith(
-        sessions: state.sessions
-            .where((s) => s.id != sessionId)
-            .toList(),
-      ),
-    );
+    _ref
+        .read(appStateControllerProvider.notifier)
+        .updateState(
+          (state) => state.copyWith(
+            sessions: state.sessions.where((s) => s.id != sessionId).toList(),
+          ),
+        );
   }
 
   void updateSessionNote(String note) {
@@ -278,13 +283,15 @@ class WorkoutController {
 
     final updatedRoutine = routine.copyWith(exercises: updatedExercises);
 
-    _ref.read(appStateControllerProvider.notifier).updateState(
-      (s) => s.copyWith(
-        routines: s.routines
-            .map((r) => r.id == updatedRoutine.id ? updatedRoutine : r)
-            .toList(),
-      ),
-    );
+    _ref
+        .read(appStateControllerProvider.notifier)
+        .updateState(
+          (s) => s.copyWith(
+            routines: s.routines
+                .map((r) => r.id == updatedRoutine.id ? updatedRoutine : r)
+                .toList(),
+          ),
+        );
   }
 
   void _persistSession(WorkoutSession updatedSession) {

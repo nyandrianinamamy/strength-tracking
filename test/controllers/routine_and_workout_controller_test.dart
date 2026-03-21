@@ -5,6 +5,7 @@ import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
+import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 
 void main() {
@@ -77,4 +78,31 @@ void main() {
       isTrue,
     );
   });
+
+  test(
+    'skipping a grouped routine advances the queue until it is completed',
+    () {
+      final container = buildContainer();
+      addTearDown(container.dispose);
+
+      container
+          .read(routineGroupControllerProvider)
+          .skipNextInGroup('ppl_split');
+
+      var group = container
+          .read(appStateControllerProvider)
+          .routineGroupById('ppl_split');
+      expect(group, isNotNull);
+      expect(group!.pendingRoutineIds, ['pull_day', 'leg_day', 'push_day']);
+
+      container.read(routineControllerProvider).startSession('pull_day');
+      container.read(workoutControllerProvider).completeSession(rpe: 8.0);
+
+      group = container
+          .read(appStateControllerProvider)
+          .routineGroupById('ppl_split');
+      expect(group, isNotNull);
+      expect(group!.pendingRoutineIds, ['leg_day', 'push_day']);
+    },
+  );
 }

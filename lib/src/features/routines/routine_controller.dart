@@ -3,6 +3,7 @@ import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
+import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 
 final routineControllerProvider = Provider<RoutineController>(
   RoutineController.new,
@@ -67,6 +68,7 @@ class RoutineController {
   }
 
   void archive(String routineId) {
+    final state = _ref.read(appStateControllerProvider);
     _ref
         .read(appStateControllerProvider.notifier)
         .updateState(
@@ -80,6 +82,18 @@ class RoutineController {
                 .toList(),
           ),
         );
+
+    final groupsToNormalize = state.routineGroups
+        .where((group) => group.routineIds.contains(routineId))
+        .toList();
+    for (final group in groupsToNormalize) {
+      _ref.read(routineGroupControllerProvider).update(
+        groupId: group.id,
+        name: group.name,
+        routineIds: group.routineIds.where((id) => id != routineId).toList(),
+        makeActive: _ref.read(appStateControllerProvider).activeRoutineGroupId == group.id,
+      );
+    }
   }
 
   WorkoutSession startSession(String routineId) {

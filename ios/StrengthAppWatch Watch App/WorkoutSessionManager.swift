@@ -253,7 +253,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
             targetReps: exercise.targetReps,
             targetDurationSeconds: exercise.targetDurationSeconds,
             restSeconds: exercise.restSeconds,
-            recommendedWeightKg: exercise.recommendedWeightKg,
+            suggestedWeightKg: exercise.suggestedWeightKg,
             completedSets: exercise.completedSets + [optimisticSet]
         )
 

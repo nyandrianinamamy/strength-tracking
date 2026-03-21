@@ -17,8 +17,10 @@ void main() {
 
       expect(loaded.exercises.length, state.exercises.length);
       expect(loaded.routines.length, state.routines.length);
+      expect(loaded.routineGroups.length, state.routineGroups.length);
       expect(loaded.sessions.length, state.sessions.length);
       expect(loaded.completedSessions.length, state.completedSessions.length);
+      expect(loaded.activeRoutineGroupId, state.activeRoutineGroupId);
     },
   );
 }

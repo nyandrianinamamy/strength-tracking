@@ -8,6 +8,7 @@ import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/auth/account_section.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
+import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_card.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -21,6 +22,7 @@ class DashboardScreen extends ConsumerWidget {
     final snapshot = ref.read(progressServiceProvider).dashboardSnapshot(state);
     final nextRoutine = snapshot.nextRoutine;
     final activeSession = snapshot.activeSession;
+    final activeGroup = state.activeRoutineGroup;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -36,30 +38,29 @@ class DashboardScreen extends ConsumerWidget {
               child: CircleAvatar(
                 radius: 24,
                 backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                child: const Icon(
-                  Icons.person,
-                  color: AppTheme.primary,
-                ),
+                child: const Icon(Icons.person, color: AppTheme.primary),
               ),
             ),
             const SizedBox(width: 12),
             Builder(
               builder: (context) {
-                final userName = state.userName.isEmpty ? l10n.athlete : state.userName;
+                final userName = state.userName.isEmpty
+                    ? l10n.athlete
+                    : state.userName;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       l10n.welcomeBack,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.slateInactive,
-                          ),
+                        color: AppTheme.slateInactive,
+                      ),
                     ),
                     Text(
                       userName,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ],
                 );
@@ -74,14 +75,16 @@ class DashboardScreen extends ConsumerWidget {
                       context: context,
                       isScrollControlled: true,
                       shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(20),
+                        ),
                       ),
                       builder: (_) => DraggableScrollableSheet(
                         initialChildSize: 0.7,
                         minChildSize: 0.4,
                         maxChildSize: 0.9,
                         expand: false,
-                        builder: (_, __) => const AccountSection(),
+                        builder: (_, _) => const AccountSection(),
                       ),
                     );
                   },
@@ -184,10 +187,7 @@ class DashboardScreen extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 20),
-        const PageSection(
-          title: 'Muscle Fatigue',
-          child: MuscleHeatmapCard(),
-        ),
+        const PageSection(title: 'Muscle Fatigue', child: MuscleHeatmapCard()),
         const SizedBox(height: 28),
 
         // Step 3: Next Workout card
@@ -205,13 +205,15 @@ class DashboardScreen extends ConsumerWidget {
                   Text(
                     (activeSession != null
                             ? l10n.sessionInProgress
-                            : nextRoutine?.category ?? l10n.readyToTrain)
+                            : snapshot.nextRoutineGroupName ??
+                                  nextRoutine?.category ??
+                                  l10n.readyToTrain)
                         .toUpperCase(),
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: const Color(0xFF8FB9FF),
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.5,
-                        ),
+                      color: const Color(0xFF8FB9FF),
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -220,10 +222,10 @@ class DashboardScreen extends ConsumerWidget {
                               'Workout'
                         : nextRoutine?.name ?? l10n.noRoutineAvailable,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontStyle: FontStyle.italic,
-                        ),
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -239,16 +241,24 @@ class DashboardScreen extends ConsumerWidget {
                           activeSession != null
                               ? '${state.routineById(activeSession.routineId)?.exercises.length ?? 0} exercises remaining'
                               : nextRoutine == null
-                                  ? l10n.createRoutineToStart
-                                  : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
+                              ? l10n.createRoutineToStart
+                              : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
+                          style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: Colors.white70),
                         ),
                       ),
                     ],
                   ),
+                  if (activeSession == null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      snapshot.nextRoutineReason,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFFBBD0FF),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
@@ -279,6 +289,27 @@ class DashboardScreen extends ConsumerWidget {
                           : l10n.startSession,
                     ),
                   ),
+                  if (activeSession == null &&
+                      activeGroup != null &&
+                      snapshot.canSkipNextRoutine) ...[
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        side: const BorderSide(color: Color(0xFF8FB9FF)),
+                        minimumSize: const Size.fromHeight(48),
+                      ),
+                      onPressed: nextRoutine == null
+                          ? null
+                          : () {
+                              ref
+                                  .read(routineGroupControllerProvider)
+                                  .skipNextInGroup(activeGroup.id);
+                            },
+                      icon: const Icon(Icons.skip_next_rounded),
+                      label: const Text('Skip for now'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -311,8 +342,9 @@ class DashboardScreen extends ConsumerWidget {
                           vertical: 8,
                         ),
                         leading: CircleAvatar(
-                          backgroundColor:
-                              AppTheme.primary.withValues(alpha: 0.1),
+                          backgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           child: const Icon(
                             Icons.fitness_center_rounded,
                             color: AppTheme.primary,
@@ -330,7 +362,10 @@ class DashboardScreen extends ConsumerWidget {
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              AppFormatters.weight(workout.totalVolumeKg, state.preferredUnit),
+                              AppFormatters.weight(
+                                workout.totalVolumeKg,
+                                state.preferredUnit,
+                              ),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w800,
                               ),
@@ -340,7 +375,9 @@ class DashboardScreen extends ConsumerWidget {
                               l10n.volume,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha:0.54),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.54),
                               ),
                             ),
                           ],
@@ -393,22 +430,22 @@ class DashboardScreen extends ConsumerWidget {
                         const SizedBox(height: 20),
                         Text(
                           AppFormatters.weekdayMonthDay(date),
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                          ),
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           '${dayWorkouts.length} workout${dayWorkouts.length > 1 ? 's' : ''}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.slateInactive,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.slateInactive),
                         ),
                         const SizedBox(height: 16),
                         ...dayWorkouts.map((workout) {
                           final routine = state.routineById(workout.routineId);
-                          final duration = (workout.endedAt ?? workout.startedAt)
-                              .difference(workout.startedAt);
+                          final duration =
+                              (workout.endedAt ?? workout.startedAt).difference(
+                                workout.startedAt,
+                              );
                           final volume = workout.completedSets.fold<double>(
                             0,
                             (sum, set) => sum + (set.weightKg * set.reps),
@@ -425,7 +462,9 @@ class DashboardScreen extends ConsumerWidget {
                                 vertical: 8,
                               ),
                               leading: CircleAvatar(
-                                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+                                backgroundColor: AppTheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
                                 child: const Icon(
                                   Icons.fitness_center_rounded,
                                   color: AppTheme.primary,
@@ -433,14 +472,21 @@ class DashboardScreen extends ConsumerWidget {
                               ),
                               title: Text(
                                 routine?.name ?? 'Workout',
-                                style: const TextStyle(fontWeight: FontWeight.w800),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                               subtitle: Text(
                                 '${AppFormatters.duration(duration)} \u2022 ${workout.completedSets.length} sets',
                               ),
                               trailing: Text(
-                                AppFormatters.weight(volume, state.preferredUnit),
-                                style: const TextStyle(fontWeight: FontWeight.w800),
+                                AppFormatters.weight(
+                                  volume,
+                                  state.preferredUnit,
+                                ),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
                               ),
                             ),
                           );
@@ -459,10 +505,7 @@ class DashboardScreen extends ConsumerWidget {
         PageSection(
           title: l10n.recentPrsTitle,
           child: snapshot.recentPrs.isEmpty
-              ? EmptyStateCard(
-                  title: l10n.noPrsYet,
-                  body: l10n.prsWillAppear,
-                )
+              ? EmptyStateCard(title: l10n.noPrsYet, body: l10n.prsWillAppear)
               : Column(
                   children: snapshot.recentPrs.map((record) {
                     return Card(
@@ -473,8 +516,9 @@ class DashboardScreen extends ConsumerWidget {
                           vertical: 8,
                         ),
                         leading: CircleAvatar(
-                          backgroundColor:
-                              AppTheme.primary.withValues(alpha: 0.1),
+                          backgroundColor: AppTheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           child: const Icon(
                             Icons.workspace_premium_rounded,
                             color: AppTheme.primary,

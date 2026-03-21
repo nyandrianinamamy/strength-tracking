@@ -11,8 +11,28 @@ void main() {
 
     expect(snapshot.totalWorkouts, greaterThan(0));
     expect(snapshot.nextRoutine, isNotNull);
+    expect(snapshot.nextRoutine?.id, 'push_day');
+    expect(snapshot.nextRoutineGroupName, 'Push / Pull / Legs');
     expect(snapshot.recentWorkouts, isNotEmpty);
     expect(snapshot.monthFrequency.days, hasLength(42));
+  });
+
+  test('dashboard snapshot follows the active routine group queue', () {
+    final seeded = DemoSeedData.initialState();
+    final group = seeded
+        .routineGroupById('ppl_split')!
+        .copyWith(pendingRoutineIds: const ['leg_day', 'pull_day']);
+    final state = seeded.copyWith(
+      routineGroups: [group],
+      activeRoutineGroupId: group.id,
+    );
+
+    final snapshot = service.dashboardSnapshot(state);
+
+    expect(snapshot.nextRoutine?.id, 'leg_day');
+    expect(snapshot.nextRoutineGroupName, 'Push / Pull / Legs');
+    expect(snapshot.canSkipNextRoutine, isTrue);
+    expect(snapshot.nextRoutineReason, contains('2 workouts left'));
   });
 
   test('progress snapshot computes streak, volume, and personal records', () {

@@ -7,6 +7,8 @@ import 'package:strength_training_tracker/src/features/exercises/exercises_scree
 import 'package:strength_training_tracker/src/features/onboarding/onboarding_screen.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_editor_screen.dart';
+import 'package:strength_training_tracker/src/features/routines/routine_group_editor_screen.dart';
+import 'package:strength_training_tracker/src/features/routines/routine_groups_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routines_screen.dart';
 import 'package:strength_training_tracker/src/features/workout/active_workout_screen.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_summary_screen.dart';
@@ -65,6 +67,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/routine/new',
         builder: (context, state) => const RoutineEditorScreen(),
+      ),
+      GoRoute(
+        path: '/routine-groups',
+        builder: (context, state) => const RoutineGroupsScreen(),
+      ),
+      GoRoute(
+        path: '/routine-groups/new',
+        builder: (context, state) => const RoutineGroupEditorScreen(),
+      ),
+      GoRoute(
+        path: '/routine-groups/:groupId/edit',
+        builder: (context, state) => RoutineGroupEditorScreen(
+          groupId: state.pathParameters['groupId'],
+        ),
       ),
       GoRoute(
         path: '/routine/:routineId/edit',

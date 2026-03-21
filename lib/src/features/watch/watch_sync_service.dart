@@ -10,6 +10,7 @@ import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
+import 'package:strength_training_tracker/src/features/progress/adaptive_progression_service.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 
 final watchSyncServiceProvider = Provider<WatchSyncService>((ref) {
@@ -101,6 +102,13 @@ class WatchSyncService {
       final name = exercise != null
           ? _localizedExerciseName(exercise, locale)
           : 'Unknown';
+      final suggestion = _ref
+          .read(adaptiveProgressionServiceProvider)
+          .suggestionForExercise(
+            state: state,
+            exercise: exercise,
+            prescription: re,
+          );
       final completedSets =
           session.completedSets
               .where((s) => s.exerciseId == re.exerciseId)
@@ -115,7 +123,7 @@ class WatchSyncService {
         'targetReps': re.targetReps,
         'targetDurationSeconds': re.targetDurationSeconds,
         'restSeconds': re.restSeconds,
-        'recommendedWeightKg': re.recommendedWeightKg,
+        'suggestedWeightKg': suggestion?.suggestedWeightKg ?? 0,
         'completedSets': completedSets
             .map(
               (s) => {

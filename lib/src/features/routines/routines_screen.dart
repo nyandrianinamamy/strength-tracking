@@ -22,6 +22,13 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
+    final activeGroup = state.activeRoutineGroup;
+    final groupNameByRoutineId = <String, String>{};
+    for (final group in state.routineGroups) {
+      for (final routineId in group.routineIds) {
+        groupNameByRoutineId[routineId] = group.name;
+      }
+    }
     final categories = [
       l10n.all,
       ...{
@@ -40,8 +47,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         return true;
       }
       return routine.name.toLowerCase().contains(_query.toLowerCase());
-    }).toList()
-      ..sort((a, b) => a.name.compareTo(b.name));
+    }).toList()..sort((a, b) => a.name.compareTo(b.name));
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -56,7 +62,38 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                 ),
               ),
             ),
+            TextButton.icon(
+              onPressed: () => context.push('/routine-groups'),
+              icon: const Icon(Icons.route_rounded),
+              label: const Text('Groups'),
+            ),
           ],
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 18,
+              vertical: 10,
+            ),
+            leading: CircleAvatar(
+              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+              child: const Icon(Icons.route_rounded, color: AppTheme.primary),
+            ),
+            title: Text(
+              activeGroup?.name ?? 'No active group',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            subtitle: Text(
+              activeGroup == null
+                  ? 'Create a routine group to drive your dashboard sequence.'
+                  : '${activeGroup.routineIds.length} routines in rotation',
+            ),
+            trailing: TextButton(
+              onPressed: () => context.push('/routine-groups'),
+              child: Text(activeGroup == null ? 'Create' : 'Manage'),
+            ),
+          ),
         ),
         const SizedBox(height: 18),
         TextField(
@@ -84,7 +121,8 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         CategoryChips(
           options: categories,
           selected: _category ?? l10n.all,
-          onSelected: (v) => setState(() => _category = v == l10n.all ? null : v),
+          onSelected: (v) =>
+              setState(() => _category = v == l10n.all ? null : v),
         ),
         const SizedBox(height: 24),
         DashedBorderCard(
@@ -112,9 +150,9 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                 const SizedBox(height: 4),
                 Text(
                   l10n.designPlan,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.black54,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.black54),
                 ),
               ],
             ),
@@ -136,67 +174,87 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Row(
-                  children: [
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.fitness_center,
-                        color: AppTheme.slateInactive,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            routine.name,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${routine.exercises.length} exercises • ${routine.estimatedDurationMin} min',
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: Colors.black54),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () {
-                        ref
-                            .read(routineControllerProvider)
-                            .startSession(routine.id);
-                        context.go('/workout/active');
-                      },
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.primary,
-                          shape: BoxShape.circle,
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
-                          Icons.play_arrow,
-                          color: Colors.white,
+                          Icons.fitness_center,
+                          color: AppTheme.slateInactive,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              routine.name,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '${routine.exercises.length} exercises • ${routine.estimatedDurationMin} min',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: Colors.black54),
+                            ),
+                            if (groupNameByRoutineId[routine.id] != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 6),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.08,
+                                    ),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    groupNameByRoutineId[routine.id]!,
+                                    style: const TextStyle(
+                                      color: AppTheme.primary,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () {
+                          ref
+                              .read(routineControllerProvider)
+                              .startSession(routine.id);
+                          context.go('/workout/active');
+                        },
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
             );
           }),
       ],

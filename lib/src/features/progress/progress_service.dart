@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
+import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 
 final progressServiceProvider = Provider<ProgressService>((ref) {
@@ -44,8 +45,12 @@ class ProgressService {
     }).length;
 
     final activeSession = state.activeSession;
-    final selectedRoutine = activeSession != null
-        ? state.routineById(activeSession.routineId)
+    final nextRecommendation = activeSession != null
+        ? RoutineRecommendation(
+            routine: state.routineById(activeSession.routineId),
+            reason: 'Session in progress',
+            canSkip: false,
+          )
         : _pickNextRoutine(state);
     final personalRecords = _personalRecords(state);
 
@@ -53,7 +58,10 @@ class ProgressService {
       totalWorkouts: completedSessions.length,
       workoutDelta: thisWeekCount - previousWeekCount,
       personalRecordCount: personalRecords.length,
-      nextRoutine: selectedRoutine,
+      nextRoutine: nextRecommendation.routine,
+      nextRoutineReason: nextRecommendation.reason,
+      nextRoutineGroupName: nextRecommendation.groupName,
+      canSkipNextRoutine: nextRecommendation.canSkip,
       activeSession: activeSession,
       recentWorkouts: recentWorkouts,
       monthFrequency: _monthFrequency(
@@ -142,22 +150,119 @@ class ProgressService {
     return records;
   }
 
-  Routine? _pickNextRoutine(AppState state) {
+  RoutineRecommendation _pickNextRoutine(AppState state) {
+    final activeGroup =
+        state.activeRoutineGroup ??
+        (state.routineGroups.isEmpty ? null : state.routineGroups.first);
+    if (activeGroup != null) {
+      final groupRecommendation = _pickNextGroupRoutine(state, activeGroup);
+      if (groupRecommendation.routine != null) {
+        return groupRecommendation;
+      }
+    }
+
     final available = state.routines
         .where((routine) => !routine.archived)
         .toList();
     if (available.isEmpty) {
-      return null;
+      return const RoutineRecommendation(
+        routine: null,
+        reason: 'Create a routine to get started',
+        canSkip: false,
+      );
     }
 
     final latestCompleted = state.completedSessions.isEmpty
         ? null
         : state.completedSessions.first;
     if (latestCompleted == null) {
-      return available.first;
+      return RoutineRecommendation(
+        routine: available.first,
+        reason: 'Ready when you are',
+        canSkip: false,
+      );
     }
 
-    return state.routineById(latestCompleted.routineId) ?? available.first;
+    available.sort((a, b) {
+      final aLastCompleted = _latestCompletedAtForRoutine(state, a.id);
+      final bLastCompleted = _latestCompletedAtForRoutine(state, b.id);
+      if (aLastCompleted == null && bLastCompleted == null) {
+        return a.name.compareTo(b.name);
+      }
+      if (aLastCompleted == null) {
+        return -1;
+      }
+      if (bLastCompleted == null) {
+        return 1;
+      }
+      final recency = aLastCompleted.compareTo(bLastCompleted);
+      if (recency != 0) {
+        return recency;
+      }
+      return a.name.compareTo(b.name);
+    });
+
+    final selected = available.first;
+    final selectedLastCompletedAt = _latestCompletedAtForRoutine(
+      state,
+      selected.id,
+    );
+    return RoutineRecommendation(
+      routine: selected,
+      reason: selectedLastCompletedAt == null
+          ? 'Never completed yet'
+          : 'Last trained ${_daysAgoLabel(DateTime.now().difference(selectedLastCompletedAt).inDays)}',
+      canSkip: false,
+    );
+  }
+
+  RoutineRecommendation _pickNextGroupRoutine(
+    AppState state,
+    RoutineGroup group,
+  ) {
+    final availableRoutineIds = group.routineIds.where((routineId) {
+      final routine = state.routineById(routineId);
+      return routine != null && !routine.archived;
+    }).toList();
+    if (availableRoutineIds.isEmpty) {
+      return const RoutineRecommendation(
+        routine: null,
+        reason: 'No routines left in this group',
+        canSkip: false,
+      );
+    }
+
+    final pendingRoutineIds = group.pendingRoutineIds
+        .where(availableRoutineIds.contains)
+        .toList();
+    final normalizedPendingRoutineIds = pendingRoutineIds.isEmpty
+        ? availableRoutineIds
+        : pendingRoutineIds;
+
+    final nextRoutineId = normalizedPendingRoutineIds.isEmpty
+        ? null
+        : normalizedPendingRoutineIds.first;
+    final nextRoutine = nextRoutineId == null
+        ? null
+        : state.routineById(nextRoutineId);
+    if (nextRoutine == null) {
+      return const RoutineRecommendation(
+        routine: null,
+        reason: 'No routines left in this group',
+        canSkip: false,
+      );
+    }
+
+    return RoutineRecommendation(
+      routine: nextRoutine,
+      reason: _groupPendingReason(
+        group,
+        availableRoutineIds,
+        normalizedPendingRoutineIds,
+      ),
+      groupName: group.name,
+      canSkip: availableRoutineIds.length > 1,
+    );
   }
 
   double _sessionVolume(WorkoutSession session) {
@@ -292,6 +397,49 @@ class ProgressService {
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
+
+  String _daysAgoLabel(int days) {
+    if (days <= 0) {
+      return 'today';
+    }
+    if (days == 1) {
+      return '1 day ago';
+    }
+    return '$days days ago';
+  }
+
+  DateTime? _latestCompletedAtForRoutine(AppState state, String routineId) {
+    for (final session in state.completedSessions) {
+      if (session.routineId == routineId) {
+        return session.endedAt ?? session.startedAt;
+      }
+    }
+    return null;
+  }
+
+  String _groupPendingReason(
+    RoutineGroup group,
+    List<String> availableRoutineIds,
+    List<String> pendingRoutineIds,
+  ) {
+    if (_sameIdsInSameOrder(availableRoutineIds, pendingRoutineIds)) {
+      return 'Start your ${group.name} cycle';
+    }
+    final remaining = pendingRoutineIds.length;
+    return '$remaining workout${remaining == 1 ? '' : 's'} left in ${group.name}';
+  }
+
+  bool _sameIdsInSameOrder(List<String> a, List<String> b) {
+    if (a.length != b.length) {
+      return false;
+    }
+    for (var index = 0; index < a.length; index++) {
+      if (a[index] != b[index]) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 class DashboardSnapshot {
@@ -300,6 +448,9 @@ class DashboardSnapshot {
     required this.workoutDelta,
     required this.personalRecordCount,
     required this.nextRoutine,
+    required this.nextRoutineReason,
+    required this.nextRoutineGroupName,
+    required this.canSkipNextRoutine,
     required this.activeSession,
     required this.recentWorkouts,
     required this.monthFrequency,
@@ -310,10 +461,27 @@ class DashboardSnapshot {
   final int workoutDelta;
   final int personalRecordCount;
   final Routine? nextRoutine;
+  final String nextRoutineReason;
+  final String? nextRoutineGroupName;
+  final bool canSkipNextRoutine;
   final WorkoutSession? activeSession;
   final List<RecentWorkoutSummary> recentWorkouts;
   final MonthFrequency monthFrequency;
   final List<ExercisePersonalRecord> recentPrs;
+}
+
+class RoutineRecommendation {
+  const RoutineRecommendation({
+    required this.routine,
+    required this.reason,
+    this.groupName,
+    required this.canSkip,
+  });
+
+  final Routine? routine;
+  final String reason;
+  final String? groupName;
+  final bool canSkip;
 }
 
 class ProgressSnapshot {

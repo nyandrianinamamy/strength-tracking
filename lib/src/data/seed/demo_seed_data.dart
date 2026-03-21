@@ -3,6 +3,7 @@ import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
+import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 
 class DemoSeedData {
@@ -218,6 +219,14 @@ class DemoSeedData {
     ];
 
     final now = DateTime.now();
+    const routineGroups = [
+      RoutineGroup(
+        id: 'ppl_split',
+        name: 'Push / Pull / Legs',
+        routineIds: ['push_day', 'pull_day', 'leg_day'],
+        pendingRoutineIds: ['push_day', 'pull_day', 'leg_day'],
+      ),
+    ];
 
     WorkoutSession buildSession({
       required String id,
@@ -306,7 +315,10 @@ class DemoSeedData {
         completedSets: sets(
           now.subtract(const Duration(days: 7, hours: 1, minutes: 15)),
           [
-            ('barbell_back_squat', [(115, 5), (122.5, 5), (127.5, 5), (132.5, 4)]),
+            (
+              'barbell_back_squat',
+              [(115, 5), (122.5, 5), (127.5, 5), (132.5, 4)],
+            ),
             ('romanian_deadlift', [(80, 8), (85, 8), (90, 7)]),
             ('leg_press', [(220, 12), (240, 12), (250, 12)]),
           ],
@@ -365,8 +377,10 @@ class DemoSeedData {
     return AppState(
       exercises: exercises,
       routines: routines,
+      routineGroups: routineGroups,
       sessions: sessions,
       userName: 'Alex',
+      activeRoutineGroupId: 'ppl_split',
     );
   }
 
@@ -381,7 +395,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest'],
         secondaryMuscles: ['Triceps', 'Shoulders'],
         equipment: ['Barbell', 'Bench'],
-        instructions: 'Retract shoulder blades, plant feet, unrack and lower the bar to mid-chest, then press up.',
+        instructions:
+            'Retract shoulder blades, plant feet, unrack and lower the bar to mid-chest, then press up.',
         archived: false,
       ),
       Exercise(
@@ -391,7 +406,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest'],
         secondaryMuscles: ['Shoulders', 'Triceps'],
         equipment: ['Barbell', 'Bench'],
-        instructions: 'Set bench to 30-45 degrees. Lower bar to upper chest and press.',
+        instructions:
+            'Set bench to 30-45 degrees. Lower bar to upper chest and press.',
         archived: false,
       ),
       Exercise(
@@ -401,7 +417,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest'],
         secondaryMuscles: ['Triceps', 'Shoulders'],
         equipment: ['Barbell', 'Bench'],
-        instructions: 'Set bench to slight decline. Lower bar to lower chest and press up.',
+        instructions:
+            'Set bench to slight decline. Lower bar to lower chest and press up.',
         archived: false,
       ),
       Exercise(
@@ -411,7 +428,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest'],
         secondaryMuscles: ['Triceps', 'Shoulders'],
         equipment: ['Dumbbells', 'Bench'],
-        instructions: 'Press dumbbells from chest level, keep wrists stacked over elbows.',
+        instructions:
+            'Press dumbbells from chest level, keep wrists stacked over elbows.',
         archived: false,
       ),
       Exercise(
@@ -421,7 +439,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest', 'Shoulders'],
         secondaryMuscles: ['Triceps'],
         equipment: ['Dumbbells', 'Bench'],
-        instructions: 'Set bench to 30-45 degrees. Press dumbbells in a slight arc toward the midline.',
+        instructions:
+            'Set bench to 30-45 degrees. Press dumbbells in a slight arc toward the midline.',
         archived: false,
       ),
       Exercise(
@@ -431,7 +450,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest'],
         secondaryMuscles: ['Shoulders'],
         equipment: ['Cable Machine'],
-        instructions: 'Slight bend in elbows, bring hands together in an arc, pause at peak contraction.',
+        instructions:
+            'Slight bend in elbows, bring hands together in an arc, pause at peak contraction.',
         archived: false,
       ),
       Exercise(
@@ -441,7 +461,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest'],
         secondaryMuscles: ['Shoulders'],
         equipment: ['Machine'],
-        instructions: 'Keep elbows at chest height, squeeze pads together with a controlled motion.',
+        instructions:
+            'Keep elbows at chest height, squeeze pads together with a controlled motion.',
         archived: false,
       ),
       Exercise(
@@ -451,7 +472,8 @@ class DemoSeedData {
         primaryMuscles: ['Chest'],
         secondaryMuscles: ['Triceps', 'Shoulders', 'Abs'],
         equipment: [],
-        instructions: 'Maintain a straight body line, lower until chest nearly touches the floor, press up.',
+        instructions:
+            'Maintain a straight body line, lower until chest nearly touches the floor, press up.',
         archived: false,
       ),
 
@@ -463,7 +485,8 @@ class DemoSeedData {
         primaryMuscles: ['Back'],
         secondaryMuscles: ['Biceps', 'Shoulders'],
         equipment: ['Barbell'],
-        instructions: 'Hinge forward, keep back flat, row bar toward lower ribs without jerking.',
+        instructions:
+            'Hinge forward, keep back flat, row bar toward lower ribs without jerking.',
         archived: false,
       ),
       Exercise(
@@ -473,7 +496,8 @@ class DemoSeedData {
         primaryMuscles: ['Back'],
         secondaryMuscles: ['Biceps'],
         equipment: ['Dumbbells', 'Bench'],
-        instructions: 'Support with one hand on the bench, row dumbbell to hip, squeeze shoulder blade.',
+        instructions:
+            'Support with one hand on the bench, row dumbbell to hip, squeeze shoulder blade.',
         archived: false,
       ),
       Exercise(
@@ -483,7 +507,8 @@ class DemoSeedData {
         primaryMuscles: ['Back'],
         secondaryMuscles: ['Biceps'],
         equipment: ['Cable Machine'],
-        instructions: 'Lean slightly back, pull bar to upper chest, control the return.',
+        instructions:
+            'Lean slightly back, pull bar to upper chest, control the return.',
         archived: false,
       ),
       Exercise(
@@ -493,7 +518,8 @@ class DemoSeedData {
         primaryMuscles: ['Back'],
         secondaryMuscles: ['Biceps'],
         equipment: ['Pull-Up Bar'],
-        instructions: 'Start from a dead hang, brace core, pull chest toward the bar without kipping.',
+        instructions:
+            'Start from a dead hang, brace core, pull chest toward the bar without kipping.',
         archived: false,
       ),
       Exercise(
@@ -503,7 +529,8 @@ class DemoSeedData {
         primaryMuscles: ['Back', 'Biceps'],
         secondaryMuscles: [],
         equipment: ['Pull-Up Bar'],
-        instructions: 'Use a supinated grip, pull chin above the bar, lower with control.',
+        instructions:
+            'Use a supinated grip, pull chin above the bar, lower with control.',
         archived: false,
       ),
       Exercise(
@@ -513,7 +540,8 @@ class DemoSeedData {
         primaryMuscles: ['Back'],
         secondaryMuscles: ['Biceps'],
         equipment: ['Cable Machine'],
-        instructions: 'Sit upright, pull handle to abdomen, squeeze shoulder blades together.',
+        instructions:
+            'Sit upright, pull handle to abdomen, squeeze shoulder blades together.',
         archived: false,
       ),
       Exercise(
@@ -523,7 +551,8 @@ class DemoSeedData {
         primaryMuscles: ['Back'],
         secondaryMuscles: ['Biceps', 'Shoulders'],
         equipment: ['Barbell'],
-        instructions: 'Straddle the bar, hinge forward, row with both hands toward your chest.',
+        instructions:
+            'Straddle the bar, hinge forward, row with both hands toward your chest.',
         archived: false,
       ),
       Exercise(
@@ -533,7 +562,8 @@ class DemoSeedData {
         primaryMuscles: ['Back', 'Shoulders'],
         secondaryMuscles: [],
         equipment: ['Cable Machine'],
-        instructions: 'Pull rope toward your face, externally rotate at the end, squeeze rear delts.',
+        instructions:
+            'Pull rope toward your face, externally rotate at the end, squeeze rear delts.',
         archived: false,
       ),
 
@@ -545,7 +575,8 @@ class DemoSeedData {
         primaryMuscles: ['Shoulders'],
         secondaryMuscles: ['Triceps'],
         equipment: ['Barbell', 'Rack'],
-        instructions: 'Brace core, press the bar overhead in a straight line, lock out at the top.',
+        instructions:
+            'Brace core, press the bar overhead in a straight line, lock out at the top.',
         archived: false,
       ),
       Exercise(
@@ -555,7 +586,8 @@ class DemoSeedData {
         primaryMuscles: ['Shoulders'],
         secondaryMuscles: ['Triceps'],
         equipment: ['Dumbbells', 'Bench'],
-        instructions: 'Press dumbbells overhead from shoulder level, keep ribs down.',
+        instructions:
+            'Press dumbbells overhead from shoulder level, keep ribs down.',
         archived: false,
       ),
       Exercise(
@@ -565,7 +597,8 @@ class DemoSeedData {
         primaryMuscles: ['Shoulders'],
         secondaryMuscles: [],
         equipment: ['Dumbbells'],
-        instructions: 'Raise dumbbells to the side until arms are parallel to the floor.',
+        instructions:
+            'Raise dumbbells to the side until arms are parallel to the floor.',
         archived: false,
       ),
       Exercise(
@@ -575,7 +608,8 @@ class DemoSeedData {
         primaryMuscles: ['Shoulders'],
         secondaryMuscles: ['Chest'],
         equipment: ['Dumbbells'],
-        instructions: 'Raise dumbbells in front until arms are parallel to the floor.',
+        instructions:
+            'Raise dumbbells in front until arms are parallel to the floor.',
         archived: false,
       ),
       Exercise(
@@ -585,7 +619,8 @@ class DemoSeedData {
         primaryMuscles: ['Shoulders'],
         secondaryMuscles: ['Back'],
         equipment: ['Dumbbells'],
-        instructions: 'Bend forward, raise dumbbells to the side, squeeze rear delts.',
+        instructions:
+            'Bend forward, raise dumbbells to the side, squeeze rear delts.',
         archived: false,
       ),
       Exercise(
@@ -595,7 +630,8 @@ class DemoSeedData {
         primaryMuscles: ['Shoulders'],
         secondaryMuscles: ['Triceps'],
         equipment: ['Dumbbells'],
-        instructions: 'Start with palms facing you, rotate as you press overhead.',
+        instructions:
+            'Start with palms facing you, rotate as you press overhead.',
         archived: false,
       ),
 
@@ -607,7 +643,8 @@ class DemoSeedData {
         primaryMuscles: ['Biceps'],
         secondaryMuscles: [],
         equipment: ['Barbell'],
-        instructions: 'Keep elbows pinned, curl the bar up, lower with control.',
+        instructions:
+            'Keep elbows pinned, curl the bar up, lower with control.',
         archived: false,
       ),
       Exercise(
@@ -617,7 +654,8 @@ class DemoSeedData {
         primaryMuscles: ['Biceps'],
         secondaryMuscles: [],
         equipment: ['Dumbbells'],
-        instructions: 'Curl with supination, squeeze at the top, control the eccentric.',
+        instructions:
+            'Curl with supination, squeeze at the top, control the eccentric.',
         archived: false,
       ),
       Exercise(
@@ -627,7 +665,8 @@ class DemoSeedData {
         primaryMuscles: ['Biceps'],
         secondaryMuscles: [],
         equipment: ['Dumbbells'],
-        instructions: 'Keep a neutral grip, curl both dumbbells up simultaneously.',
+        instructions:
+            'Keep a neutral grip, curl both dumbbells up simultaneously.',
         archived: false,
       ),
       Exercise(
@@ -637,7 +676,8 @@ class DemoSeedData {
         primaryMuscles: ['Biceps'],
         secondaryMuscles: [],
         equipment: ['Barbell', 'Bench'],
-        instructions: 'Rest arms on the preacher pad, curl the bar without lifting elbows.',
+        instructions:
+            'Rest arms on the preacher pad, curl the bar without lifting elbows.',
         archived: false,
       ),
       Exercise(
@@ -647,7 +687,8 @@ class DemoSeedData {
         primaryMuscles: ['Biceps'],
         secondaryMuscles: [],
         equipment: ['Cable Machine'],
-        instructions: 'Stand facing the cable, curl with elbows stationary, squeeze at the top.',
+        instructions:
+            'Stand facing the cable, curl with elbows stationary, squeeze at the top.',
         archived: false,
       ),
 
@@ -659,7 +700,8 @@ class DemoSeedData {
         primaryMuscles: ['Triceps'],
         secondaryMuscles: [],
         equipment: ['Cable Machine'],
-        instructions: 'Keep elbows at your sides, push the handle down, lock out at the bottom.',
+        instructions:
+            'Keep elbows at your sides, push the handle down, lock out at the bottom.',
         archived: false,
       ),
       Exercise(
@@ -669,7 +711,8 @@ class DemoSeedData {
         primaryMuscles: ['Triceps'],
         secondaryMuscles: [],
         equipment: ['Dumbbells'],
-        instructions: 'Hold a dumbbell overhead with both hands, lower behind head, extend up.',
+        instructions:
+            'Hold a dumbbell overhead with both hands, lower behind head, extend up.',
         archived: false,
       ),
       Exercise(
@@ -679,7 +722,8 @@ class DemoSeedData {
         primaryMuscles: ['Triceps'],
         secondaryMuscles: [],
         equipment: ['Barbell', 'Bench'],
-        instructions: 'Lie on a bench, lower the bar toward your forehead, extend back up.',
+        instructions:
+            'Lie on a bench, lower the bar toward your forehead, extend back up.',
         archived: false,
       ),
       Exercise(
@@ -689,7 +733,8 @@ class DemoSeedData {
         primaryMuscles: ['Triceps', 'Chest'],
         secondaryMuscles: ['Shoulders'],
         equipment: [],
-        instructions: 'Keep your body upright for tricep emphasis, lower until elbows are at 90 degrees.',
+        instructions:
+            'Keep your body upright for tricep emphasis, lower until elbows are at 90 degrees.',
         archived: false,
       ),
       Exercise(
@@ -699,7 +744,8 @@ class DemoSeedData {
         primaryMuscles: ['Triceps'],
         secondaryMuscles: ['Chest', 'Shoulders'],
         equipment: ['Barbell', 'Bench'],
-        instructions: 'Narrow grip on the bar, lower to mid-chest, press up emphasizing triceps.',
+        instructions:
+            'Narrow grip on the bar, lower to mid-chest, press up emphasizing triceps.',
         archived: false,
       ),
 
@@ -711,7 +757,8 @@ class DemoSeedData {
         primaryMuscles: ['Quads', 'Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Barbell', 'Rack'],
-        instructions: 'Brace hard, sit between your hips, keep the bar balanced over midfoot.',
+        instructions:
+            'Brace hard, sit between your hips, keep the bar balanced over midfoot.',
         archived: false,
       ),
       Exercise(
@@ -721,7 +768,8 @@ class DemoSeedData {
         primaryMuscles: ['Quads'],
         secondaryMuscles: ['Glutes', 'Abs'],
         equipment: ['Barbell', 'Rack'],
-        instructions: 'Rest bar on front delts, keep elbows high, squat to depth.',
+        instructions:
+            'Rest bar on front delts, keep elbows high, squat to depth.',
         archived: false,
       ),
       Exercise(
@@ -731,7 +779,8 @@ class DemoSeedData {
         primaryMuscles: ['Quads', 'Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Machine'],
-        instructions: 'Control the eccentric, keep lower back planted, press through midfoot.',
+        instructions:
+            'Control the eccentric, keep lower back planted, press through midfoot.',
         archived: false,
       ),
       Exercise(
@@ -741,7 +790,8 @@ class DemoSeedData {
         primaryMuscles: ['Quads'],
         secondaryMuscles: [],
         equipment: ['Machine'],
-        instructions: 'Extend legs fully, squeeze quads at the top, lower slowly.',
+        instructions:
+            'Extend legs fully, squeeze quads at the top, lower slowly.',
         archived: false,
       ),
       Exercise(
@@ -751,7 +801,8 @@ class DemoSeedData {
         primaryMuscles: ['Quads', 'Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Dumbbells', 'Bench'],
-        instructions: 'Rear foot elevated on bench, lower until front thigh is parallel.',
+        instructions:
+            'Rear foot elevated on bench, lower until front thigh is parallel.',
         archived: false,
       ),
       Exercise(
@@ -771,7 +822,8 @@ class DemoSeedData {
         primaryMuscles: ['Quads'],
         secondaryMuscles: ['Glutes'],
         equipment: ['Machine'],
-        instructions: 'Back against pad, lower until thighs are parallel, drive up.',
+        instructions:
+            'Back against pad, lower until thighs are parallel, drive up.',
         archived: false,
       ),
       Exercise(
@@ -781,7 +833,8 @@ class DemoSeedData {
         primaryMuscles: ['Quads', 'Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Dumbbells'],
-        instructions: 'Step forward, lower rear knee toward the floor, alternate legs.',
+        instructions:
+            'Step forward, lower rear knee toward the floor, alternate legs.',
         archived: false,
       ),
 
@@ -793,7 +846,8 @@ class DemoSeedData {
         primaryMuscles: ['Hamstrings', 'Glutes'],
         secondaryMuscles: ['Back'],
         equipment: ['Barbell'],
-        instructions: 'Hinge at the hips with slight knee bend, lower bar along shins, feel hamstring stretch.',
+        instructions:
+            'Hinge at the hips with slight knee bend, lower bar along shins, feel hamstring stretch.',
         archived: false,
       ),
       Exercise(
@@ -803,7 +857,8 @@ class DemoSeedData {
         primaryMuscles: ['Hamstrings'],
         secondaryMuscles: [],
         equipment: ['Machine'],
-        instructions: 'Lie face down, curl heels toward glutes, squeeze at the top.',
+        instructions:
+            'Lie face down, curl heels toward glutes, squeeze at the top.',
         archived: false,
       ),
       Exercise(
@@ -823,7 +878,8 @@ class DemoSeedData {
         primaryMuscles: ['Hamstrings'],
         secondaryMuscles: ['Glutes', 'Back'],
         equipment: ['Barbell'],
-        instructions: 'Keep legs nearly straight, hinge forward, lower bar to mid-shin.',
+        instructions:
+            'Keep legs nearly straight, hinge forward, lower bar to mid-shin.',
         archived: false,
       ),
       Exercise(
@@ -833,7 +889,8 @@ class DemoSeedData {
         primaryMuscles: ['Hamstrings'],
         secondaryMuscles: ['Glutes', 'Back'],
         equipment: ['Barbell', 'Rack'],
-        instructions: 'Bar on upper back, hinge forward keeping back straight, return to standing.',
+        instructions:
+            'Bar on upper back, hinge forward keeping back straight, return to standing.',
         archived: false,
       ),
 
@@ -845,7 +902,8 @@ class DemoSeedData {
         primaryMuscles: ['Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Barbell', 'Bench'],
-        instructions: 'Upper back on bench, drive hips up with barbell on lap, squeeze at the top.',
+        instructions:
+            'Upper back on bench, drive hips up with barbell on lap, squeeze at the top.',
         archived: false,
       ),
       Exercise(
@@ -855,7 +913,8 @@ class DemoSeedData {
         primaryMuscles: ['Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: [],
-        instructions: 'Lie on back, feet flat, drive hips up and squeeze glutes.',
+        instructions:
+            'Lie on back, feet flat, drive hips up and squeeze glutes.',
         archived: false,
       ),
       Exercise(
@@ -865,7 +924,8 @@ class DemoSeedData {
         primaryMuscles: ['Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Cable Machine'],
-        instructions: 'Attach ankle cuff, kick leg straight back, squeeze glute at the top.',
+        instructions:
+            'Attach ankle cuff, kick leg straight back, squeeze glute at the top.',
         archived: false,
       ),
       Exercise(
@@ -875,7 +935,8 @@ class DemoSeedData {
         primaryMuscles: ['Glutes', 'Quads'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Dumbbells', 'Bench'],
-        instructions: 'Step onto bench driving through the heel, stand tall, lower with control.',
+        instructions:
+            'Step onto bench driving through the heel, stand tall, lower with control.',
         archived: false,
       ),
 
@@ -887,7 +948,8 @@ class DemoSeedData {
         primaryMuscles: ['Abs'],
         secondaryMuscles: [],
         equipment: [],
-        instructions: 'Lie on back, curl shoulders off the floor, squeeze abs at the top.',
+        instructions:
+            'Lie on back, curl shoulders off the floor, squeeze abs at the top.',
         archived: false,
       ),
       Exercise(
@@ -907,7 +969,8 @@ class DemoSeedData {
         primaryMuscles: ['Abs'],
         secondaryMuscles: [],
         equipment: [],
-        instructions: 'Maintain a straight line from shoulders to heels, breathe behind the brace.',
+        instructions:
+            'Maintain a straight line from shoulders to heels, breathe behind the brace.',
         archived: false,
         exerciseType: 'timed',
       ),
@@ -918,7 +981,8 @@ class DemoSeedData {
         primaryMuscles: ['Abs'],
         secondaryMuscles: [],
         equipment: ['Cable Machine'],
-        instructions: 'Rotate torso diagonally, pulling the cable from high to low in a chopping motion.',
+        instructions:
+            'Rotate torso diagonally, pulling the cable from high to low in a chopping motion.',
         archived: false,
       ),
       Exercise(
@@ -928,7 +992,8 @@ class DemoSeedData {
         primaryMuscles: ['Abs'],
         secondaryMuscles: [],
         equipment: [],
-        instructions: 'Kneel on the floor, roll the wheel forward keeping core tight, pull back.',
+        instructions:
+            'Kneel on the floor, roll the wheel forward keeping core tight, pull back.',
         archived: false,
       ),
 
@@ -940,7 +1005,8 @@ class DemoSeedData {
         primaryMuscles: ['Back', 'Glutes', 'Hamstrings'],
         secondaryMuscles: ['Quads'],
         equipment: ['Barbell'],
-        instructions: 'Pull the slack out of the bar, drive through the floor, finish by squeezing glutes.',
+        instructions:
+            'Pull the slack out of the bar, drive through the floor, finish by squeezing glutes.',
         archived: false,
       ),
       Exercise(
@@ -950,7 +1016,8 @@ class DemoSeedData {
         primaryMuscles: ['Glutes', 'Quads', 'Hamstrings'],
         secondaryMuscles: ['Back'],
         equipment: ['Barbell'],
-        instructions: 'Wide stance, toes out, grip inside knees, push the floor apart as you lift.',
+        instructions:
+            'Wide stance, toes out, grip inside knees, push the floor apart as you lift.',
         archived: false,
       ),
       Exercise(
@@ -960,7 +1027,8 @@ class DemoSeedData {
         primaryMuscles: ['Back', 'Quads', 'Glutes'],
         secondaryMuscles: ['Hamstrings'],
         equipment: ['Barbell'],
-        instructions: 'Stand inside the trap bar, grip handles, drive up keeping torso upright.',
+        instructions:
+            'Stand inside the trap bar, grip handles, drive up keeping torso upright.',
         archived: false,
       ),
 
@@ -972,7 +1040,8 @@ class DemoSeedData {
         primaryMuscles: ['Legs'],
         secondaryMuscles: [],
         equipment: ['Machine'],
-        instructions: 'Maintain good posture, land midfoot, adjust speed and incline as needed.',
+        instructions:
+            'Maintain good posture, land midfoot, adjust speed and incline as needed.',
         archived: false,
         exerciseType: 'timed',
       ),
@@ -983,7 +1052,8 @@ class DemoSeedData {
         primaryMuscles: ['Legs'],
         secondaryMuscles: [],
         equipment: ['Machine'],
-        instructions: 'Adjust seat height, pedal at a steady cadence, increase resistance as needed.',
+        instructions:
+            'Adjust seat height, pedal at a steady cadence, increase resistance as needed.',
         archived: false,
         exerciseType: 'timed',
       ),
@@ -994,7 +1064,8 @@ class DemoSeedData {
         primaryMuscles: ['Back', 'Legs'],
         secondaryMuscles: ['Biceps', 'Abs'],
         equipment: ['Machine'],
-        instructions: 'Drive with legs first, then lean back and pull handle to chest.',
+        instructions:
+            'Drive with legs first, then lean back and pull handle to chest.',
         archived: false,
         exerciseType: 'timed',
       ),
@@ -1016,7 +1087,8 @@ class DemoSeedData {
         primaryMuscles: ['Legs'],
         secondaryMuscles: [],
         equipment: ['Machine'],
-        instructions: 'Maintain an upright posture, push and pull with both arms and legs.',
+        instructions:
+            'Maintain an upright posture, push and pull with both arms and legs.',
         archived: false,
         exerciseType: 'timed',
       ),
