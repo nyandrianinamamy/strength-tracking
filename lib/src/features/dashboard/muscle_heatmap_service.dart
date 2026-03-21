@@ -35,8 +35,12 @@ class MuscleHeatmapService {
   Map<Muscle, MuscleData> computeFatigue(AppState state) {
     final now = DateTime.now();
     final rawVolume = <Muscle, double>{};
+    final sessions = [
+      ...state.completedSessions,
+      if (state.activeSession != null) state.activeSession!,
+    ];
 
-    for (final session in state.completedSessions) {
+    for (final session in sessions) {
       for (final set in session.completedSets) {
         final exercise = state.exerciseById(set.exerciseId);
         if (exercise == null) continue;
