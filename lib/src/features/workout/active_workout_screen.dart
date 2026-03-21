@@ -396,6 +396,28 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     );
   }
 
+  void _switchToNextExerciseNow() {
+    final target = _switchTargetPage;
+    if (target == null || !_pageController.hasClients) {
+      setState(() {
+        _switchCountdown = null;
+        _switchTargetPage = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _switchCountdown = null;
+      _switchTargetPage = null;
+      _currentPage = target;
+    });
+    _pageController.animateToPage(
+      target,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
   void _maybePromptForStaleSession() {
     if (!mounted || _staleSessionPromptShown) {
       return;
@@ -1138,14 +1160,24 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                   ),
                             ),
                             const SizedBox(height: 16),
-                            OutlinedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _switchCountdown = null;
-                                  _switchTargetPage = null;
-                                });
-                              },
-                              child: Text(l10n.stayHere),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _switchCountdown = null;
+                                      _switchTargetPage = null;
+                                    });
+                                  },
+                                  child: Text(l10n.stayHere),
+                                ),
+                                const SizedBox(width: 12),
+                                FilledButton(
+                                  onPressed: _switchToNextExerciseNow,
+                                  child: const Text('Switch now'),
+                                ),
+                              ],
                             ),
                           ],
                         ),
