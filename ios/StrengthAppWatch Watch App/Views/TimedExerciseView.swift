@@ -16,6 +16,7 @@ struct TimedExerciseView: View {
     @State private var restTimerStart: Date? = nil
     @State private var restRemaining: Int = 0
     @State private var restTimer: Timer? = nil
+    @State private var lastRestAlertSecond: Int? = nil
 
     private var targetDuration: Int {
         exercise.targetDurationSeconds ?? 60
@@ -118,8 +119,11 @@ struct TimedExerciseView: View {
             restTimer?.invalidate()
             restTimer = nil
             restTimerStart = nil
+            lastRestAlertSecond = nil
             isRunning = false
         }
+        .onAppear { restoreRestTimer() }
+        .onChange(of: exercise.completedSets.count) { _ in restoreRestTimer() }
     }
 
     // MARK: - Timer
@@ -162,27 +166,7 @@ struct TimedExerciseView: View {
 
     private func logCompleted(duration: Int) {
         onLogTimedSet(duration)
-
-        // Start rest timer
-        restTimerStart = Date()
-        restRemaining = exercise.restSeconds
-        restTimer?.invalidate()
-        restTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            let elapsedRest = Int(Date().timeIntervalSince(restTimerStart ?? Date()))
-            let rem = exercise.restSeconds - elapsedRest
-            DispatchQueue.main.async {
-                restRemaining = max(0, rem)
-                if rem == 3 || rem == 2 || rem == 1 {
-                    WKInterfaceDevice.current().play(.click)
-                }
-                if rem <= 0 {
-                    WKInterfaceDevice.current().play(.notification)
-                    restTimer?.invalidate()
-                    restTimer = nil
-                    restTimerStart = nil
-                }
-            }
-        }
+        startRestTimer(from: Date())
     }
 
     private func formatTime(_ seconds: Int) -> String {
@@ -203,5 +187,63 @@ struct TimedExerciseView: View {
         if let date = formatter.date(from: string) { return date }
         formatter.formatOptions = [.withInternetDateTime]
         return formatter.date(from: string)
+    }
+
+    private func restoreRestTimer() {
+        guard let lastSet = exercise.completedSets.last,
+              let completedAt = parseISO8601(lastSet.completedAt) else {
+            restTimer?.invalidate()
+            restTimer = nil
+            restTimerStart = nil
+            restRemaining = 0
+            lastRestAlertSecond = nil
+            return
+        }
+
+        let elapsedRest = Int(Date().timeIntervalSince(completedAt))
+        let remaining = max(0, exercise.restSeconds - elapsedRest)
+        guard remaining > 0 else {
+            restTimer?.invalidate()
+            restTimer = nil
+            restTimerStart = nil
+            restRemaining = 0
+            lastRestAlertSecond = nil
+            return
+        }
+
+        startRestTimer(from: completedAt)
+    }
+
+    private func startRestTimer(from start: Date) {
+        restTimer?.invalidate()
+        restTimerStart = start
+        lastRestAlertSecond = nil
+        updateRestRemaining()
+
+        restTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+            DispatchQueue.main.async {
+                updateRestRemaining()
+            }
+        }
+    }
+
+    private func updateRestRemaining() {
+        let start = restTimerStart ?? Date()
+        let elapsedRest = Int(Date().timeIntervalSince(start))
+        let remaining = max(0, exercise.restSeconds - elapsedRest)
+        restRemaining = remaining
+
+        if (remaining == 3 || remaining == 2 || remaining == 1) && lastRestAlertSecond != remaining {
+            lastRestAlertSecond = remaining
+            WKInterfaceDevice.current().play(.click)
+        }
+
+        if remaining <= 0 {
+            WKInterfaceDevice.current().play(.notification)
+            restTimer?.invalidate()
+            restTimer = nil
+            restTimerStart = nil
+            lastRestAlertSecond = nil
+        }
     }
 }

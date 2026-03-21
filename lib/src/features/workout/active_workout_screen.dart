@@ -91,7 +91,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           }
         }
         // Timed exercise auto-log when countdown reaches zero
-        if (_timedExerciseRunning && _timedCountdownRemaining <= 0 && !_timedExerciseBeeped) {
+        if (_timedExerciseRunning &&
+            _timedCountdownRemaining <= 0 &&
+            !_timedExerciseBeeped) {
           _timedExerciseBeeped = true;
           _playRestTimerBeep();
           _autoLogTimedSet();
@@ -103,12 +105,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final state = ref.read(appStateControllerProvider);
     final session = state.activeSession;
     _currentPage = session?.currentExerciseIndex ?? 0;
-    _pageController = PageController(
-      initialPage: _currentPage,
-    );
+    _pageController = PageController(initialPage: _currentPage);
 
     // Check Watch connectivity on iOS
-    if (!kIsWeb) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       _checkWatchStatus();
     }
 
@@ -177,10 +177,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     if (routine == null || routine.exercises.isEmpty) return;
 
     final prescription = routine.exercises[_currentPage];
-    ref.read(workoutControllerProvider).logTimedSet(
-      durationSeconds: prescription.targetDurationSeconds,
-      note: _setNoteController.text.trim(),
-    );
+    ref
+        .read(workoutControllerProvider)
+        .logTimedSet(
+          durationSeconds: prescription.targetDurationSeconds,
+          note: _setNoteController.text.trim(),
+        );
     _setNoteController.clear();
     _resetTimedExercise(prescription.targetDurationSeconds);
     _resetRestTimer(prescription.restSeconds);
@@ -200,6 +202,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   Future<void> _checkWatchStatus() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
     if (!mounted) return;
     try {
       final service = ref.read(watchSyncServiceProvider);
@@ -280,9 +283,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             controller: _setNoteController,
             autofocus: true,
             maxLines: 3,
-            decoration: InputDecoration(
-              hintText: l10n.setCommentHint,
-            ),
+            decoration: InputDecoration(hintText: l10n.setCommentHint),
           ),
           actions: [
             TextButton(
@@ -327,19 +328,17 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 const SizedBox(height: 16),
                 Text(
                   l10n.finishWorkout,
-                  style: Theme.of(sheetContext)
-                      .textTheme
-                      .titleLarge
-                      ?.copyWith(fontWeight: FontWeight.w900),
+                  style: Theme.of(
+                    sheetContext,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.sessionSaved,
                   textAlign: TextAlign.center,
-                  style: Theme.of(sheetContext)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: AppTheme.slateInactive),
+                  style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
+                    color: AppTheme.slateInactive,
+                  ),
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
@@ -418,7 +417,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             final filtered = query.isEmpty
                 ? alternatives
                 : alternatives.where((e) {
-                    final name = ExerciseTranslations.displayName(context, e).toLowerCase();
+                    final name = ExerciseTranslations.displayName(
+                      context,
+                      e,
+                    ).toLowerCase();
                     final muscles = e.primaryMuscles.join(' ').toLowerCase();
                     return name.contains(query) || muscles.contains(query);
                   }).toList();
@@ -446,9 +448,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                         child: Text(
                           l10n.swapExercise,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                       ),
@@ -457,9 +457,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             currentMuscles.join(', '),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.slateInactive,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppTheme.slateInactive),
                           ),
                         ),
                       const SizedBox(height: 12),
@@ -484,28 +483,37 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                             ? Center(
                                 child: Text(
                                   'No matching exercises',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: AppTheme.slateInactive,
-                                  ),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(color: AppTheme.slateInactive),
                                 ),
                               )
                             : ListView.builder(
                                 controller: scrollController,
                                 itemCount: filtered.length,
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
                                 itemBuilder: (_, index) {
                                   final exercise = filtered[index];
                                   return ListTile(
                                     contentPadding: EdgeInsets.zero,
                                     title: Text(
-                                      ExerciseTranslations.displayName(context, exercise),
-                                      style: const TextStyle(fontWeight: FontWeight.w600),
+                                      ExerciseTranslations.displayName(
+                                        context,
+                                        exercise,
+                                      ),
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                     subtitle: Text(
                                       exercise.primaryMuscles.join(', '),
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                        color: AppTheme.slateInactive,
-                                      ),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: AppTheme.slateInactive,
+                                          ),
                                     ),
                                     trailing: const Icon(
                                       Icons.swap_horiz_rounded,
@@ -513,8 +521,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                       size: 20,
                                     ),
                                     onTap: () {
-                                      final controller = ref.read(workoutControllerProvider);
-                                      controller.swapExercise(pageIndex, exercise.id);
+                                      final controller = ref.read(
+                                        workoutControllerProvider,
+                                      );
+                                      controller.swapExercise(
+                                        pageIndex,
+                                        exercise.id,
+                                      );
                                       Navigator.pop(sheetContext);
                                     },
                                   );
@@ -532,7 +545,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     );
   }
 
-  Widget _buildEndOfWorkoutPage(BuildContext context, WorkoutController controller) {
+  Widget _buildEndOfWorkoutPage(
+    BuildContext context,
+    WorkoutController controller,
+  ) {
     final l10n = AppLocalizations.of(context)!;
     return Center(
       child: Padding(
@@ -540,25 +556,21 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.emoji_events_rounded,
-              size: 64,
-              color: AppTheme.primary,
-            ),
+            Icon(Icons.emoji_events_rounded, size: 64, color: AppTheme.primary),
             const SizedBox(height: 20),
             Text(
               'All exercises complete!',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               'Add another exercise or finish your workout.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.slateInactive,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppTheme.slateInactive),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -639,7 +651,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.warning_amber_rounded, size: 48, color: Colors.orange),
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 48,
+                  color: Colors.orange,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'Session has no valid routine',
@@ -673,7 +689,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     }
 
     final exerciseCount = routine.exercises.length;
-    final currentPrescription = routine.exercises[_currentPage.clamp(0, exerciseCount - 1)];
+    final currentPrescription =
+        routine.exercises[_currentPage.clamp(0, exerciseCount - 1)];
     final currentExercise = state.exerciseById(currentPrescription.exerciseId);
     final currentExerciseSets = session.completedSets
         .where((s) => s.exerciseId == currentPrescription.exerciseId)
@@ -690,303 +707,305 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         if (!didPop) context.go('/');
       },
       child: Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        leading: IconButton(
-          tooltip: l10n.backToDashboard,
-          onPressed: () => context.go('/'),
-          icon: const Icon(Icons.close_rounded),
-        ),
-        title: _currentPage >= exerciseCount
-            ? Text(
-                l10n.finishWorkout,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w800),
-              )
-            : Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    currentExercise != null
-                        ? ExerciseTranslations.displayName(context, currentExercise)
-                        : 'Exercise',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w800),
-                    overflow: TextOverflow.ellipsis,
+        appBar: AppBar(
+          centerTitle: true,
+          leading: IconButton(
+            tooltip: l10n.backToDashboard,
+            onPressed: () => context.go('/'),
+            icon: const Icon(Icons.close_rounded),
+          ),
+          title: _currentPage >= exerciseCount
+              ? Text(
+                  l10n.finishWorkout,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
                   ),
-                  const SizedBox(height: 2),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(999),
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      currentExercise != null
+                          ? ExerciseTranslations.displayName(
+                              context,
+                              currentExercise,
+                            )
+                          : 'Exercise',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    child: Text(
-                      'SET ${currentExerciseSets + 1} OF ${currentPrescription.targetSets}',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.primary,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                            fontSize: 10,
-                          ),
+                    const SizedBox(height: 2),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        'SET ${currentExerciseSets + 1} OF ${currentPrescription.targetSets}',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.primary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+          actions: [
+            if (!kIsWeb && _watchReachable)
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: Icon(Icons.watch, size: 18, color: AppTheme.primary),
+              ),
+            if (_currentPage < exerciseCount)
+              IconButton(
+                icon: const Icon(Icons.swap_horiz_rounded),
+                tooltip: l10n.swapExercise,
+                onPressed: () =>
+                    _showSwapPicker(context, state, routine, _currentPage),
+              ),
+            Container(
+              margin: const EdgeInsets.only(right: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.primary.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                _currentPage >= exerciseCount
+                    ? '$exerciseCount/$exerciseCount'
+                    : '${_currentPage + 1}/$exerciseCount',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: GestureDetector(
+            onTap: () => _showFinishConfirmation(context),
+            child: Container(
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFE53E3E),
+                borderRadius: BorderRadius.circular(28),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFE53E3E).withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.stop_rounded, color: Colors.white, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    timerText,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 16,
+                      fontFeatures: [FontFeature.tabularFigures()],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 1,
+                    height: 24,
+                    color: Colors.white.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    l10n.finish,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                      letterSpacing: 1.2,
                     ),
                   ),
                 ],
               ),
-        actions: [
-          if (!kIsWeb && _watchReachable)
-            Padding(
-              padding: const EdgeInsets.only(right: 4),
-              child: Icon(
-                Icons.watch,
-                size: 18,
-                color: AppTheme.primary,
-              ),
-            ),
-          if (_currentPage < exerciseCount)
-            IconButton(
-              icon: const Icon(Icons.swap_horiz_rounded),
-              tooltip: l10n.swapExercise,
-              onPressed: () => _showSwapPicker(context, state, routine, _currentPage),
-            ),
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              _currentPage >= exerciseCount
-                  ? '$exerciseCount/$exerciseCount'
-                  : '${_currentPage + 1}/$exerciseCount',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-          ),
-        ],
-      ),
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-        child: GestureDetector(
-          onTap: () => _showFinishConfirmation(context),
-          child: Container(
-            height: 56,
-            decoration: BoxDecoration(
-              color: const Color(0xFFE53E3E),
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFE53E3E).withValues(alpha: 0.3),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.stop_rounded, color: Colors.white, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  timerText,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 16,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 1,
-                  height: 24,
-                  color: Colors.white.withValues(alpha: 0.3),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  l10n.finish,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 14,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ],
             ),
           ),
         ),
-      ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-          if (notification is ScrollStartNotification) {
-            _showArrows();
-          }
-          return false;
-        },
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: _pageController,
-              itemCount: exerciseCount + 1,
-              onPageChanged: (index) {
-                setState(() => _currentPage = index);
-                if (index < exerciseCount) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) controller.goToExercise(index);
-                  });
-                }
-              },
-              itemBuilder: (context, pageIndex) {
-                if (pageIndex == exerciseCount) {
-                  return _buildEndOfWorkoutPage(context, controller);
-                }
-                return _ExercisePage(
-                  key: ValueKey(pageIndex),
-                  pageIndex: pageIndex,
-                  routine: routine,
-                  session: session,
-                  state: state,
-                  controller: controller,
-                  weightController: _weightController,
-                  repsController: _repsController,
-                  setNoteController: _setNoteController,
-                  lastExerciseId: _lastExerciseId,
-                  onExerciseIdChanged: (id) => _lastExerciseId = id,
-                  remainingRest: _remainingRest,
-                  onLogSet: _resetRestTimer,
-                  onShowComment: () => _showCommentDialog(context),
-                  preferredUnit: state.preferredUnit,
-                  timedCountdownRemaining: _timedCountdownRemaining,
-                  timedExerciseRunning: _timedExerciseRunning,
-                  onStartTimed: _startTimedExercise,
-                  onPauseTimed: _pauseTimedExercise,
-                  onResetTimed: _resetTimedExercise,
-                );
-              },
-            ),
-            // Left arrow
-            Positioned(
-              left: 4,
-              top: 0,
-              bottom: 0,
-              child: FadeTransition(
-                opacity: _arrowOpacity,
-                child: Center(
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.chevron_left_rounded,
-                      size: 22,
-                      color: _currentPage > 0
-                          ? AppTheme.ink.withValues(alpha: 0.5)
-                          : AppTheme.slateInactive.withValues(alpha: 0.25),
-                    ),
-                  ),
-                ),
+        body: NotificationListener<ScrollNotification>(
+          onNotification: (notification) {
+            if (notification is ScrollStartNotification) {
+              _showArrows();
+            }
+            return false;
+          },
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                itemCount: exerciseCount + 1,
+                onPageChanged: (index) {
+                  setState(() => _currentPage = index);
+                  if (index < exerciseCount) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) controller.goToExercise(index);
+                    });
+                  }
+                },
+                itemBuilder: (context, pageIndex) {
+                  if (pageIndex == exerciseCount) {
+                    return _buildEndOfWorkoutPage(context, controller);
+                  }
+                  return _ExercisePage(
+                    key: ValueKey(pageIndex),
+                    pageIndex: pageIndex,
+                    routine: routine,
+                    session: session,
+                    state: state,
+                    controller: controller,
+                    weightController: _weightController,
+                    repsController: _repsController,
+                    setNoteController: _setNoteController,
+                    lastExerciseId: _lastExerciseId,
+                    onExerciseIdChanged: (id) => _lastExerciseId = id,
+                    remainingRest: _remainingRest,
+                    onLogSet: _resetRestTimer,
+                    onShowComment: () => _showCommentDialog(context),
+                    preferredUnit: state.preferredUnit,
+                    timedCountdownRemaining: _timedCountdownRemaining,
+                    timedExerciseRunning: _timedExerciseRunning,
+                    onStartTimed: _startTimedExercise,
+                    onPauseTimed: _pauseTimedExercise,
+                    onResetTimed: _resetTimedExercise,
+                  );
+                },
               ),
-            ),
-            // Right arrow
-            Positioned(
-              right: 4,
-              top: 0,
-              bottom: 0,
-              child: FadeTransition(
-                opacity: _arrowOpacity,
-                child: Center(
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.chevron_right_rounded,
-                      size: 22,
-                      color: _currentPage < exerciseCount - 1
-                          ? AppTheme.ink.withValues(alpha: 0.5)
-                          : AppTheme.slateInactive.withValues(alpha: 0.25),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            // Auto-switch countdown overlay
-            if (_switchCountdown != null)
-              Positioned.fill(
-                child: Container(
-                  color: Colors.black.withValues(alpha: 0.5),
+              // Left arrow
+              Positioned(
+                left: 4,
+                top: 0,
+                bottom: 0,
+                child: FadeTransition(
+                  opacity: _arrowOpacity,
                   child: Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 32, vertical: 24),
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.15),
-                            blurRadius: 20,
-                          ),
-                        ],
+                        color: Colors.black.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.swap_horiz_rounded,
-                              size: 36, color: AppTheme.primary),
-                          const SizedBox(height: 12),
-                          Text(
-                            l10n.nextExerciseIn,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '$_switchCountdown',
-                            style: Theme.of(context)
-                                .textTheme
-                                .displaySmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w900,
-                                  color: AppTheme.primary,
-                                ),
-                          ),
-                          const SizedBox(height: 16),
-                          OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                _switchCountdown = null;
-                                _switchTargetPage = null;
-                              });
-                            },
-                            child: Text(l10n.stayHere),
-                          ),
-                        ],
+                      child: Icon(
+                        Icons.chevron_left_rounded,
+                        size: 22,
+                        color: _currentPage > 0
+                            ? AppTheme.ink.withValues(alpha: 0.5)
+                            : AppTheme.slateInactive.withValues(alpha: 0.25),
                       ),
                     ),
                   ),
                 ),
               ),
-          ],
+              // Right arrow
+              Positioned(
+                right: 4,
+                top: 0,
+                bottom: 0,
+                child: FadeTransition(
+                  opacity: _arrowOpacity,
+                  child: Center(
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.chevron_right_rounded,
+                        size: 22,
+                        color: _currentPage < exerciseCount - 1
+                            ? AppTheme.ink.withValues(alpha: 0.5)
+                            : AppTheme.slateInactive.withValues(alpha: 0.25),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Auto-switch countdown overlay
+              if (_switchCountdown != null)
+                Positioned.fill(
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    child: Center(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32,
+                          vertical: 24,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              blurRadius: 20,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.swap_horiz_rounded,
+                              size: 36,
+                              color: AppTheme.primary,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              l10n.nextExerciseIn,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '$_switchCountdown',
+                              style: Theme.of(context).textTheme.displaySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                    color: AppTheme.primary,
+                                  ),
+                            ),
+                            const SizedBox(height: 16),
+                            OutlinedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _switchCountdown = null;
+                                  _switchTargetPage = null;
+                                });
+                              },
+                              child: Text(l10n.stayHere),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 }
@@ -1043,12 +1062,13 @@ class _ExercisePage extends StatelessWidget {
     final currentSets = session.completedSets
         .where((set) => set.exerciseId == prescription.exerciseId)
         .toList();
-    final previousPerformance = state.completedSessions
-        .where((item) => item.id != session.id)
-        .expand((item) => item.completedSets)
-        .where((set) => set.exerciseId == prescription.exerciseId)
-        .toList()
-      ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    final previousPerformance =
+        state.completedSessions
+            .where((item) => item.id != session.id)
+            .expand((item) => item.completedSets)
+            .where((set) => set.exerciseId == prescription.exerciseId)
+            .toList()
+          ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
 
     // Pre-fill weight/reps when switching to this exercise (deferred to avoid
     // modifying controllers during build)
@@ -1058,15 +1078,20 @@ class _ExercisePage extends StatelessWidget {
         final lastSet = currentSets.isNotEmpty
             ? currentSets.last
             : previousPerformance.isNotEmpty
-                ? previousPerformance.first
-                : null;
+            ? previousPerformance.first
+            : null;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           weightController.text = lastSet != null
               ? AppFormatters.decimal(
-                  AppFormatters.convertWeight(lastSet.weightKg, preferredUnit))
+                  AppFormatters.convertWeight(lastSet.weightKg, preferredUnit),
+                )
               : prescription.recommendedWeightKg > 0
-              ? AppFormatters.decimal(AppFormatters.convertWeight(
-                  prescription.recommendedWeightKg, preferredUnit))
+              ? AppFormatters.decimal(
+                  AppFormatters.convertWeight(
+                    prescription.recommendedWeightKg,
+                    preferredUnit,
+                  ),
+                )
               : '';
           repsController.text =
               lastSet?.reps.toString() ?? '${prescription.targetReps}';
@@ -1083,423 +1108,460 @@ class _ExercisePage extends StatelessWidget {
     final highestPrevWeight = previousPerformance.isEmpty
         ? 0.0
         : previousPerformance
-            .map((s) => s.weightKg)
-            .reduce((a, b) => a > b ? a : b);
+              .map((s) => s.weightKg)
+              .reduce((a, b) => a > b ? a : b);
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: ListView(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
-      children: [
-        // Muscle heatmap — fatigue colors with active muscles highlighted
-        if (exercise != null && exercise.primaryMuscles.isNotEmpty) ...[
-          _ActiveMuscleHeatmap(exercise: exercise, state: state),
-          const SizedBox(height: 8),
-        ],
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 28),
+        children: [
+          // Muscle heatmap — fatigue colors with active muscles highlighted
+          if (exercise != null && exercise.primaryMuscles.isNotEmpty) ...[
+            _ActiveMuscleHeatmap(exercise: exercise, state: state),
+            const SizedBox(height: 8),
+          ],
 
-        if (exercise?.exerciseType == 'timed') ...[
-          // Timed exercise: countdown timer + start/pause/reset
-          const SizedBox(height: 8),
-          Center(
-            child: Text(
-              l10n.countdown,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: AppTheme.primary,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1.5,
-                  ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Center(
-            child: Text(
-              '${(timedCountdownRemaining ~/ 60).toString().padLeft(2, '0')}:${(timedCountdownRemaining % 60).toString().padLeft(2, '0')}',
-              style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: timedExerciseRunning ? AppTheme.primary : AppTheme.ink,
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                  ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (!timedExerciseRunning) ...[
-                FilledButton.icon(
-                  onPressed: () => onStartTimed(
-                    timedCountdownRemaining > 0
-                        ? timedCountdownRemaining
-                        : prescription.targetDurationSeconds,
-                  ),
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: Text(timedCountdownRemaining < prescription.targetDurationSeconds && timedCountdownRemaining > 0 ? l10n.resume : l10n.start),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(120, 48),
-                  ),
+          if (exercise?.exerciseType == 'timed') ...[
+            // Timed exercise: countdown timer + start/pause/reset
+            const SizedBox(height: 8),
+            Center(
+              child: Text(
+                l10n.countdown,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.5,
                 ),
-                if (timedCountdownRemaining < prescription.targetDurationSeconds) ...[
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    onPressed: () => onResetTimed(prescription.targetDurationSeconds),
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: Text(l10n.reset),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(100, 48),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Center(
+              child: Text(
+                '${(timedCountdownRemaining ~/ 60).toString().padLeft(2, '0')}:${(timedCountdownRemaining % 60).toString().padLeft(2, '0')}',
+                style: Theme.of(context).textTheme.displayLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: timedExerciseRunning ? AppTheme.primary : AppTheme.ink,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (!timedExerciseRunning) ...[
+                  FilledButton.icon(
+                    onPressed: () => onStartTimed(
+                      timedCountdownRemaining > 0
+                          ? timedCountdownRemaining
+                          : prescription.targetDurationSeconds,
+                    ),
+                    icon: const Icon(Icons.play_arrow_rounded),
+                    label: Text(
+                      timedCountdownRemaining <
+                                  prescription.targetDurationSeconds &&
+                              timedCountdownRemaining > 0
+                          ? l10n.resume
+                          : l10n.start,
+                    ),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(120, 48),
+                    ),
+                  ),
+                  if (timedCountdownRemaining <
+                      prescription.targetDurationSeconds) ...[
+                    const SizedBox(width: 12),
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          onResetTimed(prescription.targetDurationSeconds),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: Text(l10n.reset),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(100, 48),
+                      ),
+                    ),
+                  ],
+                ] else ...[
+                  FilledButton.icon(
+                    onPressed: onPauseTimed,
+                    icon: const Icon(Icons.pause_rounded),
+                    label: Text(l10n.pause),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(120, 48),
+                      backgroundColor: Colors.orange.shade600,
                     ),
                   ),
                 ],
-              ] else ...[
-                FilledButton.icon(
-                  onPressed: onPauseTimed,
-                  icon: const Icon(Icons.pause_rounded),
-                  label: Text(l10n.pause),
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size(120, 48),
-                    backgroundColor: Colors.orange.shade600,
+              ],
+            ),
+            const SizedBox(height: 20),
+            // Manual log: type duration + LOG button
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.manualMin,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.slateInactive,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: weightController,
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: '0',
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 56,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        final minutes = int.tryParse(weightController.text);
+                        if (minutes == null || minutes <= 0) return;
+                        controller.logTimedSet(
+                          durationSeconds: minutes * 60,
+                          note: setNoteController.text.trim(),
+                        );
+                        setNoteController.clear();
+                        weightController.clear();
+                        onLogSet(prescription.restSeconds);
+                      },
+                      icon: const Icon(Icons.check_circle_outline_rounded),
+                      label: Text(l10n.log),
+                    ),
                   ),
                 ),
               ],
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Manual log: type duration + LOG button
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      l10n.manualMin,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.slateInactive,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.1,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: weightController,
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w900),
-                      decoration: const InputDecoration(
-                        hintText: '0',
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 14),
+            ),
+            const SizedBox(height: 14),
+          ] else ...[
+            // Strength exercise: rest timer + weight/reps/log
+            // Rest timer
+            Center(
+              child: DigitalTimer(remaining: Duration(seconds: remainingRest)),
+            ),
+            const SizedBox(height: 24),
+
+            // 3-column input grid: weight, reps, log button
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.weightUnit(preferredUnit.toUpperCase()),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.slateInactive,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 56,
-                  child: FilledButton.icon(
-                    onPressed: () {
-                      final minutes = int.tryParse(weightController.text);
-                      if (minutes == null || minutes <= 0) return;
-                      controller.logTimedSet(
-                        durationSeconds: minutes * 60,
-                        note: setNoteController.text.trim(),
-                      );
-                      setNoteController.clear();
-                      weightController.clear();
-                      onLogSet(prescription.restSeconds);
-                    },
-                    icon: const Icon(Icons.check_circle_outline_rounded),
-                    label: Text(l10n.log),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: weightController,
+                        textAlign: TextAlign.center,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                        decoration: const InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.reps,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.slateInactive,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: repsController,
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                        decoration: const InputDecoration(
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 14,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: SizedBox(
+                    height: 56,
+                    child: FilledButton.icon(
+                      onPressed: () {
+                        final rawWeight = double.tryParse(
+                          weightController.text.replaceAll(',', '.'),
+                        );
+                        final weight = rawWeight == null
+                            ? null
+                            : AppFormatters.convertToKg(
+                                rawWeight,
+                                preferredUnit,
+                              );
+                        final reps = int.tryParse(repsController.text);
+                        if (weight == null || reps == null || reps <= 0) return;
+
+                        controller.logSet(
+                          weightKg: weight,
+                          reps: reps,
+                          note: setNoteController.text.trim(),
+                        );
+                        setNoteController.clear();
+                        onLogSet(prescription.restSeconds);
+                      },
+                      icon: const Icon(Icons.check_circle_outline_rounded),
+                      label: const Text('LOG'),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+          ], // end else (strength)
+          // Add comment button
+          GestureDetector(
+            onTap: onShowComment,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                border: Border.all(color: AppTheme.border),
+                borderRadius: BorderRadius.circular(12),
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-        ] else ...[
-          // Strength exercise: rest timer + weight/reps/log
-          // Rest timer
-          Center(
-            child:
-                DigitalTimer(remaining: Duration(seconds: remainingRest)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.chat_bubble_outline,
+                    size: 16,
+                    color: setNoteController.text.trim().isNotEmpty
+                        ? AppTheme.primary
+                        : AppTheme.slateInactive,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    setNoteController.text.trim().isNotEmpty
+                        ? l10n.commentAdded
+                        : l10n.addComment,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: setNoteController.text.trim().isNotEmpty
+                          ? AppTheme.primary
+                          : AppTheme.slateInactive,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 24),
 
-          // 3-column input grid: weight, reps, log button
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      l10n.weightUnit(preferredUnit.toUpperCase()),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.slateInactive,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.1,
+          // Current session sets
+          PageSection(
+            title: l10n.currentSessionSets,
+            child: currentSets.isEmpty
+                ? EmptyStateCard(
+                    title: l10n.nothingLoggedYet,
+                    body: l10n.setsWillAppear,
+                  )
+                : Column(
+                    children: currentSets.map((set) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: ListTile(
+                          onTap: () => _showEditSetDialog(
+                            context,
+                            controller,
+                            set,
+                            exercise?.exerciseType == 'timed',
+                            preferredUnit,
                           ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: weightController,
-                      textAlign: TextAlign.center,
-                      keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true),
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w900),
-                      decoration: const InputDecoration(
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  children: [
-                    Text(
-                      l10n.reps,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: AppTheme.slateInactive,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.1,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    TextField(
-                      controller: repsController,
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleLarge
-                          ?.copyWith(fontWeight: FontWeight.w900),
-                      decoration: const InputDecoration(
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 14),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SizedBox(
-                  height: 56,
-                  child: FilledButton.icon(
-                  onPressed: () {
-                    final rawWeight = double.tryParse(
-                      weightController.text.replaceAll(',', '.'),
-                    );
-                    final weight = rawWeight == null ? null : AppFormatters.convertToKg(rawWeight, preferredUnit);
-                    final reps = int.tryParse(repsController.text);
-                    if (weight == null || reps == null || reps <= 0) return;
-
-                    controller.logSet(
-                      weightKg: weight,
-                      reps: reps,
-                      note: setNoteController.text.trim(),
-                    );
-                    setNoteController.clear();
-                    onLogSet(prescription.restSeconds);
-                  },
-                  icon: const Icon(Icons.check_circle_outline_rounded),
-                  label: const Text('LOG'),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        ], // end else (strength)
-
-        // Add comment button
-        GestureDetector(
-          onTap: onShowComment,
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 14),
-            decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.border),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.chat_bubble_outline,
-                  size: 16,
-                  color: setNoteController.text.trim().isNotEmpty
-                      ? AppTheme.primary
-                      : AppTheme.slateInactive,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  setNoteController.text.trim().isNotEmpty
-                      ? l10n.commentAdded
-                      : l10n.addComment,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: setNoteController.text.trim().isNotEmpty
-                            ? AppTheme.primary
-                            : AppTheme.slateInactive,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Current session sets
-        PageSection(
-          title: l10n.currentSessionSets,
-          child: currentSets.isEmpty
-              ? EmptyStateCard(
-                  title: l10n.nothingLoggedYet,
-                  body: l10n.setsWillAppear,
-                )
-              : Column(
-                  children: currentSets.map((set) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: ListTile(
-                        onTap: () => _showEditSetDialog(
-                          context,
-                          controller,
-                          set,
-                          exercise?.exerciseType == 'timed',
-                          preferredUnit,
-                        ),
-                        onLongPress: () {
-                          showModalBottomSheet(
-                            context: context,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-                            ),
-                            builder: (sheetContext) => SafeArea(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const SizedBox(height: 8),
-                                  Container(
-                                    width: 40, height: 4,
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.border,
-                                      borderRadius: BorderRadius.circular(2),
-                                    ),
-                                  ),
-                                  ListTile(
-                                    leading: const Icon(Icons.edit_outlined),
-                                    title: Text(l10n.editSet),
-                                    onTap: () {
-                                      Navigator.pop(sheetContext);
-                                      _showEditSetDialog(
-                                        context, controller, set,
-                                        exercise?.exerciseType == 'timed',
-                                        preferredUnit,
-                                      );
-                                    },
-                                  ),
-                                  ListTile(
-                                    leading: Icon(Icons.delete_outline, color: Colors.red.shade400),
-                                    title: Text(l10n.deleteSet, style: TextStyle(color: Colors.red.shade400)),
-                                    onTap: () {
-                                      Navigator.pop(sheetContext);
-                                      controller.deleteSet(set.exerciseId, set.setNumber);
-                                    },
-                                  ),
-                                  const SizedBox(height: 8),
-                                ],
+                          onLongPress: () {
+                            showModalBottomSheet(
+                              context: context,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20),
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                        title: Text(
-                          set.durationSeconds > 0
-                              ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
-                              : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
-                          style:
-                              const TextStyle(fontWeight: FontWeight.w800),
-                        ),
-                        subtitle: Text(AppFormatters.time(set.completedAt)),
-                        trailing: Icon(Icons.more_vert, size: 18, color: AppTheme.slateInactive),
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-        const SizedBox(height: 24),
-
-        // Previous performance with PB badges
-        PageSection(
-          title: l10n.previousPerformance,
-          child: previousPerformance.isEmpty
-              ? EmptyStateCard(
-                  title: l10n.noHistoryYet,
-                  body: l10n.historyWillAppear,
-                )
-              : Column(
-                  children: previousPerformance.take(4).map((set) {
-                    final isPb = set.weightKg == highestPrevWeight &&
-                        highestPrevWeight > 0;
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      child: ListTile(
-                        title: Row(
-                          children: [
-                            Text(
-                              set.durationSeconds > 0
-                                  ? '${set.durationSeconds}s'
-                                  : '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w800),
-                            ),
-                            if (isPb) ...[
-                              const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.primary
-                                      .withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  'PB',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
-                                      ?.copyWith(
-                                        color: AppTheme.primary,
-                                        fontWeight: FontWeight.w800,
+                              builder: (sheetContext) => SafeArea(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      width: 40,
+                                      height: 4,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.border,
+                                        borderRadius: BorderRadius.circular(2),
                                       ),
+                                    ),
+                                    ListTile(
+                                      leading: const Icon(Icons.edit_outlined),
+                                      title: Text(l10n.editSet),
+                                      onTap: () {
+                                        Navigator.pop(sheetContext);
+                                        _showEditSetDialog(
+                                          context,
+                                          controller,
+                                          set,
+                                          exercise?.exerciseType == 'timed',
+                                          preferredUnit,
+                                        );
+                                      },
+                                    ),
+                                    ListTile(
+                                      leading: Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.red.shade400,
+                                      ),
+                                      title: Text(
+                                        l10n.deleteSet,
+                                        style: TextStyle(
+                                          color: Colors.red.shade400,
+                                        ),
+                                      ),
+                                      onTap: () {
+                                        Navigator.pop(sheetContext);
+                                        controller.deleteSet(
+                                          set.exerciseId,
+                                          set.setNumber,
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
                                 ),
                               ),
+                            );
+                          },
+                          title: Text(
+                            set.durationSeconds > 0
+                                ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
+                                : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                            style: const TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          subtitle: Text(AppFormatters.time(set.completedAt)),
+                          trailing: Icon(
+                            Icons.more_vert,
+                            size: 18,
+                            color: AppTheme.slateInactive,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+          ),
+          const SizedBox(height: 24),
+
+          // Previous performance with PB badges
+          PageSection(
+            title: l10n.previousPerformance,
+            child: previousPerformance.isEmpty
+                ? EmptyStateCard(
+                    title: l10n.noHistoryYet,
+                    body: l10n.historyWillAppear,
+                  )
+                : Column(
+                    children: previousPerformance.take(4).map((set) {
+                      final isPb =
+                          set.weightKg == highestPrevWeight &&
+                          highestPrevWeight > 0;
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        child: ListTile(
+                          title: Row(
+                            children: [
+                              Text(
+                                set.durationSeconds > 0
+                                    ? '${set.durationSeconds}s'
+                                    : '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              if (isPb) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.primary.withValues(
+                                      alpha: 0.1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    'PB',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelSmall
+                                        ?.copyWith(
+                                          color: AppTheme.primary,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                  ),
+                                ),
+                              ],
                             ],
-                          ],
+                          ),
+                          subtitle: Text(
+                            AppFormatters.weekdayMonthDay(set.completedAt),
+                          ),
                         ),
-                        subtitle: Text(
-                          AppFormatters.weekdayMonthDay(set.completedAt),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-        ),
-      ],
+                      );
+                    }).toList(),
+                  ),
+          ),
+        ],
       ),
     );
   }
@@ -1516,7 +1578,8 @@ class _ExercisePage extends StatelessWidget {
       text: isTimed
           ? '${(set.durationSeconds / 60).round()}'
           : AppFormatters.decimal(
-              AppFormatters.convertWeight(set.weightKg, preferredUnit)),
+              AppFormatters.convertWeight(set.weightKg, preferredUnit),
+            ),
     );
     final repsCtrl = TextEditingController(text: '${set.reps}');
 
@@ -1530,7 +1593,9 @@ class _ExercisePage extends StatelessWidget {
                   controller: weightCtrl,
                   autofocus: true,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Duration (min)'),
+                  decoration: const InputDecoration(
+                    labelText: 'Duration (min)',
+                  ),
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1538,8 +1603,9 @@ class _ExercisePage extends StatelessWidget {
                     TextField(
                       controller: weightCtrl,
                       autofocus: true,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                       decoration: InputDecoration(
                         labelText: 'Weight ($preferredUnit)',
                       ),
@@ -1595,10 +1661,7 @@ class _ExercisePage extends StatelessWidget {
 }
 
 class _ActiveMuscleHeatmap extends StatefulWidget {
-  const _ActiveMuscleHeatmap({
-    required this.exercise,
-    required this.state,
-  });
+  const _ActiveMuscleHeatmap({required this.exercise, required this.state});
 
   final Exercise exercise;
   final AppState state;
@@ -1761,10 +1824,9 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
               const SizedBox(height: 20),
               Text(
                 l10n.muscleHeatmap,
-                style: Theme.of(sheetContext)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w800),
+                style: Theme.of(
+                  sheetContext,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 16),
               _legendRow(
@@ -1799,20 +1861,28 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(l10n.recovered,
-                      style: TextStyle(
-                          fontSize: 11, color: AppTheme.slateInactive)),
-                  Text(l10n.fatigued,
-                      style: TextStyle(
-                          fontSize: 11, color: AppTheme.slateInactive)),
+                  Text(
+                    l10n.recovered,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.slateInactive,
+                    ),
+                  ),
+                  Text(
+                    l10n.fatigued,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: AppTheme.slateInactive,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
               Text(
                 l10n.fatigueDecayNote,
-                style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.slateInactive,
-                    ),
+                style: Theme.of(
+                  sheetContext,
+                ).textTheme.bodySmall?.copyWith(color: AppTheme.slateInactive),
               ),
               const SizedBox(height: 8),
             ],
@@ -1842,12 +1912,17 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.w700, fontSize: 13)),
-              Text(description,
-                  style: TextStyle(
-                      fontSize: 11, color: AppTheme.slateInactive)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                description,
+                style: TextStyle(fontSize: 11, color: AppTheme.slateInactive),
+              ),
             ],
           ),
         ),

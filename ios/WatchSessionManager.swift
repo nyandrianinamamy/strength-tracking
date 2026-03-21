@@ -9,12 +9,21 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     private var session: WCSession?
     private var methodChannel: FlutterMethodChannel?
     private var eventSink: FlutterEventSink?
+    private var pendingEvents: [[String: Any]] = []
 
     private override init() {
         super.init()
     }
 
     // MARK: - Setup
+
+    func activateSession() {
+        guard WCSession.isSupported() else { return }
+        let wcSession = WCSession.default
+        wcSession.delegate = self
+        wcSession.activate()
+        session = wcSession
+    }
 
     func configure(with controller: FlutterViewController) {
         // Method channel for Dart → iOS
@@ -31,13 +40,7 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
         )
         eventChannel.setStreamHandler(self)
 
-        // Activate WCSession
-        if WCSession.isSupported() {
-            let wcSession = WCSession.default
-            wcSession.delegate = self
-            wcSession.activate()
-            session = wcSession
-        }
+        activateSession()
     }
 
     // MARK: - Flutter → Watch (MethodChannel handler)
@@ -132,21 +135,24 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     private func handleWatchMessage(_ message: [String: Any]) {
         guard let type = message["type"] as? String else { return }
 
+        let forwardedMessage: [String: Any]
         switch type {
         case "log_set", "log_timed_set":
-            // Forward to Flutter via EventChannel
-            DispatchQueue.main.async {
-                self.eventSink?(message)
-            }
+            forwardedMessage = message
 
         case "request_sync":
-            // Forward sync request to Flutter
-            DispatchQueue.main.async {
-                self.eventSink?(["type": "request_sync"])
-            }
+            forwardedMessage = ["type": "request_sync"]
 
         default:
-            break
+            return
+        }
+
+        DispatchQueue.main.async {
+            if let sink = self.eventSink {
+                sink(forwardedMessage)
+            } else {
+                self.pendingEvents.append(forwardedMessage)
+            }
         }
     }
 
@@ -154,6 +160,11 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
 
     func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink) -> FlutterError? {
         eventSink = events
+        let bufferedEvents = pendingEvents
+        pendingEvents.removeAll()
+        for event in bufferedEvents {
+            events(event)
+        }
         return nil
     }
 

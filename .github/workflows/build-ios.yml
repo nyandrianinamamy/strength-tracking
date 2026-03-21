@@ -36,10 +36,49 @@ jobs:
 
       - name: Package IPA
         run: |
+          rm -rf build/Payload build/StrengthApp.ipa
           mkdir -p build/Payload
-          cp -r build/ios/iphoneos/Runner.app build/Payload/
-          cd build
-          zip -r -9 StrengthApp.ipa Payload
+
+          # Preserve the app bundle exactly as built. `ditto` is safer than
+          # `cp`/`zip` for Apple bundles and embedded frameworks.
+          ditto build/ios/iphoneos/Runner.app build/Payload/Runner.app
+
+          # SideStore will re-sign the app, so remove any stale signature and
+          # provisioning artifacts before creating the archive.
+          find build/Payload -name "_CodeSignature" -type d -prune -exec rm -rf {} +
+          find build/Payload -name "embedded.mobileprovision" -type f -delete
+
+          # Clear extended attributes to avoid packaging macOS metadata.
+          xattr -cr build/Payload || true
+
+          # Create a standard IPA zip while preserving bundle structure.
+          ditto -c -k --sequesterRsrc --keepParent build/Payload build/StrengthApp.ipa
+
+      - name: Validate IPA contents
+        run: |
+          zipinfo -1 build/StrengthApp.ipa | sed -n '1,80p'
+          python3 - <<'PYEOF'
+          import sys
+          import zipfile
+
+          with zipfile.ZipFile("build/StrengthApp.ipa") as zf:
+              names = zf.namelist()
+
+          def has_entry(path: str) -> bool:
+              return path in names or any(name.startswith(path) for name in names)
+
+          required_entries = [
+              "Payload/",
+              "Payload/Runner.app/",
+              "Payload/Runner.app/Info.plist",
+              "Payload/Runner.app/Runner",
+          ]
+
+          missing = [name for name in required_entries if not has_entry(name)]
+          if missing:
+              print("Missing expected IPA entries:", missing, file=sys.stderr)
+              sys.exit(1)
+          PYEOF
 
       - name: Get IPA size
         id: ipa

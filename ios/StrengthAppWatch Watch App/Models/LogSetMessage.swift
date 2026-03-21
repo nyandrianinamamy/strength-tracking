@@ -2,6 +2,7 @@ import Foundation
 
 struct LogSetMessage: Codable {
     let type: String // "log_set" or "log_timed_set"
+    let sessionId: String
     let exerciseId: String
     let setNumber: Int
     let weightKg: Double?       // nil for timed sets
@@ -9,9 +10,10 @@ struct LogSetMessage: Codable {
     let durationSeconds: Int?   // nil for strength sets
     let completedAt: String
 
-    static func strength(exerciseId: String, setNumber: Int, weightKg: Double, reps: Int) -> LogSetMessage {
+    static func strength(sessionId: String, exerciseId: String, setNumber: Int, weightKg: Double, reps: Int) -> LogSetMessage {
         return LogSetMessage(
             type: "log_set",
+            sessionId: sessionId,
             exerciseId: exerciseId,
             setNumber: setNumber,
             weightKg: weightKg,
@@ -21,9 +23,10 @@ struct LogSetMessage: Codable {
         )
     }
 
-    static func timed(exerciseId: String, setNumber: Int, durationSeconds: Int) -> LogSetMessage {
+    static func timed(sessionId: String, exerciseId: String, setNumber: Int, durationSeconds: Int) -> LogSetMessage {
         return LogSetMessage(
             type: "log_timed_set",
+            sessionId: sessionId,
             exerciseId: exerciseId,
             setNumber: setNumber,
             weightKg: nil,
@@ -36,6 +39,7 @@ struct LogSetMessage: Codable {
     func toDictionary() -> [String: Any] {
         var dict: [String: Any] = [
             "type": type,
+            "sessionId": sessionId,
             "exerciseId": exerciseId,
             "setNumber": setNumber,
             "completedAt": completedAt,

@@ -30,6 +30,9 @@ void main() {
     final prs = service.sessionPrs(state, 'session_leg_2');
 
     expect(prs, isNotEmpty);
-    expect(prs.any((record) => record.exerciseId == 'back_squat'), isTrue);
+    expect(
+      prs.any((record) => record.exerciseId == 'barbell_back_squat'),
+      isTrue,
+    );
   });
 }

@@ -91,6 +91,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
                 let unit = data["unit"] as? String ?? "kg"
                 let increment = data["weightIncrement"] as? Double ?? 2.5
                 let enriched = SessionSnapshot(
+                    sessionId: decoded.sessionId,
                     routineId: decoded.routineId,
                     routineName: decoded.routineName,
                     startedAt: decoded.startedAt,
@@ -130,6 +131,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
 
     func sendLogSet(_ message: LogSetMessage) {
         let dict = message.toDictionary()
+        applyOptimisticLog(message)
 
         guard let session = wcSession, session.isReachable else {
             // Queue for later delivery
@@ -137,14 +139,11 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
             return
         }
 
-        // Try direct message first, fall back to transferUserInfo
+        // Try direct message first, fall back to guaranteed delivery if needed.
         session.sendMessage(dict, replyHandler: nil) { [weak self] error in
             print("Direct send failed, queuing: \(error)")
             self?.enqueue(dict)
         }
-
-        // Also send via transferUserInfo for guaranteed delivery
-        session.transferUserInfo(dict)
     }
 
     // MARK: - Force sync
@@ -196,7 +195,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
 
     func flushQueue() {
         let queue = loadQueue()
-        guard let session = wcSession, !queue.isEmpty else { return }
+        guard let session = wcSession, session.isReachable, !queue.isEmpty else { return }
 
         for data in queue {
             if let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
@@ -223,5 +222,67 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
 
     private func clearCache() {
         UserDefaults.standard.removeObject(forKey: cacheKey)
+    }
+
+    private func applyOptimisticLog(_ message: LogSetMessage) {
+        guard let snapshot = snapshot,
+              !snapshot.sessionId.isEmpty,
+              snapshot.sessionId == message.sessionId,
+              let exerciseIndex = snapshot.exercises.firstIndex(where: { $0.exerciseId == message.exerciseId }) else {
+            return
+        }
+
+        let exercise = snapshot.exercises[exerciseIndex]
+        guard !exercise.completedSets.contains(where: { $0.setNumber == message.setNumber }) else {
+            return
+        }
+
+        let optimisticSet = WatchCompletedSet(
+            setNumber: message.setNumber,
+            weightKg: message.weightKg ?? 0,
+            reps: message.reps ?? 0,
+            durationSeconds: message.durationSeconds,
+            completedAt: message.completedAt
+        )
+
+        let updatedExercise = WatchExercise(
+            exerciseId: exercise.exerciseId,
+            name: exercise.name,
+            exerciseType: exercise.exerciseType,
+            targetSets: exercise.targetSets,
+            targetReps: exercise.targetReps,
+            targetDurationSeconds: exercise.targetDurationSeconds,
+            restSeconds: exercise.restSeconds,
+            recommendedWeightKg: exercise.recommendedWeightKg,
+            completedSets: exercise.completedSets + [optimisticSet]
+        )
+
+        var updatedExercises = snapshot.exercises
+        updatedExercises[exerciseIndex] = updatedExercise
+        let nextExerciseIndex: Int
+        if exerciseIndex == snapshot.currentExerciseIndex &&
+            updatedExercise.completedSets.count >= updatedExercise.targetSets &&
+            exerciseIndex < updatedExercises.count - 1 {
+            nextExerciseIndex = exerciseIndex + 1
+        } else {
+            nextExerciseIndex = snapshot.currentExerciseIndex
+        }
+
+        let updatedSnapshot = SessionSnapshot(
+            sessionId: snapshot.sessionId,
+            routineId: snapshot.routineId,
+            routineName: snapshot.routineName,
+            startedAt: snapshot.startedAt,
+            currentExerciseIndex: nextExerciseIndex,
+            exercises: updatedExercises,
+            locale: snapshot.locale,
+            unit: snapshot.unit,
+            weightIncrement: snapshot.weightIncrement
+        )
+
+        DispatchQueue.main.async {
+            self.snapshot = updatedSnapshot
+        }
+        cacheSnapshot(updatedSnapshot)
     }
 }

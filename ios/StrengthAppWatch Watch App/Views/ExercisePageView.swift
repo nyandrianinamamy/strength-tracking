@@ -2,8 +2,8 @@ import SwiftUI
 
 struct ExercisePageView: View {
     let snapshot: SessionSnapshot
-    let onLogSet: (String, Int, Double, Int) -> Void        // exerciseId, setNumber, weightKg, reps
-    let onLogTimedSet: (String, Int, Int) -> Void            // exerciseId, setNumber, durationSeconds
+    let onLogSet: (String, String, Int, Double, Int) -> Void        // sessionId, exerciseId, setNumber, weightKg, reps
+    let onLogTimedSet: (String, String, Int, Int) -> Void            // sessionId, exerciseId, setNumber, durationSeconds
 
     @State private var selectedPage: Int = 0
 
@@ -21,7 +21,7 @@ struct ExercisePageView: View {
                             locale: snapshot.locale,
                             onLogTimedSet: { durationSeconds in
                                 let setNumber = exercise.completedSets.count + 1
-                                onLogTimedSet(exercise.exerciseId, setNumber, durationSeconds)
+                                onLogTimedSet(snapshot.sessionId, exercise.exerciseId, setNumber, durationSeconds)
                             }
                         )
                     } else {
@@ -36,7 +36,7 @@ struct ExercisePageView: View {
                             weightIncrement: snapshot.weightIncrement,
                             onLogSet: { weightKg, reps in
                                 let setNumber = exercise.completedSets.count + 1
-                                onLogSet(exercise.exerciseId, setNumber, weightKg, reps)
+                                onLogSet(snapshot.sessionId, exercise.exerciseId, setNumber, weightKg, reps)
                             }
                         )
                     }

@@ -26,7 +26,7 @@ void main() {
     addTearDown(container.dispose);
 
     final routines = container.read(appStateControllerProvider).routines;
-    final routine = routines.firstWhere((item) => item.id == 'push_a');
+    final routine = routines.firstWhere((item) => item.id == 'push_day');
 
     final started = container
         .read(routineControllerProvider)
@@ -67,13 +67,13 @@ void main() {
         .completedSessions
         .length;
 
-    container.read(routineControllerProvider).archive('push_a');
+    container.read(routineControllerProvider).archive('push_day');
 
     final state = container.read(appStateControllerProvider);
-    expect(state.routineById('push_a')?.archived, isTrue);
+    expect(state.routineById('push_day')?.archived, isTrue);
     expect(state.completedSessions.length, initialCompletedCount);
     expect(
-      state.completedSessions.any((session) => session.routineId == 'push_a'),
+      state.completedSessions.any((session) => session.routineId == 'push_day'),
       isTrue,
     );
   });

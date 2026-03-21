@@ -84,7 +84,7 @@ Future<void> main() async {
   );
 
   // Initialize Watch sync on iOS only
-  if (!kIsWeb) {
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
     try {
       container.read(watchSyncServiceProvider).initialize();
     } catch (e) {

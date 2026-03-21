@@ -1,6 +1,7 @@
 import Foundation
 
 struct SessionSnapshot: Codable {
+    let sessionId: String
     let routineId: String
     let routineName: String
     let startedAt: String
@@ -11,12 +12,13 @@ struct SessionSnapshot: Codable {
     var weightIncrement: Double
 
     enum CodingKeys: String, CodingKey {
-        case routineId, routineName, startedAt, currentExerciseIndex, exercises
+        case sessionId, routineId, routineName, startedAt, currentExerciseIndex, exercises
         case locale, unit, weightIncrement
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decodeIfPresent(String.self, forKey: .sessionId) ?? ""
         routineId = try container.decode(String.self, forKey: .routineId)
         routineName = try container.decode(String.self, forKey: .routineName)
         startedAt = try container.decode(String.self, forKey: .startedAt)
@@ -27,7 +29,8 @@ struct SessionSnapshot: Codable {
         weightIncrement = try container.decodeIfPresent(Double.self, forKey: .weightIncrement) ?? 2.5
     }
 
-    init(routineId: String, routineName: String, startedAt: String, currentExerciseIndex: Int, exercises: [WatchExercise], locale: String, unit: String, weightIncrement: Double) {
+    init(sessionId: String, routineId: String, routineName: String, startedAt: String, currentExerciseIndex: Int, exercises: [WatchExercise], locale: String, unit: String, weightIncrement: Double) {
+        self.sessionId = sessionId
         self.routineId = routineId
         self.routineName = routineName
         self.startedAt = startedAt
