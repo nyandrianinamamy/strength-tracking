@@ -37,11 +37,12 @@ jobs:
       - name: Package IPA variants
         run: |
           package_ipa() {
-            local payload_dir="$1"
+            local bundle_root="$1"
             local output_file="$2"
             local strip_watch="$3"
+            local payload_dir="$bundle_root/Payload"
 
-            rm -rf "$payload_dir" "$output_file"
+            rm -rf "$bundle_root" "$output_file"
             mkdir -p "$payload_dir"
 
             # Preserve the app bundle exactly as built. `ditto` is safer than
@@ -64,8 +65,8 @@ jobs:
             ditto -c -k --sequesterRsrc --keepParent "$payload_dir" "$output_file"
           }
 
-          package_ipa build/Payload build/StrengthApp.ipa false
-          package_ipa build/Payload-SideStore build/StrengthApp-sidestore.ipa true
+          package_ipa build/full-ipa build/StrengthApp.ipa false
+          package_ipa build/sidestore-ipa build/StrengthApp-sidestore.ipa true
 
       - name: Validate IPA contents
         run: |
