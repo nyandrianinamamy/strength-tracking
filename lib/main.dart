@@ -9,6 +9,7 @@ import 'package:strength_training_tracker/src/app/app.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/features/live_activity/workout_live_activity_service.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 
 Future<void> main() async {
@@ -85,6 +86,12 @@ Future<void> main() async {
 
   // Initialize Watch sync on iOS only
   if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    try {
+      container.read(workoutLiveActivityServiceProvider).initialize();
+    } catch (e) {
+      debugPrint('Live Activity initialization failed: $e');
+    }
+
     try {
       container.read(watchSyncServiceProvider).initialize();
     } catch (e) {

@@ -41,6 +41,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
 
   // Rest timer beep tracking — tracks set count to know when a new set was logged
   int _lastBeepedSetCount = -1;
+  int? _lastHapticRestSetCount;
+  int? _lastHapticRestSecond;
 
   // Timed exercise countdown state
   DateTime? _timedExerciseStart;
@@ -65,8 +67,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     super.initState();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
+        final remainingRest = _remainingRest;
+
+        _handleRestTimerHaptics(remainingRest);
+
         // Rest timer beep — check if rest just finished
-        if (_remainingRest == 0 && _lastBeepedSetCount != _currentSetCount) {
+        if (remainingRest == 0 && _lastBeepedSetCount != _currentSetCount) {
           // A set was logged and rest has now elapsed
           if (_currentSetCount > 0) {
             _playRestTimerBeep();
@@ -223,7 +229,63 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     }
   }
 
+  void _handleRestTimerHaptics(int remainingRest) {
+    final currentSetCount = _currentSetCount;
+
+    if (currentSetCount <= 0) {
+      _lastHapticRestSetCount = null;
+      _lastHapticRestSecond = null;
+      return;
+    }
+
+    if (_lastHapticRestSetCount != currentSetCount) {
+      _lastHapticRestSetCount = currentSetCount;
+      _lastHapticRestSecond = remainingRest;
+      return;
+    }
+
+    if (_lastHapticRestSecond == remainingRest) {
+      return;
+    }
+
+    _lastHapticRestSecond = remainingRest;
+
+    switch (remainingRest) {
+      case 2:
+        unawaited(_playRestClickHaptic());
+        break;
+      case 1:
+        unawaited(_playRestClickHaptic());
+        break;
+      case 0:
+        unawaited(_playRestCompleteHaptic());
+        break;
+    }
+  }
+
+  Future<void> _playRestClickHaptic() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+  }
+
+  Future<void> _playRestCompleteHaptic() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+      return;
+    }
+    await HapticFeedback.heavyImpact();
+  }
+
   void _resetRestTimer(int restSeconds) {
+    if (restSeconds > 0) {
+      _lastHapticRestSetCount = _currentSetCount;
+      _lastHapticRestSecond = restSeconds;
+      unawaited(_playRestClickHaptic());
+    } else {
+      _lastHapticRestSetCount = null;
+      _lastHapticRestSecond = null;
+    }
     setState(() {});
     // Auto-advance page if the exercise index changed after logging a set
     WidgetsBinding.instance.addPostFrameCallback((_) {

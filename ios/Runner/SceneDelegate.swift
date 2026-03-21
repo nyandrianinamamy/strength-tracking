@@ -9,6 +9,7 @@ class SceneDelegate: FlutterSceneDelegate {
         if let windowScene = scene as? UIWindowScene,
            let controller = windowScene.windows.first?.rootViewController as? FlutterViewController {
             WatchSessionManager.shared.configure(with: controller)
+            StrengthLiveActivityManager.shared.configure(with: controller)
         }
     }
 }

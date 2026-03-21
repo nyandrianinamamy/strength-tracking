@@ -34,61 +34,89 @@ jobs:
       - name: Build unsigned iOS app
         run: flutter build ios --release --no-codesign --build-name=${{ steps.version.outputs.number }}
 
-      - name: Package IPA
+      - name: Package IPA variants
         run: |
-          rm -rf build/Payload build/StrengthApp.ipa
-          mkdir -p build/Payload
+          package_ipa() {
+            local payload_dir="$1"
+            local output_file="$2"
+            local strip_watch="$3"
 
-          # Preserve the app bundle exactly as built. `ditto` is safer than
-          # `cp`/`zip` for Apple bundles and embedded frameworks.
-          ditto build/ios/iphoneos/Runner.app build/Payload/Runner.app
+            rm -rf "$payload_dir" "$output_file"
+            mkdir -p "$payload_dir"
 
-          # SideStore will re-sign the app, so remove any stale signature and
-          # provisioning artifacts before creating the archive.
-          find build/Payload -name "_CodeSignature" -type d -prune -exec rm -rf {} +
-          find build/Payload -name "embedded.mobileprovision" -type f -delete
+            # Preserve the app bundle exactly as built. `ditto` is safer than
+            # `cp`/`zip` for Apple bundles and embedded frameworks.
+            ditto build/ios/iphoneos/Runner.app "$payload_dir/Runner.app"
 
-          # Clear extended attributes to avoid packaging macOS metadata.
-          xattr -cr build/Payload || true
+            if [ "$strip_watch" = "true" ]; then
+              rm -rf "$payload_dir/Runner.app/Watch"
+            fi
 
-          # Create a standard IPA zip while preserving bundle structure.
-          ditto -c -k --sequesterRsrc --keepParent build/Payload build/StrengthApp.ipa
+            # SideStore will re-sign the app, so remove any stale signature and
+            # provisioning artifacts before creating the archive.
+            find "$payload_dir" -name "_CodeSignature" -type d -prune -exec rm -rf {} +
+            find "$payload_dir" -name "embedded.mobileprovision" -type f -delete
+
+            # Clear extended attributes to avoid packaging macOS metadata.
+            xattr -cr "$payload_dir" || true
+
+            # Create a standard IPA zip while preserving bundle structure.
+            ditto -c -k --sequesterRsrc --keepParent "$payload_dir" "$output_file"
+          }
+
+          package_ipa build/Payload build/StrengthApp.ipa false
+          package_ipa build/Payload-SideStore build/StrengthApp-sidestore.ipa true
 
       - name: Validate IPA contents
         run: |
-          zipinfo -1 build/StrengthApp.ipa | sed -n '1,80p'
           python3 - <<'PYEOF'
           import sys
           import zipfile
 
-          with zipfile.ZipFile("build/StrengthApp.ipa") as zf:
-              names = zf.namelist()
+          def validate(path: str, expect_watch: bool) -> None:
+              with zipfile.ZipFile(path) as zf:
+                  names = zf.namelist()
 
-          def has_entry(path: str) -> bool:
-              return path in names or any(name.startswith(path) for name in names)
+              def has_entry(entry: str) -> bool:
+                  return entry in names or any(name.startswith(entry) for name in names)
 
-          required_entries = [
-              "Payload/",
-              "Payload/Runner.app/",
-              "Payload/Runner.app/Info.plist",
-              "Payload/Runner.app/Runner",
-          ]
+              required_entries = [
+                  "Payload/",
+                  "Payload/Runner.app/",
+                  "Payload/Runner.app/Info.plist",
+                  "Payload/Runner.app/Runner",
+              ]
 
-          missing = [name for name in required_entries if not has_entry(name)]
-          if missing:
-              print("Missing expected IPA entries:", missing, file=sys.stderr)
-              sys.exit(1)
+              missing = [name for name in required_entries if not has_entry(name)]
+              if missing:
+                  print(f"{path}: missing expected IPA entries: {missing}", file=sys.stderr)
+                  sys.exit(1)
+
+              has_watch = any(name.startswith("Payload/Runner.app/Watch/") for name in names)
+              if has_watch != expect_watch:
+                  state = "present" if has_watch else "missing"
+                  print(f"{path}: watch bundle unexpectedly {state}", file=sys.stderr)
+                  sys.exit(1)
+
+              print(f"Validated {path} (watch bundle {'present' if has_watch else 'absent'})")
+
+          validate("build/StrengthApp.ipa", expect_watch=True)
+          validate("build/StrengthApp-sidestore.ipa", expect_watch=False)
           PYEOF
 
-      - name: Get IPA size
+      - name: Get IPA sizes
         id: ipa
-        run: echo "size=$(stat -f%z build/StrengthApp.ipa)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "full_size=$(stat -f%z build/StrengthApp.ipa)" >> "$GITHUB_OUTPUT"
+          echo "sidestore_size=$(stat -f%z build/StrengthApp-sidestore.ipa)" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ steps.version.outputs.tag }}
-          files: build/StrengthApp.ipa
+          files: |
+            build/StrengthApp.ipa
+            build/StrengthApp-sidestore.ipa
           generate_release_notes: true
 
       - name: Prepare main branch for source update
@@ -99,10 +127,10 @@ jobs:
       - name: Update SideStore source JSON
         env:
           TAG: ${{ steps.version.outputs.tag }}
-          IPA_SIZE: ${{ steps.ipa.outputs.size }}
+          IPA_SIZE: ${{ steps.ipa.outputs.sidestore_size }}
         run: |
           export DATE=$(date -u +"%Y-%m-%d")
-          export DOWNLOAD_URL="https://github.com/nyandrianinamamy/strength-tracking/releases/download/${TAG}/StrengthApp.ipa"
+          export DOWNLOAD_URL="https://github.com/nyandrianinamamy/strength-tracking/releases/download/${TAG}/StrengthApp-sidestore.ipa"
 
           # Use python3 (available on macOS runners) to update the JSON
           python3 - <<'PYEOF'
