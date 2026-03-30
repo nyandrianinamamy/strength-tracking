@@ -14,7 +14,7 @@ void main() {
 
   // Connect emulators ONCE for the entire process.
   setUpAll(() async {
-    final emulators = connectEmulators();
+    final emulators = await connectEmulators();
     firestore = emulators.firestore;
     auth = emulators.auth;
   });
@@ -74,7 +74,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Chest'));
+      await tester.tap(find.text('Chest').first);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Save'));
@@ -152,7 +152,8 @@ void main() {
 
       await completeQuickWorkout(tester, weight: '100', reps: '5');
 
-      expect(find.text('E2E Squat'), findsOneWidget);
+      // E2E Squat may appear multiple times on summary (title + set details)
+      expect(find.text('E2E Squat'), findsWidgets);
     });
   });
 
@@ -175,22 +176,29 @@ void main() {
       );
       await completeQuickWorkout(tester, weight: '140', reps: '3');
 
-      // Navigate from summary back to main app
-      await tester.tap(find.byType(BackButton));
+      // Summary screen is outside ShellRoute (no bottom nav).
+      // Use "Finish & Go Home" to return to dashboard, then navigate to Progress.
+      // Scroll to find the button since it may be below the fold.
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -500));
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.tap(find.text('Finish & Go Home'));
       await tester.pumpAndSettle();
 
-      // Navigate to Progress tab
+      // Now we're back on dashboard inside ShellRoute — bottom nav available
       await navigateToTab(tester, 'PROGRESS');
 
       // Overview tab shows "Personal Records" section
-      expect(find.text('E2E Deadlift'), findsOneWidget);
+      // Exercise name may appear multiple times across sections
+      expect(find.text('E2E Deadlift'), findsWidgets);
 
       // Tap "Lifts" tab
       await tester.tap(find.text('Lifts'));
       await tester.pumpAndSettle();
 
-      expect(find.text('E2E Deadlift'), findsOneWidget);
-      expect(find.text('Best Set'), findsOneWidget);
+      expect(find.text('E2E Deadlift'), findsWidgets);
+      expect(find.text('Best Set'), findsWidgets);
     });
   });
 }

@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:strength_training_tracker/firebase_options.dart';
 import 'package:strength_training_tracker/src/app/app.dart';
 import 'package:strength_training_tracker/src/core/app_bootstrap.dart';
 import 'package:http/http.dart' as http;
@@ -13,8 +15,9 @@ const firestorePort = 8081;
 const authHost = 'localhost';
 const authPort = 9099;
 
-/// Connect Firebase singletons to emulators. Call ONCE per process.
-({FirebaseFirestore firestore, FirebaseAuth auth}) connectEmulators() {
+/// Initialize Firebase and connect singletons to emulators. Call ONCE per process.
+Future<({FirebaseFirestore firestore, FirebaseAuth auth})> connectEmulators() async {
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   final firestore = FirebaseFirestore.instance;
   firestore.useFirestoreEmulator(firestoreHost, firestorePort);
   final auth = FirebaseAuth.instance;
@@ -50,6 +53,11 @@ Future<ProviderContainer> bootstrapTestApp({
   required FirebaseFirestore firestore,
   required FirebaseAuth auth,
 }) async {
+  // Sign out any stale user from previous test (emulator reset deletes accounts
+  // but the SDK still caches the old token).
+  if (auth.currentUser != null) {
+    await auth.signOut();
+  }
   final result = await initializeApp(firestore: firestore, auth: auth);
   return buildContainer(result);
 }
@@ -95,7 +103,8 @@ Future<void> createTestExercise(
     name,
   );
   await tester.pumpAndSettle();
-  await tester.tap(find.text(muscle));
+  // Muscle name appears in both primary and secondary sections — tap the first one (primary).
+  await tester.tap(find.text(muscle).first);
   await tester.pumpAndSettle();
   await tester.tap(find.text('Save'));
   await tester.pumpAndSettle();
@@ -132,36 +141,55 @@ Future<void> createTestRoutine(
   await tester.pumpAndSettle();
 }
 
-/// Start a workout from dashboard, log one set, finish.
+/// Start a workout from the routines screen play button, log one set, finish.
+///
+/// Uses pump() instead of pumpAndSettle() on the active workout screen
+/// because the session timer prevents settling.
 Future<void> completeQuickWorkout(
   WidgetTester tester, {
   String weight = '100',
   String reps = '5',
 }) async {
-  await navigateToTab(tester, 'DASHBOARD');
-
-  // Dashboard button label (l10n): "START SESSION"
-  await tester.tap(find.text('START SESSION'));
-  await tester.pumpAndSettle();
+  // Start workout from the routines screen's play button instead of dashboard
+  // (dashboard may have START SESSION below the fold on small viewports)
+  await navigateToTab(tester, 'ROUTINES');
+  // Tap the play button (circular icon button) on the routine card
+  await tester.tap(find.byIcon(Icons.play_arrow).first);
+  // Active workout screen has a running timer — use pump() not pumpAndSettle()
+  // Give it enough time to fully render including Firestore round-trips
+  for (int i = 0; i < 30; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 
   // Enter weight (first TextField on active workout screen)
   await tester.enterText(find.byType(TextField).first, weight);
-  await tester.pumpAndSettle();
+  for (int i = 0; i < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 
   // Enter reps — second TextField in the input row
   final textFields = find.byType(TextField);
   await tester.enterText(textFields.at(1), reps);
-  await tester.pumpAndSettle();
+  for (int i = 0; i < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 
   // Tap LOG (l10n: "LOG")
   await tester.tap(find.text('LOG'));
-  await tester.pumpAndSettle();
+  for (int i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 
   // Trigger finish — bottom bar has "FINISH" text (l10n: "FINISH")
   await tester.tap(find.text('FINISH'));
-  await tester.pumpAndSettle();
+  for (int i = 0; i < 10; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 
   // Confirmation bottom sheet — tap "Finish & Save" (l10n: "Finish & Save")
   await tester.tap(find.text('Finish & Save'));
-  await tester.pumpAndSettle();
+  // Wait for navigation to summary screen
+  for (int i = 0; i < 30; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
 }
