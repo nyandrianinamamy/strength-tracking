@@ -1,6 +1,6 @@
 {
-    "name": "Strength Training Tracker",
-    "short_name": "Strength Tracker",
+    "name": "Kotrana: Musculation",
+    "short_name": "Kotrana",
     "start_url": ".",
     "id": "/",
     "display": "standalone",
@@ -11,7 +11,7 @@
     ],
     "background_color": "#F4F8FD",
     "theme_color": "#257BF4",
-    "description": "Installable offline-first strength training tracker for routines, live workout logging, and progression analytics.",
+    "description": "Kotrana: Musculation — installable offline-first strength training tracker for routines, live workout logging, and progression analytics.",
     "orientation": "any",
     "scope": "/",
     "categories": [

@@ -49,7 +49,7 @@ struct ContentView: View {
 
     private var idleView: some View {
         VStack(spacing: 12) {
-            Text("StrengthApp")
+            Text("Kotrana")
                 .font(.headline)
             Text(WatchL10n.string("no_active_workout", locale: "en"))
                 .font(.caption)

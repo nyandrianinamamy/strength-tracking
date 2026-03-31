@@ -3,9 +3,9 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>642732716369-ov3pigjlrdhp3ems7p7mai8iehap4ggg.apps.googleusercontent.com</string>
+	<string>642732716369-r3epuls5j2agmsicp0u4ufggpndaarqm.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.642732716369-ov3pigjlrdhp3ems7p7mai8iehap4ggg</string>
+	<string>com.googleusercontent.apps.642732716369-r3epuls5j2agmsicp0u4ufggpndaarqm</string>
 	<key>API_KEY</key>
 	<string>AIzaSyAcjBZnkd14HSTDIblB9OrTu5X9xLyBECc</string>
 	<key>GCM_SENDER_ID</key>
@@ -13,7 +13,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.example.strengthTrainingTracker</string>
+	<string>dev.mamy-r.kotrana</string>
 	<key>PROJECT_ID</key>
 	<string>myappv4</string>
 	<key>STORAGE_BUCKET</key>
@@ -29,7 +29,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:642732716369:ios:5572c6ba27a21995c2a370</string>
+	<string>1:642732716369:ios:0ca6bdca53439e5dc2a370</string>
 	<key>DATABASE_URL</key>
 	<string>https://myappv4.firebaseio.com</string>
 </dict>

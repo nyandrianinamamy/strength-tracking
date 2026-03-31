@@ -27,8 +27,8 @@ struct WatchL10n {
             "workout_complete": "Workout Complete",
             "start": "START",
             "stop": "STOP",
-            "open_on_iphone": "Open StrengthApp on your iPhone",
-            "install_on_iphone": "Install StrengthApp on your iPhone",
+            "open_on_iphone": "Open Kotrana on your iPhone",
+            "install_on_iphone": "Install Kotrana on your iPhone",
         ],
         "fr": [
             "resting": "Repos",
@@ -46,8 +46,8 @@ struct WatchL10n {
             "workout_complete": "Entrainement termine",
             "start": "DEMARRER",
             "stop": "STOP",
-            "open_on_iphone": "Ouvrez StrengthApp sur votre iPhone",
-            "install_on_iphone": "Installez StrengthApp sur votre iPhone",
+            "open_on_iphone": "Ouvrez Kotrana sur votre iPhone",
+            "install_on_iphone": "Installez Kotrana sur votre iPhone",
         ],
     ]
 }
