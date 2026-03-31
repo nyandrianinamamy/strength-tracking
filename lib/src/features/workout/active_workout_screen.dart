@@ -1075,14 +1075,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.chevron_left_rounded,
                         size: 22,
                         color: _currentPage > 0
-                            ? AppTheme.ink.withValues(alpha: 0.5)
+                            ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
                             : AppTheme.slateInactive.withValues(alpha: 0.25),
                       ),
                     ),
@@ -1101,14 +1101,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.chevron_right_rounded,
                         size: 22,
                         color: _currentPage < exerciseCount - 1
-                            ? AppTheme.ink.withValues(alpha: 0.5)
+                            ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
                             : AppTheme.slateInactive.withValues(alpha: 0.25),
                       ),
                     ),
@@ -1331,7 +1331,9 @@ class _ExercisePage extends StatelessWidget {
                 '${(timedCountdownRemaining ~/ 60).toString().padLeft(2, '0')}:${(timedCountdownRemaining % 60).toString().padLeft(2, '0')}',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontWeight: FontWeight.w900,
-                  color: timedExerciseRunning ? AppTheme.primary : AppTheme.ink,
+                  color: timedExerciseRunning
+                      ? AppTheme.primary
+                      : Theme.of(context).colorScheme.onSurface,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
