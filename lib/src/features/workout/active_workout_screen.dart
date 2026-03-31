@@ -24,6 +24,20 @@ import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
+class _TimedExerciseState {
+  DateTime? start;
+  int duration;
+  bool running;
+  bool beeped;
+
+  _TimedExerciseState({
+    this.start,
+    this.duration = 0,
+    this.running = false,
+    this.beeped = false,
+  });
+}
+
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
   const ActiveWorkoutScreen({super.key});
 
@@ -50,11 +64,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   int? _lastHapticRestSetCount;
   int? _lastHapticRestSecond;
 
-  // Timed exercise countdown state
-  DateTime? _timedExerciseStart;
-  int _timedExerciseDuration = 0;
-  bool _timedExerciseRunning = false;
-  bool _timedExerciseBeeped = false;
+  // Timed exercise countdown state — per exercise so switching doesn't reset
+  final Map<String, _TimedExerciseState> _timedExerciseStates = {};
+  String? _activeTimedExerciseId;
 
   // Auto-switch countdown when all sets completed
   int? _switchCountdown; // null = not counting, 5..0 = counting down
@@ -103,10 +115,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
           }
         }
         // Timed exercise auto-log when countdown reaches zero
-        if (_timedExerciseRunning &&
+        final activeTs = _activeTimedState;
+        if (activeTs != null &&
+            activeTs.running &&
             _timedCountdownRemaining <= 0 &&
-            !_timedExerciseBeeped) {
-          _timedExerciseBeeped = true;
+            !activeTs.beeped) {
+          activeTs.beeped = true;
           _playRestTimerBeep();
           _autoLogTimedSet();
         }
@@ -151,41 +165,76 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   // Timed exercise helpers
-  int get _timedCountdownRemaining {
-    if (_timedExerciseStart == null || !_timedExerciseRunning) {
-      return _timedExerciseDuration;
-    }
-    final elapsed = DateTime.now().difference(_timedExerciseStart!).inSeconds;
-    return (_timedExerciseDuration - elapsed).clamp(0, 9999);
+  _TimedExerciseState _timedStateFor(String exerciseId) {
+    return _timedExerciseStates.putIfAbsent(
+      exerciseId,
+      () => _TimedExerciseState(),
+    );
   }
 
+  _TimedExerciseState? get _activeTimedState {
+    final id = _activeTimedExerciseId;
+    return id == null ? null : _timedExerciseStates[id];
+  }
+
+  int get _timedCountdownRemaining {
+    final ts = _activeTimedState;
+    if (ts == null || ts.start == null || !ts.running) {
+      return ts?.duration ?? 0;
+    }
+    final elapsed = DateTime.now().difference(ts.start!).inSeconds;
+    return (ts.duration - elapsed).clamp(0, 9999);
+  }
+
+  bool get _timedExerciseRunning => _activeTimedState?.running ?? false;
+
   void _startTimedExercise(int durationSeconds) {
+    final ts = _activeTimedState;
+    if (ts == null) return;
     setState(() {
-      _timedExerciseDuration = durationSeconds;
-      _timedExerciseStart = DateTime.now();
-      _timedExerciseRunning = true;
-      _timedExerciseBeeped = false;
+      ts.duration = durationSeconds;
+      ts.start = DateTime.now();
+      ts.running = true;
+      ts.beeped = false;
     });
   }
 
   void _pauseTimedExercise() {
+    final ts = _activeTimedState;
+    if (ts == null) return;
     setState(() {
-      _timedExerciseDuration = _timedCountdownRemaining;
-      _timedExerciseStart = null;
-      _timedExerciseRunning = false;
+      ts.duration = _timedCountdownRemaining;
+      ts.start = null;
+      ts.running = false;
     });
   }
 
   void _resetTimedExercise(int durationSeconds) {
+    final ts = _activeTimedState;
+    if (ts == null) return;
     setState(() {
-      _timedExerciseDuration = durationSeconds;
-      _timedExerciseStart = null;
-      _timedExerciseRunning = false;
-      _timedExerciseBeeped = false;
+      ts.duration = durationSeconds;
+      ts.start = null;
+      ts.running = false;
+      ts.beeped = false;
+    });
+  }
+
+  void _initTimedExercise(String exerciseId, int durationSeconds) {
+    setState(() {
+      _activeTimedExerciseId = exerciseId;
+      final ts = _timedStateFor(exerciseId);
+      // Only set the duration if this exercise hasn't been initialized yet
+      if (ts.duration == 0 && !ts.running) {
+        ts.duration = durationSeconds;
+      }
     });
   }
 
   void _autoLogTimedSet() {
+    final exerciseId = _activeTimedExerciseId;
+    if (exerciseId == null) return;
+
     final state = ref.read(appStateControllerProvider);
     final session = state.activeSession;
     if (session == null) return;
@@ -193,16 +242,32 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final routine = state.routineById(session.routineId);
     if (routine == null || routine.exercises.isEmpty) return;
 
-    final prescription = routine.exercises[_currentPage];
-    ref
-        .read(workoutControllerProvider)
-        .logTimedSet(
-          durationSeconds: prescription.targetDurationSeconds,
-          note: _setNoteController.text.trim(),
-        );
+    // Find the prescription that owns the timer, not _currentPage
+    final exerciseIndex = routine.exercises
+        .indexWhere((p) => p.exerciseId == exerciseId);
+    if (exerciseIndex < 0) return;
+
+    final prescription = routine.exercises[exerciseIndex];
+
+    // Temporarily navigate to the timed exercise so logTimedSet targets it
+    final controller = ref.read(workoutControllerProvider);
+    final previousIndex = session.currentExerciseIndex;
+    if (previousIndex != exerciseIndex) {
+      controller.goToExercise(exerciseIndex);
+    }
+
+    controller.logTimedSet(
+      durationSeconds: prescription.targetDurationSeconds,
+      note: _setNoteController.text.trim(),
+    );
     _setNoteController.clear();
     _resetTimedExercise(prescription.targetDurationSeconds);
     _resetRestTimer(prescription.restSeconds);
+
+    // Restore the navigation index if user is on a different page
+    if (previousIndex != exerciseIndex && _currentPage != exerciseIndex) {
+      controller.goToExercise(_currentPage);
+    }
   }
 
   void _showArrows() {
@@ -1060,6 +1125,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     onStartTimed: _startTimedExercise,
                     onPauseTimed: _pauseTimedExercise,
                     onResetTimed: _resetTimedExercise,
+                    onInitTimed: _initTimedExercise,
                   );
                 },
               ),
@@ -1216,6 +1282,7 @@ class _ExercisePage extends StatelessWidget {
     required this.onStartTimed,
     required this.onPauseTimed,
     required this.onResetTimed,
+    required this.onInitTimed,
   });
 
   final int pageIndex;
@@ -1238,6 +1305,7 @@ class _ExercisePage extends StatelessWidget {
   final ValueChanged<int> onStartTimed;
   final VoidCallback onPauseTimed;
   final ValueChanged<int> onResetTimed;
+  final void Function(String exerciseId, int durationSeconds) onInitTimed;
 
   @override
   Widget build(BuildContext context) {
@@ -1288,9 +1356,9 @@ class _ExercisePage extends StatelessWidget {
           setNoteController.clear();
         });
       } else {
-        // Reset timed exercise countdown for the new exercise
+        // Restore (or initialize) timed exercise state for this exercise
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          onResetTimed(prescription.targetDurationSeconds);
+          onInitTimed(prescription.exerciseId, prescription.targetDurationSeconds);
         });
       }
     }
