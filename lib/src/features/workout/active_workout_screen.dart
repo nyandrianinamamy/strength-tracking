@@ -232,6 +232,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   void _autoLogTimedSet() {
+    final exerciseId = _activeTimedExerciseId;
+    if (exerciseId == null) return;
+
     final state = ref.read(appStateControllerProvider);
     final session = state.activeSession;
     if (session == null) return;
@@ -239,16 +242,32 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final routine = state.routineById(session.routineId);
     if (routine == null || routine.exercises.isEmpty) return;
 
-    final prescription = routine.exercises[_currentPage];
-    ref
-        .read(workoutControllerProvider)
-        .logTimedSet(
-          durationSeconds: prescription.targetDurationSeconds,
-          note: _setNoteController.text.trim(),
-        );
+    // Find the prescription that owns the timer, not _currentPage
+    final exerciseIndex = routine.exercises
+        .indexWhere((p) => p.exerciseId == exerciseId);
+    if (exerciseIndex < 0) return;
+
+    final prescription = routine.exercises[exerciseIndex];
+
+    // Temporarily navigate to the timed exercise so logTimedSet targets it
+    final controller = ref.read(workoutControllerProvider);
+    final previousIndex = session.currentExerciseIndex;
+    if (previousIndex != exerciseIndex) {
+      controller.goToExercise(exerciseIndex);
+    }
+
+    controller.logTimedSet(
+      durationSeconds: prescription.targetDurationSeconds,
+      note: _setNoteController.text.trim(),
+    );
     _setNoteController.clear();
     _resetTimedExercise(prescription.targetDurationSeconds);
     _resetRestTimer(prescription.restSeconds);
+
+    // Restore the navigation index if user is on a different page
+    if (previousIndex != exerciseIndex && _currentPage != exerciseIndex) {
+      controller.goToExercise(_currentPage);
+    }
   }
 
   void _showArrows() {
