@@ -79,7 +79,7 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
 
     return MaterialApp.router(
       scaffoldMessengerKey: _messengerKey,
-      title: 'Strength Training Tracker',
+      title: 'Kotrana: Musculation',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
