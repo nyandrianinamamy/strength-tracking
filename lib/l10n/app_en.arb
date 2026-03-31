@@ -295,5 +295,7 @@
   "heatmapSecondary": "Secondary muscles contribute at 50% of primary muscle weight",
   "allExercisesComplete": "All exercises complete!",
   "addAnotherOrFinish": "Add another exercise or finish your workout.",
-  "addExercise": "Add Exercise"
+  "addExercise": "Add Exercise",
+  "takePhoto": "Take Photo",
+  "chooseFromGallery": "Choose from Gallery"
 }

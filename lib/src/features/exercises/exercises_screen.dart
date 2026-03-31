@@ -126,20 +126,36 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: exercise.photoBase64 != null
-                              ? ClipRRect(
+                          child: Builder(
+                            builder: (context) {
+                              final photoBase64 = exercise.photoBase64;
+                              if (photoBase64 == null || photoBase64.isEmpty) {
+                                return const Icon(
+                                  Icons.fitness_center,
+                                  color: AppTheme.slateInactive,
+                                );
+                              }
+                              try {
+                                final bytes = base64Decode(photoBase64);
+                                return ClipRRect(
                                   borderRadius: BorderRadius.circular(12),
                                   child: Image.memory(
-                                    base64Decode(exercise.photoBase64!),
+                                    bytes,
                                     width: 64,
                                     height: 64,
                                     fit: BoxFit.cover,
+                                    cacheWidth: 64,
+                                    cacheHeight: 64,
                                   ),
-                                )
-                              : const Icon(
+                                );
+                              } on FormatException {
+                                return const Icon(
                                   Icons.fitness_center,
                                   color: AppTheme.slateInactive,
-                                ),
+                                );
+                              }
+                            },
+                          ),
                         ),
                         title: Text(
                           exercise.name as String,

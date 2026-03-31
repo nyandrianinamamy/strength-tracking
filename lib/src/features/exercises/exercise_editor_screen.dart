@@ -92,12 +92,12 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           children: [
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Take Photo'),
+              title: Text(AppLocalizations.of(context)!.takePhoto),
               onTap: () => Navigator.pop(context, ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
+              title: Text(AppLocalizations.of(context)!.chooseFromGallery),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
           ],
@@ -195,17 +195,21 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           GestureDetector(
             onTap: _pickPhoto,
             child: _photoBase64 != null
-                ? Stack(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: Image.memory(
-                          base64Decode(_photoBase64!),
-                          width: double.infinity,
-                          height: 200,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
+                ? Builder(
+                    builder: (context) {
+                      try {
+                        final bytes = base64Decode(_photoBase64!);
+                        return Stack(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(16),
+                              child: Image.memory(
+                                bytes,
+                                width: double.infinity,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              ),
+                            ),
                       Positioned(
                         top: 8,
                         right: 8,
@@ -224,7 +228,13 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                           ],
                         ),
                       ),
-                    ],
+                          ],
+                        );
+                      } on FormatException {
+                        _removePhoto();
+                        return const SizedBox.shrink();
+                      }
+                    },
                   )
                 : Container(
                     width: double.infinity,
@@ -474,16 +484,14 @@ class _PhotoActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: const BoxDecoration(
-          color: Colors.black54,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: Colors.white, size: 20),
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, color: Colors.white, size: 20),
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.black54,
+        minimumSize: const Size(40, 40),
       ),
+      constraints: const BoxConstraints(minWidth: 40, minHeight: 40),
     );
   }
 }
