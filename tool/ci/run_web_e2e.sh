@@ -71,14 +71,9 @@ done
 flutter drive \
   --driver=test_driver/integration_test.dart \
   --target=integration_test/app_test.dart \
-  --driver-port=4444 \
+  -d web-server \
   --browser-name=chrome \
-  --browser-dimension=390x844@1 \
-  --headless \
-  --test-arguments=test \
-  --test-arguments=--reporter=expanded \
+  --web-browser-flag=--headless=new \
   --web-browser-flag=--disable-search-engine-choice-screen \
   --web-browser-flag=--disable-dev-shm-usage \
-  --web-browser-flag=--headless=old \
-  --web-browser-flag=--no-sandbox \
-  -d web-server
+  --web-browser-flag=--no-sandbox
