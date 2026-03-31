@@ -252,7 +252,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(Icons.fitness_center,
@@ -469,11 +469,19 @@ class _StepperField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bgColor = isDark ? const Color(0xFF1E1E38) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF333350) : const Color(0xFFD5DDEA);
+    final labelColor = isDark ? AppTheme.slateInactive : Colors.black54;
+    final buttonBg = isDark ? const Color(0xFF333350) : const Color(0xFFF1F5F9);
+    final buttonIcon = isDark ? Colors.white70 : AppTheme.ink;
+
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: bgColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFD5DDEA)),
+        border: Border.all(color: borderColor),
       ),
       child: Padding(
         padding: const EdgeInsets.all(10),
@@ -481,8 +489,8 @@ class _StepperField extends StatelessWidget {
           children: [
             Text(
               label,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                color: Colors.black54,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: labelColor,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -494,11 +502,11 @@ class _StepperField extends StatelessWidget {
                   child: Container(
                     width: 28,
                     height: 28,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
+                    decoration: BoxDecoration(
+                      color: buttonBg,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.remove, size: 16, color: AppTheme.ink),
+                    child: Icon(Icons.remove, size: 16, color: buttonIcon),
                   ),
                 ),
                 Expanded(
@@ -507,7 +515,7 @@ class _StepperField extends StatelessWidget {
                     child: Text(
                       suffix != null ? '$value$suffix' : '$value',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -518,11 +526,11 @@ class _StepperField extends StatelessWidget {
                   child: Container(
                     width: 28,
                     height: 28,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF1F5F9),
+                    decoration: BoxDecoration(
+                      color: buttonBg,
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.add, size: 16, color: AppTheme.ink),
+                    child: Icon(Icons.add, size: 16, color: buttonIcon),
                   ),
                 ),
               ],
