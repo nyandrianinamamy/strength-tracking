@@ -61,12 +61,13 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAcjBZnkd14HSTDIblB9OrTu5X9xLyBECc',
-    appId: '1:642732716369:ios:5572c6ba27a21995c2a370',
+    appId: '1:642732716369:ios:0ca6bdca53439e5dc2a370',
     messagingSenderId: '642732716369',
     projectId: 'myappv4',
     databaseURL: 'https://myappv4.firebaseio.com',
     storageBucket: 'myappv4.firebasestorage.app',
-    iosClientId: '642732716369-ov3pigjlrdhp3ems7p7mai8iehap4ggg.apps.googleusercontent.com',
-    iosBundleId: 'com.example.strengthTrainingTracker',
+    iosClientId: '642732716369-r3epuls5j2agmsicp0u4ufggpndaarqm.apps.googleusercontent.com',
+    iosBundleId: 'dev.mamy-r.kotrana',
   );
+
 }
