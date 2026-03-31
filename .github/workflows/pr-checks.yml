@@ -49,9 +49,18 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Start Firebase emulators
+      - name: Install ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      - name: Run E2E tests
         run: |
+          # Start background processes and track PIDs
           firebase emulators:start --only auth,firestore --project myappv4 &
+          EMULATOR_PID=$!
+
+          chromedriver --port=4444 &
+          CHROMEDRIVER_PID=$!
+
           # Wait for emulators to be ready
           for i in $(seq 1 30); do
             if curl -s http://localhost:9099 > /dev/null 2>&1 && \
@@ -63,17 +72,14 @@ jobs:
             sleep 2
           done
 
-      - name: Install ChromeDriver
-        uses: nanasess/setup-chromedriver@v2
-
-      - name: Start ChromeDriver
-        run: |
-          chromedriver --port=4444 &
-
-      - name: Run E2E tests
-        run: |
+          # Run tests, capture exit code
           xvfb-run flutter drive \
             --driver=test_driver/integration_test.dart \
             --target=integration_test/app_test.dart \
             -d chrome \
             --browser-name=chrome
+          TEST_EXIT=$?
+
+          # Clean up background processes
+          kill $EMULATOR_PID $CHROMEDRIVER_PID 2>/dev/null || true
+          exit $TEST_EXIT
