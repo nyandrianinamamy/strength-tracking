@@ -1,0 +1,44 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    setup_ci
+
+    # Authenticate with App Store Connect API
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: true,
+    )
+
+    # Fetch signing certificates and profiles
+    match(
+      type: "appstore",
+      readonly: true,
+      api_key: api_key,
+    )
+
+    # Build the Xcode archive with proper signing
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "dev.mamy-r.kotrana" => "match AppStore dev.mamy-r.kotrana",
+        },
+      },
+      output_directory: "../build/ios/ipa",
+      output_name: "Kotrana.ipa",
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      ipa: "../build/ios/ipa/Kotrana.ipa",
+    )
+  end
+end

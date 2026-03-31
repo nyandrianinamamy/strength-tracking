@@ -1,3 +1,251 @@
+# Fastlane + TestFlight CI Implementation Plan
+
+> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
+
+**Goal:** Automate signed iOS builds and TestFlight uploads on tag push (`v*`) using Fastlane, alongside the existing SideStore IPA workflow.
+
+**Architecture:** Add Fastlane to `ios/` with `match` for code signing (certs stored in a private GitHub repo) and `pilot` for TestFlight upload. The existing `build-ios.yml` gains a second parallel job that runs the Fastlane `beta` lane. App Store Connect API key authentication is used (no Apple ID password needed).
+
+**Tech Stack:** Fastlane, fastlane match, GitHub Actions (macos-latest), App Store Connect API, Flutter
+
+---
+
+## Pre-requisites (Manual — Do These First)
+
+Before any code tasks, complete these one-time setup steps:
+
+### P1: Create private certs repo
+
+1. Go to github.com → New repository
+2. Name: `ios-certs` (or similar)
+3. Visibility: **Private**
+4. Initialize with README: yes
+5. Note the SSH URL: `git@github.com:nyandrianinamamy/ios-certs.git`
+
+### P2: Generate App Store Connect API Key
+
+1. Go to [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
+2. Users and Access → Integrations → App Store Connect API → Keys
+3. Click **+** → Name: "Fastlane CI", Access: **App Manager**
+4. Download the `.p8` file — **you can only download it once**
+5. Note the **Key ID** (e.g. `ABC123DEF4`) and **Issuer ID** (shown at top of page)
+6. Base64-encode the key: `base64 -i AuthKey_ABC123DEF4.p8 | tr -d '\n'`
+
+### P3: Generate SSH deploy key for certs repo
+
+```bash
+ssh-keygen -t ed25519 -C "match-deploy-key" -f match_deploy_key -N ""
+```
+
+1. Add `match_deploy_key.pub` as a **Deploy Key** (with write access) on the `ios-certs` repo: Settings → Deploy keys → Add
+2. The private key (`match_deploy_key`) will be stored as a GitHub secret
+
+### P4: Create the App on App Store Connect
+
+1. Go to App Store Connect → Apps → **+** → New App
+2. Platform: iOS
+3. Name: `Kotrana: Musculation`
+4. Bundle ID: `dev.mamy-r.kotrana`
+5. SKU: `kotrana-musculation`
+
+### P5: Add GitHub Secrets
+
+Go to the `strength-tracking` repo → Settings → Secrets and variables → Actions → New repository secret:
+
+| Secret name | Value |
+|-------------|-------|
+| `MATCH_GIT_URL` | `git@github.com:nyandrianinamamy/ios-certs.git` |
+| `MATCH_PASSWORD` | A strong passphrase you choose (encrypts certs at rest) |
+| `APP_STORE_CONNECT_API_KEY_ID` | The Key ID from P2 |
+| `APP_STORE_CONNECT_ISSUER_ID` | The Issuer ID from P2 |
+| `APP_STORE_CONNECT_API_KEY` | Base64-encoded .p8 content from P2 |
+| `MATCH_DEPLOY_KEY` | Contents of `match_deploy_key` private key file from P3 |
+
+---
+
+## Task 1: Create Gemfile
+
+**Files:**
+- Create: `ios/Gemfile`
+
+**Step 1: Create the Gemfile**
+
+```ruby
+source "https://rubygems.org"
+
+gem "fastlane", "~> 2.226"
+gem "cocoapods", "~> 1.16"
+```
+
+**Step 2: Install and generate lockfile**
+
+Run: `cd ios && bundle install`
+Expected: Gemfile.lock is created
+
+**Step 3: Commit**
+
+```bash
+git add ios/Gemfile ios/Gemfile.lock
+git commit -m "chore: add Gemfile for fastlane"
+```
+
+---
+
+## Task 2: Create Fastlane Appfile
+
+**Files:**
+- Create: `ios/fastlane/Appfile`
+
+**Step 1: Create the Appfile**
+
+```ruby
+app_identifier("dev.mamy-r.kotrana")
+team_id("6B673XM2ST")
+```
+
+**Step 2: Commit**
+
+```bash
+git add ios/fastlane/Appfile
+git commit -m "chore: add fastlane Appfile"
+```
+
+---
+
+## Task 3: Create Fastlane Matchfile
+
+**Files:**
+- Create: `ios/fastlane/Matchfile`
+
+**Step 1: Create the Matchfile**
+
+```ruby
+git_url(ENV["MATCH_GIT_URL"] || "git@github.com:nyandrianinamamy/ios-certs.git")
+storage_mode("git")
+type("appstore")
+app_identifier(["dev.mamy-r.kotrana"])
+team_id("6B673XM2ST")
+```
+
+**Step 2: Commit**
+
+```bash
+git add ios/fastlane/Matchfile
+git commit -m "chore: add fastlane Matchfile"
+```
+
+---
+
+## Task 4: Create Fastlane Fastfile
+
+**Files:**
+- Create: `ios/fastlane/Fastfile`
+
+**Step 1: Create the Fastfile**
+
+```ruby
+default_platform(:ios)
+
+platform :ios do
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    setup_ci
+
+    # Authenticate with App Store Connect API
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+      is_key_content_base64: true,
+    )
+
+    # Fetch signing certificates and profiles
+    match(
+      type: "appstore",
+      readonly: true,
+      api_key: api_key,
+    )
+
+    # Build the Flutter app (signed)
+    # Flutter build must be run before this lane — see CI workflow
+    # This lane handles signing + upload only
+
+    # Build the Xcode archive with proper signing
+    build_app(
+      workspace: "Runner.xcworkspace",
+      scheme: "Runner",
+      export_method: "app-store",
+      export_options: {
+        provisioningProfiles: {
+          "dev.mamy-r.kotrana" => "match AppStore dev.mamy-r.kotrana",
+        },
+      },
+      output_directory: "../build/ios/ipa",
+      output_name: "Kotrana.ipa",
+    )
+
+    # Upload to TestFlight
+    upload_to_testflight(
+      api_key: api_key,
+      skip_waiting_for_build_processing: true,
+      ipa: "../build/ios/ipa/Kotrana.ipa",
+    )
+  end
+end
+```
+
+**Step 2: Commit**
+
+```bash
+git add ios/fastlane/Fastfile
+git commit -m "chore: add fastlane Fastfile with beta lane"
+```
+
+---
+
+## Task 5: Initialize match locally
+
+This must be done on your Mac, not in CI.
+
+**Step 1: Install fastlane locally**
+
+```bash
+cd ios && bundle install
+```
+
+**Step 2: Generate appstore certs and profiles**
+
+```bash
+cd ios && bundle exec fastlane match appstore
+```
+
+This will:
+- Generate a distribution certificate
+- Generate an App Store provisioning profile for `dev.mamy-r.kotrana`
+- Encrypt and push both to the `ios-certs` repo
+
+You'll be prompted for the `MATCH_PASSWORD` — use the same passphrase you set in the GitHub secret.
+
+**Step 3: Verify match created the profiles**
+
+```bash
+cd ios && bundle exec fastlane match appstore --readonly
+```
+
+Expected: "All required keys, certificates and provisioning profiles are installed"
+
+---
+
+## Task 6: Update GitHub Actions workflow
+
+**Files:**
+- Modify: `.github/workflows/build-ios.yml`
+
+**Step 1: Rename existing job and add TestFlight job**
+
+The full updated workflow:
+
+```yaml
 name: Build iOS
 
 on:
@@ -10,7 +258,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ─── SideStore IPA build (unsigned) ───
+  # ─── Existing SideStore IPA build (unchanged logic) ───
   build-sidestore:
     runs-on: macos-latest
     outputs:
@@ -231,3 +479,75 @@ jobs:
             --head chore/sidestore-${{ needs.build-sidestore.outputs.tag }})
 
           gh pr merge "$PR_URL" --squash --auto --delete-branch
+```
+
+**Step 2: Verify the YAML is valid**
+
+Run: `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/build-ios.yml'))"`
+Expected: No output (valid YAML)
+
+**Step 3: Commit**
+
+```bash
+git add .github/workflows/build-ios.yml
+git commit -m "ci: add TestFlight upload job via Fastlane"
+```
+
+---
+
+## Task 7: Add Fastlane to .gitignore
+
+**Files:**
+- Modify: `.gitignore`
+
+**Step 1: Add Fastlane-specific ignores**
+
+Append to `.gitignore`:
+
+```
+# Fastlane
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/screenshots
+ios/fastlane/test_output
+ios/fastlane/README.md
+```
+
+**Step 2: Commit**
+
+```bash
+git add .gitignore
+git commit -m "chore: add fastlane entries to .gitignore"
+```
+
+---
+
+## Task 8: Test locally (dry run)
+
+**Step 1: Verify Fastlane loads correctly**
+
+```bash
+cd ios && bundle exec fastlane lanes
+```
+
+Expected: Shows `beta` lane under `ios` platform
+
+**Step 2: Verify match can connect (requires P1-P5 complete)**
+
+```bash
+cd ios && bundle exec fastlane match appstore --readonly
+```
+
+Expected: "All required keys, certificates and provisioning profiles are installed"
+
+---
+
+## Summary of execution order
+
+1. Tasks 1-4: Create Fastlane files (can be done immediately)
+2. Pre-requisites P1-P5: Manual Apple/GitHub setup
+3. Task 5: Initialize match locally (requires P1-P5)
+4. Task 6: Update GitHub Actions workflow
+5. Task 7: Update .gitignore
+6. Task 8: Local dry run
+7. Push tag to test end-to-end
