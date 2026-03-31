@@ -295,5 +295,9 @@
   "heatmapSecondary": "Secondary muscles contribute at 50% of primary muscle weight",
   "allExercisesComplete": "All exercises complete!",
   "addAnotherOrFinish": "Add another exercise or finish your workout.",
-  "addExercise": "Add Exercise"
+  "addExercise": "Add Exercise",
+
+  "archiveRoutine": "Archive Routine",
+  "archiveRoutineTitle": "Archive this routine?",
+  "archiveRoutineConfirm": "The routine will be hidden from your library, but all workout history will be preserved."
 }

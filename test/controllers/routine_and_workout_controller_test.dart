@@ -79,6 +79,23 @@ void main() {
     );
   });
 
+  test('archiving a routine removes it from all routine groups', () {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+
+    final groupBefore = container
+        .read(appStateControllerProvider)
+        .routineGroupById('ppl_split');
+    expect(groupBefore!.routineIds, contains('push_day'));
+
+    container.read(routineControllerProvider).archive('push_day');
+
+    final groupAfter = container
+        .read(appStateControllerProvider)
+        .routineGroupById('ppl_split');
+    expect(groupAfter!.routineIds, isNot(contains('push_day')));
+  });
+
   test(
     'skipping a grouped routine advances the queue until it is completed',
     () {

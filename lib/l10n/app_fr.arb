@@ -295,5 +295,9 @@
   "heatmapSecondary": "Les muscles secondaires contribuent à 50% du poids des muscles principaux",
   "allExercisesComplete": "Tous les exercices terminés !",
   "addAnotherOrFinish": "Ajoutez un exercice ou terminez votre séance.",
-  "addExercise": "Ajouter un exercice"
+  "addExercise": "Ajouter un exercice",
+
+  "archiveRoutine": "Archiver la routine",
+  "archiveRoutineTitle": "Archiver cette routine ?",
+  "archiveRoutineConfirm": "La routine sera masquée de votre bibliothèque, mais tout l'historique des séances sera conservé."
 }

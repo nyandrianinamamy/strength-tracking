@@ -1705,6 +1705,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Exercise'**
   String get addExercise;
+
+  /// No description provided for @archiveRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive Routine'**
+  String get archiveRoutine;
+
+  /// No description provided for @archiveRoutineTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive this routine?'**
+  String get archiveRoutineTitle;
+
+  /// No description provided for @archiveRoutineConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'The routine will be hidden from your library, but all workout history will be preserved.'**
+  String get archiveRoutineConfirm;
 }
 
 class _AppLocalizationsDelegate

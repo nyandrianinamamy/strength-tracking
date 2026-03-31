@@ -834,4 +834,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addExercise => 'Add Exercise';
+
+  @override
+  String get archiveRoutine => 'Archive Routine';
+
+  @override
+  String get archiveRoutineTitle => 'Archive this routine?';
+
+  @override
+  String get archiveRoutineConfirm =>
+      'The routine will be hidden from your library, but all workout history will be preserved.';
 }
