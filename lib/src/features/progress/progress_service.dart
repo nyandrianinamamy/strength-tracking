@@ -109,6 +109,8 @@ class ProgressService {
               bestSetWeightKg: record.weightKg,
               reps: record.reps,
               achievedAt: record.achievedAt,
+              exerciseType: record.exerciseType,
+              durationSeconds: record.durationSeconds,
             ),
           )
           .toList(),
@@ -124,27 +126,39 @@ class ProgressService {
     final records = <ExercisePersonalRecord>[];
 
     for (final set in session.completedSets) {
-      if (state.exerciseById(set.exerciseId) == null) continue;
+      final exercise = state.exerciseById(set.exerciseId);
+      if (exercise == null) continue;
 
-      final e1rm = _estimatedOneRepMax(set);
+      final isTimed = exercise.exerciseType == 'timed';
+      final e1rm = isTimed ? 0.0 : _estimatedOneRepMax(set);
       final allSets = state.completedSessions
           .where((item) => item.id != session.id)
           .expand((item) => item.completedSets)
           .where((item) => item.exerciseId == set.exerciseId);
-      final priorBest = allSets.fold<double>(0, (best, item) {
-        return math.max(best, _estimatedOneRepMax(item));
-      });
 
-      if (e1rm > priorBest) {
-        final exerciseName =
-            state.exerciseById(set.exerciseId)?.name ?? 'Exercise';
+      final bool isPr;
+      if (isTimed) {
+        final priorBest = allSets.fold<int>(0, (best, item) {
+          return math.max(best, item.durationSeconds);
+        });
+        isPr = set.durationSeconds > priorBest;
+      } else {
+        final priorBest = allSets.fold<double>(0, (best, item) {
+          return math.max(best, _estimatedOneRepMax(item));
+        });
+        isPr = e1rm > priorBest;
+      }
+
+      if (isPr) {
         final record = ExercisePersonalRecord(
           exerciseId: set.exerciseId,
-          exerciseName: exerciseName,
+          exerciseName: exercise.name,
           weightKg: set.weightKg,
           reps: set.reps,
           estimatedOneRepMax: e1rm,
           achievedAt: set.completedAt,
+          exerciseType: exercise.exerciseType,
+          durationSeconds: set.durationSeconds,
         );
 
         if (records.every((item) => item.exerciseId != record.exerciseId)) {
@@ -293,21 +307,33 @@ class ProgressService {
         final exercise = state.exerciseById(set.exerciseId);
         if (exercise == null) continue; // skip orphaned exercises
 
+        final isTimed = exercise.exerciseType == 'timed';
         final record = ExercisePersonalRecord(
           exerciseId: set.exerciseId,
           exerciseName: exercise.name,
           weightKg: set.weightKg,
           reps: set.reps,
-          estimatedOneRepMax: _estimatedOneRepMax(set),
+          estimatedOneRepMax: isTimed ? 0 : _estimatedOneRepMax(set),
           achievedAt: set.completedAt,
+          exerciseType: exercise.exerciseType,
+          durationSeconds: set.durationSeconds,
         );
 
         final existing = bestByExercise[set.exerciseId];
-        if (existing == null ||
-            record.estimatedOneRepMax > existing.estimatedOneRepMax ||
-            (record.estimatedOneRepMax == existing.estimatedOneRepMax &&
-                record.achievedAt.isAfter(existing.achievedAt))) {
+        if (existing == null) {
           bestByExercise[set.exerciseId] = record;
+        } else if (isTimed) {
+          if (record.durationSeconds > existing.durationSeconds ||
+              (record.durationSeconds == existing.durationSeconds &&
+                  record.achievedAt.isAfter(existing.achievedAt))) {
+            bestByExercise[set.exerciseId] = record;
+          }
+        } else {
+          if (record.estimatedOneRepMax > existing.estimatedOneRepMax ||
+              (record.estimatedOneRepMax == existing.estimatedOneRepMax &&
+                  record.achievedAt.isAfter(existing.achievedAt))) {
+            bestByExercise[set.exerciseId] = record;
+          }
         }
       }
     }
@@ -539,6 +565,8 @@ class ExercisePersonalRecord {
     required this.reps,
     required this.estimatedOneRepMax,
     required this.achievedAt,
+    this.exerciseType = 'strength',
+    this.durationSeconds = 0,
   });
 
   final String exerciseId;
@@ -547,6 +575,10 @@ class ExercisePersonalRecord {
   final int reps;
   final double estimatedOneRepMax;
   final DateTime achievedAt;
+  final String exerciseType;
+  final int durationSeconds;
+
+  bool get isTimed => exerciseType == 'timed';
 }
 
 class MonthFrequency {
@@ -585,6 +617,8 @@ class LiftMetric {
     required this.bestSetWeightKg,
     required this.reps,
     required this.achievedAt,
+    this.exerciseType = 'strength',
+    this.durationSeconds = 0,
   });
 
   final String exerciseId;
@@ -593,4 +627,8 @@ class LiftMetric {
   final double bestSetWeightKg;
   final int reps;
   final DateTime achievedAt;
+  final String exerciseType;
+  final int durationSeconds;
+
+  bool get isTimed => exerciseType == 'timed';
 }
