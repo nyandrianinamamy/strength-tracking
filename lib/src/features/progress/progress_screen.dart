@@ -81,6 +81,9 @@ class ProgressScreen extends ConsumerWidget {
                         children: snapshot.personalRecords.take(6).map((
                           record,
                         ) {
+                          final subtitle = record.isTimed
+                              ? '${AppFormatters.duration(Duration(seconds: record.durationSeconds))} • ${AppFormatters.monthDay(record.achievedAt)}'
+                              : '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps} • ${AppFormatters.monthDay(record.achievedAt)}';
                           return Card(
                             margin: const EdgeInsets.only(bottom: 12),
                             child: ListTile(
@@ -90,18 +93,18 @@ class ProgressScreen extends ConsumerWidget {
                                   fontWeight: FontWeight.w800,
                                 ),
                               ),
-                              subtitle: Text(
-                                '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps} • ${AppFormatters.monthDay(record.achievedAt)}',
-                              ),
-                              trailing: Text(
-                                AppFormatters.decimal(
-                                  record.estimatedOneRepMax,
-                                ),
-                                style: const TextStyle(
-                                  color: Color(0xFF257BF4),
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
+                              subtitle: Text(subtitle),
+                              trailing: record.isTimed
+                                  ? null
+                                  : Text(
+                                      AppFormatters.decimal(
+                                        record.estimatedOneRepMax,
+                                      ),
+                                      style: const TextStyle(
+                                        color: Color(0xFF257BF4),
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
                             ),
                           );
                         }).toList(),
@@ -129,16 +132,23 @@ class ProgressScreen extends ConsumerWidget {
                               spacing: 10,
                               runSpacing: 10,
                               children: [
-                                _LiftChip(
-                                  label: 'Best Set',
-                                  value:
-                                      '${AppFormatters.weight(lift.bestSetWeightKg, state.preferredUnit)} x ${lift.reps}',
-                                ),
-                                _LiftChip(
-                                  label: 'Estimated 1RM',
-                                  value:
-                                      AppFormatters.weight(lift.estimatedOneRepMax, state.preferredUnit),
-                                ),
+                                if (lift.isTimed)
+                                  _LiftChip(
+                                    label: 'Best Time',
+                                    value: AppFormatters.duration(Duration(seconds: lift.durationSeconds)),
+                                  )
+                                else ...[
+                                  _LiftChip(
+                                    label: 'Best Set',
+                                    value:
+                                        '${AppFormatters.weight(lift.bestSetWeightKg, state.preferredUnit)} x ${lift.reps}',
+                                  ),
+                                  _LiftChip(
+                                    label: 'Estimated 1RM',
+                                    value:
+                                        AppFormatters.weight(lift.estimatedOneRepMax, state.preferredUnit),
+                                  ),
+                                ],
                                 _LiftChip(
                                   label: 'Achieved',
                                   value: AppFormatters.monthDay(
