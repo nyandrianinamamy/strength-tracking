@@ -55,4 +55,75 @@ void main() {
     expect(fatigue.containsKey(Muscle.chest), isTrue);
     expect(fatigue[Muscle.chest]!.intensity, greaterThan(0));
   });
+
+  test('timed exercise duration is scaled to minutes so it does not dominate fatigue', () {
+    final now = DateTime.now();
+    final state = AppState(
+      exercises: const [
+        Exercise(
+          id: 'bench_press',
+          name: 'Bench Press',
+          primaryMuscles: ['Chest'],
+          secondaryMuscles: [],
+          equipment: ['Barbell'],
+          instructions: '',
+          archived: false,
+        ),
+        Exercise(
+          id: 'treadmill',
+          name: 'Treadmill',
+          exerciseType: 'timed',
+          primaryMuscles: ['Quadriceps'],
+          secondaryMuscles: [],
+          equipment: ['Machine'],
+          instructions: '',
+          archived: false,
+        ),
+      ],
+      routines: const [],
+      routineGroups: const [],
+      sessions: [
+        WorkoutSession(
+          id: 'session_mixed',
+          routineId: 'full_body',
+          status: WorkoutSessionStatus.completed,
+          startedAt: now.subtract(const Duration(hours: 1)),
+          endedAt: now,
+          lastActivityAt: now,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'bench_press',
+              setNumber: 1,
+              weightKg: 80,
+              reps: 10,
+              completedAt: now.subtract(const Duration(minutes: 30)),
+              note: '',
+            ),
+            CompletedSet(
+              exerciseId: 'treadmill',
+              setNumber: 1,
+              weightKg: 0,
+              reps: 0,
+              durationSeconds: 1800, // 30 minutes
+              completedAt: now.subtract(const Duration(minutes: 10)),
+              note: '',
+            ),
+          ],
+          sessionNote: '',
+          rpe: null,
+        ),
+      ],
+    );
+
+    final fatigue = service.computeFatigue(state);
+
+    // Bench press: 80 * 10 = 800 volume
+    // Treadmill: 1800 / 60 = 30 volume (not 1800 raw seconds)
+    // So chest should have higher fatigue than quadriceps
+    expect(fatigue.containsKey(Muscle.chest), isTrue);
+    expect(fatigue.containsKey(Muscle.quadriceps), isTrue);
+    expect(fatigue[Muscle.chest]!.intensity,
+        greaterThan(fatigue[Muscle.quadriceps]!.intensity));
+  });
 }
