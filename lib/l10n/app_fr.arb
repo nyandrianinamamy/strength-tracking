@@ -296,6 +296,8 @@
   "allExercisesComplete": "Tous les exercices terminés !",
   "addAnotherOrFinish": "Ajoutez un exercice ou terminez votre séance.",
   "addExercise": "Ajouter un exercice",
+  "takePhoto": "Prendre une photo",
+  "chooseFromGallery": "Choisir dans la galerie",
 
   "archiveRoutine": "Archiver la routine",
   "archiveRoutineTitle": "Archiver cette routine ?",

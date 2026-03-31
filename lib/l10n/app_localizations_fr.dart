@@ -839,6 +839,12 @@ class AppLocalizationsFr extends AppLocalizations {
   String get addExercise => 'Ajouter un exercice';
 
   @override
+  String get takePhoto => 'Prendre une photo';
+
+  @override
+  String get chooseFromGallery => 'Choisir dans la galerie';
+
+  @override
   String get archiveRoutine => 'Archiver la routine';
 
   @override

@@ -24,6 +24,9 @@ struct StrengthAppWorkoutLiveActivity: Widget {
                     Text(context.attributes.startedAt, style: .timer)
                         .font(.caption.weight(.bold))
                         .monospacedDigit()
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .contentTransition(.identity)
                 }
 
                 DynamicIslandExpandedRegion(.center) {
@@ -45,11 +48,17 @@ struct StrengthAppWorkoutLiveActivity: Widget {
             } compactLeading: {
                 Text("\(context.state.currentExerciseIndex)/\(context.state.totalExercises)")
                     .font(.caption2.weight(.bold))
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
             } compactTrailing: {
                 if let restEndAt = context.state.restEndAt, context.state.hasActiveRest {
                     Text(timerInterval: context.state.updatedAt...restEndAt, countsDown: true)
                         .monospacedDigit()
                         .font(.caption2.weight(.bold))
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
+                        .frame(maxWidth: 48)
+                        .contentTransition(.identity)
                 } else {
                     Image(systemName: "flame.fill")
                         .font(.caption2.weight(.bold))
@@ -72,14 +81,17 @@ private struct WorkoutLiveActivityView: View {
                     Text(context.attributes.routineName.uppercased())
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(.secondary)
+                        .lineLimit(1)
 
                     Text(context.state.currentExerciseName)
                         .font(.title3.weight(.bold))
                         .foregroundStyle(.white)
                         .lineLimit(2)
+                        .minimumScaleFactor(0.75)
                 }
+                .layoutPriority(1)
 
-                Spacer(minLength: 12)
+                Spacer(minLength: 8)
 
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("SESSION")
@@ -90,6 +102,7 @@ private struct WorkoutLiveActivityView: View {
                         .font(.system(.title3, design: .rounded).weight(.bold))
                         .monospacedDigit()
                         .foregroundStyle(.white)
+                        .fixedSize()
                 }
             }
 
@@ -129,11 +142,13 @@ private struct MetricCard: View {
                 .font(.headline.weight(.bold))
                 .foregroundStyle(.white)
                 .lineLimit(1)
+                .minimumScaleFactor(0.7)
 
             Text(detail)
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
+                .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, 10)

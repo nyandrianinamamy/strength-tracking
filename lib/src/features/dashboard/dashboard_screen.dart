@@ -539,26 +539,33 @@ class DashboardScreen extends ConsumerWidget {
                         subtitle: Text(
                           AppFormatters.monthDay(record.achievedAt),
                         ),
-                        trailing: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w800,
+                        trailing: record.isTimed
+                            ? Text(
+                                AppFormatters.duration(Duration(seconds: record.durationSeconds)),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '1RM ${AppFormatters.decimal(record.estimatedOneRepMax)}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: AppTheme.primary,
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '1RM ${AppFormatters.decimal(record.estimatedOneRepMax)}',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppTheme.primary,
-                              ),
-                            ),
-                          ],
-                        ),
                       ),
                     );
                   }).toList(),

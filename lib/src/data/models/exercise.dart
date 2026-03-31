@@ -9,6 +9,7 @@ class Exercise {
     required this.archived,
     this.exerciseType = 'strength',
     this.translationKey,
+    this.photoBase64,
   });
 
   final String id;
@@ -20,6 +21,7 @@ class Exercise {
   final bool archived;
   final String exerciseType;
   final String? translationKey;
+  final String? photoBase64;
 
   Exercise copyWith({
     String? id,
@@ -31,6 +33,8 @@ class Exercise {
     bool? archived,
     String? exerciseType,
     String? translationKey,
+    String? photoBase64,
+    bool clearPhoto = false,
   }) {
     return Exercise(
       id: id ?? this.id,
@@ -42,6 +46,7 @@ class Exercise {
       archived: archived ?? this.archived,
       exerciseType: exerciseType ?? this.exerciseType,
       translationKey: translationKey ?? this.translationKey,
+      photoBase64: clearPhoto ? null : photoBase64 ?? this.photoBase64,
     );
   }
 
@@ -62,6 +67,7 @@ class Exercise {
       archived: json['archived'] as bool? ?? false,
       exerciseType: json['exerciseType'] as String? ?? 'strength',
       translationKey: json['translationKey'] as String?,
+      photoBase64: json['photoBase64'] as String?,
     );
   }
 
@@ -76,6 +82,7 @@ class Exercise {
       'archived': archived,
       'exerciseType': exerciseType,
       if (translationKey != null) 'translationKey': translationKey,
+      if (photoBase64 != null) 'photoBase64': photoBase64,
     };
   }
 }
