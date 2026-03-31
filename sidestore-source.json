@@ -13,6 +13,13 @@
       "tintColor": "257BF4",
       "versions": [
         {
+          "version": "1.0.7",
+          "date": "2026-03-31",
+          "downloadURL": "https://github.com/nyandrianinamamy/strength-tracking/releases/download/v1.0.7/StrengthApp-sidestore.ipa",
+          "size": 19663289,
+          "localizedDescription": "Release v1.0.7"
+        },
+        {
           "version": "1.0.6",
           "date": "2026-03-30",
           "downloadURL": "https://github.com/nyandrianinamamy/strength-tracking/releases/download/v1.0.6/StrengthApp-sidestore.ipa",
