@@ -30,6 +30,7 @@ platform :ios do
         provisioningProfiles: {
           "dev.mamy-r.kotrana" => "match AppStore dev.mamy-r.kotrana",
           "dev.mamy-r.kotrana.liveactivity" => "match AppStore dev.mamy-r.kotrana.liveactivity",
+          "dev.mamy-r.kotrana.watchkitapp" => "match AppStore dev.mamy-r.kotrana.watchkitapp",
         },
       },
       output_directory: "../build/ios/ipa",

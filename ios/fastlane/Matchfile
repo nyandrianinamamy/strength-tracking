@@ -1,5 +1,5 @@
 git_url(ENV["MATCH_GIT_URL"] || "git@github.com:nyandrianinamamy/ios-certs.git")
 storage_mode("git")
 type("appstore")
-app_identifier(["dev.mamy-r.kotrana", "dev.mamy-r.kotrana.liveactivity"])
+app_identifier(["dev.mamy-r.kotrana", "dev.mamy-r.kotrana.liveactivity", "dev.mamy-r.kotrana.watchkitapp"])
 team_id("6B673XM2ST")
