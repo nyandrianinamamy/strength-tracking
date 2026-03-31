@@ -72,9 +72,8 @@ jobs:
 
       - name: Run E2E tests
         run: |
-          flutter drive \
+          xvfb-run flutter drive \
             --driver=test_driver/integration_test.dart \
             --target=integration_test/app_test.dart \
             -d chrome \
-            --headless \
             --browser-name=chrome

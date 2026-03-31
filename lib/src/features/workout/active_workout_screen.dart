@@ -26,16 +26,9 @@ import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart
 
 class _TimedExerciseState {
   DateTime? start;
-  int duration;
-  bool running;
-  bool beeped;
-
-  _TimedExerciseState({
-    this.start,
-    this.duration = 0,
-    this.running = false,
-    this.beeped = false,
-  });
+  int duration = 0;
+  bool running = false;
+  bool beeped = false;
 }
 
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
