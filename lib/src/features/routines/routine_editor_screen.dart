@@ -84,7 +84,9 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       appBar: AppBar(
         title: Text(widget.routineId == null ? l10n.newRoutine : l10n.editRoutine),
         actions: [
-          if (widget.routineId != null)
+          if (widget.routineId != null &&
+              state.routineById(widget.routineId!) != null &&
+              !(state.routineById(widget.routineId!)!.archived))
             IconButton(
               icon: const Icon(Icons.archive_outlined),
               tooltip: l10n.archiveRoutine,
@@ -439,11 +441,11 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
             child: Text(l10n.cancel),
           ),
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(
-              l10n.archiveRoutine,
-              style: const TextStyle(color: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(dialogContext).colorScheme.error,
             ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.archiveRoutine),
           ),
         ],
       ),
