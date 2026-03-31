@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_controller.dart';
@@ -23,6 +26,8 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
   final Set<String> _secondaryMuscles = {};
   final Set<String> _equipment = {};
   String _exerciseType = 'strength';
+  String? _photoBase64;
+  bool _photoCleared = false;
   bool _initialized = false;
 
   static const _muscleOptions = [
@@ -72,8 +77,55 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
       _secondaryMuscles.addAll(exercise.secondaryMuscles);
       _equipment.addAll(exercise.equipment);
       _exerciseType = exercise.exerciseType;
+      _photoBase64 = exercise.photoBase64;
       _initialized = true;
     }
+  }
+
+  Future<void> _pickPhoto() async {
+    final picker = ImagePicker();
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take Photo'),
+              onTap: () => Navigator.pop(context, ImageSource.camera),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Choose from Gallery'),
+              onTap: () => Navigator.pop(context, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+
+    final image = await picker.pickImage(
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 70,
+    );
+    if (image == null) return;
+
+    final bytes = await image.readAsBytes();
+    setState(() {
+      _photoBase64 = base64Encode(bytes);
+      _photoCleared = false;
+    });
+  }
+
+  void _removePhoto() {
+    setState(() {
+      _photoBase64 = null;
+      _photoCleared = true;
+    });
   }
 
   @override
@@ -95,6 +147,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         _secondaryMuscles.addAll(exercise.secondaryMuscles);
         _equipment.addAll(exercise.equipment);
         _exerciseType = exercise.exerciseType;
+        _photoBase64 = exercise.photoBase64;
       }
       _initialized = true;
     }
@@ -132,6 +185,70 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
               labelText: l10n.exerciseName,
               hintText: l10n.exerciseNameHint,
             ),
+          ),
+          const SizedBox(height: 20),
+          Text(
+            'Machine Photo',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: _pickPhoto,
+            child: _photoBase64 != null
+                ? Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: Image.memory(
+                          base64Decode(_photoBase64!),
+                          width: double.infinity,
+                          height: 200,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _PhotoActionButton(
+                              icon: Icons.camera_alt,
+                              onTap: _pickPhoto,
+                            ),
+                            const SizedBox(width: 8),
+                            _PhotoActionButton(
+                              icon: Icons.close,
+                              onTap: _removePhoto,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  )
+                : Container(
+                    width: double.infinity,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F5F9),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppTheme.border,
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.add_a_photo_rounded, size: 36, color: AppTheme.slateInactive),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Add a photo of the machine',
+                          style: TextStyle(color: AppTheme.slateInactive, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
           const SizedBox(height: 16),
           SegmentedButton<String>(
@@ -329,6 +446,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         equipment: _equipment.toList(),
         instructions: _instructionsController.text,
         exerciseType: _exerciseType,
+        photoBase64: _photoBase64,
       );
     } else {
       controller.update(
@@ -339,9 +457,33 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
         equipment: _equipment.toList(),
         instructions: _instructionsController.text,
         exerciseType: _exerciseType,
+        photoBase64: _photoBase64,
+        clearPhoto: _photoCleared,
       );
     }
 
     context.pop();
+  }
+}
+
+class _PhotoActionButton extends StatelessWidget {
+  const _PhotoActionButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: const BoxDecoration(
+          color: Colors.black54,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      ),
+    );
   }
 }

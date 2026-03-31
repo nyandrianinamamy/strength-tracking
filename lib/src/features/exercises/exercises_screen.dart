@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -124,10 +126,20 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                             color: const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(
-                            Icons.fitness_center,
-                            color: AppTheme.slateInactive,
-                          ),
+                          child: exercise.photoBase64 != null
+                              ? ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.memory(
+                                    base64Decode(exercise.photoBase64!),
+                                    width: 64,
+                                    height: 64,
+                                    fit: BoxFit.cover,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.fitness_center,
+                                  color: AppTheme.slateInactive,
+                                ),
                         ),
                         title: Text(
                           exercise.name as String,

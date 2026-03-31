@@ -50,6 +50,7 @@ dependencies:
     path: packages/flutter_body_heatmap
   package_info_plus: ^9.0.0
   flutter_reactive_ble: ^5.4.0
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

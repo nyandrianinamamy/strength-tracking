@@ -68,6 +68,10 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<key>NSCameraUsageDescription</key>
+		<string>This app needs camera access to take photos of exercise machines.</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>This app needs photo library access to select photos of exercise machines.</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 		<key>CFBundleURLTypes</key>
