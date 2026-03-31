@@ -1705,6 +1705,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Add Exercise'**
   String get addExercise;
+
+  /// No description provided for @takePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Take Photo'**
+  String get takePhoto;
+
+  /// No description provided for @chooseFromGallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose from Gallery'**
+  String get chooseFromGallery;
 }
 
 class _AppLocalizationsDelegate

@@ -834,4 +834,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get addExercise => 'Add Exercise';
+
+  @override
+  String get takePhoto => 'Take Photo';
+
+  @override
+  String get chooseFromGallery => 'Choose from Gallery';
 }

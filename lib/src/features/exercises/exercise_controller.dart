@@ -41,6 +41,7 @@ class ExerciseController {
     required List<String> equipment,
     required String instructions,
     String exerciseType = 'strength',
+    String? photoBase64,
   }) {
     final exercise = Exercise(
       id: 'exercise_${DateTime.now().microsecondsSinceEpoch}',
@@ -51,6 +52,7 @@ class ExerciseController {
       instructions: instructions.trim(),
       archived: false,
       exerciseType: exerciseType,
+      photoBase64: photoBase64,
     );
 
     _ref
@@ -70,6 +72,8 @@ class ExerciseController {
     required List<String> equipment,
     required String instructions,
     String exerciseType = 'strength',
+    String? photoBase64,
+    bool clearPhoto = false,
   }) {
     final state = _ref.read(appStateControllerProvider);
     final exercise = state.exerciseById(exerciseId)!;
@@ -80,6 +84,8 @@ class ExerciseController {
       equipment: equipment,
       instructions: instructions.trim(),
       exerciseType: exerciseType,
+      photoBase64: photoBase64,
+      clearPhoto: clearPhoto,
     );
 
     _ref
