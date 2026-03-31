@@ -24,10 +24,12 @@ platform :ios do
     build_app(
       workspace: "Runner.xcworkspace",
       scheme: "Runner",
+      configuration: "Release",
       export_method: "app-store",
       export_options: {
         provisioningProfiles: {
           "dev.mamy-r.kotrana" => "match AppStore dev.mamy-r.kotrana",
+          "dev.mamy-r.kotrana.liveactivity" => "match AppStore dev.mamy-r.kotrana.liveactivity",
         },
       },
       output_directory: "../build/ios/ipa",
