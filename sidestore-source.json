@@ -7,11 +7,18 @@
       "name": "Kotrana: Musculation",
       "bundleIdentifier": "dev.mamy-r.kotrana",
       "developerName": "nyandrianinamamy",
-      "subtitle": "Kotrana: Musculation — offline-first strength training tracker",
+      "subtitle": "Kotrana: Musculation \u2014 offline-first strength training tracker",
       "localizedDescription": "Offline-first strength training tracker for iOS with Apple Watch companion. Track workouts, sets, reps, and rest timers. Includes body heatmap, workout history, and multi-language support.",
       "iconURL": "https://raw.githubusercontent.com/nyandrianinamamy/strength-tracking/main/assets/icon/app_icon.png",
       "tintColor": "257BF4",
       "versions": [
+        {
+          "version": "1.0.9",
+          "date": "2026-03-31",
+          "downloadURL": "https://github.com/nyandrianinamamy/strength-tracking/releases/download/v1.0.9/StrengthApp-sidestore.ipa",
+          "size": 19663461,
+          "localizedDescription": "Release v1.0.9"
+        },
         {
           "version": "1.0.7",
           "date": "2026-03-31",
