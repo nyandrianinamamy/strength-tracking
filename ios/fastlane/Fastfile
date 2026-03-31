@@ -20,6 +20,35 @@ platform :ios do
       api_key: api_key,
     )
 
+    # Switch all targets to manual signing for CI
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Runner.xcodeproj",
+      team_id: "6B673XM2ST",
+      code_sign_identity: "iPhone Distribution",
+      targets: ["Runner"],
+      profile_name: "match AppStore dev.mamy-r.kotrana",
+      bundle_identifier: "dev.mamy-r.kotrana",
+    )
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Runner.xcodeproj",
+      team_id: "6B673XM2ST",
+      code_sign_identity: "iPhone Distribution",
+      targets: ["StrengthAppLiveActivity"],
+      profile_name: "match AppStore dev.mamy-r.kotrana.liveactivity",
+      bundle_identifier: "dev.mamy-r.kotrana.liveactivity",
+    )
+    update_code_signing_settings(
+      use_automatic_signing: false,
+      path: "Runner.xcodeproj",
+      team_id: "6B673XM2ST",
+      code_sign_identity: "Apple Distribution",
+      targets: ["StrengthAppWatch Watch App"],
+      profile_name: "match AppStore dev.mamy-r.kotrana.watchkitapp",
+      bundle_identifier: "dev.mamy-r.kotrana.watchkitapp",
+    )
+
     # Build the Xcode archive with proper signing
     build_app(
       workspace: "Runner.xcworkspace",
