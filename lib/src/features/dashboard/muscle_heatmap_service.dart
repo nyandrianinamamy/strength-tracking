@@ -45,7 +45,7 @@ class MuscleHeatmapService {
         final exercise = state.exerciseById(set.exerciseId);
         if (exercise == null) continue;
 
-        final volume = set.weightKg * set.reps + set.durationSeconds.toDouble();
+        final volume = set.weightKg * set.reps + set.durationSeconds / 60.0;
         final hoursElapsed = now.difference(set.completedAt).inMinutes / 60.0;
         final decayFactor = _decay(hoursElapsed);
         if (decayFactor < 0.01) continue;
