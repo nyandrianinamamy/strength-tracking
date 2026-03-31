@@ -843,4 +843,14 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get chooseFromGallery => 'Choisir dans la galerie';
+
+  @override
+  String get archiveRoutine => 'Archiver la routine';
+
+  @override
+  String get archiveRoutineTitle => 'Archiver cette routine ?';
+
+  @override
+  String get archiveRoutineConfirm =>
+      'La routine sera masquée de votre bibliothèque, mais tout l\'historique des séances sera conservé.';
 }

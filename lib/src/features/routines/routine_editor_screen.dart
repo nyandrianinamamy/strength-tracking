@@ -84,6 +84,14 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       appBar: AppBar(
         title: Text(widget.routineId == null ? l10n.newRoutine : l10n.editRoutine),
         actions: [
+          if (widget.routineId != null &&
+              state.routineById(widget.routineId!) != null &&
+              !(state.routineById(widget.routineId!)!.archived))
+            IconButton(
+              icon: const Icon(Icons.archive_outlined),
+              tooltip: l10n.archiveRoutine,
+              onPressed: () => _confirmArchive(context, l10n),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilledButton(
@@ -419,6 +427,34 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
     _exercises = _exercises.asMap().entries.map((entry) {
       return entry.value.copyWith(order: entry.key);
     }).toList();
+  }
+
+  Future<void> _confirmArchive(BuildContext context, AppLocalizations l10n) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.archiveRoutineTitle),
+        content: Text(l10n.archiveRoutineConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.archiveRoutine),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      ref.read(routineControllerProvider).archive(widget.routineId!);
+      context.pop();
+    }
   }
 
   void _save(BuildContext context) {

@@ -297,5 +297,9 @@
   "addAnotherOrFinish": "Add another exercise or finish your workout.",
   "addExercise": "Add Exercise",
   "takePhoto": "Take Photo",
-  "chooseFromGallery": "Choose from Gallery"
+  "chooseFromGallery": "Choose from Gallery",
+
+  "archiveRoutine": "Archive Routine",
+  "archiveRoutineTitle": "Archive this routine?",
+  "archiveRoutineConfirm": "The routine will be hidden from your library, but all workout history will be preserved."
 }

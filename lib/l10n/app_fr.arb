@@ -297,5 +297,9 @@
   "addAnotherOrFinish": "Ajoutez un exercice ou terminez votre séance.",
   "addExercise": "Ajouter un exercice",
   "takePhoto": "Prendre une photo",
-  "chooseFromGallery": "Choisir dans la galerie"
+  "chooseFromGallery": "Choisir dans la galerie",
+
+  "archiveRoutine": "Archiver la routine",
+  "archiveRoutineTitle": "Archiver cette routine ?",
+  "archiveRoutineConfirm": "La routine sera masquée de votre bibliothèque, mais tout l'historique des séances sera conservé."
 }
