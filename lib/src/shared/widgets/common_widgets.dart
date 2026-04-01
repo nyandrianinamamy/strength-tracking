@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 
@@ -35,7 +35,7 @@ class PageSection extends StatelessWidget {
               width: 4,
               height: 24,
               decoration: BoxDecoration(
-                color: AppTheme.primary,
+                color: Theme.of(context).colorScheme.primary,
                 borderRadius: BorderRadius.circular(999),
               ),
             ),
@@ -89,7 +89,7 @@ class MetricCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: AppTheme.primary, size: 22),
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
             const SizedBox(height: 8),
             Text(
               label.toUpperCase(),
@@ -119,7 +119,7 @@ class MetricCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.primary,
+                      color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w700,
                     ),
               ),
@@ -160,7 +160,7 @@ class EmptyStateCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (icon != null) ...[
-                Icon(icon, size: 40, color: AppTheme.primary),
+                Icon(icon, size: 40, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(height: 12),
               ],
               Text(
@@ -223,7 +223,7 @@ class DashedBorderCard extends StatelessWidget {
       onTap: onTap,
       child: CustomPaint(
         painter: _DashedBorderPainter(
-          color: AppTheme.primary.withValues(alpha: 0.3),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
           borderRadius: 16,
           strokeWidth: 1.5,
           dashWidth: 6,
@@ -231,7 +231,7 @@ class DashedBorderCard extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            color: AppTheme.primary.withValues(alpha: 0.05),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
           ),
           child: child,
@@ -329,7 +329,7 @@ class StatCard extends StatelessWidget {
               Container(
                 width: 3,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary,
+                  color: Theme.of(context).colorScheme.primary,
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(12),
                     bottomLeft: Radius.circular(12),
@@ -403,7 +403,7 @@ class DigitalTimer extends StatelessWidget {
         Text(
           l10n.restTimer,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppTheme.primary,
+                color: Theme.of(context).colorScheme.primary,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
                 fontSize: 10,
@@ -415,14 +415,14 @@ class DigitalTimer extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppTheme.primary, width: 1.5),
-              color: AppTheme.primary.withValues(alpha: 0.08),
+              border: Border.all(color: Theme.of(context).colorScheme.primary, width: 1.5),
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
             ),
             child: Text(
               l10n.ready,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
-                    color: AppTheme.primary,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
             ),
           )
@@ -452,7 +452,7 @@ class DigitalTimer extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.border, width: 1.5),
+        border: Border.all(color: context.appColors.border, width: 1.5),
       ),
       child: Text(
         text,
@@ -496,16 +496,16 @@ class CategoryChips extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppTheme.primary : Theme.of(context).cardColor,
+                  color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: isSelected ? AppTheme.primary : AppTheme.border,
+                    color: isSelected ? Theme.of(context).colorScheme.primary : context.appColors.border,
                   ),
                 ),
                 child: Text(
                   option,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: isSelected ? Colors.white : Theme.of(context).colorScheme.onSurface,
+                        color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface,
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w500,
                       ),
@@ -536,6 +536,7 @@ class WorkoutFrequencyCalendar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+    final primary = Theme.of(context).colorScheme.primary;
 
     return Card(
       child: Padding(
@@ -595,19 +596,19 @@ class WorkoutFrequencyCalendar extends StatelessWidget {
 
                 if (intensity > 0) {
                   background = [
-                    AppTheme.primary.withValues(alpha: 0.16),
-                    AppTheme.primary.withValues(alpha: 0.38),
-                    AppTheme.primary,
+                    primary.withValues(alpha: 0.16),
+                    primary.withValues(alpha: 0.38),
+                    primary,
                   ][intensity - 1];
                   foreground =
-                      intensity == 3 ? Colors.white : AppTheme.primary;
+                      intensity == 3 ? Theme.of(context).colorScheme.onPrimary : primary;
                 }
 
                 if (day.isToday) {
                   side =
-                      const BorderSide(color: AppTheme.primary, width: 1.6);
+                      BorderSide(color: primary, width: 1.6);
                   foreground =
-                      background == null ? AppTheme.primary : foreground;
+                      background == null ? primary : foreground;
                 }
 
                 return GestureDetector(
