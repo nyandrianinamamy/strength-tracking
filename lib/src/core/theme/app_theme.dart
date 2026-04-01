@@ -1,47 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'app_colors.dart';
+
 class AppTheme {
+  @Deprecated('Use context.appColors or Theme.of(context).colorScheme instead')
   static const Color primary = Color(0xFF257BF4);
+  @Deprecated('Use Theme.of(context).scaffoldBackgroundColor instead')
   static const Color surface = Color(0xFFF8FAFD);
+  @Deprecated('Use Theme.of(context).colorScheme.surface instead')
   static const Color surfaceStrong = Color(0xFFFFFFFF);
+  @Deprecated('Use context.appColors.ink instead')
   static const Color ink = Color(0xFF0F172A);
+  @Deprecated('Use context.appColors.border instead')
   static const Color border = Color(0xFFE2E8F0);
+  @Deprecated('Use Theme.of(context).inputDecorationTheme instead')
   static const Color inputBorder = Color(0xFFD5DDEA);
+  @Deprecated('Use context.appColors.subtleText instead')
   static const Color slateInactive = Color(0xFF94A3B8);
 
   static ThemeData light() {
     final textTheme = GoogleFonts.lexendTextTheme(
       ThemeData.light().textTheme,
     ).apply(
-      bodyColor: ink,
-      displayColor: ink,
+      bodyColor: const Color(0xFF0F172A),
+      displayColor: const Color(0xFF0F172A),
     );
 
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: primary,
-      primary: primary,
-      surface: surfaceStrong,
+      seedColor: const Color(0xFF257BF4),
+      primary: const Color(0xFF257BF4),
+      surface: const Color(0xFFFFFFFF),
     );
 
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: surface,
+      scaffoldBackgroundColor: const Color(0xFFF8FAFD),
       textTheme: textTheme,
+      extensions: [AppColors.light],
       appBarTheme: const AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        backgroundColor: surface,
-        foregroundColor: ink,
+        backgroundColor: Color(0xFFF8FAFD),
+        foregroundColor: Color(0xFF0F172A),
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: surfaceStrong,
+        color: const Color(0xFFFFFFFF),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: border),
+          side: const BorderSide(color: Color(0xFFE2E8F0)),
         ),
       ),
       chipTheme: ChipThemeData(
@@ -52,26 +62,26 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: surfaceStrong,
+        fillColor: const Color(0xFFFFFFFF),
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: inputBorder),
+          borderSide: const BorderSide(color: Color(0xFFD5DDEA)),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: inputBorder),
+          borderSide: const BorderSide(color: Color(0xFFD5DDEA)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primary, width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF257BF4), width: 1.5),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: surfaceStrong,
+        backgroundColor: const Color(0xFFFFFFFF),
         indicatorColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
@@ -79,28 +89,32 @@ class AppTheme {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
-            color: isSelected ? primary : slateInactive,
+            color: isSelected
+                ? const Color(0xFF257BF4)
+                : const Color(0xFF94A3B8),
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: isSelected ? primary : slateInactive,
+            color: isSelected
+                ? const Color(0xFF257BF4)
+                : const Color(0xFF94A3B8),
           );
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
-        backgroundColor: surfaceStrong,
+        backgroundColor: const Color(0xFFFFFFFF),
         indicatorColor: Colors.transparent,
-        selectedIconTheme: const IconThemeData(color: primary),
-        unselectedIconTheme: const IconThemeData(color: slateInactive),
+        selectedIconTheme: const IconThemeData(color: Color(0xFF257BF4)),
+        unselectedIconTheme: const IconThemeData(color: Color(0xFF94A3B8)),
         selectedLabelTextStyle: GoogleFonts.lexend(
-          color: primary,
+          color: const Color(0xFF257BF4),
           fontWeight: FontWeight.w700,
           fontSize: 10,
         ),
         unselectedLabelTextStyle: GoogleFonts.lexend(
-          color: slateInactive,
+          color: const Color(0xFF94A3B8),
           fontWeight: FontWeight.w700,
           fontSize: 10,
         ),
@@ -121,8 +135,8 @@ class AppTheme {
     const darkBorder = Color(0xFF333350);
 
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: primary,
-      primary: primary,
+      seedColor: const Color(0xFF257BF4),
+      primary: const Color(0xFF257BF4),
       surface: darkSurface,
       brightness: Brightness.dark,
     );
@@ -133,6 +147,7 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: darkBg,
       textTheme: textTheme,
+      extensions: [AppColors.dark],
       appBarTheme: const AppBarTheme(
         elevation: 0,
         scrolledUnderElevation: 0,
@@ -166,7 +181,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primary, width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFF257BF4), width: 1.5),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
@@ -178,28 +193,32 @@ class AppTheme {
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
-            color: isSelected ? primary : slateInactive,
+            color: isSelected
+                ? const Color(0xFF257BF4)
+                : const Color(0xFF94A3B8),
           );
         }),
         iconTheme: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
           return IconThemeData(
-            color: isSelected ? primary : slateInactive,
+            color: isSelected
+                ? const Color(0xFF257BF4)
+                : const Color(0xFF94A3B8),
           );
         }),
       ),
       navigationRailTheme: NavigationRailThemeData(
         backgroundColor: darkBg,
         indicatorColor: Colors.transparent,
-        selectedIconTheme: const IconThemeData(color: primary),
-        unselectedIconTheme: const IconThemeData(color: slateInactive),
+        selectedIconTheme: const IconThemeData(color: Color(0xFF257BF4)),
+        unselectedIconTheme: const IconThemeData(color: Color(0xFF94A3B8)),
         selectedLabelTextStyle: GoogleFonts.lexend(
-          color: primary,
+          color: const Color(0xFF257BF4),
           fontWeight: FontWeight.w700,
           fontSize: 10,
         ),
         unselectedLabelTextStyle: GoogleFonts.lexend(
-          color: slateInactive,
+          color: const Color(0xFF94A3B8),
           fontWeight: FontWeight.w700,
           fontSize: 10,
         ),
