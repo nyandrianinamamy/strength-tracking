@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/utils/force_update.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
@@ -30,18 +30,18 @@ class AccountSection extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.border,
+                color: context.appColors.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 24),
             CircleAvatar(
               radius: 32,
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
               child: Icon(
                 isAnonymous ? Icons.person_outline : Icons.person,
                 size: 32,
-                color: AppTheme.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 12),
@@ -58,7 +58,7 @@ class AccountSection extends ConsumerWidget {
               isAnonymous ? l10n.linkToSync : user?.email ?? '',
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: AppTheme.slateInactive),
+              ).textTheme.bodySmall?.copyWith(color: context.appColors.subtleText),
             ),
             const SizedBox(height: 24),
             if (isAnonymous) ...[
@@ -104,7 +104,7 @@ class AccountSection extends ConsumerWidget {
                     child: Text(
                       l10n.switchAccount,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.slateInactive,
+                        color: context.appColors.subtleText,
                       ),
                     ),
                   ),
@@ -116,7 +116,7 @@ class AccountSection extends ConsumerWidget {
                 'This will discard your current data and load the linked account\'s data.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.orange.shade700,
+                  color: context.appColors.warning,
                   fontSize: 11,
                 ),
               ),
@@ -138,7 +138,7 @@ class AccountSection extends ConsumerWidget {
                 textAlign: TextAlign.center,
                 style: Theme.of(
                   context,
-                ).textTheme.bodyMedium?.copyWith(color: AppTheme.slateInactive),
+                ).textTheme.bodyMedium?.copyWith(color: context.appColors.subtleText),
               ),
             ],
             const SizedBox(height: 24),
@@ -318,7 +318,7 @@ class AccountSection extends ConsumerWidget {
                           );
                         },
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
+                          foregroundColor: Theme.of(context).colorScheme.error,
                         ),
                         child: Text(l10n.clear),
                       ),
@@ -369,7 +369,7 @@ class AccountSection extends ConsumerWidget {
                           );
                         },
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
+                          foregroundColor: Theme.of(context).colorScheme.error,
                         ),
                         child: Text(l10n.clear),
                       ),
@@ -399,7 +399,7 @@ class AccountSection extends ConsumerWidget {
                   child: Text(
                     'v${version.version}+${version.buildNumber}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.slateInactive,
+                      color: context.appColors.subtleText,
                       fontSize: 11,
                     ),
                   ),
@@ -430,7 +430,7 @@ class AccountSection extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.orange),
+            style: TextButton.styleFrom(foregroundColor: context.appColors.warning),
             child: Text(l10n.switchButton),
           ),
         ],
