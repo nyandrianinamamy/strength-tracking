@@ -121,24 +121,25 @@ struct StrengthExerciseView: View {
                     )
 
                     Spacer()
+                    Spacer().frame(height: 8)
 
-                    // LOG SET — full-width prominent button
+                    // LOG SET button
                     Button(action: logSet) {
-                        VStack(spacing: 2) {
+                        VStack(spacing: 1) {
                             Text(WatchL10n.string("log_set", locale: locale))
-                                .font(.system(size: 16, weight: .black))
-                                .tracking(-0.4)
+                                .font(.system(size: 13, weight: .black))
+                                .tracking(-0.3)
                                 .textCase(.uppercase)
                             Text(WatchL10n.string("confirm_weight_reps", locale: locale))
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.system(size: 8, weight: .bold))
                                 .textCase(.uppercase)
                                 .opacity(0.8)
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
+                        .padding(.vertical, 10)
                         .background(Color.blue)
-                        .cornerRadius(16)
+                        .cornerRadius(14)
                     }
                     .buttonStyle(.plain)
                 } else {
