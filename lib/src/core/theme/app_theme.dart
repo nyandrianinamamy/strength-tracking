@@ -4,21 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  @Deprecated('Use context.appColors or Theme.of(context).colorScheme instead')
-  static const Color primary = Color(0xFF257BF4);
-  @Deprecated('Use Theme.of(context).scaffoldBackgroundColor instead')
-  static const Color surface = Color(0xFFF8FAFD);
-  @Deprecated('Use Theme.of(context).colorScheme.surface instead')
-  static const Color surfaceStrong = Color(0xFFFFFFFF);
-  @Deprecated('Use context.appColors.ink instead')
-  static const Color ink = Color(0xFF0F172A);
-  @Deprecated('Use context.appColors.border instead')
-  static const Color border = Color(0xFFE2E8F0);
-  @Deprecated('Use Theme.of(context).inputDecorationTheme instead')
-  static const Color inputBorder = Color(0xFFD5DDEA);
-  @Deprecated('Use context.appColors.subtleText instead')
-  static const Color slateInactive = Color(0xFF94A3B8);
-
   static ThemeData light() {
     final textTheme = GoogleFonts.lexendTextTheme(
       ThemeData.light().textTheme,
