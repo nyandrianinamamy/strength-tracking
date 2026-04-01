@@ -46,6 +46,7 @@ app.*.map.json
 
 # Local/temp artifacts
 .claude/
+.worktrees/
 .firebase/
 .playwright-cli/
 screenshots/
