@@ -3,7 +3,7 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -77,8 +77,8 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
               vertical: 10,
             ),
             leading: CircleAvatar(
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              child: const Icon(Icons.route_rounded, color: AppTheme.primary),
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(Icons.route_rounded, color: Theme.of(context).colorScheme.primary),
             ),
             title: Text(
               activeGroup?.name ?? 'No active group',
@@ -101,7 +101,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
             prefixIcon: const Icon(Icons.search_rounded),
             hintText: l10n.searchRoutines,
             filled: true,
-            fillColor: const Color(0xFFF1F5F9),
+            fillColor: context.appColors.surfaceMuted,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -135,10 +135,10 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.add, color: AppTheme.primary),
+                  child: Icon(Icons.add, color: Theme.of(context).colorScheme.primary),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -152,7 +152,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                   l10n.designPlan,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: Colors.black54),
+                  ).textTheme.bodySmall?.copyWith(color: context.appColors.subtleText),
                 ),
               ],
             ),
@@ -179,12 +179,12 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: context.appColors.surfaceMuted,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.fitness_center,
-                          color: AppTheme.slateInactive,
+                          color: context.appColors.subtleText,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -201,7 +201,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                             Text(
                               '${routine.exercises.length} exercises • ${routine.estimatedDurationMin} min',
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: Colors.black54),
+                                  ?.copyWith(color: context.appColors.subtleText),
                             ),
                             if (groupNameByRoutineId[routine.id] != null)
                               Padding(
@@ -212,15 +212,15 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary.withValues(
+                                    color: Theme.of(context).colorScheme.primary.withValues(
                                       alpha: 0.08,
                                     ),
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
                                     groupNameByRoutineId[routine.id]!,
-                                    style: const TextStyle(
-                                      color: AppTheme.primary,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.primary,
                                       fontSize: 12,
                                       fontWeight: FontWeight.w700,
                                     ),
@@ -241,13 +241,13 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                         child: Container(
                           width: 40,
                           height: 40,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.primary,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.play_arrow,
-                            color: Colors.white,
+                            color: Theme.of(context).colorScheme.onPrimary,
                           ),
                         ),
                       ),

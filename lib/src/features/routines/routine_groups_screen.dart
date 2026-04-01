@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -40,7 +40,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
             'Build ordered splits like PPL or Upper/Lower and choose which one drives the dashboard recommendation.',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppTheme.slateInactive),
+            ).textTheme.bodyMedium?.copyWith(color: context.appColors.subtleText),
           ),
           const SizedBox(height: 18),
           if (groups.isEmpty)
@@ -95,15 +95,15 @@ class RoutineGroupsScreen extends ConsumerWidget {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withValues(
+                                  color: Theme.of(context).colorScheme.primary.withValues(
                                     alpha: 0.1,
                                   ),
                                   borderRadius: BorderRadius.circular(999),
                                 ),
-                                child: const Text(
+                                child: Text(
                                   'Active',
                                   style: TextStyle(
-                                    color: AppTheme.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.w700,
                                   ),
                                 ),
@@ -114,7 +114,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
                         Text(
                           '${routineNames.length} routines',
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppTheme.slateInactive),
+                              ?.copyWith(color: context.appColors.subtleText),
                         ),
                         if (routineNames.isNotEmpty) ...[
                           const SizedBox(height: 14),
@@ -128,7 +128,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
                                   vertical: 6,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFF1F5F9),
+                                  color: context.appColors.surfaceMuted,
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
@@ -146,7 +146,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
                           Text(
                             'Current cycle: ${pendingNames.join(' → ')}',
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppTheme.slateInactive),
+                                ?.copyWith(color: context.appColors.subtleText),
                           ),
                         ],
                       ],
