@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 
 /// A single shimmer bone — the building block for skeleton screens.
 class SkeletonBone extends StatefulWidget {
@@ -51,7 +51,7 @@ class _SkeletonBoneState extends State<SkeletonBone>
         width: widget.circle ? widget.height : widget.width,
         height: widget.height,
         decoration: BoxDecoration(
-          color: AppTheme.border,
+          color: context.appColors.border,
           borderRadius: widget.circle
               ? null
               : BorderRadius.circular(widget.borderRadius),
@@ -105,7 +105,7 @@ class DashboardSkeleton extends StatelessWidget {
         Container(
           height: 160,
           decoration: BoxDecoration(
-            color: const Color(0xFF0F172A),
+            color: context.appColors.ink,
             borderRadius: BorderRadius.circular(16),
           ),
         ),
@@ -171,8 +171,8 @@ class _SkeletonCard extends StatelessWidget {
       height: height,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppTheme.border),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(color: context.appColors.border),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -201,7 +201,7 @@ class _SkeletonSectionHeader extends StatelessWidget {
           width: 4,
           height: 24,
           decoration: BoxDecoration(
-            color: AppTheme.primary.withValues(alpha: 0.3),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(99),
           ),
         ),
@@ -221,8 +221,8 @@ class _SkeletonListItem extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppTheme.border),
+        color: Theme.of(context).colorScheme.surface,
+        border: Border.all(color: context.appColors.border),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
