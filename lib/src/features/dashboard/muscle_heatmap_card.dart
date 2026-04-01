@@ -3,26 +3,19 @@ import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
 
 class MuscleHeatmapCard extends ConsumerWidget {
   const MuscleHeatmapCard({super.key});
-
-  static const _colors = [
-    Color(0xFFE2E8F0), // gray (recovered)
-    Color(0xFF93C5FD), // blue
-    Color(0xFF4ADE80), // green
-    Color(0xFFFBBF24), // yellow
-    Color(0xFFF97316), // orange
-    Color(0xFFEF4444), // red (fatigued)
-  ];
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appStateControllerProvider);
     final fatigue = ref.read(muscleHeatmapServiceProvider).computeFatigue(state);
     final l10n = AppLocalizations.of(context)!;
+    final appColors = context.appColors;
+    final heatmapColors = appColors.heatmapGradient;
 
     return Card(
       child: Padding(
@@ -46,8 +39,8 @@ class MuscleHeatmapCard extends ConsumerWidget {
                                   ? BodyGender.female
                                   : BodyGender.male,
                               data: fatigue,
-                              colors: _colors,
-                              bodyColor: const Color(0xFFE2E8F0),
+                              colors: heatmapColors,
+                              bodyColor: appColors.heatmapBody,
                             ),
                           ),
                         ],
@@ -67,8 +60,8 @@ class MuscleHeatmapCard extends ConsumerWidget {
                                   ? BodyGender.female
                                   : BodyGender.male,
                               data: fatigue,
-                              colors: _colors,
-                              bodyColor: const Color(0xFFE2E8F0),
+                              colors: heatmapColors,
+                              bodyColor: appColors.heatmapBody,
                             ),
                           ),
                         ],
@@ -88,10 +81,10 @@ class MuscleHeatmapCard extends ConsumerWidget {
                         color: Theme.of(context).cardColor.withValues(alpha: 0.8),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.info_outline_rounded,
                         size: 16,
-                        color: AppTheme.slateInactive,
+                        color: appColors.subtleText,
                       ),
                     ),
                   ),
@@ -108,7 +101,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
 
   TextStyle? _labelStyle(BuildContext context) {
     return Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: AppTheme.slateInactive,
+          color: context.appColors.subtleText,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.5,
         );
@@ -116,11 +109,12 @@ class MuscleHeatmapCard extends ConsumerWidget {
 
   Widget _buildLegend(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final appColors = context.appColors;
     return Row(
       children: [
         Text(l10n.recovered,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.slateInactive,
+                  color: appColors.subtleText,
                   fontSize: 10,
                 )),
         const SizedBox(width: 8),
@@ -129,14 +123,14 @@ class MuscleHeatmapCard extends ConsumerWidget {
             height: 8,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(4),
-              gradient: const LinearGradient(colors: _colors),
+              gradient: LinearGradient(colors: appColors.heatmapGradient),
             ),
           ),
         ),
         const SizedBox(width: 8),
         Text(l10n.fatigued,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.slateInactive,
+                  color: appColors.subtleText,
                   fontSize: 10,
                 )),
       ],
@@ -145,6 +139,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
 
   void _showHeatmapInfo(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final appColors = context.appColors;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -162,7 +157,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.border,
+                    color: appColors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -179,7 +174,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
               Text(
                 l10n.heatmapDescription,
                 style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.slateInactive,
+                      color: appColors.subtleText,
                     ),
               ),
               const SizedBox(height: 16),
@@ -203,7 +198,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                 height: 12,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
-                  gradient: const LinearGradient(colors: _colors),
+                  gradient: LinearGradient(colors: appColors.heatmapGradient),
                 ),
               ),
               const SizedBox(height: 6),
@@ -211,9 +206,9 @@ class MuscleHeatmapCard extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(l10n.recovered,
-                      style: TextStyle(fontSize: 11, color: AppTheme.slateInactive)),
+                      style: TextStyle(fontSize: 11, color: appColors.subtleText)),
                   Text(l10n.fatigued,
-                      style: TextStyle(fontSize: 11, color: AppTheme.slateInactive)),
+                      style: TextStyle(fontSize: 11, color: appColors.subtleText)),
                 ],
               ),
               const SizedBox(height: 8),
@@ -228,13 +223,13 @@ class MuscleHeatmapCard extends ConsumerWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: AppTheme.primary),
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 10),
         Expanded(
           child: Text(
             text,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.slateInactive,
+                  color: context.appColors.subtleText,
                   height: 1.4,
                 ),
           ),

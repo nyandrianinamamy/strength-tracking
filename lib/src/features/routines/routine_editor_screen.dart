@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
@@ -151,11 +151,11 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.add_circle_outline,
-                      color: AppTheme.slateInactive),
+                      color: context.appColors.subtleText),
                   const SizedBox(width: 8),
                   Text(
                     l10n.tapToAddExercises,
-                    style: TextStyle(color: AppTheme.slateInactive),
+                    style: TextStyle(color: context.appColors.subtleText),
                   ),
                 ],
               ),
@@ -187,11 +187,11 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.add_circle_outline,
-                      color: AppTheme.slateInactive),
+                      color: context.appColors.subtleText),
                   const SizedBox(width: 8),
                   Text(
                     l10n.tapToAddMore,
-                    style: TextStyle(color: AppTheme.slateInactive),
+                    style: TextStyle(color: context.appColors.subtleText),
                   ),
                 ],
               ),
@@ -199,23 +199,23 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
             const SizedBox(height: 20),
             Row(
               children: [
-                Icon(Icons.schedule, size: 18, color: AppTheme.primary),
+                Icon(Icons.schedule, size: 18, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 6),
                 Text(
                   'Est. duration: $_estimatedDurationMin min',
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.slateInactive,
+                    color: context.appColors.subtleText,
                   ),
                 ),
                 const SizedBox(width: 20),
-                Icon(Icons.fitness_center, size: 18, color: AppTheme.primary),
+                Icon(Icons.fitness_center, size: 18, color: Theme.of(context).colorScheme.primary),
                 const SizedBox(width: 6),
                 Text(
                   '${_exercises.length} exercises',
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.slateInactive,
+                    color: context.appColors.subtleText,
                   ),
                 ),
               ],
@@ -263,8 +263,8 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.fitness_center,
-                      color: AppTheme.slateInactive),
+                  child: Icon(Icons.fitness_center,
+                      color: context.appColors.subtleText),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -283,15 +283,15 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                           muscles,
                           style: TextStyle(
                             fontSize: 13,
-                            color: AppTheme.slateInactive,
+                            color: context.appColors.subtleText,
                           ),
                         ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline,
-                      color: AppTheme.slateInactive),
+                  icon: Icon(Icons.delete_outline,
+                      color: context.appColors.subtleText),
                   onPressed: () {
                     setState(() {
                       _exercises.removeAt(index);
@@ -301,8 +301,8 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                 ),
                 ReorderableDragStartListener(
                   index: index,
-                  child: const Icon(Icons.drag_handle,
-                      color: AppTheme.slateInactive),
+                  child: Icon(Icons.drag_handle,
+                      color: context.appColors.subtleText),
                 ),
               ],
             ),
@@ -506,12 +506,11 @@ class _StepperField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final bgColor = isDark ? const Color(0xFF1E1E38) : Colors.white;
-    final borderColor = isDark ? const Color(0xFF333350) : const Color(0xFFD5DDEA);
-    final labelColor = isDark ? AppTheme.slateInactive : Colors.black54;
-    final buttonBg = isDark ? const Color(0xFF333350) : const Color(0xFFF1F5F9);
-    final buttonIcon = isDark ? Colors.white70 : AppTheme.ink;
+    final bgColor = theme.colorScheme.surface;
+    final borderColor = context.appColors.border;
+    final labelColor = context.appColors.subtleText;
+    final buttonBg = context.appColors.surfaceMuted;
+    final buttonIcon = context.appColors.ink;
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -637,7 +636,7 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
                 prefixIcon: const Icon(Icons.search_rounded),
                 hintText: l10n.searchExercisesEllipsis,
                 filled: true,
-                fillColor: const Color(0xFFF1F5F9),
+                fillColor: context.appColors.surfaceMuted,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16),
                   borderSide: BorderSide.none,
@@ -678,8 +677,8 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
                               ? Icons.timer_rounded
                               : Icons.fitness_center_rounded,
                           color: alreadyAdded
-                              ? AppTheme.slateInactive
-                              : AppTheme.primary,
+                              ? context.appColors.subtleText
+                              : Theme.of(context).colorScheme.primary,
                           size: 20,
                         ),
                         title: Text(exercise.name),
@@ -687,7 +686,7 @@ class _ExercisePickerContentState extends State<_ExercisePickerContent> {
                         trailing: alreadyAdded
                             ? Text(
                                 l10n.added,
-                                style: TextStyle(color: AppTheme.slateInactive),
+                                style: TextStyle(color: context.appColors.subtleText),
                               )
                             : const Icon(Icons.add_rounded),
                         onTap: alreadyAdded

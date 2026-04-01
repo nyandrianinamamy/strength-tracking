@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -122,7 +122,7 @@ class _RoutineGroupEditorScreenState
             'These run in sequence. You can reorder them and skip one from the dashboard when needed.',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppTheme.slateInactive),
+            ).textTheme.bodyMedium?.copyWith(color: context.appColors.subtleText),
           ),
           const SizedBox(height: 16),
           if (_routineIds.isEmpty)
@@ -181,14 +181,14 @@ class _RoutineGroupEditorScreenState
                   children: [
                     Icon(
                       Icons.add_circle_outline,
-                      color: AppTheme.slateInactive,
+                      color: context.appColors.subtleText,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       availableRoutines.isEmpty
                           ? 'All routines are already assigned'
                           : 'Add more routines',
-                      style: const TextStyle(color: AppTheme.slateInactive),
+                      style: TextStyle(color: context.appColors.subtleText),
                     ),
                   ],
                 ),
@@ -207,7 +207,7 @@ class _RoutineGroupEditorScreenState
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: () => _delete(context),
-              style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+              style: OutlinedButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
               icon: const Icon(Icons.delete_outline),
               label: const Text('Delete Group'),
             ),
@@ -295,7 +295,7 @@ class _RoutineGroupEditorScreenState
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
             child: const Text('Delete'),
           ),
         ],
@@ -337,14 +337,14 @@ class _RoutineGroupRoutineCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
               child: Text(
                 '${index + 1}',
-                style: const TextStyle(
-                  color: AppTheme.primary,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -364,7 +364,7 @@ class _RoutineGroupRoutineCard extends StatelessWidget {
                     Text(
                       subtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.slateInactive,
+                        color: context.appColors.subtleText,
                       ),
                     ),
                 ],
@@ -372,16 +372,16 @@ class _RoutineGroupRoutineCard extends StatelessWidget {
             ),
             IconButton(
               onPressed: onRemove,
-              icon: const Icon(
+              icon: Icon(
                 Icons.delete_outline,
-                color: AppTheme.slateInactive,
+                color: context.appColors.subtleText,
               ),
             ),
             ReorderableDragStartListener(
               index: index,
-              child: const Icon(
+              child: Icon(
                 Icons.drag_handle,
-                color: AppTheme.slateInactive,
+                color: context.appColors.subtleText,
               ),
             ),
           ],

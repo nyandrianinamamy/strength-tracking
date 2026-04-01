@@ -3,7 +3,7 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
@@ -69,7 +69,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         ref.read(workoutControllerProvider).deleteSession(sessionId);
                         context.go('/');
                       },
-                      style: TextButton.styleFrom(foregroundColor: Colors.red),
+                      style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
                       child: Text(l10n.delete),
                     ),
                   ],
@@ -89,15 +89,15 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.primary, width: 4),
+                    border: Border.all(color: Theme.of(context).colorScheme.primary, width: 4),
                   ),
                   child: CircleAvatar(
                     radius: 64,
-                    backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                    child: const Icon(
+                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    child: Icon(
                       Icons.workspace_premium,
                       size: 48,
-                      color: AppTheme.primary,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
@@ -116,23 +116,23 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.trending_up,
                           size: 16,
-                          color: AppTheme.primary,
+                          color: Theme.of(context).colorScheme.primary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           l10n.newPersonalRecord,
                           style:
                               Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: AppTheme.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.w800,
                                   ),
                         ),
@@ -198,8 +198,8 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                           width: 180,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            border: Border.all(color: AppTheme.border),
+                            color: Theme.of(context).colorScheme.surface,
+                            border: Border.all(color: context.appColors.border),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Column(
@@ -221,7 +221,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                                     .textTheme
                                     .titleLarge
                                     ?.copyWith(
-                                      color: AppTheme.primary,
+                                      color: Theme.of(context).colorScheme.primary,
                                       fontWeight: FontWeight.w900,
                                     ),
                               ),
@@ -231,7 +231,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
-                                    ?.copyWith(color: AppTheme.slateInactive),
+                                    ?.copyWith(color: context.appColors.subtleText),
                               ),
                             ],
                           ),
@@ -276,7 +276,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.primary,
+                                color: Theme.of(context).colorScheme.primary,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -285,7 +285,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                                     .textTheme
                                     .labelSmall
                                     ?.copyWith(
-                                      color: Colors.white,
+                                      color: Theme.of(context).colorScheme.onPrimary,
                                       fontWeight: FontWeight.w800,
                                     ),
                               ),
@@ -312,7 +312,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
 
           // RPE section with restyled card
           Card(
-            color: AppTheme.primary.withValues(alpha: 0.05),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Column(
@@ -328,7 +328,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                   Text(
                     'RPE ${rpe.toStringAsFixed(1)}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.primary,
+                          color: Theme.of(context).colorScheme.primary,
                           fontWeight: FontWeight.w800,
                         ),
                   ),
@@ -339,7 +339,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         l10n.easy,
                         style:
                             Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: AppTheme.slateInactive,
+                                  color: context.appColors.subtleText,
                                   fontWeight: FontWeight.w600,
                                 ),
                       ),
@@ -360,7 +360,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         l10n.hard,
                         style:
                             Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: AppTheme.slateInactive,
+                                  color: context.appColors.subtleText,
                                   fontWeight: FontWeight.w600,
                                 ),
                       ),
@@ -373,7 +373,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                       style: Theme.of(context)
                           .textTheme
                           .bodyMedium
-                          ?.copyWith(color: Colors.black54),
+                          ?.copyWith(color: context.appColors.subtleText),
                     ),
                   ],
                 ],

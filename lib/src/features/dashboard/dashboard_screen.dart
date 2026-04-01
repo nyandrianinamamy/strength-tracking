@@ -3,7 +3,7 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/auth/account_section.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
@@ -24,6 +24,8 @@ class DashboardScreen extends ConsumerWidget {
     final activeSession = snapshot.activeSession;
     final activeGroup = state.activeRoutineGroup;
     final activeSessionIsStale = snapshot.activeSessionIsStale;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
@@ -34,12 +36,12 @@ class DashboardScreen extends ConsumerWidget {
             Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.primary, width: 2),
+                border: Border.all(color: colorScheme.primary, width: 2),
               ),
               child: CircleAvatar(
                 radius: 24,
-                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-                child: const Icon(Icons.person, color: AppTheme.primary),
+                backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+                child: Icon(Icons.person, color: colorScheme.primary),
               ),
             ),
             const SizedBox(width: 12),
@@ -54,7 +56,7 @@ class DashboardScreen extends ConsumerWidget {
                     Text(
                       l10n.welcomeBack,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.slateInactive,
+                        color: appColors.subtleText,
                       ),
                     ),
                     Text(
@@ -97,8 +99,8 @@ class DashboardScreen extends ConsumerWidget {
                   child: Container(
                     width: 8,
                     height: 8,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
+                    decoration: BoxDecoration(
+                      color: colorScheme.error,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -133,24 +135,24 @@ class DashboardScreen extends ConsumerWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.trending_up,
                           size: 14,
-                          color: AppTheme.primary,
+                          color: colorScheme.primary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           snapshot.workoutDelta >= 0
                               ? '+${snapshot.workoutDelta}'
                               : '${snapshot.workoutDelta}',
-                          style: const TextStyle(
-                            color: AppTheme.primary,
+                          style: TextStyle(
+                            color: colorScheme.primary,
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
                           ),
@@ -170,13 +172,13 @@ class DashboardScreen extends ConsumerWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary,
+                      color: colorScheme.primary,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       l10n.newBadge,
                       style: TextStyle(
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                         fontWeight: FontWeight.w700,
                         fontSize: 12,
                       ),
@@ -195,9 +197,7 @@ class DashboardScreen extends ConsumerWidget {
         PageSection(
           title: activeSession != null ? l10n.activeWorkout : l10n.nextWorkout,
           child: Card(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0xFF2A2A45)
-                : const Color(0xFF0F172A),
+            color: appColors.ink,
             child: Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
@@ -213,7 +213,7 @@ class DashboardScreen extends ConsumerWidget {
                                   l10n.readyToTrain)
                         .toUpperCase(),
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: const Color(0xFF8FB9FF),
+                      color: colorScheme.primary.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w800,
                       letterSpacing: 1.5,
                     ),
@@ -225,7 +225,7 @@ class DashboardScreen extends ConsumerWidget {
                               'Workout'
                         : nextRoutine?.name ?? l10n.noRoutineAvailable,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
+                      color: colorScheme.onPrimary,
                       fontWeight: FontWeight.w900,
                       fontStyle: FontStyle.italic,
                     ),
@@ -233,10 +233,10 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.schedule,
                         size: 16,
-                        color: Colors.white70,
+                        color: colorScheme.onPrimary.withValues(alpha: 0.7),
                       ),
                       const SizedBox(width: 6),
                       Expanded(
@@ -250,7 +250,7 @@ class DashboardScreen extends ConsumerWidget {
                               ? l10n.createRoutineToStart
                               : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: Colors.white70),
+                              ?.copyWith(color: colorScheme.onPrimary.withValues(alpha: 0.7)),
                         ),
                       ),
                     ],
@@ -260,7 +260,7 @@ class DashboardScreen extends ConsumerWidget {
                     Text(
                       snapshot.nextRoutineReason,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: const Color(0xFFBBD0FF),
+                        color: colorScheme.primary.withValues(alpha: 0.6),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -268,8 +268,8 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF257BF4),
-                      foregroundColor: Colors.white,
+                      backgroundColor: colorScheme.primary,
+                      foregroundColor: colorScheme.onPrimary,
                       minimumSize: const Size.fromHeight(52),
                     ),
                     onPressed: () {
@@ -303,8 +303,8 @@ class DashboardScreen extends ConsumerWidget {
                     const SizedBox(height: 10),
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        side: const BorderSide(color: Color(0xFF8FB9FF)),
+                        foregroundColor: colorScheme.onPrimary,
+                        side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.6)),
                         minimumSize: const Size.fromHeight(48),
                       ),
                       onPressed: nextRoutine == null
@@ -350,12 +350,12 @@ class DashboardScreen extends ConsumerWidget {
                           vertical: 8,
                         ),
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primary.withValues(
+                          backgroundColor: colorScheme.primary.withValues(
                             alpha: 0.1,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.fitness_center_rounded,
-                            color: AppTheme.primary,
+                            color: colorScheme.primary,
                           ),
                         ),
                         title: Text(
@@ -383,9 +383,7 @@ class DashboardScreen extends ConsumerWidget {
                               l10n.volume,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withValues(alpha: 0.54),
+                                color: colorScheme.onSurface.withValues(alpha: 0.54),
                               ),
                             ),
                           ],
@@ -430,7 +428,7 @@ class DashboardScreen extends ConsumerWidget {
                             width: 40,
                             height: 4,
                             decoration: BoxDecoration(
-                              color: AppTheme.border,
+                              color: appColors.border,
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -445,7 +443,7 @@ class DashboardScreen extends ConsumerWidget {
                         Text(
                           '${dayWorkouts.length} workout${dayWorkouts.length > 1 ? 's' : ''}',
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppTheme.slateInactive),
+                              ?.copyWith(color: appColors.subtleText),
                         ),
                         const SizedBox(height: 16),
                         ...dayWorkouts.map((workout) {
@@ -470,12 +468,12 @@ class DashboardScreen extends ConsumerWidget {
                                 vertical: 8,
                               ),
                               leading: CircleAvatar(
-                                backgroundColor: AppTheme.primary.withValues(
+                                backgroundColor: colorScheme.primary.withValues(
                                   alpha: 0.1,
                                 ),
-                                child: const Icon(
+                                child: Icon(
                                   Icons.fitness_center_rounded,
-                                  color: AppTheme.primary,
+                                  color: colorScheme.primary,
                                 ),
                               ),
                               title: Text(
@@ -524,12 +522,12 @@ class DashboardScreen extends ConsumerWidget {
                           vertical: 8,
                         ),
                         leading: CircleAvatar(
-                          backgroundColor: AppTheme.primary.withValues(
+                          backgroundColor: colorScheme.primary.withValues(
                             alpha: 0.1,
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.workspace_premium_rounded,
-                            color: AppTheme.primary,
+                            color: colorScheme.primary,
                           ),
                         ),
                         title: Text(
@@ -559,9 +557,9 @@ class DashboardScreen extends ConsumerWidget {
                                   const SizedBox(height: 2),
                                   Text(
                                     '1RM ${AppFormatters.decimal(record.estimatedOneRepMax)}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 12,
-                                      color: AppTheme.primary,
+                                      color: colorScheme.primary,
                                     ),
                                   ),
                                 ],

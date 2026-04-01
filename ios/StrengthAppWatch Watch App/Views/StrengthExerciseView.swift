@@ -29,145 +29,155 @@ struct StrengthExerciseView: View {
             let restInfo = computeRestRemaining(now: context.date)
             let sessionTime = elapsedSessionTime(now: context.date)
 
-            ScrollView {
-                VStack(spacing: 6) {
-                    // Rest timer pill
-                    if restInfo.remaining > 0 {
-                        HStack(spacing: 4) {
-                            Image(systemName: "timer")
-                                .font(.caption2)
-                            Text("\(WatchL10n.string("resting", locale: locale)): \(formatTime(restInfo.remaining))")
-                                .font(.caption2)
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.2))
-                        .cornerRadius(12)
+            VStack(spacing: 0) {
+                Spacer().frame(height: 4)
+
+                // Rest timer pill
+                if restInfo.remaining > 0 {
+                    HStack(spacing: 4) {
+                        Image(systemName: "timer")
+                            .font(.system(size: 10, weight: .black))
+                        Text("\(WatchL10n.string("resting", locale: locale)): \(formatTime(restInfo.remaining))")
+                            .font(.system(size: 12, weight: .black))
                     }
-
-                    // Set progress
-                    Text(WatchL10n.setOf(min(nextSetNumber, exercise.targetSets), exercise.targetSets, locale: locale))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-
-                    // Exercise name
-                    Text(exercise.name)
-                        .font(.headline)
-                        .bold()
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-
-                    // Weight, reps, and LOG — inline row
-                    if !allSetsComplete {
-                        HStack(spacing: 4) {
-                            // Weight field
-                            Text(formatWeight(weight, unit: unit))
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(editingWeight ? .blue : .primary)
-                                .frame(minWidth: 40)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(editingWeight ? Color.blue : Color.gray.opacity(0.4), lineWidth: editingWeight ? 2 : 1)
-                                )
-                                .onTapGesture { editingWeight = true }
-
-                            Text("x")
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-
-                            // Reps field
-                            Text("\(reps)")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(!editingWeight ? .blue : .primary)
-                                .frame(minWidth: 32)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 6)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(!editingWeight ? Color.blue : Color.gray.opacity(0.4), lineWidth: !editingWeight ? 2 : 1)
-                                )
-                                .onTapGesture { editingWeight = false }
-
-                            Spacer().frame(width: 6)
-
-                            // LOG button
-                            Button(action: logSet) {
-                                Text(WatchL10n.string("log", locale: locale))
-                                    .font(.system(size: 8, weight: .bold))
-                                    .padding(.horizontal, 4)
-                                    .padding(.vertical, 2)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .tint(.blue)
-                            .controlSize(.mini)
-                        }
-                        .focusable(true)
-                        .digitalCrownRotation(
-                            editingWeight
-                                ? Binding(
-                                    get: { weight },
-                                    set: { newValue in
-                                        let clamped = max(0, newValue)
-                                        if clamped != weight {
-                                            weight = clamped
-                                        }
-                                        if clamped <= 0 {
-                                            WKInterfaceDevice.current().play(.directionDown)
-                                        }
-                                    }
-                                  )
-                                : Binding(
-                                    get: { Double(reps) },
-                                    set: { newValue in
-                                        let newReps = max(1, Int(newValue))
-                                        if newReps != reps {
-                                            reps = newReps
-                                        }
-                                        if newReps <= 1 {
-                                            WKInterfaceDevice.current().play(.directionDown)
-                                        }
-                                    }
-                                  ),
-                            from: 0,
-                            through: editingWeight ? 500 : 100,
-                            by: editingWeight
-                                ? (unit == "lbs" ? weightIncrement / 2.20462 : weightIncrement)
-                                : 1,
-                            sensitivity: .medium
-                        )
-                    } else {
-                        Text("✓")
-                            .font(.title2)
-                            .foregroundColor(.green)
-                    }
-
-                    // Next exercise + session time
-                    HStack {
-                        if let next = nextExerciseName {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(WatchL10n.string("next", locale: locale))
-                                    .font(.system(size: 9))
-                                    .foregroundColor(.secondary)
-                                Text(next)
-                                    .font(.caption2)
-                                    .lineLimit(1)
-                            }
-                        }
-                        Spacer()
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text(WatchL10n.string("session", locale: locale))
-                                .font(.system(size: 9))
-                                .foregroundColor(.secondary)
-                            Text(sessionTime)
-                                .font(.caption2)
-                        }
-                    }
-                    .padding(.top, 4)
+                    .foregroundColor(.blue)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 4)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(999)
                 }
-                .padding(.horizontal, 4)
+
+                Spacer().frame(height: 8)
+
+                // Set progress
+                Text(WatchL10n.setOf(min(nextSetNumber, exercise.targetSets), exercise.targetSets, locale: locale))
+                    .font(.system(size: 10, weight: .bold))
+                    .kerning(1)
+                    .textCase(.uppercase)
+                    .foregroundColor(Color(white: 0.63))
+
+                // Exercise name
+                Text(exercise.name)
+                    .font(.system(size: 18, weight: .black))
+                    .tracking(-0.45)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .padding(.top, 2)
+
+                Spacer().frame(height: 12)
+
+                // Weight x Reps — large center stage display
+                if !allSetsComplete {
+                    HStack(alignment: .center, spacing: 8) {
+                        Text(formatWeight(weight, unit: unit))
+                            .font(.system(size: 24, weight: .black))
+                            .tracking(-1.2)
+                            .foregroundColor(editingWeight ? .blue : .blue.opacity(0.5))
+                            .onTapGesture { editingWeight = true }
+
+                        Text("x")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(Color(white: 0.63))
+
+                        Text("\(reps) \(WatchL10n.string("reps_short", locale: locale))")
+                            .font(.system(size: 24, weight: .black))
+                            .tracking(-1.2)
+                            .foregroundColor(!editingWeight ? .primary : .primary.opacity(0.7))
+                            .onTapGesture { editingWeight = false }
+                    }
+                    .focusable(true)
+                    .digitalCrownRotation(
+                        editingWeight
+                            ? Binding(
+                                get: { weight },
+                                set: { newValue in
+                                    let clamped = max(0, newValue)
+                                    if clamped != weight {
+                                        weight = clamped
+                                    }
+                                    if clamped <= 0 {
+                                        WKInterfaceDevice.current().play(.directionDown)
+                                    }
+                                }
+                              )
+                            : Binding(
+                                get: { Double(reps) },
+                                set: { newValue in
+                                    let newReps = max(1, Int(newValue))
+                                    if newReps != reps {
+                                        reps = newReps
+                                    }
+                                    if newReps <= 1 {
+                                        WKInterfaceDevice.current().play(.directionDown)
+                                    }
+                                }
+                              ),
+                        from: 0,
+                        through: editingWeight ? 500 : 100,
+                        by: editingWeight
+                            ? (unit == "lbs" ? weightIncrement / 2.20462 : weightIncrement)
+                            : 1,
+                        sensitivity: .medium
+                    )
+
+                    Spacer()
+                    Spacer().frame(height: 8)
+
+                    // LOG SET button
+                    Button(action: logSet) {
+                        VStack(spacing: 1) {
+                            Text(WatchL10n.string("log_set", locale: locale))
+                                .font(.system(size: 13, weight: .black))
+                                .tracking(-0.3)
+                                .textCase(.uppercase)
+                            Text(WatchL10n.string("confirm_weight_reps", locale: locale))
+                                .font(.system(size: 8, weight: .bold))
+                                .textCase(.uppercase)
+                                .opacity(0.8)
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.blue)
+                        .cornerRadius(14)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    Spacer()
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.green)
+                    Spacer()
+                }
+
+                // Footer — next exercise + session time
+                Divider()
+                    .padding(.top, 8)
+                HStack {
+                    if let next = nextExerciseName {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(WatchL10n.string("next", locale: locale))
+                                .font(.system(size: 8, weight: .bold))
+                                .textCase(.uppercase)
+                                .foregroundColor(Color(white: 0.63))
+                            Text(next)
+                                .font(.system(size: 10, weight: .black))
+                                .lineLimit(1)
+                        }
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 1) {
+                        Text(WatchL10n.string("session", locale: locale))
+                            .font(.system(size: 8, weight: .bold))
+                            .textCase(.uppercase)
+                            .foregroundColor(Color(white: 0.63))
+                        Text(sessionTime)
+                            .font(.system(size: 10, weight: .black))
+                    }
+                }
+                .padding(.top, 6)
             }
+            .padding(.horizontal, 4)
         }
         .onAppear { prefillValues() }
         .onChange(of: exercise.completedSets.count) { _ in prefillValues() }

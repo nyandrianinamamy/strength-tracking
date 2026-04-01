@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
@@ -515,7 +515,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ref.read(workoutControllerProvider).discardDraft();
                 context.go('/');
               },
-              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
               child: const Text('Discard'),
             ),
           ],
@@ -533,6 +533,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (sheetContext) {
+        final sheetColors = sheetContext.appColors;
         return SafeArea(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -543,15 +544,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.border,
+                    color: sheetColors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Icon(
+                Icon(
                   Icons.flag_rounded,
                   size: 48,
-                  color: AppTheme.primary,
+                  color: Theme.of(sheetContext).colorScheme.primary,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -565,7 +566,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   l10n.sessionSaved,
                   textAlign: TextAlign.center,
                   style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.slateInactive,
+                    color: sheetColors.subtleText,
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -601,7 +602,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   child: Text(
                     l10n.discardSession,
                     style: TextStyle(
-                      color: Colors.red.shade400,
+                      color: Theme.of(sheetContext).colorScheme.error,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -641,6 +642,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (ctx, setSheetState) {
+            final swapAppColors = context.appColors;
+            final swapColorScheme = Theme.of(context).colorScheme;
             final query = searchController.text.toLowerCase();
             final filtered = query.isEmpty
                 ? alternatives
@@ -667,7 +670,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         width: 40,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppTheme.border,
+                          color: swapAppColors.border,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -686,7 +689,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                           child: Text(
                             currentMuscles.join(', '),
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppTheme.slateInactive),
+                                ?.copyWith(color: swapAppColors.subtleText),
                           ),
                         ),
                       const SizedBox(height: 12),
@@ -712,7 +715,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                 child: Text(
                                   'No matching exercises',
                                   style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(color: AppTheme.slateInactive),
+                                      ?.copyWith(color: swapAppColors.subtleText),
                                 ),
                               )
                             : ListView.builder(
@@ -740,12 +743,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                           .textTheme
                                           .bodySmall
                                           ?.copyWith(
-                                            color: AppTheme.slateInactive,
+                                            color: swapAppColors.subtleText,
                                           ),
                                     ),
-                                    trailing: const Icon(
+                                    trailing: Icon(
                                       Icons.swap_horiz_rounded,
-                                      color: AppTheme.primary,
+                                      color: swapColorScheme.primary,
                                       size: 20,
                                     ),
                                     onTap: () {
@@ -778,13 +781,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     WorkoutController controller,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.emoji_events_rounded, size: 64, color: AppTheme.primary),
+            Icon(Icons.emoji_events_rounded, size: 64, color: colorScheme.primary),
             const SizedBox(height: 20),
             Text(
               'All exercises complete!',
@@ -798,7 +803,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               'Add another exercise or finish your workout.',
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: AppTheme.slateInactive),
+              ).textTheme.bodyMedium?.copyWith(color: appColors.subtleText),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -847,6 +852,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
     final state = ref.watch(appStateControllerProvider);
     final session = state.activeSession;
     final controller = ref.read(workoutControllerProvider);
@@ -879,10 +886,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
                   size: 48,
-                  color: Colors.orange,
+                  color: context.appColors.warning,
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -896,7 +903,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 Text(
                   'The routine for this session may have been deleted. Discard this session to continue.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.slateInactive,
+                    color: context.appColors.subtleText,
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -971,13 +978,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.1),
+                        color: colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
                         'SET ${currentExerciseSets + 1} OF ${currentPrescription.targetSets}',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.primary,
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,
                           fontSize: 10,
@@ -990,7 +997,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             if (!kIsWeb && _watchReachable)
               Padding(
                 padding: const EdgeInsets.only(right: 4),
-                child: Icon(Icons.watch, size: 18, color: AppTheme.primary),
+                child: Icon(Icons.watch, size: 18, color: colorScheme.primary),
               ),
             if (_currentPage < exerciseCount)
               IconButton(
@@ -1003,7 +1010,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               margin: const EdgeInsets.only(right: 16),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(
@@ -1011,7 +1018,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     ? '$exerciseCount/$exerciseCount'
                     : '${_currentPage + 1}/$exerciseCount',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: AppTheme.primary,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -1025,11 +1032,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             child: Container(
               height: 56,
               decoration: BoxDecoration(
-                color: const Color(0xFFE53E3E),
+                color: colorScheme.error,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFE53E3E).withValues(alpha: 0.3),
+                    color: colorScheme.error.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -1038,28 +1045,28 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.stop_rounded, color: Colors.white, size: 22),
+                  Icon(Icons.stop_rounded, color: colorScheme.onError, size: 22),
                   const SizedBox(width: 8),
                   Text(
                     timerText,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: colorScheme.onError,
                       fontWeight: FontWeight.w800,
                       fontSize: 16,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                   const SizedBox(width: 12),
                   Container(
                     width: 1,
                     height: 24,
-                    color: Colors.white.withValues(alpha: 0.3),
+                    color: colorScheme.onError.withValues(alpha: 0.3),
                   ),
                   const SizedBox(width: 12),
                   Text(
                     l10n.finish,
                     style: TextStyle(
-                      color: Colors.white,
+                      color: colorScheme.onError,
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
                       letterSpacing: 1.2,
@@ -1142,7 +1149,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         size: 22,
                         color: _currentPage > 0
                             ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
-                            : AppTheme.slateInactive.withValues(alpha: 0.25),
+                            : appColors.subtleText.withValues(alpha: 0.25),
                       ),
                     ),
                   ),
@@ -1168,7 +1175,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         size: 22,
                         color: _currentPage < exerciseCount - 1
                             ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
-                            : AppTheme.slateInactive.withValues(alpha: 0.25),
+                            : appColors.subtleText.withValues(alpha: 0.25),
                       ),
                     ),
                   ),
@@ -1178,7 +1185,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               if (_switchCountdown != null)
                 Positioned.fill(
                   child: Container(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: colorScheme.scrim,
                     child: Center(
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -1186,11 +1193,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                           vertical: 24,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colorScheme.surface,
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.15),
+                              color: colorScheme.shadow.withValues(alpha: 0.15),
                               blurRadius: 20,
                             ),
                           ],
@@ -1198,10 +1205,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.swap_horiz_rounded,
                               size: 36,
-                              color: AppTheme.primary,
+                              color: colorScheme.primary,
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -1215,7 +1222,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                               style: Theme.of(context).textTheme.displaySmall
                                   ?.copyWith(
                                     fontWeight: FontWeight.w900,
-                                    color: AppTheme.primary,
+                                    color: colorScheme.primary,
                                   ),
                             ),
                             const SizedBox(height: 16),
@@ -1303,6 +1310,8 @@ class _ExercisePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
     final prescription = routine.exercises[pageIndex];
     final exercise = state.exerciseById(prescription.exerciseId);
     final currentSets = session.completedSets
@@ -1380,7 +1389,7 @@ class _ExercisePage extends StatelessWidget {
               child: Text(
                 l10n.countdown,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: AppTheme.primary,
+                  color: colorScheme.primary,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 1.5,
                 ),
@@ -1393,8 +1402,8 @@ class _ExercisePage extends StatelessWidget {
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: timedExerciseRunning
-                      ? AppTheme.primary
-                      : Theme.of(context).colorScheme.onSurface,
+                      ? colorScheme.primary
+                      : colorScheme.onSurface,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -1442,7 +1451,7 @@ class _ExercisePage extends StatelessWidget {
                     label: Text(l10n.pause),
                     style: FilledButton.styleFrom(
                       minimumSize: const Size(120, 48),
-                      backgroundColor: Colors.orange.shade600,
+                      backgroundColor: appColors.warning,
                     ),
                   ),
                 ],
@@ -1459,7 +1468,7 @@ class _ExercisePage extends StatelessWidget {
                       Text(
                         l10n.manualMin,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.slateInactive,
+                          color: appColors.subtleText,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.1,
                         ),
@@ -1532,7 +1541,7 @@ class _ExercisePage extends StatelessWidget {
                       Text(
                         l10n.weightUnit(preferredUnit.toUpperCase()),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.slateInactive,
+                          color: appColors.subtleText,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.1,
                         ),
@@ -1564,7 +1573,7 @@ class _ExercisePage extends StatelessWidget {
                       Text(
                         l10n.reps,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.slateInactive,
+                          color: appColors.subtleText,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.1,
                         ),
@@ -1629,7 +1638,7 @@ class _ExercisePage extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14),
               decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.border),
+                border: Border.all(color: appColors.border),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -1639,8 +1648,8 @@ class _ExercisePage extends StatelessWidget {
                     Icons.chat_bubble_outline,
                     size: 16,
                     color: setNoteController.text.trim().isNotEmpty
-                        ? AppTheme.primary
-                        : AppTheme.slateInactive,
+                        ? colorScheme.primary
+                        : appColors.subtleText,
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -1649,8 +1658,8 @@ class _ExercisePage extends StatelessWidget {
                         : l10n.addComment,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: setNoteController.text.trim().isNotEmpty
-                          ? AppTheme.primary
-                          : AppTheme.slateInactive,
+                          ? colorScheme.primary
+                          : appColors.subtleText,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 1.1,
                     ),
@@ -1698,7 +1707,7 @@ class _ExercisePage extends StatelessWidget {
                                       width: 40,
                                       height: 4,
                                       decoration: BoxDecoration(
-                                        color: AppTheme.border,
+                                        color: appColors.border,
                                         borderRadius: BorderRadius.circular(2),
                                       ),
                                     ),
@@ -1719,12 +1728,12 @@ class _ExercisePage extends StatelessWidget {
                                     ListTile(
                                       leading: Icon(
                                         Icons.delete_outline,
-                                        color: Colors.red.shade400,
+                                        color: colorScheme.error,
                                       ),
                                       title: Text(
                                         l10n.deleteSet,
                                         style: TextStyle(
-                                          color: Colors.red.shade400,
+                                          color: colorScheme.error,
                                         ),
                                       ),
                                       onTap: () {
@@ -1751,7 +1760,7 @@ class _ExercisePage extends StatelessWidget {
                           trailing: Icon(
                             Icons.more_vert,
                             size: 18,
-                            color: AppTheme.slateInactive,
+                            color: appColors.subtleText,
                           ),
                         ),
                       );
@@ -1794,7 +1803,7 @@ class _ExercisePage extends StatelessWidget {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary.withValues(
+                                    color: colorScheme.primary.withValues(
                                       alpha: 0.1,
                                     ),
                                     borderRadius: BorderRadius.circular(999),
@@ -1805,7 +1814,7 @@ class _ExercisePage extends StatelessWidget {
                                         .textTheme
                                         .labelSmall
                                         ?.copyWith(
-                                          color: AppTheme.primary,
+                                          color: colorScheme.primary,
                                           fontWeight: FontWeight.w800,
                                         ),
                                   ),
@@ -1935,13 +1944,15 @@ class _ProgressionHint extends StatelessWidget {
         ? 'No suggestion yet'
         : 'Suggested ${AppFormatters.weight(suggestion!.suggestedWeightKg, preferredUnit)} · ${_directionLabel(suggestion!)}';
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withValues(alpha: 0.06),
+        color: colorScheme.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.14)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.14)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1949,7 +1960,7 @@ class _ProgressionHint extends StatelessWidget {
           Text(
             text,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppTheme.primary,
+              color: colorScheme.primary,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -1958,7 +1969,7 @@ class _ProgressionHint extends StatelessWidget {
             Text(
               suggestion!.reason,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.slateInactive,
+                color: appColors.subtleText,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -2015,6 +2026,8 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
     final exercise = widget.exercise;
     final state = widget.state;
     final fatigue = MuscleHeatmapService().computeFatigue(state);
@@ -2041,26 +2054,19 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
         for (final muscle in activeMuscles) {
           highlightedData[muscle] = MuscleData(
             intensity: 1.0,
-            color: AppTheme.primary.withValues(alpha: pulse),
+            color: colorScheme.primary.withValues(alpha: pulse),
           );
         }
         for (final muscle in secondaryMuscles) {
           if (!activeMuscles.contains(muscle)) {
             highlightedData[muscle] = MuscleData(
               intensity: 0.7,
-              color: AppTheme.primary.withValues(alpha: pulse * 0.5),
+              color: colorScheme.primary.withValues(alpha: pulse * 0.5),
             );
           }
         }
 
-        const colors = [
-          Color(0xFFE2E8F0),
-          Color(0xFF93C5FD),
-          Color(0xFF4ADE80),
-          Color(0xFFFBBF24),
-          Color(0xFFF97316),
-          Color(0xFFEF4444),
-        ];
+        final colors = appColors.heatmapGradient;
 
         Widget buildBody(BodySide side) {
           return AspectRatio(
@@ -2072,7 +2078,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
                   : BodyGender.male,
               data: highlightedData,
               colors: colors,
-              bodyColor: const Color(0xFFE2E8F0),
+              bodyColor: appColors.heatmapBody,
               showBorder: false,
             ),
           );
@@ -2099,13 +2105,13 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.8),
+                      color: colorScheme.surface.withValues(alpha: 0.8),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       Icons.info_outline_rounded,
                       size: 16,
-                      color: AppTheme.slateInactive,
+                      color: appColors.subtleText,
                     ),
                   ),
                 ),
@@ -2119,6 +2125,8 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
 
   void _showHeatmapLegend(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final legendColorScheme = Theme.of(context).colorScheme;
+    final legendAppColors = context.appColors;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -2136,7 +2144,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.border,
+                    color: legendAppColors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -2150,13 +2158,13 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
               ),
               const SizedBox(height: 16),
               _legendRow(
-                color: AppTheme.primary,
+                color: legendColorScheme.primary,
                 label: l10n.activeMuscles,
                 description: l10n.activeMusclesDesc,
               ),
               const SizedBox(height: 12),
               _legendRow(
-                color: AppTheme.primary.withValues(alpha: 0.4),
+                color: legendColorScheme.primary.withValues(alpha: 0.4),
                 label: l10n.secondaryMusclesLabel,
                 description: l10n.secondaryMusclesDesc,
               ),
@@ -2166,14 +2174,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
                   gradient: LinearGradient(
-                    colors: [
-                      Colors.grey.shade300,
-                      Colors.blue.shade300,
-                      Colors.green.shade400,
-                      Colors.yellow.shade600,
-                      Colors.orange.shade600,
-                      Colors.red.shade500,
-                    ],
+                    colors: legendAppColors.heatmapGradient,
                   ),
                 ),
               ),
@@ -2185,14 +2186,14 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
                     l10n.recovered,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.slateInactive,
+                      color: legendAppColors.subtleText,
                     ),
                   ),
                   Text(
                     l10n.fatigued,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.slateInactive,
+                      color: legendAppColors.subtleText,
                     ),
                   ),
                 ],
@@ -2202,7 +2203,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
                 l10n.fatigueDecayNote,
                 style: Theme.of(
                   sheetContext,
-                ).textTheme.bodySmall?.copyWith(color: AppTheme.slateInactive),
+                ).textTheme.bodySmall?.copyWith(color: legendAppColors.subtleText),
               ),
               const SizedBox(height: 8),
             ],
@@ -2241,7 +2242,7 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
               ),
               Text(
                 description,
-                style: TextStyle(fontSize: 11, color: AppTheme.slateInactive),
+                style: TextStyle(fontSize: 11, color: context.appColors.subtleText),
               ),
             ],
           ),
