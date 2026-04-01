@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class ProgressScreen extends ConsumerWidget {
@@ -100,8 +101,8 @@ class ProgressScreen extends ConsumerWidget {
                                       AppFormatters.decimal(
                                         record.estimatedOneRepMax,
                                       ),
-                                      style: const TextStyle(
-                                        color: Color(0xFF257BF4),
+                                      style: TextStyle(
+                                        color: Theme.of(context).colorScheme.primary,
                                         fontWeight: FontWeight.w900,
                                       ),
                                     ),
@@ -223,7 +224,7 @@ class _LiftChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: const Color(0xFFF4F8FD),
+        color: context.appColors.surfaceMuted,
         borderRadius: BorderRadius.circular(18),
       ),
       child: Padding(
@@ -233,8 +234,8 @@ class _LiftChip extends StatelessWidget {
           children: [
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.black54,
+              style: TextStyle(
+                color: context.appColors.subtleText,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -297,7 +298,7 @@ class _VolumeBars extends StatelessWidget {
                         widthFactor: 0.75,
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: const Color(0xFF257BF4),
+                            color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(20),
                           ),
                         ),
@@ -307,7 +308,7 @@ class _VolumeBars extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     AppFormatters.monthDay(point.weekStart),
-                    style: const TextStyle(fontSize: 11, color: Colors.black54),
+                    style: TextStyle(fontSize: 11, color: context.appColors.subtleText),
                   ),
                 ],
               ),
