@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_controller.dart';
 
 class ExerciseEditorScreen extends ConsumerStatefulWidget {
@@ -240,21 +240,21 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                     width: double.infinity,
                     height: 140,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
+                      color: context.appColors.surfaceMuted,
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: AppTheme.border,
+                        color: context.appColors.border,
                         style: BorderStyle.solid,
                       ),
                     ),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_a_photo_rounded, size: 36, color: AppTheme.slateInactive),
+                        Icon(Icons.add_a_photo_rounded, size: 36, color: context.appColors.subtleText),
                         const SizedBox(height: 8),
                         Text(
                           'Add a photo of the machine',
-                          style: TextStyle(color: AppTheme.slateInactive, fontSize: 14),
+                          style: TextStyle(color: context.appColors.subtleText, fontSize: 14),
                         ),
                       ],
                     ),
@@ -298,14 +298,14 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: selected
-                        ? AppTheme.primary
-                        : const Color(0xFFF1F5F9),
+                        ? Theme.of(context).colorScheme.primary
+                        : context.appColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     muscle,
                     style: TextStyle(
-                      color: selected ? Colors.white : AppTheme.ink,
+                      color: selected ? Theme.of(context).colorScheme.onPrimary : context.appColors.ink,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -321,7 +321,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           const SizedBox(height: 4),
           Text(
             l10n.secondaryMusclesHint,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.black54),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: context.appColors.subtleText),
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -345,21 +345,21 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
                     color: isPrimary
-                        ? Colors.grey.shade300
+                        ? Theme.of(context).disabledColor
                         : selected
-                            ? AppTheme.primary.withValues(alpha: 0.15)
-                            : const Color(0xFFF1F5F9),
+                            ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
+                            : context.appColors.surfaceMuted,
                     borderRadius: BorderRadius.circular(999),
-                    border: selected ? Border.all(color: AppTheme.primary, width: 1.5) : null,
+                    border: selected ? Border.all(color: Theme.of(context).colorScheme.primary, width: 1.5) : null,
                   ),
                   child: Text(
                     muscle,
                     style: TextStyle(
                       color: isPrimary
-                          ? Colors.grey
+                          ? Theme.of(context).disabledColor
                           : selected
-                              ? AppTheme.primary
-                              : AppTheme.ink,
+                              ? Theme.of(context).colorScheme.primary
+                              : context.appColors.ink,
                       fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
                     ),
                   ),
@@ -400,10 +400,10 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.surface,
                     border: Border.all(
                       color:
-                          selected ? AppTheme.primary : AppTheme.border,
+                          selected ? Theme.of(context).colorScheme.primary : context.appColors.border,
                     ),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -415,8 +415,8 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                             : Icons.check_box_outline_blank,
                         size: 20,
                         color: selected
-                            ? AppTheme.primary
-                            : AppTheme.slateInactive,
+                            ? Theme.of(context).colorScheme.primary
+                            : context.appColors.subtleText,
                       ),
                       const SizedBox(width: 8),
                       Text(item, style: const TextStyle(fontSize: 13)),

@@ -5,7 +5,7 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -72,7 +72,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
             prefixIcon: const Icon(Icons.search_rounded),
             hintText: l10n.searchExercises,
             filled: true,
-            fillColor: const Color(0xFFF1F5F9),
+            fillColor: context.appColors.surfaceMuted,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: BorderSide.none,
@@ -108,7 +108,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 title: entry.key,
                 trailing: Text(
                   '${entry.value.length}',
-                  style: const TextStyle(color: Colors.black54),
+                  style: TextStyle(color: context.appColors.subtleText),
                 ),
                 child: Column(
                   children: entry.value.map((exercise) {
@@ -123,16 +123,16 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                           width: 64,
                           height: 64,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: context.appColors.surfaceMuted,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Builder(
                             builder: (context) {
                               final photoBase64 = exercise.photoBase64;
                               if (photoBase64 == null || photoBase64.isEmpty) {
-                                return const Icon(
+                                return Icon(
                                   Icons.fitness_center,
-                                  color: AppTheme.slateInactive,
+                                  color: context.appColors.subtleText,
                                 );
                               }
                               try {
@@ -149,9 +149,9 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                   ),
                                 );
                               } on FormatException {
-                                return const Icon(
+                                return Icon(
                                   Icons.fitness_center,
-                                  color: AppTheme.slateInactive,
+                                  color: context.appColors.subtleText,
                                 );
                               }
                             },
