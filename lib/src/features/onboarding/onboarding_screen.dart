@@ -3,7 +3,7 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
@@ -99,11 +99,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           children: [
             CircleAvatar(
               radius: 48,
-              backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
-              child: const Icon(
+              backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+              child: Icon(
                 Icons.fitness_center_rounded,
                 size: 64,
-                color: AppTheme.primary,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 32),
@@ -117,7 +117,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Text(
               l10n.whatShouldWeCallYou,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.slateInactive,
+                color: context.appColors.subtleText,
               ),
             ),
             const SizedBox(height: 24),
@@ -137,7 +137,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 onPressed:
                     _nameController.text.trim().isEmpty ? null : _goToNextPage,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -155,7 +155,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   child: Text(
                     l10n.orSignIn,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppTheme.slateInactive,
+                      color: context.appColors.subtleText,
                     ),
                   ),
                 ),
@@ -222,7 +222,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             Text(
               l10n.changeAnytime,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppTheme.slateInactive,
+                color: context.appColors.subtleText,
               ),
             ),
             const SizedBox(height: 32),
@@ -255,7 +255,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               child: FilledButton(
                 onPressed: _startTraining,
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -296,10 +296,14 @@ class _UnitCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 24),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.primary : Colors.white,
+          color: selected
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: selected ? AppTheme.primary : AppTheme.border,
+            color: selected
+                ? Theme.of(context).colorScheme.primary
+                : context.appColors.border,
             width: selected ? 2 : 1,
           ),
         ),
@@ -309,14 +313,18 @@ class _UnitCard extends StatelessWidget {
               label,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: selected ? Colors.white : null,
+                color: selected
+                    ? Theme.of(context).colorScheme.onPrimary
+                    : null,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
               style: theme.textTheme.bodySmall?.copyWith(
-                color: selected ? Colors.white70 : AppTheme.slateInactive,
+                color: selected
+                    ? Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.7)
+                    : context.appColors.subtleText,
               ),
             ),
           ],
