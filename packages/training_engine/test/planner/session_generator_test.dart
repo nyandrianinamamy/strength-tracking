@@ -71,43 +71,43 @@ class MockRegistry implements ExerciseRegistryLookup {
 // ---------------------------------------------------------------------------
 
 MockRegistry _buildRichRegistry() {
-  final chestEx1 = _makeExercise('bench_press', 'chest', MovementClass.compoundUpper,
-      secondaryMuscles: ['shoulder', 'tricep']);
-  final chestEx2 = _makeExercise('incline_press', 'chest', MovementClass.compoundUpper);
-  final shoulderEx1 = _makeExercise('ohp', 'shoulder', MovementClass.compoundUpper,
-      secondaryMuscles: ['tricep']);
-  final shoulderEx2 = _makeExercise('lateral_raise', 'shoulder', MovementClass.isolation);
-  final tricepEx1 = _makeExercise('tricep_pushdown', 'tricep', MovementClass.isolation);
-  final tricepEx2 = _makeExercise('skull_crusher', 'tricep', MovementClass.isolation);
-  final backEx1 = _makeExercise('pullup', 'back', MovementClass.compoundUpper,
-      secondaryMuscles: ['bicep', 'rear_delt']);
-  final backEx2 = _makeExercise('row', 'back', MovementClass.compoundUpper,
-      secondaryMuscles: ['bicep']);
-  final backEx3 = _makeExercise('lat_pulldown', 'back', MovementClass.isolation);
-  final bicepEx1 = _makeExercise('barbell_curl', 'bicep', MovementClass.isolation);
-  final bicepEx2 = _makeExercise('hammer_curl', 'bicep', MovementClass.isolation);
-  final rearDeltEx = _makeExercise('face_pull', 'rear_delt', MovementClass.isolation);
-  final quadEx1 = _makeExercise('squat', 'quad', MovementClass.compoundLower,
-      secondaryMuscles: ['glute', 'hamstring']);
-  final quadEx2 = _makeExercise('leg_press', 'quad', MovementClass.compoundLower);
-  final hamstringEx1 = _makeExercise('rdl', 'hamstring', MovementClass.compoundLower,
-      secondaryMuscles: ['glute']);
-  final hamstringEx2 = _makeExercise('leg_curl', 'hamstring', MovementClass.isolation);
-  final gluteEx = _makeExercise('hip_thrust', 'glute', MovementClass.isolation);
-  final calfEx = _makeExercise('calf_raise', 'calf', MovementClass.isolation);
+  final chestEx1 = _makeExercise('bench_press', 'pectorals', MovementClass.compoundUpper,
+      secondaryMuscles: ['anterior_deltoid', 'triceps']);
+  final chestEx2 = _makeExercise('incline_press', 'pectorals', MovementClass.compoundUpper);
+  final shoulderEx1 = _makeExercise('ohp', 'anterior_deltoid', MovementClass.compoundUpper,
+      secondaryMuscles: ['triceps']);
+  final shoulderEx2 = _makeExercise('lateral_raise', 'anterior_deltoid', MovementClass.isolation);
+  final tricepEx1 = _makeExercise('tricep_pushdown', 'triceps', MovementClass.isolation);
+  final tricepEx2 = _makeExercise('skull_crusher', 'triceps', MovementClass.isolation);
+  final backEx1 = _makeExercise('pullup', 'lats', MovementClass.compoundUpper,
+      secondaryMuscles: ['biceps', 'rear_deltoid']);
+  final backEx2 = _makeExercise('row', 'lats', MovementClass.compoundUpper,
+      secondaryMuscles: ['biceps']);
+  final backEx3 = _makeExercise('lat_pulldown', 'lats', MovementClass.isolation);
+  final bicepEx1 = _makeExercise('barbell_curl', 'biceps', MovementClass.isolation);
+  final bicepEx2 = _makeExercise('hammer_curl', 'biceps', MovementClass.isolation);
+  final rearDeltEx = _makeExercise('face_pull', 'rear_deltoid', MovementClass.isolation);
+  final quadEx1 = _makeExercise('squat', 'quadriceps', MovementClass.compoundLower,
+      secondaryMuscles: ['glutes', 'hamstrings']);
+  final quadEx2 = _makeExercise('leg_press', 'quadriceps', MovementClass.compoundLower);
+  final hamstringEx1 = _makeExercise('rdl', 'hamstrings', MovementClass.compoundLower,
+      secondaryMuscles: ['glutes']);
+  final hamstringEx2 = _makeExercise('leg_curl', 'hamstrings', MovementClass.isolation);
+  final gluteEx = _makeExercise('hip_thrust', 'glutes', MovementClass.isolation);
+  final calfEx = _makeExercise('calf_raise', 'calves', MovementClass.isolation);
 
   return MockRegistry(
     byMuscle: {
-      'chest': [chestEx1, chestEx2],
-      'shoulder': [shoulderEx1, shoulderEx2],
-      'tricep': [tricepEx1, tricepEx2],
-      'back': [backEx1, backEx2, backEx3],
-      'bicep': [bicepEx1, bicepEx2],
-      'rear_delt': [rearDeltEx],
-      'quad': [quadEx1, quadEx2],
-      'hamstring': [hamstringEx1, hamstringEx2],
-      'glute': [gluteEx],
-      'calf': [calfEx],
+      'pectorals': [chestEx1, chestEx2],
+      'anterior_deltoid': [shoulderEx1, shoulderEx2],
+      'triceps': [tricepEx1, tricepEx2],
+      'lats': [backEx1, backEx2, backEx3],
+      'biceps': [bicepEx1, bicepEx2],
+      'rear_deltoid': [rearDeltEx],
+      'quadriceps': [quadEx1, quadEx2],
+      'hamstrings': [hamstringEx1, hamstringEx2],
+      'glutes': [gluteEx],
+      'calves': [calfEx],
     },
     compounds: {
       SessionFocus.push: [chestEx1, shoulderEx1],

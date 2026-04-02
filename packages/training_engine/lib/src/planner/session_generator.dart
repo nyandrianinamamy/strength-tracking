@@ -213,37 +213,37 @@ List<PlannedExercise> _exercisesForFocus(
   switch (focus) {
     case SessionFocus.push:
       result
-        ..addAll(_pickFor('chest', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('shoulder', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('tricep', 2, registry, excluded, preferred));
+        ..addAll(_pickFor('pectorals', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('anterior_deltoid', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('triceps', 2, registry, excluded, preferred));
 
     case SessionFocus.pull:
       result
-        ..addAll(_pickFor('back', 3, registry, excluded, preferred))
-        ..addAll(_pickFor('bicep', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('rear_delt', 1, registry, excluded, preferred));
+        ..addAll(_pickFor('lats', 3, registry, excluded, preferred))
+        ..addAll(_pickFor('biceps', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('rear_deltoid', 1, registry, excluded, preferred));
 
     case SessionFocus.legs:
       result
-        ..addAll(_pickFor('quad', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('hamstring', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('glute', 1, registry, excluded, preferred))
-        ..addAll(_pickFor('calf', 1, registry, excluded, preferred));
+        ..addAll(_pickFor('quadriceps', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('hamstrings', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('glutes', 1, registry, excluded, preferred))
+        ..addAll(_pickFor('calves', 1, registry, excluded, preferred));
 
     case SessionFocus.upper:
       result
-        ..addAll(_pickFor('chest', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('back', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('shoulder', 1, registry, excluded, preferred))
-        ..addAll(_pickFor('bicep', 1, registry, excluded, preferred))
-        ..addAll(_pickFor('tricep', 1, registry, excluded, preferred));
+        ..addAll(_pickFor('pectorals', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('lats', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('anterior_deltoid', 1, registry, excluded, preferred))
+        ..addAll(_pickFor('biceps', 1, registry, excluded, preferred))
+        ..addAll(_pickFor('triceps', 1, registry, excluded, preferred));
 
     case SessionFocus.lower:
       result
-        ..addAll(_pickFor('quad', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('hamstring', 2, registry, excluded, preferred))
-        ..addAll(_pickFor('glute', 1, registry, excluded, preferred))
-        ..addAll(_pickFor('calf', 1, registry, excluded, preferred));
+        ..addAll(_pickFor('quadriceps', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('hamstrings', 2, registry, excluded, preferred))
+        ..addAll(_pickFor('glutes', 1, registry, excluded, preferred))
+        ..addAll(_pickFor('calves', 1, registry, excluded, preferred));
 
     case SessionFocus.fullBody:
       // 1 push compound, 1 pull compound, 1 leg compound, 2-3 accessories
@@ -258,9 +258,9 @@ List<PlannedExercise> _exercisesForFocus(
           _pickCompounds(SessionFocus.legs, 1, registry, excluded, preferred),
         )
         // Accessories: 1 shoulder + 1 arm
-        ..addAll(_pickFor('shoulder', 1, registry, excluded, preferred))
-        ..addAll(_pickFor('bicep', 1, registry, excluded, preferred))
-        ..addAll(_pickFor('tricep', 1, registry, excluded, preferred));
+        ..addAll(_pickFor('anterior_deltoid', 1, registry, excluded, preferred))
+        ..addAll(_pickFor('biceps', 1, registry, excluded, preferred))
+        ..addAll(_pickFor('triceps', 1, registry, excluded, preferred));
   }
 
   return result;

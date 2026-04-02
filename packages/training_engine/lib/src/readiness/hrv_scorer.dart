@@ -96,17 +96,17 @@ double _rhrTrendPenalty(List<HrvRecord> records, DateTime today) {
 
   if (withRhr.length < 2) return 0.0;
 
-  // Earliest RHR in the 7-day look-back window
+  // Filter to records within the 7-day window only
   final cutoff = today.subtract(const Duration(days: _rhrTrendDays));
-  final early = withRhr.where((r) {
+  final inWindow = withRhr.where((r) {
     final d = DateTime.utc(r.date.year, r.date.month, r.date.day);
-    return !d.isAfter(cutoff.add(const Duration(days: 1)));
+    return !d.isBefore(cutoff);
   }).toList();
 
-  if (early.isEmpty) return 0.0;
+  if (inWindow.length < 2) return 0.0;
 
-  final earliestRhr = early.first.restingHeartRate!;
-  final latestRhr = withRhr.last.restingHeartRate!;
+  final earliestRhr = inWindow.first.restingHeartRate!;
+  final latestRhr = inWindow.last.restingHeartRate!;
 
   return (latestRhr - earliestRhr) > _rhrRisingThreshold ? 10.0 : 0.0;
 }

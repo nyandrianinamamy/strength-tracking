@@ -246,23 +246,23 @@ void main() {
 
   group('adjustSessionForFatigue', () {
     test('replaces exercise when secondary muscle is fatigued (>50)', () {
-      // bench_press: primary=chest, secondary=tricep
-      // tricep_cable: primary=chest (no tricep secondary) → valid substitute
+      // bench_press: primary=pectorals, secondary=triceps
+      // incline_press: primary=pectorals (no triceps secondary) → valid substitute
       final benchPress = _makeExercise(
         'bench_press',
-        'chest',
+        'pectorals',
         MovementClass.compoundUpper,
-        secondaryMuscles: ['tricep'],
+        secondaryMuscles: ['triceps'],
       );
       final inclinePress = _makeExercise(
         'incline_press',
-        'chest',
+        'pectorals',
         MovementClass.compoundUpper,
-        // No tricep secondary → suitable substitute
+        // No triceps secondary → suitable substitute
       );
 
       final registry = MockRegistry({
-        'chest': [benchPress, inclinePress],
+        'pectorals': [benchPress, inclinePress],
       });
 
       final session = PlannedSession(
@@ -272,7 +272,7 @@ void main() {
         estimatedDuration: const Duration(hours: 1),
       );
 
-      final fatigueMap = {'tricep': 75.0}; // >50 → substitute
+      final fatigueMap = {'triceps': 75.0}; // >50 → substitute
 
       final result = adjustSessionForFatigue(session, fatigueMap, registry);
 
@@ -296,13 +296,13 @@ void main() {
     test('no substitution when muscles are recovered (fatigue <= 50)', () {
       final benchPress = _makeExercise(
         'bench_press',
-        'chest',
+        'pectorals',
         MovementClass.compoundUpper,
-        secondaryMuscles: ['tricep'],
+        secondaryMuscles: ['triceps'],
       );
 
       final registry = MockRegistry({
-        'chest': [benchPress],
+        'pectorals': [benchPress],
       });
 
       final session = PlannedSession(
@@ -312,7 +312,7 @@ void main() {
         estimatedDuration: const Duration(hours: 1),
       );
 
-      final fatigueMap = {'tricep': 30.0}; // ≤50 → no substitution
+      final fatigueMap = {'triceps': 30.0}; // ≤50 → no substitution
 
       final result = adjustSessionForFatigue(session, fatigueMap, registry);
 
@@ -324,9 +324,9 @@ void main() {
     });
 
     test('primary fatigue >60 adds warning, not substitution', () {
-      final squat = _makeExercise('squat', 'quad', MovementClass.compoundLower);
+      final squat = _makeExercise('squat', 'quadriceps', MovementClass.compoundLower);
 
-      final registry = MockRegistry({'quad': [squat]});
+      final registry = MockRegistry({'quadriceps': [squat]});
 
       final session = PlannedSession(
         dayOfWeek: 1,
@@ -335,7 +335,7 @@ void main() {
         estimatedDuration: const Duration(hours: 1),
       );
 
-      final fatigueMap = {'quad': 80.0}; // >60 → warning only
+      final fatigueMap = {'quadriceps': 80.0}; // >60 → warning only
 
       final result = adjustSessionForFatigue(session, fatigueMap, registry);
 
@@ -351,11 +351,11 @@ void main() {
     test('no changes when fatigueMap is empty', () {
       final benchPress = _makeExercise(
         'bench_press',
-        'chest',
+        'pectorals',
         MovementClass.compoundUpper,
-        secondaryMuscles: ['tricep'],
+        secondaryMuscles: ['triceps'],
       );
-      final registry = MockRegistry({'chest': [benchPress]});
+      final registry = MockRegistry({'pectorals': [benchPress]});
 
       final session = PlannedSession(
         dayOfWeek: 1,
@@ -373,21 +373,21 @@ void main() {
     test('multiple exercises: only fatigued-secondary exercises are replaced', () {
       final deadlift = _makeExercise(
         'deadlift',
-        'hamstring',
+        'hamstrings',
         MovementClass.compoundLower,
         secondaryMuscles: ['erector_spinae'],
       );
       final legCurl = _makeExercise(
         'leg_curl',
-        'hamstring',
+        'hamstrings',
         MovementClass.isolation,
         // No erector_spinae secondary
       );
-      final squat = _makeExercise('squat', 'quad', MovementClass.compoundLower);
+      final squat = _makeExercise('squat', 'quadriceps', MovementClass.compoundLower);
 
       final registry = MockRegistry({
-        'hamstring': [deadlift, legCurl],
-        'quad': [squat],
+        'hamstrings': [deadlift, legCurl],
+        'quadriceps': [squat],
       });
 
       final session = PlannedSession(

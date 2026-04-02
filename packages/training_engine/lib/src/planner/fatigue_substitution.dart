@@ -161,8 +161,10 @@ EngineExercise? _resolveExercise(String id, ExerciseRegistryLookup registry) {
   // In a full implementation the registry would expose a direct lookup;
   // here we use a best-effort scan across known muscle IDs.
   const commonMuscles = [
-    'chest', 'shoulder', 'tricep', 'back', 'bicep', 'rear_delt',
-    'quad', 'hamstring', 'glute', 'calf', 'erector_spinae', 'core',
+    'pectorals', 'anterior_deltoid', 'lateral_deltoid', 'rear_deltoid',
+    'triceps', 'lats', 'upper_back', 'biceps',
+    'quadriceps', 'hamstrings', 'glutes', 'calves',
+    'erector_spinae', 'abs',
   ];
   for (final muscle in commonMuscles) {
     final results = registry.exercisesForMuscle(muscle);
