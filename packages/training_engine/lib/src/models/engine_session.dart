@@ -20,7 +20,7 @@ class EngineSession {
     'startedAt': startedAt.toIso8601String(),
     'endedAt': endedAt.toIso8601String(),
     'sets': sets.map((s) => s.toJson()).toList(),
-    'sessionRpe': sessionRpe,
+    if (sessionRpe != null) 'sessionRpe': sessionRpe,
   };
 
   factory EngineSession.fromJson(Map<String, dynamic> json) => EngineSession(
