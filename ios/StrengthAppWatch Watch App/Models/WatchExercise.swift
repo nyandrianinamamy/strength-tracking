@@ -10,6 +10,7 @@ struct WatchExercise: Codable, Identifiable {
     let restSeconds: Int
     let suggestedWeightKg: Double
     let completedSets: [WatchCompletedSet]
+    let activeTimerStartedAt: String?
 
     var id: String { exerciseId }
 
@@ -27,6 +28,7 @@ struct WatchExercise: Codable, Identifiable {
         case suggestedWeightKg
         case recommendedWeightKg
         case completedSets
+        case activeTimerStartedAt
     }
 
     init(
@@ -38,7 +40,8 @@ struct WatchExercise: Codable, Identifiable {
         targetDurationSeconds: Int?,
         restSeconds: Int,
         suggestedWeightKg: Double,
-        completedSets: [WatchCompletedSet]
+        completedSets: [WatchCompletedSet],
+        activeTimerStartedAt: String? = nil
     ) {
         self.exerciseId = exerciseId
         self.name = name
@@ -49,6 +52,7 @@ struct WatchExercise: Codable, Identifiable {
         self.restSeconds = restSeconds
         self.suggestedWeightKg = suggestedWeightKg
         self.completedSets = completedSets
+        self.activeTimerStartedAt = activeTimerStartedAt
     }
 
     init(from decoder: Decoder) throws {
@@ -64,6 +68,7 @@ struct WatchExercise: Codable, Identifiable {
             ?? container.decodeIfPresent(Double.self, forKey: .recommendedWeightKg)
             ?? 0
         completedSets = try container.decode([WatchCompletedSet].self, forKey: .completedSets)
+        activeTimerStartedAt = try container.decodeIfPresent(String.self, forKey: .activeTimerStartedAt)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -77,5 +82,6 @@ struct WatchExercise: Codable, Identifiable {
         try container.encode(restSeconds, forKey: .restSeconds)
         try container.encode(suggestedWeightKg, forKey: .suggestedWeightKg)
         try container.encode(completedSets, forKey: .completedSets)
+        try container.encodeIfPresent(activeTimerStartedAt, forKey: .activeTimerStartedAt)
     }
 }

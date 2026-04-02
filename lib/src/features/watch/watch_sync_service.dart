@@ -32,6 +32,10 @@ class WatchSyncService {
   Timer? _pendingSyncRetry;
   Map<String, dynamic>? _pendingSnapshot;
 
+  // Active timed exercise timer state (set by active_workout_screen)
+  String? _activeTimerExerciseId;
+  DateTime? _activeTimerStartedAt;
+
   /// Start listening for state changes and Watch events.
   /// Call this once during app initialization.
   void initialize() {
@@ -61,6 +65,18 @@ class WatchSyncService {
     _eventSubscription?.cancel();
     _pendingSyncRetry?.cancel();
     _isListening = false;
+  }
+
+  /// Called by active_workout_screen when a timed exercise timer starts or stops.
+  void updateTimedExerciseTimer({
+    required String? exerciseId,
+    required DateTime? startedAt,
+  }) {
+    _activeTimerExerciseId = exerciseId;
+    _activeTimerStartedAt = startedAt;
+    // Trigger immediate sync so Watch gets the timer state
+    final state = _ref.read(appStateControllerProvider);
+    _onStateChanged(state);
   }
 
   // MARK: - State → Watch
@@ -115,7 +131,7 @@ class WatchSyncService {
               .toList()
             ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
 
-      return {
+      final exerciseData = {
         'exerciseId': re.exerciseId,
         'name': name,
         'exerciseType': exercise?.exerciseType ?? 'strength',
@@ -136,6 +152,15 @@ class WatchSyncService {
             )
             .toList(),
       };
+
+      // Add active timer state if this exercise has a running timer
+      if (_activeTimerExerciseId == re.exerciseId &&
+          _activeTimerStartedAt != null) {
+        exerciseData['activeTimerStartedAt'] =
+            _activeTimerStartedAt!.toUtc().toIso8601String();
+      }
+
+      return exerciseData;
     }).toList();
 
     return {

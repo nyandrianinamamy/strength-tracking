@@ -2,8 +2,9 @@ import Foundation
 import WatchConnectivity
 import WatchKit
 import Combine
+import HealthKit
 
-class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
+class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWorkoutSessionDelegate {
 
     static let shared = WorkoutSessionManager()
 
@@ -19,6 +20,11 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
     private let cacheKey = "cached_session_snapshot"
     private let queueKey = "queued_log_sets"
     private var wcSession: WCSession?
+
+    // MARK: - HealthKit Workout Session
+
+    private let healthStore = HKHealthStore()
+    private var workoutSession: HKWorkoutSession?
 
     private override init() {
         super.init()
@@ -104,6 +110,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
                 DispatchQueue.main.async {
                     self.snapshot = enriched
                     self.showWorkoutComplete = false
+                    self.startWorkoutSession()
                 }
                 cacheSnapshot(enriched)
             } catch {
@@ -112,6 +119,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
 
         case "session_end":
             DispatchQueue.main.async {
+                self.endWorkoutSession()
                 self.showWorkoutComplete = true
                 // Show "Workout Complete" for 3 seconds, then clear
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
@@ -203,6 +211,51 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate {
             }
         }
         UserDefaults.standard.removeObject(forKey: queueKey)
+    }
+
+    // MARK: - HKWorkoutSession
+
+    private func startWorkoutSession() {
+        guard workoutSession == nil, HKHealthStore.isHealthDataAvailable() else { return }
+
+        healthStore.requestAuthorization(toShare: [HKQuantityType.workoutType()], read: []) { [weak self] success, _ in
+            guard success else { return }
+            DispatchQueue.main.async {
+                self?.beginWorkout()
+            }
+        }
+    }
+
+    private func beginWorkout() {
+        guard workoutSession == nil else { return }
+        let config = HKWorkoutConfiguration()
+        config.activityType = .traditionalStrengthTraining
+        config.locationType = .indoor
+
+        do {
+            let session = try HKWorkoutSession(healthStore: healthStore, configuration: config)
+            session.delegate = self
+            session.startActivity(with: Date())
+            workoutSession = session
+        } catch {
+            print("Failed to start HKWorkoutSession: \(error)")
+        }
+    }
+
+    private func endWorkoutSession() {
+        workoutSession?.end()
+        workoutSession = nil
+    }
+
+    // MARK: - HKWorkoutSessionDelegate
+
+    func workoutSession(_ workoutSession: HKWorkoutSession, didChangeTo toState: HKWorkoutSessionState, from fromState: HKWorkoutSessionState, date: Date) {
+        // No-op — we only care about keeping the app foregrounded
+    }
+
+    func workoutSession(_ workoutSession: HKWorkoutSession, didFailWithError error: Error) {
+        print("HKWorkoutSession failed: \(error)")
+        self.workoutSession = nil
     }
 
     // MARK: - Cache

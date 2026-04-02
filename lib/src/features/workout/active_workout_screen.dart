@@ -190,6 +190,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       ts.running = true;
       ts.beeped = false;
     });
+    ref.read(watchSyncServiceProvider).updateTimedExerciseTimer(
+      exerciseId: _activeTimedExerciseId,
+      startedAt: ts.start,
+    );
   }
 
   void _pauseTimedExercise() {
@@ -200,6 +204,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       ts.start = null;
       ts.running = false;
     });
+    ref.read(watchSyncServiceProvider).updateTimedExerciseTimer(
+      exerciseId: null,
+      startedAt: null,
+    );
   }
 
   void _resetTimedExercise(int durationSeconds) {
@@ -211,6 +219,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       ts.running = false;
       ts.beeped = false;
     });
+    ref.read(watchSyncServiceProvider).updateTimedExerciseTimer(
+      exerciseId: null,
+      startedAt: null,
+    );
   }
 
   void _initTimedExercise(String exerciseId, int durationSeconds) {

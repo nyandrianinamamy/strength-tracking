@@ -35,81 +35,107 @@ struct TimedExerciseView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 8) {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let sessionTime = elapsedSessionTime(now: context.date)
+
+            VStack(spacing: 0) {
+                Spacer().frame(height: 4)
+
                 // Rest timer pill
                 if let _ = restTimerStart, restRemaining > 0 {
                     HStack(spacing: 4) {
                         Image(systemName: "timer")
-                            .font(.caption2)
+                            .font(.system(size: 10, weight: .black))
                         Text("\(WatchL10n.string("resting", locale: locale)): \(formatTime(restRemaining))")
-                            .font(.caption2)
+                            .font(.system(size: 12, weight: .black))
                     }
+                    .foregroundColor(.blue)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.2))
-                    .cornerRadius(12)
+                    .background(Color.blue.opacity(0.1))
+                    .cornerRadius(999)
                 }
+
+                Spacer().frame(height: 8)
 
                 // Set progress
                 Text(WatchL10n.setOf(min(nextSetNumber, exercise.targetSets), exercise.targetSets, locale: locale))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 10, weight: .bold))
+                    .kerning(1)
+                    .textCase(.uppercase)
+                    .foregroundColor(Color(white: 0.63))
 
                 // Exercise name
                 Text(exercise.name)
-                    .font(.headline)
-                    .bold()
+                    .font(.system(size: 18, weight: .black))
+                    .tracking(-0.45)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
+                    .padding(.top, 2)
+
+                Spacer().frame(height: 12)
 
                 // Countdown display
-                Text(formatTime(isRunning ? remaining : targetDuration))
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    .foregroundColor(isRunning ? .blue : .primary)
-
-                // START / STOP button
                 if !allSetsComplete {
+                    Text(formatTime(isRunning ? remaining : targetDuration))
+                        .font(.system(size: 40, weight: .black, design: .rounded))
+                        .tracking(-2)
+                        .foregroundColor(isRunning ? .blue : .primary)
+
+                    Spacer()
+                    Spacer().frame(height: 8)
+
+                    // START / STOP button
                     Button(action: toggleTimer) {
-                        Text(isRunning
-                             ? WatchL10n.string("stop", locale: locale)
-                             : WatchL10n.string("start", locale: locale))
-                            .font(.headline)
-                            .bold()
-                            .frame(maxWidth: .infinity)
+                        VStack(spacing: 1) {
+                            Text(isRunning
+                                 ? WatchL10n.string("stop", locale: locale)
+                                 : WatchL10n.string("start", locale: locale))
+                                .font(.system(size: 13, weight: .black))
+                                .tracking(-0.3)
+                                .textCase(.uppercase)
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(isRunning ? Color.red : Color.blue)
+                        .cornerRadius(14)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(isRunning ? .red : .blue)
+                    .buttonStyle(.plain)
                 } else {
-                    Text("✓")
-                        .font(.title2)
+                    Spacer()
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 32))
                         .foregroundColor(.green)
+                    Spacer()
                 }
 
-                // Next exercise + session time
+                // Footer — next exercise + session time
+                Divider()
+                    .padding(.top, 8)
                 HStack {
                     if let next = nextExerciseName {
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: 1) {
                             Text(WatchL10n.string("next", locale: locale))
-                                .font(.system(size: 9))
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 8, weight: .bold))
+                                .textCase(.uppercase)
+                                .foregroundColor(Color(white: 0.63))
                             Text(next)
-                                .font(.caption2)
+                                .font(.system(size: 10, weight: .black))
                                 .lineLimit(1)
                         }
                     }
                     Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
+                    VStack(alignment: .trailing, spacing: 1) {
                         Text(WatchL10n.string("session", locale: locale))
-                            .font(.system(size: 9))
-                            .foregroundColor(.secondary)
-                        TimelineView(.periodic(from: .now, by: 1)) { context in
-                            Text(elapsedSessionTime(now: context.date))
-                                .font(.caption2)
-                        }
+                            .font(.system(size: 8, weight: .bold))
+                            .textCase(.uppercase)
+                            .foregroundColor(Color(white: 0.63))
+                        Text(sessionTime)
+                            .font(.system(size: 10, weight: .black))
                     }
                 }
-                .padding(.top, 4)
+                .padding(.top, 6)
             }
             .padding(.horizontal, 4)
         }
@@ -122,8 +148,58 @@ struct TimedExerciseView: View {
             lastRestAlertSecond = nil
             isRunning = false
         }
-        .onAppear { restoreRestTimer() }
+        .onAppear {
+            restoreRestTimer()
+            syncFromPhone()
+        }
         .onChange(of: exercise.completedSets.count) { _ in restoreRestTimer() }
+        .onChange(of: exercise.activeTimerStartedAt) { _ in syncFromPhone() }
+    }
+
+    // MARK: - Phone sync
+
+    private func syncFromPhone() {
+        if let startStr = exercise.activeTimerStartedAt,
+           let startDate = parseISO8601(startStr) {
+            // Phone timer is running — sync Watch to it
+            let elapsedSinceStart = Int(Date().timeIntervalSince(startDate))
+            let rem = targetDuration - elapsedSinceStart
+            if rem > 0 && !isRunning {
+                elapsed = elapsedSinceStart
+                isRunning = true
+                timer?.invalidate()
+                timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
+                    DispatchQueue.main.async {
+                        elapsed += 1
+                        let rem = targetDuration - elapsed
+                        if rem == 3 || rem == 2 || rem == 1 {
+                            WKInterfaceDevice.current().play(.click)
+                        }
+                        if rem <= 0 {
+                            timer?.invalidate()
+                            timer = nil
+                            isRunning = false
+                            WKInterfaceDevice.current().play(.notification)
+                            let duration = elapsed
+                            elapsed = 0
+                            logCompleted(duration: duration)
+                        }
+                    }
+                }
+            } else if rem <= 0 {
+                // Timer already finished
+                timer?.invalidate()
+                timer = nil
+                isRunning = false
+                elapsed = 0
+            }
+        } else if isRunning {
+            // Phone timer stopped — stop Watch timer too
+            timer?.invalidate()
+            timer = nil
+            isRunning = false
+            elapsed = 0
+        }
     }
 
     // MARK: - Timer
