@@ -7,6 +7,7 @@ import 'package:strength_training_tracker/src/features/exercises/exercise_editor
 import 'package:strength_training_tracker/src/features/exercises/exercises_screen.dart';
 import 'package:strength_training_tracker/src/features/onboarding/onboarding_screen.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_screen.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_debug_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_groups_screen.dart';
@@ -61,10 +62,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/debug/training-engine',
-            builder: (context, state) => Scaffold(
-              appBar: AppBar(title: Text('Training Engine Debug')),
-              body: SizedBox.shrink(),
-            ),
+            builder: (context, state) => const TrainingEngineDebugScreen(),
           ),
         ],
       ),
