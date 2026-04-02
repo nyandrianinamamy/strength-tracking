@@ -141,16 +141,18 @@ LoadRecommendation buildRecommendation({
   // Step 5: Progression + gates clear
   if (delta == PerformanceDelta.progression) {
     if (e1rm != null) {
-      final targetMidReps =
-          (targets.targetRepsLow + targets.targetRepsHigh) ~/ 2;
       final rawPredicted =
-          predictLoad(e1rm: e1rm, targetReps: targetMidReps, targetRpe: targets.targetRpe);
+          predictLoad(e1rm: e1rm, targetReps: targets.targetRepsHigh, targetRpe: targets.targetRpe);
 
       // Apply gate modifier to the increment over previous weight
       double suggested;
       if (gate.modifier < 1.0 && previousWeightKg != null) {
         final increment = rawPredicted - previousWeightKg;
-        suggested = previousWeightKg + (increment * gate.modifier);
+        if (increment > 0) {
+          suggested = previousWeightKg + (increment * gate.modifier);
+        } else {
+          suggested = previousWeightKg;
+        }
       } else {
         suggested = rawPredicted;
       }
