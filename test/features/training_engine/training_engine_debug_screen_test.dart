@@ -43,6 +43,17 @@ void _expectRowContaining(String label, String valueFragment) {
   );
 }
 
+void _expectRowInSection(String sectionTitle, String label, String value) {
+  final section = find.widgetWithText(Card, sectionTitle);
+  expect(section, findsOneWidget);
+  final row = find.descendant(
+    of: section,
+    matching: find.widgetWithText(Row, label),
+  );
+  expect(row, findsOneWidget);
+  expect(find.descendant(of: row, matching: find.text(value)), findsOneWidget);
+}
+
 Map<String, dynamic> _savedEngineState() {
   final now = DateTime.now();
   final savedEngine = TrainingEngine(
@@ -107,11 +118,86 @@ Map<String, dynamic> _savedEngineState() {
     ),
   );
   savedEngine.ingestHrv(
+    HrvRecord(date: now, sdnn: 60.0, restingHeartRate: 60.0),
+  );
+
+  final snapshot = savedEngine.serializeState();
+  snapshot['lastUpdated'] = DateTime(2026, 4, 1, 18, 0).toIso8601String();
+  return snapshot;
+}
+
+Map<String, dynamic> _savedEngineStateWithBenchAndSquatData() {
+  final now = DateTime.now();
+  final savedEngine = TrainingEngine(
+    registry: ExerciseRegistry.withDefaults(),
+    profile: UserProfile(
+      sex: Sex.male,
+      age: 28,
+      bodyWeightKg: 80,
+      experience: ExperienceLevel.intermediate,
+      goal: HypertrophyGoal.hypertrophy,
+      availableDays: const [1, 3, 5],
+      maxSessionDuration: const Duration(minutes: 60),
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  savedEngine.ingestSession(
+    EngineSession(
+      id: 'debug-session-1',
+      startedAt: now.subtract(const Duration(hours: 1)),
+      endedAt: now,
+      sets: [
+        LoggedSet(
+          exerciseId: 'barbell_bench_press',
+          weightKg: 90,
+          reps: 6,
+          rpe: 8.0,
+          completedAt: now.subtract(const Duration(minutes: 50)),
+        ),
+        LoggedSet(
+          exerciseId: 'barbell_back_squat',
+          weightKg: 120,
+          reps: 5,
+          rpe: 8.5,
+          completedAt: now.subtract(const Duration(minutes: 35)),
+        ),
+      ],
+    ),
+  );
+  savedEngine.ingestSleep(
+    SleepRecord(
+      date: now.subtract(const Duration(days: 1)),
+      totalSleep: const Duration(hours: 8),
+      deepSleep: const Duration(minutes: 72),
+      remSleep: const Duration(minutes: 96),
+      coreSleep: const Duration(hours: 4, minutes: 48),
+    ),
+  );
+  savedEngine.ingestSleep(
+    SleepRecord(
+      date: now.subtract(const Duration(days: 2)),
+      totalSleep: const Duration(hours: 8),
+      deepSleep: const Duration(minutes: 72),
+      remSleep: const Duration(minutes: 96),
+      coreSleep: const Duration(hours: 4, minutes: 48),
+    ),
+  );
+  savedEngine.ingestHrv(
     HrvRecord(
-      date: now,
+      date: now.subtract(const Duration(days: 2)),
       sdnn: 60.0,
       restingHeartRate: 60.0,
     ),
+  );
+  savedEngine.ingestHrv(
+    HrvRecord(
+      date: now.subtract(const Duration(days: 1)),
+      sdnn: 60.0,
+      restingHeartRate: 60.0,
+    ),
+  );
+  savedEngine.ingestHrv(
+    HrvRecord(date: now, sdnn: 60.0, restingHeartRate: 60.0),
   );
 
   final snapshot = savedEngine.serializeState();
@@ -131,11 +217,11 @@ void main() {
       expect(find.text('Training Engine Debug'), findsOneWidget);
       expect(find.text('Engine Status'), findsOneWidget);
       expect(find.text('Readiness Breakdown'), findsOneWidget);
-      _expectRow('sessions ingested', '1');
+      _expectRowInSection('Engine Status', 'sessions ingested', '1');
       _expectRowContaining('Last updated', '2026-04-01T18:00:00');
-      _expectRow('Sleep records', '2');
-      _expectRow('HRV records', '3');
-      _expectRow('Daily loads', '1');
+      _expectRowInSection('Engine Status', 'Sleep records', '2');
+      _expectRowInSection('Engine Status', 'HRV records', '3');
+      _expectRowInSection('Engine Status', 'Daily loads', '1');
 
       _expectRow('Readiness score', '82.8/100');
       _expectRow('confidence', 'high');
@@ -144,6 +230,71 @@ void main() {
       _expectRow('acwr', '92.5');
       _expectRow('sleep', '70.0');
       _expectRow('hrv', '85.0');
+    },
+  );
+
+  testWidgets(
+    'debug screen renders fatigue, recommendation, and raw snapshot sections',
+    (tester) async {
+      final savedEngineState = _savedEngineStateWithBenchAndSquatData();
+      final container = ProviderContainer(
+        overrides: [
+          appStateRepositoryProvider.overrideWithValue(
+            MemoryAppStateRepository(
+              initialState: const AppState(
+                exercises: [],
+                routines: [],
+                sessions: [],
+              ),
+            ),
+          ),
+          initialAppStateProvider.overrideWithValue(
+            const AppState(exercises: [], routines: [], sessions: []),
+          ),
+          trainingEngineStateRepositoryProvider.overrideWithValue(
+            MemoryTrainingEngineStateRepository(initialState: savedEngineState),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      expect(
+        await container.read(engineDebugFatigueRowsProvider.future),
+        isNotEmpty,
+      );
+      expect(
+        await container.read(engineDebugRecommendationRowsProvider.future),
+        isNotEmpty,
+      );
+      expect(
+        await container.read(engineDebugRawSnapshotProvider.future),
+        contains('barbell_back_squat'),
+      );
+
+      await tester.pumpWidget(
+        _buildDebugScreenApp(savedEngineState: savedEngineState),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.scrollUntilVisible(
+        find.text('Raw Snapshot'),
+        400,
+        scrollable: find.byType(Scrollable),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Fatigue Breakdown'), findsOneWidget);
+      expect(find.text('Heatmap Payload'), findsOneWidget);
+      expect(find.text('Recommendation Breakdown'), findsOneWidget);
+      expect(find.text('Persisted State Summary'), findsOneWidget);
+      expect(find.text('Raw Snapshot'), findsOneWidget);
+      expect(find.textContaining('barbell_back_squat'), findsWidgets);
+      expect(find.textContaining('barbell_bench_press'), findsWidgets);
+
+      await tester.tap(find.text('Raw Snapshot'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('barbell_back_squat'), findsWidgets);
+      expect(find.textContaining('lastTopSets'), findsWidgets);
     },
   );
 
