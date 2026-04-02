@@ -278,6 +278,15 @@ void main() {
             restingHeartRate: 50.0,
           ),
         ],
+        lastTopSets: {
+          'barbell_back_squat': LoggedSet(
+            exerciseId: 'barbell_back_squat',
+            weightKg: 130.0,
+            reps: 5,
+            rpe: 8.0,
+            completedAt: DateTime.utc(2026, 3, 1),
+          ),
+        },
         lastUpdated: DateTime.utc(2026, 3, 2),
         sessionsIngested: 10,
       );
@@ -292,6 +301,7 @@ void main() {
       expect(restored.acwrState!.acuteEwma, closeTo(520.0, 0.001));
       expect(restored.sleepHistory.first.totalSleep.inHours, equals(8));
       expect(restored.hrvHistory.first.sdnn, closeTo(70.0, 0.001));
+      expect(restored.lastTopSets['barbell_back_squat']!.weightKg, closeTo(130.0, 0.001));
       expect(restored.lastUpdated, equals(DateTime.utc(2026, 3, 2)));
       expect(restored.sessionsIngested, equals(10));
     });

@@ -3,6 +3,7 @@ import 'e1rm_estimate.dart';
 import 'ewma_state.dart';
 import 'fatigue_impulse.dart';
 import 'hrv_record.dart';
+import 'logged_set.dart';
 import 'sleep_record.dart';
 import 'user_profile.dart';
 
@@ -31,6 +32,12 @@ class TrainingState {
   /// Recent HRV records for readiness scoring.
   final List<HrvRecord> hrvHistory;
 
+  /// Heaviest working set per exercise from the most recent session.
+  ///
+  /// Updated during [TrainingEngine.ingestSession]. Used by [TrainingEngine.recommendLoad]
+  /// to determine the last top set without storing full session history.
+  final Map<String, LoggedSet> lastTopSets;
+
   /// Wall-clock time of the last state mutation.
   final DateTime lastUpdated;
 
@@ -45,6 +52,7 @@ class TrainingState {
     required this.acwrState,
     required this.sleepHistory,
     required this.hrvHistory,
+    required this.lastTopSets,
     required this.lastUpdated,
     required this.sessionsIngested,
   });
@@ -62,6 +70,7 @@ class TrainingState {
         acwrState: null,
         sleepHistory: [],
         hrvHistory: [],
+        lastTopSets: {},
         lastUpdated: DateTime.now(),
         sessionsIngested: 0,
       );
@@ -79,6 +88,7 @@ class TrainingState {
     Object? acwrState = _sentinel,
     List<SleepRecord>? sleepHistory,
     List<HrvRecord>? hrvHistory,
+    Map<String, LoggedSet>? lastTopSets,
     DateTime? lastUpdated,
     int? sessionsIngested,
   }) {
@@ -92,6 +102,7 @@ class TrainingState {
           : acwrState as EwmaState?,
       sleepHistory: sleepHistory ?? this.sleepHistory,
       hrvHistory: hrvHistory ?? this.hrvHistory,
+      lastTopSets: lastTopSets ?? this.lastTopSets,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       sessionsIngested: sessionsIngested ?? this.sessionsIngested,
     );
@@ -113,6 +124,7 @@ class TrainingState {
         'acwrState': acwrState?.toJson(),
         'sleepHistory': sleepHistory.map((e) => e.toJson()).toList(),
         'hrvHistory': hrvHistory.map((e) => e.toJson()).toList(),
+        'lastTopSets': lastTopSets.map((key, set) => MapEntry(key, set.toJson())),
         'lastUpdated': lastUpdated.toIso8601String(),
         'sessionsIngested': sessionsIngested,
       };
@@ -136,6 +148,15 @@ class TrainingState {
       ),
     );
 
+    // lastTopSets — optional for backward compat with older snapshots
+    final lastTopSetsRaw = json['lastTopSets'] as Map<String, dynamic>?;
+    final lastTopSets = lastTopSetsRaw != null
+        ? lastTopSetsRaw.map(
+            (key, value) =>
+                MapEntry(key, LoggedSet.fromJson(value as Map<String, dynamic>)),
+          )
+        : <String, LoggedSet>{};
+
     return TrainingState(
       profile: UserProfile.fromJson(json['profile'] as Map<String, dynamic>),
       e1rmHistory: e1rmHistory,
@@ -152,6 +173,7 @@ class TrainingState {
       hrvHistory: (json['hrvHistory'] as List)
           .map((e) => HrvRecord.fromJson(e as Map<String, dynamic>))
           .toList(),
+      lastTopSets: lastTopSets,
       lastUpdated: DateTime.parse(json['lastUpdated'] as String),
       sessionsIngested: json['sessionsIngested'] as int,
     );

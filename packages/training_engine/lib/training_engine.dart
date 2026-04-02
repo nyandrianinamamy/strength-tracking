@@ -17,3 +17,7 @@ export 'src/progression/recommendation.dart';
 export 'src/registry/exercise_registry.dart';
 export 'src/registry/default_exercises.dart';
 export 'src/e1rm/strength_baseline.dart';
+export 'src/e1rm/composite_estimator.dart';
+export 'src/planner/session_generator.dart';
+export 'src/planner/split_selector.dart';
+export 'src/engine.dart';
