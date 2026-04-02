@@ -318,6 +318,65 @@ void main() {
     );
 
     test(
+      'engine debug recommendation rows expose row details',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final savedEngine = TrainingEngine(
+          registry: ExerciseRegistry.withDefaults(),
+          profile: UserProfile(
+            sex: Sex.male,
+            age: 30,
+            bodyWeightKg: 82,
+            experience: ExperienceLevel.intermediate,
+            goal: HypertrophyGoal.hypertrophy,
+            availableDays: const [1, 3, 5],
+            maxSessionDuration: const Duration(minutes: 60),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        savedEngine.ingestSession(
+          EngineSession(
+            id: 'debug-recommendation-session',
+            startedAt: DateTime.utc(2026, 3, 1, 17, 0),
+            endedAt: DateTime.utc(2026, 3, 1, 18, 0),
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_back_squat',
+                weightKg: 110,
+                reps: 8,
+                rpe: 8.5,
+                completedAt: DateTime.utc(2026, 3, 1, 17, 10),
+              ),
+            ],
+          ),
+        );
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: savedEngine.serializeState(),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final rows = await container.read(
+          engineDebugRecommendationRowsProvider.future,
+        );
+
+        final row = rows.singleWhere(
+          (row) => row.exerciseId == 'barbell_back_squat',
+        );
+
+        expect(row.exerciseId, 'barbell_back_squat');
+        expect(row.e1rm, isNotNull);
+        expect(row.lastTopSet, isNotNull);
+        expect(row.recommendation, isA<LoadRecommendation>());
+      },
+    );
+
+    test(
       'engine debug raw snapshot provider returns formatted serialized state',
       () async {
         final appState = _appStateWithCompletedSession();
@@ -336,6 +395,9 @@ void main() {
 
         expect(snapshot, contains('sessionsIngested'));
         expect(snapshot, contains('e1rmHistory'));
+        expect(snapshot, contains('\n'));
+        expect(snapshot, contains('  "sessionsIngested"'));
+        expect(snapshot, startsWith('{\n'));
       },
     );
   });
