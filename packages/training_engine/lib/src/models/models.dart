@@ -11,3 +11,4 @@ export 'e1rm_estimate.dart';
 export 'fatigue_impulse.dart';
 export 'daily_load.dart';
 export 'ewma_state.dart';
+export 'training_state.dart';

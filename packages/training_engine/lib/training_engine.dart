@@ -14,3 +14,6 @@ export 'src/progression/performance_delta.dart';
 export 'src/progression/load_predictor.dart';
 export 'src/progression/equipment_rounding.dart';
 export 'src/progression/recommendation.dart';
+export 'src/registry/exercise_registry.dart';
+export 'src/registry/default_exercises.dart';
+export 'src/e1rm/strength_baseline.dart';
