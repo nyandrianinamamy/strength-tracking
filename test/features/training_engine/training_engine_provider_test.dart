@@ -348,6 +348,13 @@ void main() {
                 rpe: 8.5,
                 completedAt: DateTime.utc(2026, 3, 1, 17, 10),
               ),
+              LoggedSet(
+                exerciseId: 'barbell_bench_press',
+                weightKg: 80,
+                reps: 8,
+                rpe: 8.0,
+                completedAt: DateTime.utc(2026, 3, 1, 17, 20),
+              ),
             ],
           ),
         );
@@ -365,14 +372,30 @@ void main() {
           engineDebugRecommendationRowsProvider.future,
         );
 
-        final row = rows.singleWhere(
-          (row) => row.exerciseId == 'barbell_back_squat',
+        final exerciseIds = rows.map((row) => row.exerciseId).toList();
+
+        expect(rows, hasLength(2));
+        expect(
+          exerciseIds,
+          orderedEquals(<String>[
+            'barbell_back_squat',
+            'barbell_bench_press',
+          ]),
         );
 
-        expect(row.exerciseId, 'barbell_back_squat');
-        expect(row.e1rm, isNotNull);
-        expect(row.lastTopSet, isNotNull);
-        expect(row.recommendation, isA<LoadRecommendation>());
+        final squatRow = rows.firstWhere(
+          (row) => row.exerciseId == 'barbell_back_squat',
+        );
+        final benchRow = rows.firstWhere(
+          (row) => row.exerciseId == 'barbell_bench_press',
+        );
+
+        expect(squatRow.e1rm, isNotNull);
+        expect(squatRow.lastTopSet, isNotNull);
+        expect(squatRow.recommendation, isA<LoadRecommendation>());
+        expect(benchRow.e1rm, isNotNull);
+        expect(benchRow.lastTopSet, isNotNull);
+        expect(benchRow.recommendation, isA<LoadRecommendation>());
       },
     );
 
