@@ -149,31 +149,53 @@ class TrainingEngineAdapter {
     final m = muscle.toLowerCase().trim();
     // Common substitutions
     const substitutions = <String, String>{
+      // Chest
       'chest': 'pectorals',
       'pectorals': 'pectorals',
       'pecs': 'pectorals',
+      // Shoulders
       'shoulders': 'anterior_deltoid',
       'deltoid': 'anterior_deltoid',
+      'deltoids': 'anterior_deltoid',
       'anterior deltoid': 'anterior_deltoid',
       'lateral deltoid': 'lateral_deltoid',
       'posterior deltoid': 'rear_deltoid',
       'rear delts': 'rear_deltoid',
+      'rear_delt': 'rear_deltoid',
+      'shoulder': 'anterior_deltoid',
+      // Back
+      'back': 'lats',
       'lats': 'lats',
       'latissimus dorsi': 'lats',
       'upper back': 'upper_back',
+      'upper_back': 'upper_back',
       'trapezius': 'trapezius',
+      'rhomboids': 'rhomboids',
+      'lower back': 'erector_spinae',
+      'erector spinae': 'erector_spinae',
+      // Arms
       'biceps': 'biceps',
+      'bicep': 'biceps',
       'triceps': 'triceps',
+      'tricep': 'triceps',
+      'forearms': 'forearms',
+      'forearm': 'forearms',
+      // Legs
       'quadriceps': 'quadriceps',
       'quads': 'quadriceps',
+      'legs': 'quadriceps',
       'hamstrings': 'hamstrings',
+      'hamstring': 'hamstrings',
       'gluteus maximus': 'glutes',
       'glutes': 'glutes',
       'calves': 'calves',
       'gastrocnemius': 'calves',
+      'adductors': 'adductors',
+      // Core
       'core': 'abs',
       'abdominals': 'abs',
       'abs': 'abs',
+      'obliques': 'obliques',
     };
     return substitutions[m] ?? m.replaceAll(' ', '_');
   }
