@@ -81,14 +81,17 @@ class AdaptiveProgressionService {
     final isClearlyUnderTarget =
         evaluatedSets.length >= prescription.targetSets &&
         averageReps <= (prescription.targetReps - 2);
-    final sessionRpe = sourceSession.rpe;
+    final effectiveRpe = _effectiveExerciseRpe(
+      evaluatedSets,
+      fallbackSessionRpe: sourceSession.rpe,
+    );
 
     final direction = _directionForPerformance(
       allSetsHitTarget: allSetsHitTarget,
       completedSetCount: evaluatedSets.length,
       targetSetCount: prescription.targetSets,
       isClearlyUnderTarget: isClearlyUnderTarget,
-      sessionRpe: sessionRpe,
+      effectiveRpe: effectiveRpe,
     );
 
     final suggestedWeightKg = switch (direction) {
@@ -106,7 +109,7 @@ class AdaptiveProgressionService {
         direction,
         completedSetCount: evaluatedSets.length,
         targetSetCount: prescription.targetSets,
-        sessionRpe: sessionRpe,
+        effectiveRpe: effectiveRpe,
       ),
       incrementKg: incrementKg,
     );
@@ -117,13 +120,13 @@ class AdaptiveProgressionService {
     required int completedSetCount,
     required int targetSetCount,
     required bool isClearlyUnderTarget,
-    required double? sessionRpe,
+    required double? effectiveRpe,
   }) {
-    if (allSetsHitTarget && (sessionRpe == null || sessionRpe <= 8.5)) {
+    if (allSetsHitTarget && (effectiveRpe == null || effectiveRpe <= 8.5)) {
       return ProgressionDirection.up;
     }
 
-    if (isClearlyUnderTarget && sessionRpe != null && sessionRpe >= 9.5) {
+    if (isClearlyUnderTarget && effectiveRpe != null && effectiveRpe >= 9.5) {
       return ProgressionDirection.down;
     }
 
@@ -131,7 +134,7 @@ class AdaptiveProgressionService {
       return ProgressionDirection.hold;
     }
 
-    if (sessionRpe != null && sessionRpe > 8.5) {
+    if (effectiveRpe != null && effectiveRpe > 8.5) {
       return ProgressionDirection.hold;
     }
 
@@ -142,7 +145,7 @@ class AdaptiveProgressionService {
     ProgressionDirection direction, {
     required int completedSetCount,
     required int targetSetCount,
-    required double? sessionRpe,
+    required double? effectiveRpe,
   }) {
     switch (direction) {
       case ProgressionDirection.up:
@@ -153,11 +156,27 @@ class AdaptiveProgressionService {
         if (completedSetCount < targetSetCount) {
           return 'Hold until all working sets are completed';
         }
-        if (sessionRpe != null && sessionRpe > 8.5) {
+        if (effectiveRpe != null && effectiveRpe > 8.5) {
           return 'Hold because the last session felt hard';
         }
         return 'Hold and build consistency first';
     }
+  }
+
+  double? _effectiveExerciseRpe(
+    List<CompletedSet> sets, {
+    required double? fallbackSessionRpe,
+  }) {
+    final loggedRpes = sets
+        .map((set) => set.rpe)
+        .whereType<double>()
+        .toList(growable: false);
+    if (loggedRpes.isEmpty) {
+      return fallbackSessionRpe;
+    }
+
+    final total = loggedRpes.fold<double>(0, (sum, rpe) => sum + rpe);
+    return total / loggedRpes.length;
   }
 
   double _progressionIncrementKg(Exercise exercise) {

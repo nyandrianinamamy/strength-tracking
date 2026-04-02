@@ -88,6 +88,26 @@ void main() {
     expect(suggestion.suggestedWeightKg, 100);
   });
 
+  test('prefers per-set RPE over session RPE for successful sets', () {
+    final state = _stateWithSession(
+      exercise: squat,
+      rpe: 9.2,
+      reps: const [5, 5, 5],
+      weightKg: 100,
+      perSetRpes: const [8.0, 8.0, 8.0],
+    );
+
+    final suggestion = service.suggestionForExercise(
+      state: state,
+      exercise: squat,
+      prescription: squatPrescription,
+    );
+
+    expect(suggestion, isNotNull);
+    expect(suggestion!.direction, ProgressionDirection.up);
+    expect(suggestion.suggestedWeightKg, 105);
+  });
+
   test('holds on mixed reps', () {
     final state = _stateWithSession(
       exercise: curl,
@@ -113,6 +133,26 @@ void main() {
       rpe: 9.6,
       reps: const [7, 8, 8],
       weightKg: 14,
+    );
+
+    final suggestion = service.suggestionForExercise(
+      state: state,
+      exercise: curl,
+      prescription: curlPrescription,
+    );
+
+    expect(suggestion, isNotNull);
+    expect(suggestion!.direction, ProgressionDirection.down);
+    expect(suggestion.suggestedWeightKg, 12.75);
+  });
+
+  test('prefers per-set RPE over session RPE for hard missed sets', () {
+    final state = _stateWithSession(
+      exercise: curl,
+      rpe: 8.0,
+      reps: const [7, 8, 8],
+      weightKg: 14,
+      perSetRpes: const [9.6, 9.7, 9.5],
     );
 
     final suggestion = service.suggestionForExercise(
@@ -175,6 +215,7 @@ AppState _stateWithSession({
   required List<int> reps,
   required double weightKg,
   int durationSeconds = 0,
+  List<double?>? perSetRpes,
 }) {
   final startedAt = DateTime(2026, 3, 1, 8);
   final sets = <CompletedSet>[];
@@ -188,6 +229,7 @@ AppState _stateWithSession({
         completedAt: startedAt.add(Duration(minutes: index + 1)),
         note: '',
         durationSeconds: durationSeconds,
+        rpe: perSetRpes?[index],
       ),
     );
   }
