@@ -44,10 +44,12 @@ class TrainingEngineAdapter {
   /// - If `set.rpe != null`: use it directly, `rpeEstimated = false`
   /// - Else if `session.rpe != null`: backfill with session RPE, `rpeEstimated = true`
   /// - Else: default to 8.0, `rpeEstimated = true`
-  EngineSession toEngineSession(WorkoutSession session) {
+  EngineSession? toEngineSession(WorkoutSession session) {
     final fallbackRpe = (session.rpe ?? 8.0).clamp(5.0, 10.0);
 
-    final mappedSets = session.completedSets.map((set) {
+    final mappedSets = session.completedSets
+        .where((set) => set.reps > 0)
+        .map((set) {
       final double setRpe;
       final bool estimated;
 
@@ -68,6 +70,10 @@ class TrainingEngineAdapter {
         rpeEstimated: estimated,
       );
     }).toList();
+
+    if (mappedSets.isEmpty) {
+      return null;
+    }
 
     return EngineSession(
       id: session.id,

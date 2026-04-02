@@ -54,6 +54,49 @@ AppState _appStateWithCompletedSession() {
   );
 }
 
+AppState _appStateWithTimedOnlyCompletedSession() {
+  final completedAt = DateTime.utc(2026, 3, 2, 18, 0);
+  return AppState(
+    exercises: const [
+      Exercise(
+        id: 'plank',
+        name: 'Plank',
+        primaryMuscles: ['Abs'],
+        secondaryMuscles: ['Obliques'],
+        equipment: ['Bodyweight'],
+        instructions: '',
+        archived: false,
+      ),
+    ],
+    routines: const [],
+    sessions: [
+      WorkoutSession(
+        id: 'completed-timed-session-1',
+        routineId: 'routine-core',
+        status: WorkoutSessionStatus.completed,
+        startedAt: completedAt.subtract(const Duration(minutes: 20)),
+        endedAt: completedAt,
+        lastActivityAt: completedAt,
+        currentExerciseIndex: 0,
+        completedSets: [
+          CompletedSet(
+            exerciseId: 'plank',
+            setNumber: 1,
+            weightKg: 0.0,
+            reps: 0,
+            durationSeconds: 60,
+            completedAt: completedAt,
+            note: '',
+          ),
+        ],
+        sessionNote: '',
+        rpe: 7.0,
+      ),
+    ],
+    bodyGender: 'male',
+  );
+}
+
 ProviderContainer _buildContainer({
   required AppState initialState,
   required AppStateRepository appRepository,
@@ -137,6 +180,24 @@ void main() {
       expect(engine.state.sessionsIngested, 1);
       expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
       expect(engine.state.e1rmHistory['barbell_back_squat'], isNull);
+    });
+
+    test('ignores timed-only legacy sessions during bootstrap', () async {
+      final appState = _appStateWithTimedOnlyCompletedSession();
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final engineRepository = MemoryTrainingEngineStateRepository();
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final engine = await container.read(trainingEngineProvider.future);
+
+      expect(engine.state.sessionsIngested, 0);
+      expect(engine.state.e1rmHistory, isEmpty);
+      expect(engineRepository.state, isNotNull);
     });
   });
 

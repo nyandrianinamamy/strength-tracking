@@ -57,6 +57,7 @@ Future<TrainingEngine> loadTrainingEngine({
 
   final completedSessions = appState.completedSessions
       .map(adapter.toEngineSession)
+      .whereType<EngineSession>()
       .toList();
   if (completedSessions.isNotEmpty) {
     engine.bootstrapFromHistory(completedSessions);

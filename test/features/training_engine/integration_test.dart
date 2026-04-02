@@ -88,7 +88,7 @@ void main() {
       );
 
       // 3. Map via adapter
-      final engineSession = adapter.toEngineSession(workoutSession);
+      final engineSession = adapter.toEngineSession(workoutSession)!;
       expect(engineSession.sets, hasLength(5));
       expect(engineSession.sets.every((s) => !s.rpeEstimated), isTrue,
           reason: 'All sets have explicit RPE — none should be estimated');
@@ -165,7 +165,7 @@ void main() {
         rpe: 7.5, // session-level RPE
       );
 
-      final engineSession = adapter.toEngineSession(legacySession);
+      final engineSession = adapter.toEngineSession(legacySession)!;
 
       // All sets should have RPE backfilled from session RPE
       for (final set in engineSession.sets) {
@@ -201,9 +201,83 @@ void main() {
         rpe: null, // No session RPE either
       );
 
-      final engineSession = adapter.toEngineSession(noRpeSession);
+      final engineSession = adapter.toEngineSession(noRpeSession)!;
       expect(engineSession.sets.first.rpe, closeTo(8.0, 0.001));
       expect(engineSession.sets.first.rpeEstimated, isTrue);
+    });
+
+    test('adapter: ignores timed sets and returns null for timed-only sessions', () {
+      final adapter = const TrainingEngineAdapter();
+
+      final sessionDate = DateTime.utc(2026, 3, 7, 17, 0);
+      final timedOnlySession = WorkoutSession(
+        id: 'timed-only-session-01',
+        routineId: 'routine-core',
+        status: WorkoutSessionStatus.completed,
+        startedAt: sessionDate.subtract(const Duration(minutes: 20)),
+        endedAt: sessionDate,
+        lastActivityAt: sessionDate,
+        currentExerciseIndex: 0,
+        completedSets: [
+          CompletedSet(
+            exerciseId: 'plank',
+            setNumber: 1,
+            weightKg: 0.0,
+            reps: 0,
+            durationSeconds: 60,
+            completedAt: sessionDate,
+            note: '',
+          ),
+        ],
+        sessionNote: '',
+        rpe: 7.0,
+      );
+
+      expect(adapter.toEngineSession(timedOnlySession), isNull);
+    });
+
+    test('adapter: keeps strength sets when a session mixes timed and rep sets', () {
+      final adapter = const TrainingEngineAdapter();
+
+      final sessionDate = DateTime.utc(2026, 3, 8, 17, 0);
+      final mixedSession = WorkoutSession(
+        id: 'mixed-session-01',
+        routineId: 'routine-mixed',
+        status: WorkoutSessionStatus.completed,
+        startedAt: sessionDate.subtract(const Duration(minutes: 45)),
+        endedAt: sessionDate,
+        lastActivityAt: sessionDate,
+        currentExerciseIndex: 0,
+        completedSets: [
+          CompletedSet(
+            exerciseId: 'plank',
+            setNumber: 1,
+            weightKg: 0.0,
+            reps: 0,
+            durationSeconds: 60,
+            completedAt: sessionDate,
+            note: '',
+          ),
+          CompletedSet(
+            exerciseId: 'barbell_back_squat',
+            setNumber: 1,
+            weightKg: 100.0,
+            reps: 8,
+            completedAt: sessionDate,
+            note: '',
+            rpe: 8.0,
+          ),
+        ],
+        sessionNote: '',
+        rpe: 8.0,
+      );
+
+      final engineSession = adapter.toEngineSession(mixedSession);
+
+      expect(engineSession, isNotNull);
+      expect(engineSession!.sets, hasLength(1));
+      expect(engineSession.sets.single.exerciseId, 'barbell_back_squat');
+      expect(engineSession.sets.single.reps, 8);
     });
 
     test('engine state serialization roundtrip via restoreState', () {
@@ -237,7 +311,7 @@ void main() {
         rpe: 8.5,
       );
 
-      engine.ingestSession(adapter.toEngineSession(workoutSession));
+      engine.ingestSession(adapter.toEngineSession(workoutSession)!);
 
       // Serialize and restore into a fresh engine
       final json = engine.serializeState();

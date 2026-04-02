@@ -363,9 +363,13 @@ class WorkoutController {
 
     try {
       final adapter = _ref.read(trainingEngineAdapterProvider);
+      final engineSession = adapter.toEngineSession(session);
+      if (engineSession == null) {
+        return;
+      }
       await _ref
           .read(trainingEngineControllerProvider)
-          .ingestSession(adapter.toEngineSession(session));
+          .ingestSession(engineSession);
     } catch (error) {
       debugPrint('Failed to sync completed workout into training engine: $error');
     }
