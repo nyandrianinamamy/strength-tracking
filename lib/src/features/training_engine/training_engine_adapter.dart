@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:training_engine/training_engine.dart';
 
 import '../../data/models/app_state.dart';
@@ -98,16 +99,33 @@ class TrainingEngineAdapter {
   /// 4. Returns `null` only when [exercise.primaryMuscles] is empty and no
   ///    registry match is found (nothing useful to map).
   EngineExercise? toEngineExercise(Exercise exercise, ExerciseRegistry registry) {
-    // 1. Exact ID match
+    // 1. Exact ID match — re-key under the app's exercise ID
     final byId = registry.lookup(exercise.id);
-    if (byId != null) return byId;
+    if (byId != null) {
+      return EngineExercise(
+        id: exercise.id,
+        name: byId.name,
+        muscleMap: byId.muscleMap,
+        equipment: byId.equipment,
+        movement: byId.movement,
+      );
+    }
 
-    // 2. Case-insensitive name match
+    // 2. Case-insensitive name match — re-key under the app's exercise ID
     final lower = exercise.name.toLowerCase();
     final byName = registry.all.where(
       (e) => e.name.toLowerCase() == lower,
     );
-    if (byName.isNotEmpty) return byName.first;
+    if (byName.isNotEmpty) {
+      final matched = byName.first;
+      return EngineExercise(
+        id: exercise.id,
+        name: matched.name,
+        muscleMap: matched.muscleMap,
+        equipment: matched.equipment,
+        movement: matched.movement,
+      );
+    }
 
     // 3. Construct synthetic exercise if we have muscle information
     if (exercise.primaryMuscles.isEmpty) return null;
@@ -197,7 +215,11 @@ class TrainingEngineAdapter {
       'abs': 'abs',
       'obliques': 'obliques',
     };
-    return substitutions[m] ?? m.replaceAll(' ', '_');
+    final result = substitutions[m] ?? m.replaceAll(' ', '_');
+    if (!substitutions.containsKey(m)) {
+      debugPrint('[TrainingEngineAdapter] _normaliseMuscleId: unmapped "$muscle" (lowered: "$m") → fallback "$result"');
+    }
+    return result;
   }
 
   /// Guesses the [EquipmentClass] from a list of equipment strings.

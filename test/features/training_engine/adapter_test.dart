@@ -61,8 +61,10 @@ void main() {
       final mapped = adapter.toEngineExercise(exercise, registry);
 
       expect(mapped, isNotNull);
-      expect(mapped!.id, 'barbell_bench_press');
+      // Re-keyed under the app's exercise ID so registry.lookup works during ingestion
+      expect(mapped!.id, 'custom_bench_variant');
       expect(mapped.name, 'Barbell Bench Press');
+      expect(mapped.muscleMap.any((m) => m.muscleId == 'pectorals'), isTrue);
     });
 
     test('builds a synthetic engine exercise when registry has no match', () {
