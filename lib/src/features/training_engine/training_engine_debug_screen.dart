@@ -232,7 +232,9 @@ class _RecommendationCard extends StatelessWidget {
       title: 'Recommendation Breakdown',
       children: [
         if (rows.isEmpty)
-          const Text('No recommendation rows available.')
+          const Text(
+            'No recommendation rows available yet. Ingested strength sessions will populate this section.',
+          )
         else
           ...rows.expand((row) {
             final children = <Widget>[

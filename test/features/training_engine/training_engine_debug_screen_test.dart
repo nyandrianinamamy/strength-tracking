@@ -252,8 +252,20 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Engine Status'), findsOneWidget);
-      expect(find.textContaining('0'), findsWidgets);
+      expect(
+        find.text(
+          'No fatigue rows available yet. Ingested strength sessions will populate this section.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'No recommendation rows available yet. Ingested strength sessions will populate this section.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('Fatigue Breakdown'), findsOneWidget);
+      expect(find.text('Recommendation Breakdown'), findsOneWidget);
     },
   );
 
