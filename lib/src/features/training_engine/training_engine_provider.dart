@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:training_engine/training_engine.dart';
@@ -48,11 +49,23 @@ Future<TrainingEngine> loadTrainingEngine({
 
   final profile = adapter.toUserProfile(appState);
   final engine = TrainingEngine(registry: registry, profile: profile);
-  final savedState = await repository.load();
-
-  if (savedState != null) {
-    engine.restoreState(savedState);
-    return engine;
+  try {
+    final savedState = await repository.load();
+    if (savedState != null) {
+      engine.restoreState(savedState);
+      return engine;
+    }
+  } catch (error) {
+    debugPrint(
+      'Training engine restore failed, clearing saved state and rebuilding from app history: $error',
+    );
+    try {
+      await repository.clear();
+    } catch (clearError) {
+      debugPrint(
+        'Training engine state clear failed after restore error: $clearError',
+      );
+    }
   }
 
   final completedSessions = appState.completedSessions

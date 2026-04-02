@@ -111,6 +111,20 @@ ProviderContainer _buildContainer({
   );
 }
 
+class _ThrowingTrainingEngineStateRepository
+    implements TrainingEngineStateRepository {
+  @override
+  Future<void> clear() async {}
+
+  @override
+  Future<Map<String, dynamic>?> load() async {
+    throw const FormatException('corrupted engine state');
+  }
+
+  @override
+  Future<void> save(Map<String, dynamic> state) async {}
+}
+
 void main() {
   group('trainingEngineProvider', () {
     test('bootstraps from completed app sessions when no saved engine state exists', () async {
@@ -198,6 +212,46 @@ void main() {
       expect(engine.state.sessionsIngested, 0);
       expect(engine.state.e1rmHistory, isEmpty);
       expect(engineRepository.state, isNotNull);
+    });
+
+    test('falls back to app history when saved engine state cannot be restored',
+        () async {
+      final appState = _appStateWithCompletedSession();
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final engineRepository = MemoryTrainingEngineStateRepository(
+        initialState: <String, dynamic>{'bad': 'snapshot'},
+      );
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final engine = await container.read(trainingEngineProvider.future);
+
+      expect(engine.state.sessionsIngested, 1);
+      expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+      expect(engineRepository.state, isNotNull);
+      expect(engineRepository.state?['sessionsIngested'], 1);
+    });
+
+    test('falls back to app history when loading saved engine state throws',
+        () async {
+      final appState = _appStateWithCompletedSession();
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final engineRepository = _ThrowingTrainingEngineStateRepository();
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final engine = await container.read(trainingEngineProvider.future);
+
+      expect(engine.state.sessionsIngested, 1);
+      expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
     });
   });
 
