@@ -20,4 +20,8 @@ export 'src/e1rm/strength_baseline.dart';
 export 'src/e1rm/composite_estimator.dart';
 export 'src/planner/session_generator.dart';
 export 'src/planner/split_selector.dart';
+export 'src/planner/missed_session.dart';
+export 'src/planner/time_bounder.dart';
+export 'src/planner/fatigue_substitution.dart';
+export 'src/e1rm/formulas.dart';
 export 'src/engine.dart';

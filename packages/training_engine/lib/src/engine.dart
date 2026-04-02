@@ -15,6 +15,8 @@ import 'models/logged_set.dart';
 import 'models/sleep_record.dart';
 import 'models/training_state.dart';
 import 'models/user_profile.dart';
+import 'planner/fatigue_substitution.dart' as sub_lib;
+import 'planner/missed_session.dart' as missed_lib;
 import 'planner/session_generator.dart';
 import 'progression/performance_delta.dart';
 import 'progression/recommendation.dart' as rec_lib;
@@ -311,6 +313,25 @@ class TrainingEngine {
     return generateWeeklyPlan(config, registry);
   }
 
+  /// Returns a new plan with missed volume redistributed to remaining sessions.
+  WeeklyPlan handleMissedSession(WeeklyPlan plan, int missedDay, DateTime now) {
+    return missed_lib.handleMissedSession(plan, missedDay, now);
+  }
+
+  /// Adjusts a session by substituting exercises whose secondary muscles are fatigued.
+  sub_lib.SubstitutionResult adjustSessionForFatigue(
+    PlannedSession session,
+    DateTime? at,
+  ) {
+    final now = at ?? DateTime.now();
+    final fatigueMap = <String, double>{};
+    for (final entry in _state.fatigueLog.entries) {
+      fatigueMap[entry.key] = fatigue_lib.currentFatigue(
+        entry.key, entry.value, now, age: _state.profile.age);
+    }
+    return sub_lib.adjustSessionForFatigue(session, fatigueMap, registry);
+  }
+
   // ---------------------------------------------------------------------------
   // State management
   // ---------------------------------------------------------------------------
@@ -322,8 +343,9 @@ class TrainingEngine {
   Map<String, dynamic> serializeState() => _state.toJson();
 
   /// Restores engine state from a previously serialized JSON snapshot.
-  void restoreState(Map<String, dynamic> json) {
+  TrainingState restoreState(Map<String, dynamic> json) {
     _state = TrainingState.fromJson(json);
+    return _state;
   }
 
   /// Ingests a list of legacy sessions in chronological order.
