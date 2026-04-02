@@ -23,7 +23,41 @@ class TrainingEngineDebugScreen extends ConsumerWidget {
     final rawSnapshotAsync = ref.watch(engineDebugRawSnapshotProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Training Engine Debug')),
+      appBar: AppBar(
+        title: const Text('Training Engine Debug'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Reset & Re-bootstrap Engine',
+            onPressed: () async {
+              final confirmed = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Reset Engine State'),
+                  content: const Text(
+                    'This will clear the persisted training engine state and '
+                    'rebuild from workout history. ACWR history will reset.\n\n'
+                    'Continue?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text('Reset'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirmed == true) {
+                await resetAndRebootstrapEngine(ref);
+              }
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(

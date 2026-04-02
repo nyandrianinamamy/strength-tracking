@@ -136,6 +136,16 @@ final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
   return engine.computeReadiness();
 });
 
+/// Clears persisted engine state and re-bootstraps from AppState history.
+///
+/// This forces the engine to rebuild all e1RM estimates, fatigue impulses,
+/// and ACWR from scratch using the corrected adapter normalization.
+Future<void> resetAndRebootstrapEngine(WidgetRef ref) async {
+  final repository = ref.read(trainingEngineStateRepositoryProvider);
+  await repository.clear();
+  ref.invalidate(trainingEngineProvider);
+}
+
 /// Returns a [LoadRecommendation] for the given exercise ID, or `null` when
 /// no e1RM data is available (engine falls back to baseline, so this will
 /// always return a recommendation in practice, but guards against edge cases).
