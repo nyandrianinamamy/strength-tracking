@@ -25,6 +25,7 @@ double compositeE1rm({
   required int reps,
   required double rpe,
 }) {
+  if (reps <= 0) throw ArgumentError('reps must be positive, got $reps');
   final rm = rMax(reps, rpe);
 
   if (rm <= 1) return weight;
