@@ -343,9 +343,47 @@ class TrainingEngine {
   Map<String, dynamic> serializeState() => _state.toJson();
 
   /// Restores engine state from a previously serialized JSON snapshot.
+  ///
+  /// Applies a one-time migration of stale muscle IDs in the fatigue log
+  /// to match the canonical vocabulary used by the planner and registry.
   TrainingState restoreState(Map<String, dynamic> json) {
     _state = TrainingState.fromJson(json);
+    _migrateStaleMuscleIds();
     return _state;
+  }
+
+  static const _muscleIdMigration = <String, String>{
+    'back': 'lats',
+    'quad': 'quadriceps',
+    'glute': 'glutes',
+    'hamstring': 'hamstrings',
+    'calf': 'calves',
+    'rear_delt': 'rear_deltoid',
+    'shoulder': 'anterior_deltoid',
+  };
+
+  void _migrateStaleMuscleIds() {
+    final log = _state.fatigueLog;
+    final migrated = <String, List<FatigueImpulse>>{};
+    var changed = false;
+    for (final entry in log.entries) {
+      final newKey = _muscleIdMigration[entry.key];
+      if (newKey != null) {
+        changed = true;
+        migrated[newKey] = [
+          ...migrated[newKey] ?? [],
+          ...entry.value,
+        ];
+      } else {
+        migrated[entry.key] = [
+          ...migrated[entry.key] ?? [],
+          ...entry.value,
+        ];
+      }
+    }
+    if (changed) {
+      _state = _state.copyWith(fatigueLog: migrated);
+    }
   }
 
   /// Ingests a list of legacy sessions in chronological order.

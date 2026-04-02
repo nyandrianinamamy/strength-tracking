@@ -66,9 +66,9 @@ void main() {
       );
     });
 
-    test('barbell_back_squat has quads as primary', () {
+    test('barbell_back_squat has quadriceps as primary', () {
       final ex = registry.lookup('barbell_back_squat')!;
-      final quad = ex.muscleMap.firstWhere((m) => m.muscleId == 'quad');
+      final quad = ex.muscleMap.firstWhere((m) => m.muscleId == 'quadriceps');
       expect(quad.role, equals(MuscleRole.primary));
       expect(quad.coefficient, equals(1.0));
     });
@@ -153,13 +153,13 @@ void main() {
       expect(chest.any((ex) => ex.id == 'barbell_bench_press'), isFalse);
     });
 
-    test('exercisesForMuscle returns back exercises', () {
-      final back = registry.exercisesForMuscle('back');
-      expect(back, isNotEmpty);
+    test('exercisesForMuscle returns lats exercises', () {
+      final lats = registry.exercisesForMuscle('lats');
+      expect(lats, isNotEmpty);
     });
 
-    test('exercisesForMuscle returns quad exercises', () {
-      final quads = registry.exercisesForMuscle('quad');
+    test('exercisesForMuscle returns quadriceps exercises', () {
+      final quads = registry.exercisesForMuscle('quadriceps');
       expect(quads, isNotEmpty);
       expect(quads.any((ex) => ex.id == 'barbell_back_squat'), isTrue);
     });

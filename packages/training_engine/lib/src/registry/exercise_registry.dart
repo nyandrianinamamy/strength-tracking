@@ -114,9 +114,9 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
   /// optionally excluding specific IDs.
   ///
   /// Focus → movement + primary muscle mapping:
-  /// - push   → compoundUpper + pectorals or shoulder
-  /// - pull   → compoundUpper + back
-  /// - legs   → compoundLower + quad or glute or hamstring
+  /// - push   → compoundUpper + pectorals or deltoid
+  /// - pull   → compoundUpper + lats
+  /// - legs   → compoundLower + quadriceps or glutes or hamstrings
   /// - upper  → compoundUpper (any)
   /// - lower  → compoundLower (any)
   /// - fullBody → compoundUpper + compoundLower (any)
@@ -152,7 +152,7 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
             .where(
               (ex) =>
                   isUpper(ex) &&
-                  hasPrimaryMuscle(ex, {'pectorals', 'shoulder', 'anterior_deltoid', 'triceps'}),
+                  hasPrimaryMuscle(ex, {'pectorals', 'anterior_deltoid', 'lateral_deltoid', 'triceps'}),
             )
             .toList();
 
@@ -160,7 +160,7 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
         return filtered
             .where(
               (ex) =>
-                  isUpper(ex) && hasPrimaryMuscle(ex, {'back', 'biceps', 'rear_delt'}),
+                  isUpper(ex) && hasPrimaryMuscle(ex, {'lats', 'biceps', 'rear_deltoid'}),
             )
             .toList();
 
@@ -169,7 +169,7 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
             .where(
               (ex) =>
                   isLower(ex) &&
-                  hasPrimaryMuscle(ex, {'quad', 'glute', 'hamstring'}),
+                  hasPrimaryMuscle(ex, {'quadriceps', 'glutes', 'hamstrings'}),
             )
             .toList();
 

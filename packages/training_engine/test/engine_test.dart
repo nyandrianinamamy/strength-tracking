@@ -178,13 +178,13 @@ void main() {
   group('TrainingEngine.currentFatigue', () {
     test('returns 0 with no ingested sessions', () {
       final engine = _engine();
-      expect(engine.currentFatigue('quad'), equals(0.0));
+      expect(engine.currentFatigue('quadriceps'), equals(0.0));
     });
 
     test('returns positive fatigue after session', () {
       final engine = _engine();
       engine.ingestSession(_session());
-      final fatigue = engine.currentFatigue('quad');
+      final fatigue = engine.currentFatigue('quadriceps');
       // quad is primary for squat
       expect(fatigue, greaterThan(0.0));
     });
@@ -196,7 +196,7 @@ void main() {
 
       // Query 30 days later — well beyond 7-day pruning window
       final farFuture = sessionDate.add(const Duration(days: 30));
-      final fatigue = engine.currentFatigue('quad', farFuture);
+      final fatigue = engine.currentFatigue('quadriceps', farFuture);
       expect(fatigue, closeTo(0.0, 1.0));
     });
   });
