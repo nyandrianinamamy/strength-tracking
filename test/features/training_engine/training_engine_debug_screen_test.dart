@@ -28,7 +28,23 @@ Widget _buildDebugScreenApp({Map<String, dynamic>? savedEngineState}) {
   );
 }
 
+void _expectRow(String label, String value) {
+  final row = find.widgetWithText(Row, label);
+  expect(row, findsOneWidget);
+  expect(find.descendant(of: row, matching: find.text(value)), findsOneWidget);
+}
+
+void _expectRowContaining(String label, String valueFragment) {
+  final row = find.widgetWithText(Row, label);
+  expect(row, findsOneWidget);
+  expect(
+    find.descendant(of: row, matching: find.textContaining(valueFragment)),
+    findsOneWidget,
+  );
+}
+
 Map<String, dynamic> _savedEngineState() {
+  final now = DateTime.now();
   final savedEngine = TrainingEngine(
     registry: ExerciseRegistry.withDefaults(),
     profile: UserProfile(
@@ -45,20 +61,62 @@ Map<String, dynamic> _savedEngineState() {
   savedEngine.ingestSession(
     EngineSession(
       id: 'debug-session',
-      startedAt: DateTime.utc(2026, 4, 1, 17, 0),
-      endedAt: DateTime.utc(2026, 4, 1, 18, 0),
+      startedAt: now.subtract(const Duration(hours: 1)),
+      endedAt: now,
       sets: [
         LoggedSet(
           exerciseId: 'barbell_back_squat',
           weightKg: 100,
           reps: 8,
           rpe: 8.0,
-          completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+          completedAt: now.subtract(const Duration(minutes: 45)),
         ),
       ],
     ),
   );
-  return savedEngine.serializeState();
+  savedEngine.ingestSleep(
+    SleepRecord(
+      date: now.subtract(const Duration(days: 1)),
+      totalSleep: const Duration(hours: 8),
+      deepSleep: const Duration(minutes: 72),
+      remSleep: const Duration(minutes: 96),
+      coreSleep: const Duration(hours: 4, minutes: 48),
+    ),
+  );
+  savedEngine.ingestSleep(
+    SleepRecord(
+      date: now.subtract(const Duration(days: 2)),
+      totalSleep: const Duration(hours: 8),
+      deepSleep: const Duration(minutes: 72),
+      remSleep: const Duration(minutes: 96),
+      coreSleep: const Duration(hours: 4, minutes: 48),
+    ),
+  );
+  savedEngine.ingestHrv(
+    HrvRecord(
+      date: now.subtract(const Duration(days: 2)),
+      sdnn: 60.0,
+      restingHeartRate: 60.0,
+    ),
+  );
+  savedEngine.ingestHrv(
+    HrvRecord(
+      date: now.subtract(const Duration(days: 1)),
+      sdnn: 60.0,
+      restingHeartRate: 60.0,
+    ),
+  );
+  savedEngine.ingestHrv(
+    HrvRecord(
+      date: now,
+      sdnn: 60.0,
+      restingHeartRate: 60.0,
+    ),
+  );
+
+  final snapshot = savedEngine.serializeState();
+  snapshot['lastUpdated'] = DateTime(2026, 4, 1, 18, 0).toIso8601String();
+  return snapshot;
 }
 
 void main() {
@@ -73,8 +131,19 @@ void main() {
       expect(find.text('Training Engine Debug'), findsOneWidget);
       expect(find.text('Engine Status'), findsOneWidget);
       expect(find.text('Readiness Breakdown'), findsOneWidget);
-      expect(find.textContaining('sessions ingested'), findsOneWidget);
-      expect(find.textContaining('confidence'), findsOneWidget);
+      _expectRow('sessions ingested', '1');
+      _expectRowContaining('Last updated', '2026-04-01T18:00:00');
+      _expectRow('Sleep records', '2');
+      _expectRow('HRV records', '3');
+      _expectRow('Daily loads', '1');
+
+      _expectRow('Readiness score', '82.8/100');
+      _expectRow('confidence', 'high');
+      _expectRow('Tier', 'full');
+      _expectRow('Flags', 'None');
+      _expectRow('acwr', '92.5');
+      _expectRow('sleep', '70.0');
+      _expectRow('hrv', '85.0');
     },
   );
 
