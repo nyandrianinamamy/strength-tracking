@@ -7,3 +7,7 @@ export 'engine_session.dart';
 export 'engine_exercise.dart';
 export 'sleep_record.dart';
 export 'hrv_record.dart';
+export 'e1rm_estimate.dart';
+export 'fatigue_impulse.dart';
+export 'daily_load.dart';
+export 'ewma_state.dart';
