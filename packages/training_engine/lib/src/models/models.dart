@@ -5,3 +5,5 @@ export 'user_profile.dart';
 export 'logged_set.dart';
 export 'engine_session.dart';
 export 'engine_exercise.dart';
+export 'sleep_record.dart';
+export 'hrv_record.dart';
