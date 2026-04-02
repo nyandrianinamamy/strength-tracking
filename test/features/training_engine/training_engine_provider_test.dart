@@ -127,74 +127,80 @@ class _ThrowingTrainingEngineStateRepository
 
 void main() {
   group('trainingEngineProvider', () {
-    test('bootstraps from completed app sessions when no saved engine state exists', () async {
-      final appState = _appStateWithCompletedSession();
-      final appRepository = MemoryAppStateRepository(initialState: appState);
-      final engineRepository = MemoryTrainingEngineStateRepository();
-      final container = _buildContainer(
-        initialState: appState,
-        appRepository: appRepository,
-        engineRepository: engineRepository,
-      );
-      addTearDown(container.dispose);
+    test(
+      'bootstraps from completed app sessions when no saved engine state exists',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
 
-      final engine = await container.read(trainingEngineProvider.future);
+        final engine = await container.read(trainingEngineProvider.future);
 
-      expect(engine.state.sessionsIngested, 1);
-      expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
-      expect(engineRepository.state, isNotNull);
-    });
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+        expect(engineRepository.state, isNotNull);
+      },
+    );
 
-    test('restores saved engine state without bootstrapping app sessions again', () async {
-      final appState = _appStateWithCompletedSession();
-      final appRepository = MemoryAppStateRepository(initialState: appState);
+    test(
+      'restores saved engine state without bootstrapping app sessions again',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
 
-      final savedEngine = TrainingEngine(
-        registry: ExerciseRegistry.withDefaults(),
-        profile: UserProfile(
-          sex: Sex.male,
-          age: 30,
-          bodyWeightKg: 82,
-          experience: ExperienceLevel.intermediate,
-          goal: HypertrophyGoal.hypertrophy,
-          availableDays: const [1, 3, 5],
-          maxSessionDuration: const Duration(minutes: 60),
-          createdAt: DateTime.utc(2026, 1, 1),
-        ),
-      );
-      savedEngine.ingestSession(
-        EngineSession(
-          id: 'saved-session',
-          startedAt: DateTime.utc(2026, 2, 1, 17, 0),
-          endedAt: DateTime.utc(2026, 2, 1, 18, 0),
-          sets: [
-            LoggedSet(
-              exerciseId: 'barbell_bench_press',
-              weightKg: 80,
-              reps: 8,
-              rpe: 8.0,
-              completedAt: DateTime.utc(2026, 2, 1, 17, 10),
-            ),
-          ],
-        ),
-      );
+        final savedEngine = TrainingEngine(
+          registry: ExerciseRegistry.withDefaults(),
+          profile: UserProfile(
+            sex: Sex.male,
+            age: 30,
+            bodyWeightKg: 82,
+            experience: ExperienceLevel.intermediate,
+            goal: HypertrophyGoal.hypertrophy,
+            availableDays: const [1, 3, 5],
+            maxSessionDuration: const Duration(minutes: 60),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        savedEngine.ingestSession(
+          EngineSession(
+            id: 'saved-session',
+            startedAt: DateTime.utc(2026, 2, 1, 17, 0),
+            endedAt: DateTime.utc(2026, 2, 1, 18, 0),
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_bench_press',
+                weightKg: 80,
+                reps: 8,
+                rpe: 8.0,
+                completedAt: DateTime.utc(2026, 2, 1, 17, 10),
+              ),
+            ],
+          ),
+        );
 
-      final engineRepository = MemoryTrainingEngineStateRepository(
-        initialState: savedEngine.serializeState(),
-      );
-      final container = _buildContainer(
-        initialState: appState,
-        appRepository: appRepository,
-        engineRepository: engineRepository,
-      );
-      addTearDown(container.dispose);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: savedEngine.serializeState(),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
 
-      final engine = await container.read(trainingEngineProvider.future);
+        final engine = await container.read(trainingEngineProvider.future);
 
-      expect(engine.state.sessionsIngested, 1);
-      expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
-      expect(engine.state.e1rmHistory['barbell_back_squat'], isNull);
-    });
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNull);
+      },
+    );
 
     test('ignores timed-only legacy sessions during bootstrap', () async {
       final appState = _appStateWithTimedOnlyCompletedSession();
@@ -214,45 +220,124 @@ void main() {
       expect(engineRepository.state, isNotNull);
     });
 
-    test('falls back to app history when saved engine state cannot be restored',
-        () async {
-      final appState = _appStateWithCompletedSession();
-      final appRepository = MemoryAppStateRepository(initialState: appState);
-      final engineRepository = MemoryTrainingEngineStateRepository(
-        initialState: <String, dynamic>{'bad': 'snapshot'},
-      );
-      final container = _buildContainer(
-        initialState: appState,
-        appRepository: appRepository,
-        engineRepository: engineRepository,
-      );
-      addTearDown(container.dispose);
+    test(
+      'falls back to app history when saved engine state cannot be restored',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: <String, dynamic>{'bad': 'snapshot'},
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
 
-      final engine = await container.read(trainingEngineProvider.future);
+        final engine = await container.read(trainingEngineProvider.future);
 
-      expect(engine.state.sessionsIngested, 1);
-      expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
-      expect(engineRepository.state, isNotNull);
-      expect(engineRepository.state?['sessionsIngested'], 1);
-    });
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+        expect(engineRepository.state, isNotNull);
+        expect(engineRepository.state?['sessionsIngested'], 1);
+      },
+    );
 
-    test('falls back to app history when loading saved engine state throws',
-        () async {
-      final appState = _appStateWithCompletedSession();
-      final appRepository = MemoryAppStateRepository(initialState: appState);
-      final engineRepository = _ThrowingTrainingEngineStateRepository();
-      final container = _buildContainer(
-        initialState: appState,
-        appRepository: appRepository,
-        engineRepository: engineRepository,
-      );
-      addTearDown(container.dispose);
+    test(
+      'falls back to app history when loading saved engine state throws',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = _ThrowingTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
 
-      final engine = await container.read(trainingEngineProvider.future);
+        final engine = await container.read(trainingEngineProvider.future);
 
-      expect(engine.state.sessionsIngested, 1);
-      expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
-    });
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+      },
+    );
+
+    test(
+      'engine debug fatigue rows are sorted from highest to lowest fatigue',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final savedEngine = TrainingEngine(
+          registry: ExerciseRegistry.withDefaults(),
+          profile: UserProfile(
+            sex: Sex.male,
+            age: 30,
+            bodyWeightKg: 82,
+            experience: ExperienceLevel.intermediate,
+            goal: HypertrophyGoal.hypertrophy,
+            availableDays: const [1, 3, 5],
+            maxSessionDuration: const Duration(minutes: 60),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        savedEngine.ingestSession(
+          EngineSession(
+            id: 'debug-fatigue-session',
+            startedAt: DateTime.utc(2026, 3, 1, 17, 0),
+            endedAt: DateTime.utc(2026, 3, 1, 18, 0),
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_back_squat',
+                weightKg: 110,
+                reps: 8,
+                rpe: 8.5,
+                completedAt: DateTime.utc(2026, 3, 1, 17, 10),
+              ),
+            ],
+          ),
+        );
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: savedEngine.serializeState(),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final rows = await container.read(
+          engineDebugFatigueRowsProvider.future,
+        );
+
+        expect(rows, isNotEmpty);
+        expect(rows.first.value, greaterThanOrEqualTo(rows.last.value));
+      },
+    );
+
+    test(
+      'engine debug raw snapshot provider returns formatted serialized state',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final snapshot = await container.read(
+          engineDebugRawSnapshotProvider.future,
+        );
+
+        expect(snapshot, contains('sessionsIngested'));
+        expect(snapshot, contains('e1rmHistory'));
+      },
+    );
   });
 
   group('SharedPreferencesTrainingEngineStateRepository', () {

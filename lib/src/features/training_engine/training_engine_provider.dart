@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
@@ -28,10 +30,10 @@ final healthKitDataSourceProvider = Provider<HealthKitDataSource>(
 
 final trainingEngineStateRepositoryProvider =
     Provider<TrainingEngineStateRepository>(
-  (ref) => throw UnimplementedError(
-    'trainingEngineStateRepositoryProvider must be overridden',
-  ),
-);
+      (ref) => throw UnimplementedError(
+        'trainingEngineStateRepositoryProvider must be overridden',
+      ),
+    );
 
 Future<TrainingEngine> loadTrainingEngine({
   required AppState appState,
@@ -109,12 +111,16 @@ final trainingEngineProvider = FutureProvider<TrainingEngine>((ref) async {
 // ---------------------------------------------------------------------------
 
 /// Returns the current per-muscle fatigue map.
-final fatigueMapProvider = FutureProvider<Map<String, FatigueStatus>>((ref) async {
+final fatigueMapProvider = FutureProvider<Map<String, FatigueStatus>>((
+  ref,
+) async {
   final engine = await ref.watch(trainingEngineProvider.future);
   return engine.fullFatigueMap();
 });
 
-final engineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((ref) async {
+final engineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
+  ref,
+) async {
   final engine = await ref.watch(trainingEngineProvider.future);
   if (engine.state.sessionsIngested == 0) {
     return <Muscle, MuscleData>{};
@@ -135,22 +141,86 @@ final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
 /// always return a recommendation in practice, but guards against edge cases).
 final loadRecommendationProvider =
     FutureProvider.family<LoadRecommendation?, String>((ref, exerciseId) async {
-  final engine = await ref.watch(trainingEngineProvider.future);
-  // currentE1rm always returns a value (falls back to baseline), so this
-  // check is a safety guard for truly degenerate states.
-  if (engine.currentE1rm(exerciseId) == null) return null;
-  return engine.recommendLoad(exerciseId);
-});
+      final engine = await ref.watch(trainingEngineProvider.future);
+      // currentE1rm always returns a value (falls back to baseline), so this
+      // check is a safety guard for truly degenerate states.
+      if (engine.currentE1rm(exerciseId) == null) return null;
+      return engine.recommendLoad(exerciseId);
+    });
 
 final engineWeightSuggestionProvider =
-    FutureProvider.family<EngineWeightSuggestion?, String>((ref, exerciseId) async {
-  final engine = await ref.watch(trainingEngineProvider.future);
-  if (engine.state.sessionsIngested == 0) {
-    return null;
-  }
+    FutureProvider.family<EngineWeightSuggestion?, String>((
+      ref,
+      exerciseId,
+    ) async {
+      final engine = await ref.watch(trainingEngineProvider.future);
+      if (engine.state.sessionsIngested == 0) {
+        return null;
+      }
 
-  final recommendation = engine.recommendLoad(exerciseId);
-  return ref
-      .watch(trainingEngineUiAdapterProvider)
-      .toWeightSuggestion(recommendation);
+      final recommendation = engine.recommendLoad(exerciseId);
+      return ref
+          .watch(trainingEngineUiAdapterProvider)
+          .toWeightSuggestion(recommendation);
+    });
+
+class EngineDebugFatigueRow {
+  const EngineDebugFatigueRow({
+    required this.muscleId,
+    required this.value,
+    required this.status,
+  });
+
+  final String muscleId;
+  final double value;
+  final FatigueStatus status;
+}
+
+class EngineDebugRecommendationRow {
+  const EngineDebugRecommendationRow({
+    required this.exerciseId,
+    required this.e1rm,
+    required this.lastTopSet,
+    required this.recommendation,
+  });
+
+  final String exerciseId;
+  final double? e1rm;
+  final LoggedSet? lastTopSet;
+  final LoadRecommendation recommendation;
+}
+
+final engineDebugFatigueRowsProvider =
+    FutureProvider<List<EngineDebugFatigueRow>>((ref) async {
+      final engine = await ref.watch(trainingEngineProvider.future);
+      final now = DateTime.now();
+      final fatigueMap = engine.fullFatigueMap(now);
+      final rows = fatigueMap.entries.map((entry) {
+        return EngineDebugFatigueRow(
+          muscleId: entry.key,
+          value: engine.currentFatigue(entry.key, now),
+          status: entry.value,
+        );
+      }).toList()..sort((a, b) => b.value.compareTo(a.value));
+      return rows;
+    });
+
+final engineDebugRecommendationRowsProvider =
+    FutureProvider<List<EngineDebugRecommendationRow>>((ref) async {
+      final engine = await ref.watch(trainingEngineProvider.future);
+      final rows = engine.state.lastTopSets.entries.map((entry) {
+        return EngineDebugRecommendationRow(
+          exerciseId: entry.key,
+          e1rm: engine.currentE1rm(entry.key),
+          lastTopSet: entry.value,
+          recommendation: engine.recommendLoad(entry.key),
+        );
+      }).toList()..sort((a, b) => a.exerciseId.compareTo(b.exerciseId));
+      return rows;
+    });
+
+final engineDebugRawSnapshotProvider = FutureProvider<String>((ref) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
+  const encoder = JsonEncoder.withIndent('  ');
+  return encoder.convert(engine.serializeState());
 });
