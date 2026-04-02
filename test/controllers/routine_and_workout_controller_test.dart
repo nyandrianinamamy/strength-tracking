@@ -167,4 +167,24 @@ void main() {
       equals(previousCompletedCount + 1),
     );
   });
+
+  test('logging a set stores per-set RPE in the active session', () {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+
+    container.read(routineControllerProvider).startSession('push_day');
+
+    final updated = container.read(workoutControllerProvider).logSet(
+      weightKg: 100,
+      reps: 6,
+      rpe: 8.5,
+    );
+
+    expect(updated, isNotNull);
+    expect(updated!.completedSets.single.rpe, equals(8.5));
+    expect(
+      container.read(appStateControllerProvider).activeSession?.completedSets.single.rpe,
+      equals(8.5),
+    );
+  });
 }

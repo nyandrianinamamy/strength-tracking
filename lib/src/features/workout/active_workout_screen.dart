@@ -43,6 +43,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     with SingleTickerProviderStateMixin {
   final _weightController = TextEditingController();
   final _repsController = TextEditingController();
+  final _setRpeController = TextEditingController();
   final _setNoteController = TextEditingController();
   late final Timer _ticker;
   late final PageController _pageController;
@@ -151,6 +152,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     _restTimerNotificationService.cancel();
     _weightController.dispose();
     _repsController.dispose();
+    _setRpeController.dispose();
     _setNoteController.dispose();
     _pageController.dispose();
     _arrowAnimController.dispose();
@@ -1122,6 +1124,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     controller: controller,
                     weightController: _weightController,
                     repsController: _repsController,
+                    setRpeController: _setRpeController,
                     setNoteController: _setNoteController,
                     lastExerciseId: _lastExerciseId,
                     onExerciseIdChanged: (id) => _lastExerciseId = id,
@@ -1271,6 +1274,31 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 }
 
+double? _parseOptionalRpe(String rawValue) {
+  final trimmed = rawValue.trim();
+  if (trimmed.isEmpty) {
+    return null;
+  }
+
+  final parsed = double.tryParse(trimmed.replaceAll(',', '.'));
+  if (parsed == null || parsed <= 0 || parsed > 10) {
+    return null;
+  }
+  return parsed;
+}
+
+String _setTitle(CompletedSet set, String preferredUnit) {
+  final baseTitle = set.durationSeconds > 0
+      ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
+      : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}';
+
+  if (set.rpe == null) {
+    return baseTitle;
+  }
+
+  return '$baseTitle • RPE ${set.rpe!.toStringAsFixed(1)}';
+}
+
 class _ExercisePage extends StatelessWidget {
   const _ExercisePage({
     super.key,
@@ -1281,6 +1309,7 @@ class _ExercisePage extends StatelessWidget {
     required this.controller,
     required this.weightController,
     required this.repsController,
+    required this.setRpeController,
     required this.setNoteController,
     required this.lastExerciseId,
     required this.onExerciseIdChanged,
@@ -1304,6 +1333,7 @@ class _ExercisePage extends StatelessWidget {
   final WorkoutController controller;
   final TextEditingController weightController;
   final TextEditingController repsController;
+  final TextEditingController setRpeController;
   final TextEditingController setNoteController;
   final String? lastExerciseId;
   final ValueChanged<String> onExerciseIdChanged;
@@ -1367,11 +1397,14 @@ class _ExercisePage extends StatelessWidget {
               : '';
           repsController.text =
               lastSet?.reps.toString() ?? '${prescription.targetReps}';
+          setRpeController.text =
+              lastSet?.rpe == null ? '' : lastSet!.rpe!.toStringAsFixed(1);
           setNoteController.clear();
         });
       } else {
         // Restore (or initialize) timed exercise state for this exercise
         WidgetsBinding.instance.addPostFrameCallback((_) {
+          setRpeController.clear();
           onInitTimed(prescription.exerciseId, prescription.targetDurationSeconds);
         });
       }
@@ -1560,6 +1593,7 @@ class _ExercisePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       TextField(
+                        key: const ValueKey('active-workout-weight-input'),
                         controller: weightController,
                         textAlign: TextAlign.center,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -1592,6 +1626,7 @@ class _ExercisePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       TextField(
+                        key: const ValueKey('active-workout-reps-input'),
                         controller: repsController,
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
@@ -1613,6 +1648,7 @@ class _ExercisePage extends StatelessWidget {
                   child: SizedBox(
                     height: 56,
                     child: FilledButton.icon(
+                      key: const ValueKey('active-workout-log-set-button'),
                       onPressed: () {
                         final rawWeight = double.tryParse(
                           weightController.text.replaceAll(',', '.'),
@@ -1624,12 +1660,18 @@ class _ExercisePage extends StatelessWidget {
                                 preferredUnit,
                               );
                         final reps = int.tryParse(repsController.text);
+                        final rpe = _parseOptionalRpe(setRpeController.text);
+                        if (setRpeController.text.trim().isNotEmpty &&
+                            rpe == null) {
+                          return;
+                        }
                         if (weight == null || reps == null || reps <= 0) return;
 
                         controller.logSet(
                           weightKg: weight,
                           reps: reps,
                           note: setNoteController.text.trim(),
+                          rpe: rpe,
                         );
                         setNoteController.clear();
                         onLogSet(prescription.restSeconds);
@@ -1640,6 +1682,19 @@ class _ExercisePage extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const ValueKey('active-workout-rpe-input'),
+              controller: setRpeController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'RPE',
+                hintText: 'Optional, 1-10',
+              ),
             ),
             const SizedBox(height: 14),
           ], // end else (strength)
@@ -1763,9 +1818,7 @@ class _ExercisePage extends StatelessWidget {
                             );
                           },
                           title: Text(
-                            set.durationSeconds > 0
-                                ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
-                                : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                            _setTitle(set, preferredUnit),
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           subtitle: Text(AppFormatters.time(set.completedAt)),
@@ -1863,6 +1916,9 @@ class _ExercisePage extends StatelessWidget {
             ),
     );
     final repsCtrl = TextEditingController(text: '${set.reps}');
+    final rpeCtrl = TextEditingController(
+      text: set.rpe == null ? '' : set.rpe!.toStringAsFixed(1),
+    );
 
     showDialog(
       context: context,
@@ -1897,6 +1953,20 @@ class _ExercisePage extends StatelessWidget {
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(labelText: 'Reps'),
                     ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: rpeCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'RPE',
+                        hintText: 'Optional, 1-10',
+                      ),
+                    ),
                   ],
                 ),
           actions: [
@@ -1922,12 +1992,16 @@ class _ExercisePage extends StatelessWidget {
                       ? null
                       : AppFormatters.convertToKg(rawWeight, preferredUnit);
                   final reps = int.tryParse(repsCtrl.text);
+                  final rpe = _parseOptionalRpe(rpeCtrl.text);
+                  if (rpeCtrl.text.trim().isNotEmpty && rpe == null) return;
                   if (weight == null || reps == null || reps <= 0) return;
                   controller.updateSet(
                     set.exerciseId,
                     set.setNumber,
                     weightKg: weight,
                     reps: reps,
+                    rpe: rpe,
+                    clearRpe: rpeCtrl.text.trim().isEmpty,
                   );
                 }
                 Navigator.pop(dialogContext);

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
+import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -13,6 +15,20 @@ class WorkoutSummaryScreen extends ConsumerWidget {
   const WorkoutSummaryScreen({super.key, required this.sessionId});
 
   final String sessionId;
+
+  String _setSummaryText(
+    AppState state,
+    CompletedSet set,
+  ) {
+    final baseText =
+        'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, state.preferredUnit)} x ${set.reps}';
+
+    if (set.rpe == null) {
+      return baseText;
+    }
+
+    return '$baseText • RPE ${set.rpe!.toStringAsFixed(1)}';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -297,7 +313,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 6),
                             child: Text(
-                              'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, state.preferredUnit)} x ${set.reps}',
+                              _setSummaryText(state, set),
                             ),
                           );
                         }),

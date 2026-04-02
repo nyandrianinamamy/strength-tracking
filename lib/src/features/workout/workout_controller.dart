@@ -25,6 +25,7 @@ class WorkoutController {
     required double weightKg,
     required int reps,
     String note = '',
+    double? rpe,
   }) {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
@@ -53,6 +54,7 @@ class WorkoutController {
       reps: reps,
       completedAt: DateTime.now(),
       note: note,
+      rpe: rpe,
     );
 
     var nextExerciseIndex = session.currentExerciseIndex;
@@ -149,6 +151,8 @@ class WorkoutController {
     double? weightKg,
     int? reps,
     int? durationSeconds,
+    double? rpe,
+    bool clearRpe = false,
   }) {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
@@ -160,6 +164,8 @@ class WorkoutController {
           weightKg: weightKg ?? s.weightKg,
           reps: reps ?? s.reps,
           durationSeconds: durationSeconds ?? s.durationSeconds,
+          rpe: rpe,
+          clearRpe: clearRpe,
         );
       }
       return s;
