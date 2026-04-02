@@ -1,7 +1,5 @@
 import 'package:test/test.dart';
 import 'package:training_engine/training_engine.dart';
-import 'package:training_engine/src/registry/exercise_registry.dart';
-import 'package:training_engine/src/planner/split_selector.dart';
 
 void main() {
   group('ExerciseRegistry', () {

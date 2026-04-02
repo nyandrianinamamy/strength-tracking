@@ -6,7 +6,6 @@ import 'package:training_engine/src/acwr/acwr_classifier.dart';
 import 'package:training_engine/src/models/sleep_record.dart';
 import 'package:training_engine/src/models/hrv_record.dart';
 import 'package:training_engine/src/models/enums.dart';
-import 'package:training_engine/src/models/ewma_state.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -123,7 +122,7 @@ void main() {
       // Compare against 13 poor nights + 1 old excellent night (at day 13)
       final excellentOld = _sleep(now.subtract(const Duration(days: 13)), totalH: 9, deepM: 100, remM: 120);
       final recentPoor = _sleep(now, totalH: 4, deepM: 20, remM: 30);
-      final scoreWithPoorRecent = scoreSleep([recentPoor, ...poor.take(12).toList(), excellentOld], now)!;
+      final scoreWithPoorRecent = scoreSleep([recentPoor, ...poor.take(12), excellentOld], now)!;
 
       expect(scoreWithExcellentRecent, greaterThan(scoreWithPoorRecent));
     });
@@ -217,7 +216,7 @@ void main() {
   // computeReadiness
   // ---------------------------------------------------------------------------
   group('computeReadiness', () {
-    AcwrStatus _acwrStatus(AcwrZone zone, {double ratio = 1.0}) => AcwrStatus(
+    AcwrStatus acwrStatus(AcwrZone zone, {double ratio = 1.0}) => AcwrStatus(
           ratio: ratio,
           zone: zone,
           acuteEwma: 100.0,
@@ -227,7 +226,7 @@ void main() {
 
     test('full tier when all three sources provided', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         sleepScore: 80.0,
         hrvScore: 75.0,
       );
@@ -237,7 +236,7 @@ void main() {
 
     test('noHrv tier when ACWR + sleep only', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         sleepScore: 80.0,
       );
       expect(result.tier, ReadinessTier.noHrv);
@@ -246,7 +245,7 @@ void main() {
 
     test('noSleep tier when ACWR + HRV only', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         hrvScore: 75.0,
       );
       expect(result.tier, ReadinessTier.noSleep);
@@ -255,7 +254,7 @@ void main() {
 
     test('acwrOnly tier when only ACWR provided', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
       );
       expect(result.tier, ReadinessTier.acwrOnly);
       expect(result.confidence, ReadinessConfidence.low);
@@ -276,21 +275,21 @@ void main() {
 
     test('danger zone flag when ACWR ratio > 1.50', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.danger, ratio: 1.7),
+        acwr: acwrStatus(AcwrZone.danger, ratio: 1.7),
       );
       expect(result.flags, contains(ReadinessFlag.acwrDangerZone));
     });
 
     test('no danger zone flag for optimal ACWR', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal, ratio: 1.0),
+        acwr: acwrStatus(AcwrZone.optimal, ratio: 1.0),
       );
       expect(result.flags, isNot(contains(ReadinessFlag.acwrDangerZone)));
     });
 
     test('full tier produces score in plausible range', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         sleepScore: 80.0,
         hrvScore: 75.0,
       );
@@ -300,12 +299,12 @@ void main() {
 
     test('danger zone ACWR produces lower score than optimal ACWR (all else equal)', () {
       final optimal = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         sleepScore: 80.0,
         hrvScore: 75.0,
       );
       final danger = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.danger, ratio: 1.7),
+        acwr: acwrStatus(AcwrZone.danger, ratio: 1.7),
         sleepScore: 80.0,
         hrvScore: 75.0,
       );
@@ -314,7 +313,7 @@ void main() {
 
     test('componentScores contains acwr key when ACWR provided', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         sleepScore: 80.0,
       );
       expect(result.componentScores.containsKey('acwr'), isTrue);
@@ -330,13 +329,13 @@ void main() {
 
     test('manual slider reduces influence when all 3 objective sources present', () {
       final fullWithoutManual = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         sleepScore: 80.0,
         hrvScore: 75.0,
       );
       // Add a very low manual score – should not drag down much (10% weight)
       final fullWithManual = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.optimal),
+        acwr: acwrStatus(AcwrZone.optimal),
         sleepScore: 80.0,
         hrvScore: 75.0,
         manualSlider: 1.0, // low: maps to 10
@@ -348,7 +347,7 @@ void main() {
 
     test('score is clamped to 0-100', () {
       final result = computeReadiness(
-        acwr: _acwrStatus(AcwrZone.danger, ratio: 2.0),
+        acwr: acwrStatus(AcwrZone.danger, ratio: 2.0),
         sleepScore: 0.0,
         hrvScore: 0.0,
       );
@@ -357,7 +356,7 @@ void main() {
     });
 
     test('coldStart flag not set when ACWR is available', () {
-      final result = computeReadiness(acwr: _acwrStatus(AcwrZone.optimal));
+      final result = computeReadiness(acwr: acwrStatus(AcwrZone.optimal));
       expect(result.flags, isNot(contains(ReadinessFlag.coldStart)));
     });
   });

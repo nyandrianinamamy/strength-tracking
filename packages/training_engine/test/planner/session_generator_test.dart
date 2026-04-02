@@ -318,7 +318,7 @@ void main() {
   // ── Time Bounder ──────────────────────────────────────────────────────────
 
   group('boundSessionToTime', () {
-    PlannedSession _makeSession(List<PlannedExercise> exercises) =>
+    PlannedSession makeSession(List<PlannedExercise> exercises) =>
         PlannedSession(
           dayOfWeek: 1,
           focus: SessionFocus.push,
@@ -337,7 +337,7 @@ void main() {
           restSeconds: 180,
         ),
       ];
-      final session = _makeSession(exercises);
+      final session = makeSession(exercises);
       final result = boundSessionToTime(session, const Duration(hours: 1));
 
       expect(result.adjustments, isEmpty);
@@ -347,16 +347,6 @@ void main() {
 
     test('pass 1: reduces isolation rest when over limit', () {
       // 6 isolation exercises × 3 sets × (30+120)s = 2700s > 20 min limit
-      final exercises = List.generate(
-        6,
-        (i) => PlannedExercise(
-          exerciseId: 'iso_$i',
-          targetSets: 3,
-          targetReps: 12,
-          targetRpe: 8.5,
-          restSeconds: 120, // > 90 but treated as isolation (<120 for pass2)
-        ),
-      );
       // Actually let's use restSeconds=100 (> 90) to trigger pass 1
       final isoExercises = List.generate(
         6,
@@ -368,7 +358,7 @@ void main() {
           restSeconds: 100, // > 90 → pass 1 target
         ),
       );
-      final session = _makeSession(isoExercises);
+      final session = makeSession(isoExercises);
       // Total: 6 × 3 × (30+100) = 2340s. Set limit to 2000s to force pass 1.
       final result = boundSessionToTime(session, const Duration(seconds: 2000));
 
@@ -396,7 +386,7 @@ void main() {
         ),
       );
       // Total: 4 × 4 × (45+180) = 3600s. Set limit to 2000s.
-      final session = _makeSession(exercises);
+      final session = makeSession(exercises);
       final result = boundSessionToTime(session, const Duration(seconds: 2000));
 
       expect(
@@ -422,7 +412,7 @@ void main() {
         ),
       );
       // Total: 8 × 3 × (30+90) = 2880s. Set limit to 1200s to force all passes.
-      final session = _makeSession(exercises);
+      final session = makeSession(exercises);
       final result = boundSessionToTime(session, const Duration(seconds: 1200));
 
       expect(
@@ -446,7 +436,7 @@ void main() {
           restSeconds: 90,
         ),
       );
-      final session = _makeSession(exercises);
+      final session = makeSession(exercises);
       final result = boundSessionToTime(session, const Duration(seconds: 800));
 
       expect(result.adjustments, isNotEmpty);

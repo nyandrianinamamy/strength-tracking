@@ -6,10 +6,15 @@ import 'package:strength_training_tracker/src/data/repository/app_state_reposito
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 
 void main() {
-  ProviderContainer buildContainer({AppState? initialState}) {
+  ProviderContainer buildContainer({
+    AppState? initialState,
+    TrainingEngineStateRepository? trainingEngineRepository,
+  }) {
     final repository = MemoryAppStateRepository(
       initialState: initialState ?? DemoSeedData.initialState(),
     );
@@ -18,11 +23,14 @@ void main() {
       overrides: [
         appStateRepositoryProvider.overrideWithValue(repository),
         initialAppStateProvider.overrideWithValue(repository.state),
+        trainingEngineStateRepositoryProvider.overrideWithValue(
+          trainingEngineRepository ?? MemoryTrainingEngineStateRepository(),
+        ),
       ],
     );
   }
 
-  test('starting, logging, and completing a workout updates app state', () {
+  test('starting, logging, and completing a workout updates app state', () async {
     final container = buildContainer();
     addTearDown(container.dispose);
 
@@ -47,6 +55,7 @@ void main() {
     final completed = container
         .read(workoutControllerProvider)
         .completeSession(rpe: 8.5);
+    await Future<void>.delayed(Duration.zero);
     expect(completed, isNotNull);
     expect(completed!.status.name, 'completed');
     expect(container.read(appStateControllerProvider).activeSession, isNull);
@@ -98,7 +107,7 @@ void main() {
 
   test(
     'skipping a grouped routine advances the queue until it is completed',
-    () {
+    () async {
       final container = buildContainer();
       addTearDown(container.dispose);
 
@@ -114,6 +123,7 @@ void main() {
 
       container.read(routineControllerProvider).startSession('pull_day');
       container.read(workoutControllerProvider).completeSession(rpe: 8.0);
+      await Future<void>.delayed(Duration.zero);
 
       group = container
           .read(appStateControllerProvider)
@@ -122,4 +132,39 @@ void main() {
       expect(group!.pendingRoutineIds, ['leg_day', 'push_day']);
     },
   );
+
+  test('completing a workout persists training engine state', () async {
+    final trainingEngineRepository = MemoryTrainingEngineStateRepository();
+    final container = buildContainer(
+      trainingEngineRepository: trainingEngineRepository,
+    );
+    addTearDown(container.dispose);
+
+    final previousCompletedCount = container
+        .read(appStateControllerProvider)
+        .completedSessions
+        .length;
+    final routine = container
+        .read(appStateControllerProvider)
+        .routines
+        .firstWhere((item) => item.id == 'push_day');
+
+    container.read(routineControllerProvider).startSession(routine.id);
+    container.read(workoutControllerProvider).logSet(weightKg: 100, reps: 8);
+    final completed = container
+        .read(workoutControllerProvider)
+        .completeSession(rpe: 8.0);
+
+    expect(completed, isNotNull);
+
+    for (var i = 0; i < 10 && trainingEngineRepository.state == null; i++) {
+      await Future<void>.delayed(Duration.zero);
+    }
+
+    expect(trainingEngineRepository.state, isNotNull);
+    expect(
+      trainingEngineRepository.state?['sessionsIngested'],
+      equals(previousCompletedCount + 1),
+    );
+  });
 }

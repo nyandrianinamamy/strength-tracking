@@ -1,5 +1,6 @@
 import 'package:training_engine/training_engine.dart';
 
+import '../../data/models/app_state.dart';
 import '../../data/models/exercise.dart';
 import '../../data/models/workout_session.dart';
 
@@ -10,6 +11,28 @@ import '../../data/models/workout_session.dart';
 /// does not interact with the engine directly.
 class TrainingEngineAdapter {
   const TrainingEngineAdapter();
+
+  /// Converts host app state into a minimal training-engine user profile.
+  ///
+  /// The current app model does not yet capture all engine demographics, so
+  /// this uses conservative host-level defaults until onboarding/profile data
+  /// is expanded.
+  UserProfile toUserProfile(AppState appState) {
+    final sex = appState.bodyGender.toLowerCase() == 'female'
+        ? Sex.female
+        : Sex.male;
+
+    return UserProfile(
+      sex: sex,
+      age: 25,
+      bodyWeightKg: 75.0,
+      experience: ExperienceLevel.intermediate,
+      goal: HypertrophyGoal.hypertrophy,
+      availableDays: const [1, 3, 5],
+      maxSessionDuration: const Duration(minutes: 60),
+      createdAt: DateTime.now(),
+    );
+  }
 
   // ---------------------------------------------------------------------------
   // Session mapping

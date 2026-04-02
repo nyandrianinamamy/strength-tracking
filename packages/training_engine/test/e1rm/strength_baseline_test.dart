@@ -1,5 +1,4 @@
 import 'package:test/test.dart';
-import 'package:training_engine/src/e1rm/strength_baseline.dart';
 import 'package:training_engine/training_engine.dart';
 
 void main() {

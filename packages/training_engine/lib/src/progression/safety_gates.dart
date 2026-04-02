@@ -17,19 +17,17 @@ class GateResult {
         modifier = 1.0;
 
   const GateResult.blocked({
-    required GateReason reason,
-    required GateAction action,
-    double modifier = 0.0,
+    required this.reason,
+    required this.action,
+    this.modifier = 0.0,
   })  : passed = false,
-        reason = reason,
-        action = action,
-        modifier = modifier;
+        assert(reason != null),
+        assert(action != null);
 
-  const GateResult.dampened({required double modifier})
+  const GateResult.dampened({required this.modifier})
       : passed = true,
         reason = null,
-        action = null,
-        modifier = modifier;
+        action = null;
 
   // Private named constructor for internal use
   const GateResult._({

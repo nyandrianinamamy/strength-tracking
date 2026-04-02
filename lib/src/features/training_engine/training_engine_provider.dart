@@ -1,29 +1,87 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:training_engine/training_engine.dart';
 
+import '../../core/app_state_controller.dart';
+import '../../data/models/app_state.dart';
+import 'healthkit_data_source.dart';
+import 'training_engine_adapter.dart';
+import 'training_engine_state_repository.dart';
+
 // ---------------------------------------------------------------------------
 // Core engine provider
 // ---------------------------------------------------------------------------
 
-/// Provides a singleton [TrainingEngine] instance.
-///
-/// The engine is initialised with default demographic data. In production,
-/// this should be overridden (via `ProviderContainer.overrides` or
-/// `ProviderScope.overrides`) once the user's profile is available from
-/// onboarding.
-final trainingEngineProvider = Provider<TrainingEngine>((ref) {
+final trainingEngineAdapterProvider = Provider<TrainingEngineAdapter>(
+  (ref) => const TrainingEngineAdapter(),
+);
+
+final healthKitDataSourceProvider = Provider<HealthKitDataSource>(
+  (ref) => const HealthKitDataSource(),
+);
+
+final trainingEngineStateRepositoryProvider =
+    Provider<TrainingEngineStateRepository>(
+  (ref) => throw UnimplementedError(
+    'trainingEngineStateRepositoryProvider must be overridden',
+  ),
+);
+
+Future<TrainingEngine> loadTrainingEngine({
+  required AppState appState,
+  required TrainingEngineAdapter adapter,
+  required HealthKitDataSource healthKit,
+  required TrainingEngineStateRepository repository,
+}) async {
   final registry = ExerciseRegistry.withDefaults();
-  final profile = UserProfile(
-    sex: Sex.male,
-    age: 25,
-    bodyWeightKg: 75.0,
-    experience: ExperienceLevel.intermediate,
-    goal: HypertrophyGoal.hypertrophy,
-    availableDays: [1, 3, 5], // Mon, Wed, Fri
-    maxSessionDuration: const Duration(minutes: 60),
-    createdAt: DateTime.now(),
+  for (final exercise in appState.exercises) {
+    final engineExercise = adapter.toEngineExercise(exercise, registry);
+    if (engineExercise != null) {
+      registry.addCustom(engineExercise);
+    }
+  }
+
+  final profile = adapter.toUserProfile(appState);
+  final engine = TrainingEngine(registry: registry, profile: profile);
+  final savedState = await repository.load();
+
+  if (savedState != null) {
+    engine.restoreState(savedState);
+    return engine;
+  }
+
+  final completedSessions = appState.completedSessions
+      .map(adapter.toEngineSession)
+      .toList();
+  if (completedSessions.isNotEmpty) {
+    engine.bootstrapFromHistory(completedSessions);
+  }
+
+  final sleepRecords = await healthKit.fetchRecentSleep();
+  for (final record in sleepRecords) {
+    engine.ingestSleep(record);
+  }
+
+  final hrvRecords = await healthKit.fetchRecentHrv();
+  for (final record in hrvRecords) {
+    engine.ingestHrv(record);
+  }
+
+  await repository.save(engine.serializeState());
+  return engine;
+}
+
+final trainingEngineProvider = FutureProvider<TrainingEngine>((ref) async {
+  final appState = ref.watch(appStateControllerProvider);
+  final adapter = ref.watch(trainingEngineAdapterProvider);
+  final healthKit = ref.watch(healthKitDataSourceProvider);
+  final repository = ref.watch(trainingEngineStateRepositoryProvider);
+
+  return loadTrainingEngine(
+    appState: appState,
+    adapter: adapter,
+    healthKit: healthKit,
+    repository: repository,
   );
-  return TrainingEngine(registry: registry, profile: profile);
 });
 
 // ---------------------------------------------------------------------------
@@ -31,21 +89,23 @@ final trainingEngineProvider = Provider<TrainingEngine>((ref) {
 // ---------------------------------------------------------------------------
 
 /// Returns the current per-muscle fatigue map.
-final fatigueMapProvider = Provider<Map<String, FatigueStatus>>((ref) {
-  return ref.watch(trainingEngineProvider).fullFatigueMap();
+final fatigueMapProvider = FutureProvider<Map<String, FatigueStatus>>((ref) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
+  return engine.fullFatigueMap();
 });
 
 /// Returns the current composite readiness score.
-final readinessProvider = Provider<ReadinessScore>((ref) {
-  return ref.watch(trainingEngineProvider).computeReadiness();
+final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
+  return engine.computeReadiness();
 });
 
 /// Returns a [LoadRecommendation] for the given exercise ID, or `null` when
 /// no e1RM data is available (engine falls back to baseline, so this will
 /// always return a recommendation in practice, but guards against edge cases).
 final loadRecommendationProvider =
-    Provider.family<LoadRecommendation?, String>((ref, exerciseId) {
-  final engine = ref.watch(trainingEngineProvider);
+    FutureProvider.family<LoadRecommendation?, String>((ref, exerciseId) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
   // currentE1rm always returns a value (falls back to baseline), so this
   // check is a safety guard for truly degenerate states.
   if (engine.currentE1rm(exerciseId) == null) return null;
