@@ -9,3 +9,8 @@ export 'src/acwr/acwr_classifier.dart';
 export 'src/readiness/sleep_scorer.dart';
 export 'src/readiness/hrv_scorer.dart';
 export 'src/readiness/composite_readiness.dart';
+export 'src/progression/safety_gates.dart';
+export 'src/progression/performance_delta.dart';
+export 'src/progression/load_predictor.dart';
+export 'src/progression/equipment_rounding.dart';
+export 'src/progression/recommendation.dart';
