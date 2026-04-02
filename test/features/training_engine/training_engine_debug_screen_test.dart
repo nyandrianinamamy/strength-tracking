@@ -11,7 +11,10 @@ import 'package:strength_training_tracker/src/features/training_engine/training_
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:training_engine/training_engine.dart';
 
-Widget _buildDebugScreenApp({Map<String, dynamic>? savedEngineState}) {
+Widget _buildDebugScreenApp({
+  Map<String, dynamic>? savedEngineState,
+  TrainingEngineStateRepository? trainingEngineRepository,
+}) {
   const initialState = AppState(exercises: [], routines: [], sessions: []);
 
   return ProviderScope(
@@ -21,11 +24,32 @@ Widget _buildDebugScreenApp({Map<String, dynamic>? savedEngineState}) {
       ),
       initialAppStateProvider.overrideWithValue(initialState),
       trainingEngineStateRepositoryProvider.overrideWithValue(
-        MemoryTrainingEngineStateRepository(initialState: savedEngineState),
+        trainingEngineRepository ??
+            MemoryTrainingEngineStateRepository(initialState: savedEngineState),
       ),
     ],
     child: const MaterialApp(home: TrainingEngineDebugScreen()),
   );
+}
+
+class _ThrowingTrainingEngineStateRepository
+    implements TrainingEngineStateRepository {
+  @override
+  Future<void> clear() async {}
+
+  @override
+  Future<Map<String, dynamic>?> load() async {
+    throw const FormatException('corrupted engine state');
+  }
+
+  @override
+  Future<void> save(Map<String, dynamic> state) async {
+    throw const FormatException('corrupted engine state');
+  }
+}
+
+TrainingEngineStateRepository _throwingTrainingEngineRepository() {
+  return _ThrowingTrainingEngineStateRepository();
 }
 
 void _expectRow(String label, String value) {
@@ -206,6 +230,33 @@ Map<String, dynamic> _savedEngineStateWithBenchAndSquatData() {
 }
 
 void main() {
+  testWidgets(
+    'debug screen shows useful error text when engine loading fails',
+    (tester) async {
+      await tester.pumpWidget(
+        _buildDebugScreenApp(
+          trainingEngineRepository: _throwingTrainingEngineRepository(),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Engine Status'), findsOneWidget);
+      expect(find.textContaining('corrupted engine state'), findsWidgets);
+    },
+  );
+
+  testWidgets(
+    'debug screen remains useful with no ingested sessions',
+    (tester) async {
+      await tester.pumpWidget(_buildDebugScreenApp());
+      await tester.pumpAndSettle();
+
+      expect(find.text('Engine Status'), findsOneWidget);
+      expect(find.textContaining('0'), findsWidgets);
+      expect(find.text('Fatigue Breakdown'), findsOneWidget);
+    },
+  );
+
   testWidgets(
     'debug screen renders status and readiness sections with engine data',
     (tester) async {

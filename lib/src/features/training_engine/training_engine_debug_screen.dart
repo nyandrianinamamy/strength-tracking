@@ -31,19 +31,22 @@ class TrainingEngineDebugScreen extends ConsumerWidget {
           children: [
             engineAsync.when(
               loading: _loadingCard,
-              error: (error, stack) => _DebugErrorCard(error: error),
+              error: (error, stack) =>
+                  _ErrorSectionCard(title: 'Engine Status', error: error),
               data: (engine) => _EngineStatusCard(engine: engine),
             ),
             const SizedBox(height: 16),
             readinessAsync.when(
               loading: _loadingCard,
-              error: (error, stack) => _DebugErrorCard(error: error),
+              error: (error, stack) =>
+                  _ErrorSectionCard(title: 'Readiness Breakdown', error: error),
               data: (readiness) => _ReadinessCard(readiness: readiness),
             ),
             const SizedBox(height: 16),
             fatigueRowsAsync.when(
               loading: _loadingCard,
-              error: (error, stack) => _DebugErrorCard(error: error),
+              error: (error, stack) =>
+                  _ErrorSectionCard(title: 'Fatigue Breakdown', error: error),
               data: (rows) => heatmapAsync.when(
                 loading: () => _FatigueCard(rows: rows),
                 error: (error, stack) =>
@@ -55,19 +58,26 @@ class TrainingEngineDebugScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             recommendationRowsAsync.when(
               loading: _loadingCard,
-              error: (error, stack) => _DebugErrorCard(error: error),
+              error: (error, stack) => _ErrorSectionCard(
+                title: 'Recommendation Breakdown',
+                error: error,
+              ),
               data: (rows) => _RecommendationCard(rows: rows),
             ),
             const SizedBox(height: 16),
             persistedStateAsync.when(
               loading: _loadingCard,
-              error: (error, stack) => _DebugErrorCard(error: error),
+              error: (error, stack) => _ErrorSectionCard(
+                title: 'Persisted State Summary',
+                error: error,
+              ),
               data: (summary) => _PersistedStateCard(summary: summary),
             ),
             const SizedBox(height: 16),
             rawSnapshotAsync.when(
               loading: _loadingCard,
-              error: (error, stack) => _DebugErrorCard(error: error),
+              error: (error, stack) =>
+                  _ErrorSectionCard(title: 'Raw Snapshot', error: error),
               data: (snapshot) => _RawSnapshotCard(snapshot: snapshot),
             ),
           ],
@@ -176,7 +186,9 @@ class _FatigueCard extends StatelessWidget {
       title: 'Fatigue Breakdown',
       children: [
         if (rows.isEmpty)
-          const Text('No fatigue rows available.')
+          const Text(
+            'No fatigue rows available yet. Ingested strength sessions will populate this section.',
+          )
         else
           ...rows.map(
             (row) => _KvRow(
@@ -368,21 +380,22 @@ String _formatLoggedSet(LoggedSet? set) {
   return '${set.weightKg.toStringAsFixed(1)} kg × ${set.reps} @ ${set.rpe.toStringAsFixed(1)}';
 }
 
-class _DebugErrorCard extends StatelessWidget {
-  const _DebugErrorCard({required this.error});
+class _ErrorSectionCard extends StatelessWidget {
+  const _ErrorSectionCard({required this.title, required this.error});
 
+  final String title;
   final Object error;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Text(
-          'Debug data unavailable: $error',
+    return _SectionCard(
+      title: title,
+      children: [
+        Text(
+          'Debug data unavailable: ${error.toString()}',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
-      ),
+      ],
     );
   }
 }
