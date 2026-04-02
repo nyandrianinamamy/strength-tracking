@@ -190,6 +190,96 @@ class EngineDebugRecommendationRow {
   final LoadRecommendation recommendation;
 }
 
+class EngineDebugDailyLoadSummary {
+  const EngineDebugDailyLoadSummary({required this.date, required this.volume});
+
+  final String date;
+  final String volume;
+}
+
+class EngineDebugTextRow {
+  const EngineDebugTextRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+}
+
+class EngineDebugCountRow {
+  const EngineDebugCountRow({required this.label, required this.count});
+
+  final String label;
+  final int count;
+}
+
+class EngineDebugPersistedStateSummary {
+  const EngineDebugPersistedStateSummary({
+    required this.acwrSummary,
+    required this.dailyLoadsCount,
+    required this.lastTopSetsCount,
+    required this.e1rmHistoryCount,
+    required this.latestDailyLoad,
+    required this.lastTopSetRows,
+    required this.e1rmHistoryRows,
+  });
+
+  final String acwrSummary;
+  final int dailyLoadsCount;
+  final int lastTopSetsCount;
+  final int e1rmHistoryCount;
+  final EngineDebugDailyLoadSummary? latestDailyLoad;
+  final List<EngineDebugTextRow> lastTopSetRows;
+  final List<EngineDebugCountRow> e1rmHistoryRows;
+}
+
+final engineDebugPersistedStateSummaryProvider =
+    FutureProvider<EngineDebugPersistedStateSummary>((ref) async {
+      final engine = await ref.watch(trainingEngineProvider.future);
+      final state = engine.state;
+
+      final acwrState = state.acwrState;
+      final acwrSummary = acwrState == null
+          ? 'Unavailable'
+          : 'acute ${acwrState.acuteEwma.toStringAsFixed(1)} / '
+                'chronic ${acwrState.chronicEwma.toStringAsFixed(1)}';
+
+      final dailyLoads = state.dailyLoads;
+      final latestDailyLoad = dailyLoads.isEmpty
+          ? null
+          : EngineDebugDailyLoadSummary(
+              date: dailyLoads.last.date.toIso8601String(),
+              volume: dailyLoads.last.volumeLoad.toStringAsFixed(1),
+            );
+
+      final lastTopSetRows = state.lastTopSets.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key));
+      final e1rmHistoryRows = state.e1rmHistory.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key));
+
+      return EngineDebugPersistedStateSummary(
+        acwrSummary: acwrSummary,
+        dailyLoadsCount: dailyLoads.length,
+        lastTopSetsCount: lastTopSetRows.length,
+        e1rmHistoryCount: e1rmHistoryRows.length,
+        latestDailyLoad: latestDailyLoad,
+        lastTopSetRows: lastTopSetRows
+            .map(
+              (entry) => EngineDebugTextRow(
+                label: entry.key,
+                value: _formatLoggedSet(entry.value),
+              ),
+            )
+            .toList(),
+        e1rmHistoryRows: e1rmHistoryRows
+            .map(
+              (entry) => EngineDebugCountRow(
+                label: entry.key,
+                count: entry.value.length,
+              ),
+            )
+            .toList(),
+      );
+    });
+
 final engineDebugFatigueRowsProvider =
     FutureProvider<List<EngineDebugFatigueRow>>((ref) async {
       final engine = await ref.watch(trainingEngineProvider.future);
@@ -224,3 +314,7 @@ final engineDebugRawSnapshotProvider = FutureProvider<String>((ref) async {
   const encoder = JsonEncoder.withIndent('  ');
   return encoder.convert(engine.serializeState());
 });
+
+String _formatLoggedSet(LoggedSet set) {
+  return '${set.weightKg.toStringAsFixed(1)} kg × ${set.reps} @ ${set.rpe.toStringAsFixed(1)}';
+}

@@ -111,6 +111,50 @@ ProviderContainer _buildContainer({
   );
 }
 
+Map<String, dynamic> _savedEngineStateWithBenchAndSquatData() {
+  final now = DateTime.utc(2026, 4, 1, 18, 0);
+  final savedEngine = TrainingEngine(
+    registry: ExerciseRegistry.withDefaults(),
+    profile: UserProfile(
+      sex: Sex.male,
+      age: 28,
+      bodyWeightKg: 80,
+      experience: ExperienceLevel.intermediate,
+      goal: HypertrophyGoal.hypertrophy,
+      availableDays: const [1, 3, 5],
+      maxSessionDuration: const Duration(minutes: 60),
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  savedEngine.ingestSession(
+    EngineSession(
+      id: 'debug-session-1',
+      startedAt: now.subtract(const Duration(hours: 1)),
+      endedAt: now,
+      sets: [
+        LoggedSet(
+          exerciseId: 'barbell_bench_press',
+          weightKg: 90,
+          reps: 6,
+          rpe: 8.0,
+          completedAt: now.subtract(const Duration(minutes: 50)),
+        ),
+        LoggedSet(
+          exerciseId: 'barbell_back_squat',
+          weightKg: 120,
+          reps: 5,
+          rpe: 8.5,
+          completedAt: now.subtract(const Duration(minutes: 35)),
+        ),
+      ],
+    ),
+  );
+
+  final snapshot = savedEngine.serializeState();
+  snapshot['lastUpdated'] = now.toIso8601String();
+  return snapshot;
+}
+
 class _ThrowingTrainingEngineStateRepository
     implements TrainingEngineStateRepository {
   @override
@@ -265,6 +309,37 @@ void main() {
     );
 
     test(
+      'engine debug persisted state summary is provider-backed and sorted',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: _savedEngineStateWithBenchAndSquatData(),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final summary = await container.read(
+          engineDebugPersistedStateSummaryProvider.future,
+        );
+
+        expect(summary.acwrSummary, isNotEmpty);
+        expect(summary.dailyLoadsCount, 1);
+        expect(summary.latestDailyLoad, isNotNull);
+        expect(summary.lastTopSetsCount, 2);
+        expect(summary.lastTopSetRows.first.label, 'barbell_back_squat');
+        expect(summary.lastTopSetRows.last.label, 'barbell_bench_press');
+        expect(summary.e1rmHistoryCount, 2);
+        expect(summary.e1rmHistoryRows.first.label, 'barbell_back_squat');
+        expect(summary.e1rmHistoryRows.last.label, 'barbell_bench_press');
+      },
+    );
+
+    test(
       'engine debug fatigue rows are sorted from highest to lowest fatigue',
       () async {
         final appState = _appStateWithCompletedSession();
@@ -317,87 +392,81 @@ void main() {
       },
     );
 
-    test(
-      'engine debug recommendation rows expose row details',
-      () async {
-        final appState = _appStateWithCompletedSession();
-        final appRepository = MemoryAppStateRepository(initialState: appState);
-        final savedEngine = TrainingEngine(
-          registry: ExerciseRegistry.withDefaults(),
-          profile: UserProfile(
-            sex: Sex.male,
-            age: 30,
-            bodyWeightKg: 82,
-            experience: ExperienceLevel.intermediate,
-            goal: HypertrophyGoal.hypertrophy,
-            availableDays: const [1, 3, 5],
-            maxSessionDuration: const Duration(minutes: 60),
-            createdAt: DateTime.utc(2026, 1, 1),
-          ),
-        );
-        savedEngine.ingestSession(
-          EngineSession(
-            id: 'debug-recommendation-session',
-            startedAt: DateTime.utc(2026, 3, 1, 17, 0),
-            endedAt: DateTime.utc(2026, 3, 1, 18, 0),
-            sets: [
-              LoggedSet(
-                exerciseId: 'barbell_back_squat',
-                weightKg: 110,
-                reps: 8,
-                rpe: 8.5,
-                completedAt: DateTime.utc(2026, 3, 1, 17, 10),
-              ),
-              LoggedSet(
-                exerciseId: 'barbell_bench_press',
-                weightKg: 80,
-                reps: 8,
-                rpe: 8.0,
-                completedAt: DateTime.utc(2026, 3, 1, 17, 20),
-              ),
-            ],
-          ),
-        );
-        final engineRepository = MemoryTrainingEngineStateRepository(
-          initialState: savedEngine.serializeState(),
-        );
-        final container = _buildContainer(
-          initialState: appState,
-          appRepository: appRepository,
-          engineRepository: engineRepository,
-        );
-        addTearDown(container.dispose);
+    test('engine debug recommendation rows expose row details', () async {
+      final appState = _appStateWithCompletedSession();
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final savedEngine = TrainingEngine(
+        registry: ExerciseRegistry.withDefaults(),
+        profile: UserProfile(
+          sex: Sex.male,
+          age: 30,
+          bodyWeightKg: 82,
+          experience: ExperienceLevel.intermediate,
+          goal: HypertrophyGoal.hypertrophy,
+          availableDays: const [1, 3, 5],
+          maxSessionDuration: const Duration(minutes: 60),
+          createdAt: DateTime.utc(2026, 1, 1),
+        ),
+      );
+      savedEngine.ingestSession(
+        EngineSession(
+          id: 'debug-recommendation-session',
+          startedAt: DateTime.utc(2026, 3, 1, 17, 0),
+          endedAt: DateTime.utc(2026, 3, 1, 18, 0),
+          sets: [
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 110,
+              reps: 8,
+              rpe: 8.5,
+              completedAt: DateTime.utc(2026, 3, 1, 17, 10),
+            ),
+            LoggedSet(
+              exerciseId: 'barbell_bench_press',
+              weightKg: 80,
+              reps: 8,
+              rpe: 8.0,
+              completedAt: DateTime.utc(2026, 3, 1, 17, 20),
+            ),
+          ],
+        ),
+      );
+      final engineRepository = MemoryTrainingEngineStateRepository(
+        initialState: savedEngine.serializeState(),
+      );
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
 
-        final rows = await container.read(
-          engineDebugRecommendationRowsProvider.future,
-        );
+      final rows = await container.read(
+        engineDebugRecommendationRowsProvider.future,
+      );
 
-        final exerciseIds = rows.map((row) => row.exerciseId).toList();
+      final exerciseIds = rows.map((row) => row.exerciseId).toList();
 
-        expect(rows, hasLength(2));
-        expect(
-          exerciseIds,
-          orderedEquals(<String>[
-            'barbell_back_squat',
-            'barbell_bench_press',
-          ]),
-        );
+      expect(rows, hasLength(2));
+      expect(
+        exerciseIds,
+        orderedEquals(<String>['barbell_back_squat', 'barbell_bench_press']),
+      );
 
-        final squatRow = rows.firstWhere(
-          (row) => row.exerciseId == 'barbell_back_squat',
-        );
-        final benchRow = rows.firstWhere(
-          (row) => row.exerciseId == 'barbell_bench_press',
-        );
+      final squatRow = rows.firstWhere(
+        (row) => row.exerciseId == 'barbell_back_squat',
+      );
+      final benchRow = rows.firstWhere(
+        (row) => row.exerciseId == 'barbell_bench_press',
+      );
 
-        expect(squatRow.e1rm, isNotNull);
-        expect(squatRow.lastTopSet, isNotNull);
-        expect(squatRow.recommendation, isA<LoadRecommendation>());
-        expect(benchRow.e1rm, isNotNull);
-        expect(benchRow.lastTopSet, isNotNull);
-        expect(benchRow.recommendation, isA<LoadRecommendation>());
-      },
-    );
+      expect(squatRow.e1rm, isNotNull);
+      expect(squatRow.lastTopSet, isNotNull);
+      expect(squatRow.recommendation, isA<LoadRecommendation>());
+      expect(benchRow.e1rm, isNotNull);
+      expect(benchRow.lastTopSet, isNotNull);
+      expect(benchRow.recommendation, isA<LoadRecommendation>());
+    });
 
     test(
       'engine debug raw snapshot provider returns formatted serialized state',

@@ -17,6 +17,9 @@ class TrainingEngineDebugScreen extends ConsumerWidget {
       engineDebugRecommendationRowsProvider,
     );
     final heatmapAsync = ref.watch(engineHeatmapDataProvider);
+    final persistedStateAsync = ref.watch(
+      engineDebugPersistedStateSummaryProvider,
+    );
     final rawSnapshotAsync = ref.watch(engineDebugRawSnapshotProvider);
 
     return Scaffold(
@@ -56,10 +59,10 @@ class TrainingEngineDebugScreen extends ConsumerWidget {
               data: (rows) => _RecommendationCard(rows: rows),
             ),
             const SizedBox(height: 16),
-            engineAsync.when(
+            persistedStateAsync.when(
               loading: _loadingCard,
               error: (error, stack) => _DebugErrorCard(error: error),
-              data: (engine) => _PersistedStateCard(engine: engine),
+              data: (summary) => _PersistedStateCard(summary: summary),
             ),
             const SizedBox(height: 16),
             rawSnapshotAsync.when(
@@ -266,35 +269,27 @@ class _RecommendationCard extends StatelessWidget {
 }
 
 class _PersistedStateCard extends StatelessWidget {
-  const _PersistedStateCard({required this.engine});
+  const _PersistedStateCard({required this.summary});
 
-  final TrainingEngine engine;
+  final EngineDebugPersistedStateSummary summary;
 
   @override
   Widget build(BuildContext context) {
-    final state = engine.state;
-    final acwrState = state.acwrState;
-    final dailyLoads = state.dailyLoads;
-    final lastTopSets = state.lastTopSets.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-    final e1rmHistory = state.e1rmHistory.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
-
     return _SectionCard(
       title: 'Persisted State Summary',
       children: [
+        _KvRow(label: 'ACWR state', value: summary.acwrSummary),
+        _KvRow(label: 'Daily loads', value: summary.dailyLoadsCount.toString()),
         _KvRow(
-          label: 'ACWR state',
-          value: acwrState == null
-              ? 'Unavailable'
-              : 'acute ${acwrState.acuteEwma.toStringAsFixed(1)} / '
-                    'chronic ${acwrState.chronicEwma.toStringAsFixed(1)}',
+          label: 'Last top sets',
+          value: summary.lastTopSetsCount.toString(),
         ),
-        _KvRow(label: 'Daily loads', value: dailyLoads.length.toString()),
-        _KvRow(label: 'Last top sets', value: lastTopSets.length.toString()),
-        _KvRow(label: 'e1RM history', value: e1rmHistory.length.toString()),
+        _KvRow(
+          label: 'e1RM history',
+          value: summary.e1rmHistoryCount.toString(),
+        ),
         const SizedBox(height: 8),
-        if (dailyLoads.isNotEmpty) ...[
+        if (summary.latestDailyLoad != null) ...[
           Text(
             'Latest Daily Load',
             style: Theme.of(
@@ -302,13 +297,10 @@ class _PersistedStateCard extends StatelessWidget {
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
-          _KvRow(label: 'Date', value: dailyLoads.last.date.toIso8601String()),
-          _KvRow(
-            label: 'Volume',
-            value: dailyLoads.last.volumeLoad.toStringAsFixed(1),
-          ),
+          _KvRow(label: 'Date', value: summary.latestDailyLoad!.date),
+          _KvRow(label: 'Volume', value: summary.latestDailyLoad!.volume),
         ],
-        if (lastTopSets.isNotEmpty) ...[
+        if (summary.lastTopSetRows.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
             'Last Top Set Exercises',
@@ -317,12 +309,11 @@ class _PersistedStateCard extends StatelessWidget {
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
-          ...lastTopSets.map(
-            (entry) =>
-                _KvRow(label: entry.key, value: _formatLoggedSet(entry.value)),
+          ...summary.lastTopSetRows.map(
+            (entry) => _KvRow(label: entry.label, value: entry.value),
           ),
         ],
-        if (e1rmHistory.isNotEmpty) ...[
+        if (summary.e1rmHistoryRows.isNotEmpty) ...[
           const SizedBox(height: 8),
           Text(
             'e1RM History Exercises',
@@ -331,11 +322,9 @@ class _PersistedStateCard extends StatelessWidget {
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
-          ...e1rmHistory.map(
-            (entry) => _KvRow(
-              label: entry.key,
-              value: '${entry.value.length} estimates',
-            ),
+          ...summary.e1rmHistoryRows.map(
+            (entry) =>
+                _KvRow(label: entry.label, value: '${entry.count} estimates'),
           ),
         ],
       ],
