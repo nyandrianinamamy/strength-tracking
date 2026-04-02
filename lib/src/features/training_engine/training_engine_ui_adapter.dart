@@ -41,6 +41,10 @@ class TrainingEngineUiAdapter {
     'Legs': [Muscle.quadriceps, Muscle.hamstring, Muscle.calves],
   };
 
+  /// Maps canonical engine muscle IDs → heatmap [Muscle] enum values.
+  ///
+  /// Only canonical IDs are listed here. Any stale/aliased IDs in the fatigue
+  /// map are resolved via [MuscleNormalizer.normalize] before lookup.
   static const Map<String, List<Muscle>> _muscleMap = {
     'pectorals': [Muscle.chest],
     'upper_back': [Muscle.upperBack],
@@ -50,19 +54,12 @@ class TrainingEngineUiAdapter {
     'anterior_deltoid': [Muscle.deltoids],
     'lateral_deltoid': [Muscle.deltoids],
     'rear_deltoid': [Muscle.deltoids],
-    'rear_delt': [Muscle.deltoids],
-    'shoulder': [Muscle.deltoids],
-    'back': [Muscle.upperBack],
-    'quad': [Muscle.quadriceps],
-    'glute': [Muscle.gluteal],
-    'hamstring': [Muscle.hamstring],
-    'calf': [Muscle.calves],
     'biceps': [Muscle.biceps],
     'triceps': [Muscle.triceps],
     'forearms': [Muscle.forearm],
     'brachialis': [Muscle.forearm],
     'brachioradialis': [Muscle.forearm],
-    'abs': [Muscle.abs],
+    'core': [Muscle.abs],
     'obliques': [Muscle.obliques],
     'lower_back': [Muscle.lowerBack],
     'erector_spinae': [Muscle.lowerBack],
@@ -80,7 +77,8 @@ class TrainingEngineUiAdapter {
     final result = <Muscle, MuscleData>{};
 
     for (final entry in fatigueMap.entries) {
-      final mappedMuscles = _muscleMap[entry.key];
+      final canonical = MuscleNormalizer.normalize(entry.key);
+      final mappedMuscles = _muscleMap[canonical];
       if (mappedMuscles == null) {
         continue;
       }

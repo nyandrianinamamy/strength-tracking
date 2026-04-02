@@ -1,5 +1,6 @@
 export 'src/models/models.dart';
 export 'src/fatigue/muscle_registry.dart';
+export 'src/fatigue/muscle_normalizer.dart';
 export 'src/fatigue/impulse_calculator.dart';
 export 'src/fatigue/decay.dart';
 export 'src/acwr/ewma.dart';

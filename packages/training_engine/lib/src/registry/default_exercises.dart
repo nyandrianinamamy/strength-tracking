@@ -239,7 +239,7 @@ final List<EngineExercise> defaultExercises = [
       MuscleActivation(muscleId: 'lateral_deltoid', role: MuscleRole.primary, coefficient: 1.0),
       MuscleActivation(muscleId: 'anterior_deltoid', role: MuscleRole.primary, coefficient: 1.0),
       MuscleActivation(muscleId: 'triceps', role: MuscleRole.synergist, coefficient: 0.5),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.4),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.4),
       MuscleActivation(muscleId: 'core', role: MuscleRole.stabilizer, coefficient: 0.2),
     ],
     equipment: EquipmentClass.barbell,
@@ -252,7 +252,7 @@ final List<EngineExercise> defaultExercises = [
       MuscleActivation(muscleId: 'lateral_deltoid', role: MuscleRole.primary, coefficient: 1.0),
       MuscleActivation(muscleId: 'anterior_deltoid', role: MuscleRole.primary, coefficient: 1.0),
       MuscleActivation(muscleId: 'triceps', role: MuscleRole.synergist, coefficient: 0.5),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.4),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.4),
       MuscleActivation(muscleId: 'core', role: MuscleRole.stabilizer, coefficient: 0.2),
     ],
     equipment: EquipmentClass.dumbbell,
@@ -263,7 +263,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Lateral Raise',
     muscleMap: [
       MuscleActivation(muscleId: 'lateral_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.4),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.4),
       MuscleActivation(muscleId: 'anterior_deltoid', role: MuscleRole.synergist, coefficient: 0.3),
     ],
     equipment: EquipmentClass.dumbbell,
@@ -285,7 +285,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Face Pull',
     muscleMap: [
       MuscleActivation(muscleId: 'rear_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.5),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.5),
       MuscleActivation(muscleId: 'biceps', role: MuscleRole.synergist, coefficient: 0.3),
       MuscleActivation(muscleId: 'lats', role: MuscleRole.stabilizer, coefficient: 0.2),
     ],
@@ -297,7 +297,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Reverse Fly',
     muscleMap: [
       MuscleActivation(muscleId: 'rear_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.4),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.4),
       MuscleActivation(muscleId: 'lats', role: MuscleRole.synergist, coefficient: 0.3),
     ],
     equipment: EquipmentClass.dumbbell,
@@ -308,7 +308,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Cable Lateral Raise',
     muscleMap: [
       MuscleActivation(muscleId: 'lateral_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.4),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.4),
       MuscleActivation(muscleId: 'anterior_deltoid', role: MuscleRole.synergist, coefficient: 0.3),
     ],
     equipment: EquipmentClass.cable,
@@ -319,7 +319,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Upright Row',
     muscleMap: [
       MuscleActivation(muscleId: 'lateral_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.6),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.6),
       MuscleActivation(muscleId: 'biceps', role: MuscleRole.synergist, coefficient: 0.4),
     ],
     equipment: EquipmentClass.barbell,
@@ -759,7 +759,7 @@ final List<EngineExercise> defaultExercises = [
     id: 'barbell_shrug',
     name: 'Barbell Shrug',
     muscleMap: [
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.primary, coefficient: 1.0),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.primary, coefficient: 1.0),
       MuscleActivation(muscleId: 'forearms', role: MuscleRole.stabilizer, coefficient: 0.2),
     ],
     equipment: EquipmentClass.barbell,
@@ -769,7 +769,7 @@ final List<EngineExercise> defaultExercises = [
     id: 'dumbbell_shrug',
     name: 'Dumbbell Shrug',
     muscleMap: [
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.primary, coefficient: 1.0),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.primary, coefficient: 1.0),
       MuscleActivation(muscleId: 'forearms', role: MuscleRole.stabilizer, coefficient: 0.2),
     ],
     equipment: EquipmentClass.dumbbell,
@@ -862,7 +862,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Machine Lateral Raise',
     muscleMap: [
       MuscleActivation(muscleId: 'lateral_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.3),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.3),
     ],
     equipment: EquipmentClass.machine,
     movement: MovementClass.isolation,
@@ -872,7 +872,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Cable Face Pull',
     muscleMap: [
       MuscleActivation(muscleId: 'rear_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.5),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.5),
       MuscleActivation(muscleId: 'biceps', role: MuscleRole.synergist, coefficient: 0.3),
     ],
     equipment: EquipmentClass.cable,
@@ -936,7 +936,7 @@ final List<EngineExercise> defaultExercises = [
     id: 'cable_shrug',
     name: 'Cable Shrug',
     muscleMap: [
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.primary, coefficient: 1.0),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.primary, coefficient: 1.0),
       MuscleActivation(muscleId: 'forearms', role: MuscleRole.stabilizer, coefficient: 0.2),
     ],
     equipment: EquipmentClass.cable,
@@ -947,7 +947,7 @@ final List<EngineExercise> defaultExercises = [
     name: 'Reverse Pec Deck',
     muscleMap: [
       MuscleActivation(muscleId: 'rear_deltoid', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'upper_trapezius', role: MuscleRole.synergist, coefficient: 0.4),
+      MuscleActivation(muscleId: 'trapezius', role: MuscleRole.synergist, coefficient: 0.4),
       MuscleActivation(muscleId: 'lats', role: MuscleRole.synergist, coefficient: 0.3),
     ],
     equipment: EquipmentClass.machine,

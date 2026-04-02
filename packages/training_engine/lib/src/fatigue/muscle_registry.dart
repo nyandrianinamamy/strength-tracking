@@ -53,7 +53,7 @@ final Map<String, MuscleDefinition> defaultMuscles = {
   'rear_deltoid': _def('rear_deltoid', 'Rear Deltoid', MuscleSize.moderate),
   'anterior_deltoid': _def('anterior_deltoid', 'Anterior Deltoid', MuscleSize.moderate),
   'trapezius': _def('trapezius', 'Trapezius', MuscleSize.moderate),
-  'abs': _def('abs', 'Abs', MuscleSize.moderate),
+  'core': _def('core', 'Core', MuscleSize.moderate),
   'obliques': _def('obliques', 'Obliques', MuscleSize.moderate),
   'hamstrings': _def('hamstrings', 'Hamstrings', MuscleSize.moderate),
   'rotator_cuff': _def('rotator_cuff', 'Rotator Cuff', MuscleSize.moderate),

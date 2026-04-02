@@ -351,8 +351,8 @@ void main() {
       expect(find.text('Recommendation Breakdown'), findsOneWidget);
       expect(find.text('Persisted State Summary'), findsOneWidget);
       expect(find.text('Raw Snapshot'), findsOneWidget);
-      expect(find.textContaining('barbell_back_squat'), findsWidgets);
-      expect(find.textContaining('barbell_bench_press'), findsWidgets);
+      expect(find.textContaining('Barbell Back Squat'), findsWidgets);
+      expect(find.textContaining('Barbell Bench Press'), findsWidgets);
 
       await tester.tap(find.text('Raw Snapshot'));
       await tester.pumpAndSettle();

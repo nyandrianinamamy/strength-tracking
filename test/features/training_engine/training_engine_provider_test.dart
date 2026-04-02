@@ -331,11 +331,11 @@ void main() {
         expect(summary.dailyLoadsCount, 1);
         expect(summary.latestDailyLoad, isNotNull);
         expect(summary.lastTopSetsCount, 2);
-        expect(summary.lastTopSetRows.first.label, 'barbell_back_squat');
-        expect(summary.lastTopSetRows.last.label, 'barbell_bench_press');
+        expect(summary.lastTopSetRows.first.label, 'Barbell Back Squat');
+        expect(summary.lastTopSetRows.last.label, 'Barbell Bench Press');
         expect(summary.e1rmHistoryCount, 2);
-        expect(summary.e1rmHistoryRows.first.label, 'barbell_back_squat');
-        expect(summary.e1rmHistoryRows.last.label, 'barbell_bench_press');
+        expect(summary.e1rmHistoryRows.first.label, 'Barbell Back Squat');
+        expect(summary.e1rmHistoryRows.last.label, 'Barbell Bench Press');
       },
     );
 

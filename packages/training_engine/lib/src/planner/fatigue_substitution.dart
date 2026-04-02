@@ -164,7 +164,7 @@ EngineExercise? _resolveExercise(String id, ExerciseRegistryLookup registry) {
     'pectorals', 'anterior_deltoid', 'lateral_deltoid', 'rear_deltoid',
     'triceps', 'lats', 'upper_back', 'biceps',
     'quadriceps', 'hamstrings', 'glutes', 'calves',
-    'erector_spinae', 'abs',
+    'erector_spinae', 'core', 'trapezius',
   ];
   for (final muscle in commonMuscles) {
     final results = registry.exercisesForMuscle(muscle);

@@ -5,6 +5,7 @@ import 'e1rm/formulas.dart' as formula_lib;
 import 'e1rm/strength_baseline.dart' as baseline_lib;
 import 'fatigue/decay.dart' as fatigue_lib;
 import 'fatigue/impulse_calculator.dart' as impulse_lib;
+import 'fatigue/muscle_normalizer.dart';
 import 'models/daily_load.dart';
 import 'models/e1rm_estimate.dart';
 import 'models/engine_session.dart';
@@ -352,34 +353,17 @@ class TrainingEngine {
     return _state;
   }
 
-  static const _muscleIdMigration = <String, String>{
-    'back': 'lats',
-    'quad': 'quadriceps',
-    'glute': 'glutes',
-    'hamstring': 'hamstrings',
-    'calf': 'calves',
-    'rear_delt': 'rear_deltoid',
-    'shoulder': 'anterior_deltoid',
-  };
-
   void _migrateStaleMuscleIds() {
     final log = _state.fatigueLog;
     final migrated = <String, List<FatigueImpulse>>{};
     var changed = false;
     for (final entry in log.entries) {
-      final newKey = _muscleIdMigration[entry.key];
-      if (newKey != null) {
-        changed = true;
-        migrated[newKey] = [
-          ...migrated[newKey] ?? [],
-          ...entry.value,
-        ];
-      } else {
-        migrated[entry.key] = [
-          ...migrated[entry.key] ?? [],
-          ...entry.value,
-        ];
-      }
+      final canonical = MuscleNormalizer.normalize(entry.key);
+      if (canonical != entry.key) changed = true;
+      migrated[canonical] = [
+        ...migrated[canonical] ?? [],
+        ...entry.value,
+      ];
     }
     if (changed) {
       _state = _state.copyWith(fatigueLog: migrated);

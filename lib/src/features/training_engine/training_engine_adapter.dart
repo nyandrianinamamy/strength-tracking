@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:training_engine/training_engine.dart';
 
 import '../../data/models/app_state.dart';
@@ -133,14 +132,14 @@ class TrainingEngineAdapter {
     final muscleMap = <MuscleActivation>[];
     for (final muscle in exercise.primaryMuscles) {
       muscleMap.add(MuscleActivation(
-        muscleId: _normaliseMuscleId(muscle),
+        muscleId: MuscleNormalizer.normalize(muscle),
         role: MuscleRole.primary,
         coefficient: 1.0,
       ));
     }
     for (final muscle in exercise.secondaryMuscles) {
       muscleMap.add(MuscleActivation(
-        muscleId: _normaliseMuscleId(muscle),
+        muscleId: MuscleNormalizer.normalize(muscle),
         role: MuscleRole.synergist,
         coefficient: 0.5,
       ));
@@ -158,69 +157,6 @@ class TrainingEngineAdapter {
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
-
-  /// Normalises a human-readable muscle name to an engine muscle ID.
-  ///
-  /// Converts to lowercase and applies simple substitutions for common
-  /// variations used in the app's exercise data.
-  String _normaliseMuscleId(String muscle) {
-    final m = muscle.toLowerCase().trim();
-    // Common substitutions
-    const substitutions = <String, String>{
-      // Chest
-      'chest': 'pectorals',
-      'pectorals': 'pectorals',
-      'pecs': 'pectorals',
-      // Shoulders
-      'shoulders': 'anterior_deltoid',
-      'deltoid': 'anterior_deltoid',
-      'deltoids': 'anterior_deltoid',
-      'anterior deltoid': 'anterior_deltoid',
-      'lateral deltoid': 'lateral_deltoid',
-      'posterior deltoid': 'rear_deltoid',
-      'rear delts': 'rear_deltoid',
-      'rear_delt': 'rear_deltoid',
-      'shoulder': 'anterior_deltoid',
-      // Back
-      'back': 'lats',
-      'lats': 'lats',
-      'latissimus dorsi': 'lats',
-      'upper back': 'upper_back',
-      'upper_back': 'upper_back',
-      'trapezius': 'trapezius',
-      'rhomboids': 'rhomboids',
-      'lower back': 'erector_spinae',
-      'erector spinae': 'erector_spinae',
-      // Arms
-      'biceps': 'biceps',
-      'bicep': 'biceps',
-      'triceps': 'triceps',
-      'tricep': 'triceps',
-      'forearms': 'forearms',
-      'forearm': 'forearms',
-      // Legs
-      'quadriceps': 'quadriceps',
-      'quads': 'quadriceps',
-      'legs': 'quadriceps',
-      'hamstrings': 'hamstrings',
-      'hamstring': 'hamstrings',
-      'gluteus maximus': 'glutes',
-      'glutes': 'glutes',
-      'calves': 'calves',
-      'gastrocnemius': 'calves',
-      'adductors': 'adductors',
-      // Core
-      'core': 'abs',
-      'abdominals': 'abs',
-      'abs': 'abs',
-      'obliques': 'obliques',
-    };
-    final result = substitutions[m] ?? m.replaceAll(' ', '_');
-    if (!substitutions.containsKey(m)) {
-      debugPrint('[TrainingEngineAdapter] _normaliseMuscleId: unmapped "$muscle" (lowered: "$m") → fallback "$result"');
-    }
-    return result;
-  }
 
   /// Guesses the [EquipmentClass] from a list of equipment strings.
   EquipmentClass _guessEquipment(List<String> equipment) {

@@ -109,8 +109,8 @@ void main() {
       // 6. Verify fatigue map
       final fatigueMap = engine.fullFatigueMap();
       expect(fatigueMap, isNotEmpty);
-      // At least quad should be fatigued after squats
-      final quadFatigue = engine.currentFatigue('quad');
+      // At least quadriceps should be fatigued after squats
+      final quadFatigue = engine.currentFatigue('quadriceps');
       expect(quadFatigue, greaterThan(0.0));
 
       // 7. Load recommendation 3 days later (recovered state)
