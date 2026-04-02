@@ -189,12 +189,14 @@ class EngineDebugFatigueRow {
 class EngineDebugRecommendationRow {
   const EngineDebugRecommendationRow({
     required this.exerciseId,
+    required this.exerciseName,
     required this.e1rm,
     required this.lastTopSet,
     required this.recommendation,
   });
 
   final String exerciseId;
+  final String exerciseName;
   final double? e1rm;
   final LoggedSet? lastTopSet;
   final LoadRecommendation recommendation;
@@ -260,6 +262,9 @@ final engineDebugPersistedStateSummaryProvider =
               volume: dailyLoads.last.volumeLoad.toStringAsFixed(1),
             );
 
+      String resolveName(String id) =>
+          engine.registry.lookup(id)?.name ?? id;
+
       final lastTopSetRows = state.lastTopSets.entries.toList()
         ..sort((a, b) => a.key.compareTo(b.key));
       final e1rmHistoryRows = state.e1rmHistory.entries.toList()
@@ -274,7 +279,7 @@ final engineDebugPersistedStateSummaryProvider =
         lastTopSetRows: lastTopSetRows
             .map(
               (entry) => EngineDebugTextRow(
-                label: entry.key,
+                label: resolveName(entry.key),
                 value: _formatLoggedSet(entry.value),
               ),
             )
@@ -282,7 +287,7 @@ final engineDebugPersistedStateSummaryProvider =
         e1rmHistoryRows: e1rmHistoryRows
             .map(
               (entry) => EngineDebugCountRow(
-                label: entry.key,
+                label: resolveName(entry.key),
                 count: entry.value.length,
               ),
             )
@@ -309,13 +314,16 @@ final engineDebugRecommendationRowsProvider =
     FutureProvider<List<EngineDebugRecommendationRow>>((ref) async {
       final engine = await ref.watch(trainingEngineProvider.future);
       final rows = engine.state.lastTopSets.entries.map((entry) {
+        final name =
+            engine.registry.lookup(entry.key)?.name ?? entry.key;
         return EngineDebugRecommendationRow(
           exerciseId: entry.key,
+          exerciseName: name,
           e1rm: engine.currentE1rm(entry.key),
           lastTopSet: entry.value,
           recommendation: engine.recommendLoad(entry.key),
         );
-      }).toList()..sort((a, b) => a.exerciseId.compareTo(b.exerciseId));
+      }).toList()..sort((a, b) => a.exerciseName.compareTo(b.exerciseName));
       return rows;
     });
 

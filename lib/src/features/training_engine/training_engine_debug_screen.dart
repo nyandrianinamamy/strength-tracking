@@ -273,7 +273,7 @@ class _RecommendationCard extends StatelessWidget {
           ...rows.expand((row) {
             final children = <Widget>[
               Text(
-                row.exerciseId,
+                row.exerciseName,
                 style: Theme.of(
                   context,
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
