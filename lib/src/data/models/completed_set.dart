@@ -7,6 +7,7 @@ class CompletedSet {
     required this.completedAt,
     required this.note,
     this.durationSeconds = 0,
+    this.rpe,
   });
 
   final String exerciseId;
@@ -17,6 +18,10 @@ class CompletedSet {
   final String note;
   final int durationSeconds;
 
+  /// Per-set RPE (Rate of Perceived Exertion, 1–10 scale).
+  /// Nullable for backward-compatibility with legacy data that has no per-set RPE.
+  final double? rpe;
+
   CompletedSet copyWith({
     String? exerciseId,
     int? setNumber,
@@ -25,6 +30,8 @@ class CompletedSet {
     DateTime? completedAt,
     String? note,
     int? durationSeconds,
+    double? rpe,
+    bool clearRpe = false,
   }) {
     return CompletedSet(
       exerciseId: exerciseId ?? this.exerciseId,
@@ -34,6 +41,7 @@ class CompletedSet {
       completedAt: completedAt ?? this.completedAt,
       note: note ?? this.note,
       durationSeconds: durationSeconds ?? this.durationSeconds,
+      rpe: clearRpe ? null : rpe ?? this.rpe,
     );
   }
 
@@ -46,6 +54,7 @@ class CompletedSet {
       completedAt: DateTime.parse(json['completedAt'] as String),
       note: json['note'] as String? ?? '',
       durationSeconds: json['durationSeconds'] as int? ?? 0,
+      rpe: (json['rpe'] as num?)?.toDouble(),
     );
   }
 
@@ -58,6 +67,7 @@ class CompletedSet {
       'completedAt': completedAt.toIso8601String(),
       'note': note,
       'durationSeconds': durationSeconds,
+      if (rpe != null) 'rpe': rpe,
     };
   }
 }
