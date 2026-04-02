@@ -1,8 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:training_engine/training_engine.dart';
 
 import '../../core/app_state_controller.dart';
 import '../../data/models/app_state.dart';
+import 'training_engine_ui_adapter.dart';
 import 'healthkit_data_source.dart';
 import 'training_engine_adapter.dart';
 import 'training_engine_state_repository.dart';
@@ -13,6 +15,10 @@ import 'training_engine_state_repository.dart';
 
 final trainingEngineAdapterProvider = Provider<TrainingEngineAdapter>(
   (ref) => const TrainingEngineAdapter(),
+);
+
+final trainingEngineUiAdapterProvider = Provider<TrainingEngineUiAdapter>(
+  (ref) => const TrainingEngineUiAdapter(),
 );
 
 final healthKitDataSourceProvider = Provider<HealthKitDataSource>(
@@ -94,6 +100,16 @@ final fatigueMapProvider = FutureProvider<Map<String, FatigueStatus>>((ref) asyn
   return engine.fullFatigueMap();
 });
 
+final engineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((ref) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
+  if (engine.state.sessionsIngested == 0) {
+    return <Muscle, MuscleData>{};
+  }
+
+  final fatigueMap = await ref.watch(fatigueMapProvider.future);
+  return ref.watch(trainingEngineUiAdapterProvider).toHeatmapData(fatigueMap);
+});
+
 /// Returns the current composite readiness score.
 final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
   final engine = await ref.watch(trainingEngineProvider.future);
@@ -110,4 +126,17 @@ final loadRecommendationProvider =
   // check is a safety guard for truly degenerate states.
   if (engine.currentE1rm(exerciseId) == null) return null;
   return engine.recommendLoad(exerciseId);
+});
+
+final engineWeightSuggestionProvider =
+    FutureProvider.family<EngineWeightSuggestion?, String>((ref, exerciseId) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
+  if (engine.state.sessionsIngested == 0) {
+    return null;
+  }
+
+  final recommendation = engine.recommendLoad(exerciseId);
+  return ref
+      .watch(trainingEngineUiAdapterProvider)
+      .toWeightSuggestion(recommendation);
 });

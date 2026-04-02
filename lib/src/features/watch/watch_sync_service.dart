@@ -10,7 +10,7 @@ import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
-import 'package:strength_training_tracker/src/features/progress/adaptive_progression_service.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 
 final watchSyncServiceProvider = Provider<WatchSyncService>((ref) {
@@ -53,12 +53,12 @@ class WatchSyncService {
 
     // Listen for state changes and push to Watch
     _ref.listen<AppState>(appStateControllerProvider, (previous, next) {
-      _onStateChanged(next);
+      unawaited(_onStateChanged(next));
     });
 
     // Send initial state if there's an active session
     final state = _ref.read(appStateControllerProvider);
-    _onStateChanged(state);
+    unawaited(_onStateChanged(state));
   }
 
   void dispose() {
@@ -76,12 +76,12 @@ class WatchSyncService {
     _activeTimerStartedAt = startedAt;
     // Trigger immediate sync so Watch gets the timer state
     final state = _ref.read(appStateControllerProvider);
-    _onStateChanged(state);
+    unawaited(_onStateChanged(state));
   }
 
   // MARK: - State → Watch
 
-  void _onStateChanged(AppState state) {
+  Future<void> _onStateChanged(AppState state) async {
     final session = state.activeSession;
     if (session == null) {
       _pendingSyncRetry?.cancel();
@@ -98,33 +98,30 @@ class WatchSyncService {
 
     final routine = state.routineById(session.routineId);
     if (routine == null) return;
-    final snapshot = _buildSessionSnapshot(state, session, routine);
+    final snapshot = await _buildSessionSnapshot(state, session, routine);
     _sendSessionUpdateWithRetry(snapshot, session.id);
   }
 
-  Map<String, dynamic> _buildSessionSnapshot(
+  Future<Map<String, dynamic>> _buildSessionSnapshot(
     AppState state,
     WorkoutSession session,
     Routine routine,
-  ) {
+  ) async {
     final locale = state.preferredLanguage.isNotEmpty
         ? state.preferredLanguage
         : 'en';
     final unit = state.preferredUnit;
     final weightIncrement = unit == 'lbs' ? 5.0 : 2.5;
 
-    final exercises = routine.exercises.map((re) {
+    final exercises = <Map<String, dynamic>>[];
+    for (final re in routine.exercises) {
       final exercise = state.exerciseById(re.exerciseId);
       final name = exercise != null
           ? _localizedExerciseName(exercise, locale)
           : 'Unknown';
-      final suggestion = _ref
-          .read(adaptiveProgressionServiceProvider)
-          .suggestionForExercise(
-            state: state,
-            exercise: exercise,
-            prescription: re,
-          );
+      final suggestion = await _ref.read(
+        engineWeightSuggestionProvider(re.exerciseId).future,
+      );
       final completedSets =
           session.completedSets
               .where((s) => s.exerciseId == re.exerciseId)
@@ -159,9 +156,8 @@ class WatchSyncService {
         exerciseData['activeTimerStartedAt'] =
             _activeTimerStartedAt!.toUtc().toIso8601String();
       }
-
-      return exerciseData;
-    }).toList();
+      exercises.add(exerciseData);
+    }
 
     return {
       'type': 'session_update',

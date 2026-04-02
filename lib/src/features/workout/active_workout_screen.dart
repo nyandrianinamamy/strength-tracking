@@ -17,9 +17,9 @@ import 'package:strength_training_tracker/src/features/workout/workout_controlle
 import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
-import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
 import 'package:strength_training_tracker/src/features/notifications/rest_timer_notification_service.dart';
-import 'package:strength_training_tracker/src/features/progress/adaptive_progression_service.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_ui_adapter.dart';
 import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -1132,9 +1132,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     onLogSet: _resetRestTimer,
                     onShowComment: () => _showCommentDialog(context),
                     preferredUnit: state.preferredUnit,
-                    progressionService: ref.read(
-                      adaptiveProgressionServiceProvider,
-                    ),
                     timedCountdownRemaining: _timedCountdownRemaining,
                     timedExerciseRunning: _timedExerciseRunning,
                     onStartTimed: _startTimedExercise,
@@ -1299,7 +1296,7 @@ String _setTitle(CompletedSet set, String preferredUnit) {
   return '$baseTitle • RPE ${set.rpe!.toStringAsFixed(1)}';
 }
 
-class _ExercisePage extends StatelessWidget {
+class _ExercisePage extends ConsumerWidget {
   const _ExercisePage({
     super.key,
     required this.pageIndex,
@@ -1317,7 +1314,6 @@ class _ExercisePage extends StatelessWidget {
     required this.onLogSet,
     required this.onShowComment,
     required this.preferredUnit,
-    required this.progressionService,
     required this.timedCountdownRemaining,
     required this.timedExerciseRunning,
     required this.onStartTimed,
@@ -1341,7 +1337,6 @@ class _ExercisePage extends StatelessWidget {
   final ValueChanged<int> onLogSet;
   final VoidCallback onShowComment;
   final String preferredUnit;
-  final AdaptiveProgressionService progressionService;
   final int timedCountdownRemaining;
   final bool timedExerciseRunning;
   final ValueChanged<int> onStartTimed;
@@ -1350,7 +1345,7 @@ class _ExercisePage extends StatelessWidget {
   final void Function(String exerciseId, int durationSeconds) onInitTimed;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final appColors = context.appColors;
@@ -1366,11 +1361,9 @@ class _ExercisePage extends StatelessWidget {
             .where((set) => set.exerciseId == prescription.exerciseId)
             .toList()
           ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
-    final suggestion = progressionService.suggestionForExercise(
-      state: state,
-      exercise: exercise,
-      prescription: prescription,
-    );
+    final suggestion = ref
+        .watch(engineWeightSuggestionProvider(prescription.exerciseId))
+        .valueOrNull;
 
     // Pre-fill weight/reps when switching to this exercise (deferred to avoid
     // modifying controllers during build)
@@ -1408,6 +1401,20 @@ class _ExercisePage extends StatelessWidget {
           onInitTimed(prescription.exerciseId, prescription.targetDurationSeconds);
         });
       }
+    } else if (exercise?.exerciseType != 'timed' &&
+        currentSets.isEmpty &&
+        weightController.text.isEmpty &&
+        suggestion != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (weightController.text.isEmpty) {
+          weightController.text = AppFormatters.decimal(
+            AppFormatters.convertWeight(
+              suggestion.suggestedWeightKg,
+              preferredUnit,
+            ),
+          );
+        }
+      });
     }
 
     final highestPrevWeight = previousPerformance.isEmpty
@@ -2021,7 +2028,7 @@ class _ProgressionHint extends StatelessWidget {
     required this.preferredUnit,
   });
 
-  final WeightSuggestion? suggestion;
+  final EngineWeightSuggestion? suggestion;
   final String preferredUnit;
 
   @override
@@ -2065,29 +2072,29 @@ class _ProgressionHint extends StatelessWidget {
     );
   }
 
-  String _directionLabel(WeightSuggestion suggestion) {
+  String _directionLabel(EngineWeightSuggestion suggestion) {
     switch (suggestion.direction) {
-      case ProgressionDirection.up:
+      case EngineSuggestionDirection.up:
         return 'up from last time';
-      case ProgressionDirection.hold:
+      case EngineSuggestionDirection.hold:
         return 'hold steady';
-      case ProgressionDirection.down:
+      case EngineSuggestionDirection.down:
         return 'slight deload';
     }
   }
 }
 
-class _ActiveMuscleHeatmap extends StatefulWidget {
+class _ActiveMuscleHeatmap extends ConsumerStatefulWidget {
   const _ActiveMuscleHeatmap({required this.exercise, required this.state});
 
   final Exercise exercise;
   final AppState state;
 
   @override
-  State<_ActiveMuscleHeatmap> createState() => _ActiveMuscleHeatmapState();
+  ConsumerState<_ActiveMuscleHeatmap> createState() => _ActiveMuscleHeatmapState();
 }
 
-class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
+class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
@@ -2116,19 +2123,17 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
     final appColors = context.appColors;
     final exercise = widget.exercise;
     final state = widget.state;
-    final fatigue = MuscleHeatmapService().computeFatigue(state);
+    final fatigue = ref.watch(engineHeatmapDataProvider).maybeWhen(
+      data: (data) => data,
+      orElse: () => const <Muscle, MuscleData>{},
+    );
+    const adapter = TrainingEngineUiAdapter();
 
     // Build the set of active Muscle enums for this exercise
-    final activeMuscles = <Muscle>{};
-    for (final name in exercise.primaryMuscles) {
-      final mapped = MuscleHeatmapService.muscleMapping[name] ?? [];
-      activeMuscles.addAll(mapped);
-    }
-    final secondaryMuscles = <Muscle>{};
-    for (final name in exercise.secondaryMuscles) {
-      final mapped = MuscleHeatmapService.muscleMapping[name] ?? [];
-      secondaryMuscles.addAll(mapped);
-    }
+    final activeMuscles = adapter.appMusclesToHeatmap(exercise.primaryMuscles);
+    final secondaryMuscles = adapter.appMusclesToHeatmap(
+      exercise.secondaryMuscles,
+    );
 
     return AnimatedBuilder(
       animation: _pulseAnimation,
