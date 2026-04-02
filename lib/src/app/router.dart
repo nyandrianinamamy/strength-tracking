@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -40,26 +41,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: DashboardScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DashboardScreen()),
           ),
           GoRoute(
             path: '/routines',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: RoutinesScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: RoutinesScreen()),
           ),
           GoRoute(
             path: '/exercises',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ExercisesScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ExercisesScreen()),
           ),
           GoRoute(
             path: '/progress',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ProgressScreen(),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProgressScreen()),
+          ),
+          GoRoute(
+            path: '/debug/training-engine',
+            builder: (context, state) => Scaffold(
+              appBar: AppBar(title: Text('Training Engine Debug')),
+              body: SizedBox.shrink(),
             ),
           ),
         ],
@@ -78,9 +82,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/routine-groups/:groupId/edit',
-        builder: (context, state) => RoutineGroupEditorScreen(
-          groupId: state.pathParameters['groupId'],
-        ),
+        builder: (context, state) =>
+            RoutineGroupEditorScreen(groupId: state.pathParameters['groupId']),
       ),
       GoRoute(
         path: '/routine/:routineId/edit',
