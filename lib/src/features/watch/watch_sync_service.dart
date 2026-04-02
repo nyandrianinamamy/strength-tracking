@@ -131,7 +131,7 @@ class WatchSyncService {
                 'weightKg': s.weightKg,
                 'reps': s.reps,
                 'durationSeconds': s.durationSeconds,
-                'completedAt': s.completedAt.toIso8601String(),
+                'completedAt': s.completedAt.toUtc().toIso8601String(),
               },
             )
             .toList(),
@@ -144,7 +144,7 @@ class WatchSyncService {
         'sessionId': session.id,
         'routineId': session.routineId,
         'routineName': routine.name,
-        'startedAt': session.startedAt.toIso8601String(),
+        'startedAt': session.startedAt.toUtc().toIso8601String(),
         'currentExerciseIndex': session.currentExerciseIndex,
         'exercises': exercises,
       },
