@@ -7,11 +7,23 @@ import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/auth/account_section.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_card.dart';
 import 'package:strength_training_tracker/src/features/dashboard/training_readiness_card.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
+
+String? _displayCategory(AppLocalizations l10n, String? raw) {
+  if (raw == null) return null;
+  final key = Routine.normalizeCategory(raw);
+  return switch (key) {
+    'strength' => l10n.strength,
+    'hypertrophy' => l10n.hypertrophy,
+    'mobility' => l10n.mobility,
+    _ => l10n.strength,
+  };
+}
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -220,7 +232,7 @@ class DashboardScreen extends ConsumerWidget {
                                   ? 'Workout paused'
                                   : l10n.sessionInProgress
                             : snapshot.nextRoutineGroupName ??
-                                  nextRoutine?.category ??
+                                  _displayCategory(l10n, nextRoutine?.category) ??
                                   l10n.readyToTrain)
                         .toUpperCase(),
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(

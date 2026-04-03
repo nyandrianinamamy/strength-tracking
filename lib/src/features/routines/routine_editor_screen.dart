@@ -6,6 +6,7 @@ import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -22,7 +23,7 @@ class RoutineEditorScreen extends ConsumerStatefulWidget {
 
 class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
   final _nameController = TextEditingController();
-  String _category = 'Strength';
+  String _category = 'strength';
   List<RoutineExercise> _exercises = [];
   bool _initialized = false;
 
@@ -37,7 +38,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
     final routine = ref.read(appStateControllerProvider).routineById(routineId);
     if (routine != null) {
       _nameController.text = routine.name;
-      _category = routine.category;
+      _category = Routine.normalizeCategory(routine.category);
       _exercises = [...routine.exercises]
         ..sort((a, b) => a.order.compareTo(b.order));
       _initialized = true;
@@ -71,7 +72,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       final routine = state.routineById(widget.routineId!);
       if (routine != null) {
         _nameController.text = routine.name;
-        _category = routine.category;
+        _category = Routine.normalizeCategory(routine.category);
         _exercises = [...routine.exercises]
           ..sort((a, b) => a.order.compareTo(b.order));
       }
@@ -121,10 +122,15 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _category,
-            items: <String>[l10n.strength, l10n.hypertrophy, l10n.mobility]
+            items: <String, String>{
+              'strength': l10n.strength,
+              'hypertrophy': l10n.hypertrophy,
+              'mobility': l10n.mobility,
+            }
+                .entries
                 .map(
-                  (category) =>
-                      DropdownMenuItem<String>(value: category, child: Text(category)),
+                  (e) =>
+                      DropdownMenuItem<String>(value: e.key, child: Text(e.value)),
                 )
                 .toList(),
             onChanged: (value) {

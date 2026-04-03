@@ -3,8 +3,10 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
+import 'package:strength_training_tracker/src/features/smart_planner/smart_planner_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class RoutinesScreen extends ConsumerStatefulWidget {
@@ -29,18 +31,33 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         groupNameByRoutineId[routineId] = group.name;
       }
     }
-    final categories = [
+    String displayCategory(String raw) {
+      final key = Routine.normalizeCategory(raw);
+      return switch (key) {
+        'strength' => l10n.strength,
+        'hypertrophy' => l10n.hypertrophy,
+        'mobility' => l10n.mobility,
+        _ => l10n.strength,
+      };
+    }
+    final normalizedCategories = {
+      for (final routine in state.routines.where((item) => !item.archived))
+        Routine.normalizeCategory(routine.category),
+    };
+    final categories = <String>[
       l10n.all,
-      ...{
-        for (final routine in state.routines.where((item) => !item.archived))
-          routine.category,
-      },
+      ...normalizedCategories.map<String>((key) => switch (key) {
+        'strength' => l10n.strength,
+        'hypertrophy' => l10n.hypertrophy,
+        'mobility' => l10n.mobility,
+        _ => l10n.strength,
+      }),
     ];
     final routines = state.routines.where((routine) {
       if (routine.archived) {
         return false;
       }
-      if (_category != null && routine.category != _category) {
+      if (_category != null && displayCategory(routine.category) != _category) {
         return false;
       }
       if (_query.isEmpty) {
@@ -125,6 +142,69 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
               setState(() => _category = v == l10n.all ? null : v),
         ),
         const SizedBox(height: 24),
+        Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: context.appColors.border),
+          ),
+          elevation: 1,
+          shadowColor: Colors.black12,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              ref.read(smartPlannerControllerProvider.notifier).reset();
+              context.push('/routines/smart-planner');
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3E8FF).withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: Color(0xFF9333EA),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Generate Smart Plan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'AI-powered weekly training plan',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: Color(0xFF64748B),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
         DashedBorderCard(
           onTap: () => context.push('/routine/new'),
           child: Padding(
