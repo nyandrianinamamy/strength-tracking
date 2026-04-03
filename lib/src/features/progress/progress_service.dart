@@ -74,10 +74,9 @@ class ProgressService {
           ? null
           : staleSessionService.idleLabel(activeSession),
       recentWorkouts: recentWorkouts,
-      monthFrequency: _monthFrequency(
-        completedSessions,
-        DateTime(now.year, now.month),
-      ),
+      calendarSessions: completedSessions.map((s) {
+        return MonthFrequencySession(date: s.endedAt ?? s.startedAt);
+      }).toList(),
       recentPrs: personalRecords.take(3).toList(),
     );
   }
@@ -92,13 +91,14 @@ class ProgressService {
         .max(1, DateTime.now().difference(earliest).inDays / 7)
         .toDouble();
 
+    final calendarSessions = completedSessions.map((s) {
+      return MonthFrequencySession(date: s.endedAt ?? s.startedAt);
+    }).toList();
+
     return ProgressSnapshot(
       averageWorkoutDaysPerWeek: completedSessions.length / weeksSpan,
       activeStreakDays: _activeStreakDays(completedSessions),
-      monthFrequency: _monthFrequency(
-        completedSessions,
-        DateTime(DateTime.now().year, DateTime.now().month),
-      ),
+      calendarSessions: calendarSessions,
       personalRecords: personalRecords,
       weeklyVolume: _weeklyVolume(completedSessions),
       topLifts: personalRecords
@@ -349,36 +349,6 @@ class ProgressService {
     return records;
   }
 
-  MonthFrequency _monthFrequency(
-    List<WorkoutSession> sessions,
-    DateTime month,
-  ) {
-    final firstDay = DateTime(month.year, month.month, 1);
-    final offset = firstDay.weekday % 7;
-    final start = firstDay.subtract(Duration(days: offset));
-    final days = <CalendarDayEntry>[];
-    final counts = <String, int>{};
-
-    for (final session in sessions) {
-      final date = session.endedAt ?? session.startedAt;
-      final key = _dateKey(date);
-      counts[key] = (counts[key] ?? 0) + 1;
-    }
-
-    for (var index = 0; index < 42; index++) {
-      final date = start.add(Duration(days: index));
-      days.add(
-        CalendarDayEntry(
-          date: date,
-          inMonth: date.month == month.month,
-          workouts: counts[_dateKey(date)] ?? 0,
-          isToday: _isSameDay(date, DateTime.now()),
-        ),
-      );
-    }
-
-    return MonthFrequency(month: month, days: days);
-  }
 
   int _activeStreakDays(List<WorkoutSession> sessions) {
     if (sessions.isEmpty) {
@@ -431,12 +401,6 @@ class ProgressService {
             .toList()
           ..sort((a, b) => a.weekStart.compareTo(b.weekStart));
     return points;
-  }
-
-  String _dateKey(DateTime date) => '${date.year}-${date.month}-${date.day}';
-
-  bool _isSameDay(DateTime a, DateTime b) {
-    return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   String _daysAgoLabel(int days) {
@@ -496,7 +460,7 @@ class DashboardSnapshot {
     required this.activeSessionIsStale,
     required this.activeSessionIdleLabel,
     required this.recentWorkouts,
-    required this.monthFrequency,
+    required this.calendarSessions,
     required this.recentPrs,
   });
 
@@ -511,7 +475,7 @@ class DashboardSnapshot {
   final bool activeSessionIsStale;
   final String? activeSessionIdleLabel;
   final List<RecentWorkoutSummary> recentWorkouts;
-  final MonthFrequency monthFrequency;
+  final List<MonthFrequencySession> calendarSessions;
   final List<ExercisePersonalRecord> recentPrs;
 }
 
@@ -533,7 +497,7 @@ class ProgressSnapshot {
   const ProgressSnapshot({
     required this.averageWorkoutDaysPerWeek,
     required this.activeStreakDays,
-    required this.monthFrequency,
+    required this.calendarSessions,
     required this.personalRecords,
     required this.weeklyVolume,
     required this.topLifts,
@@ -541,10 +505,15 @@ class ProgressSnapshot {
 
   final double averageWorkoutDaysPerWeek;
   final int activeStreakDays;
-  final MonthFrequency monthFrequency;
+  final List<MonthFrequencySession> calendarSessions;
   final List<ExercisePersonalRecord> personalRecords;
   final List<VolumePoint> weeklyVolume;
   final List<LiftMetric> topLifts;
+}
+
+class MonthFrequencySession {
+  const MonthFrequencySession({required this.date});
+  final DateTime date;
 }
 
 class RecentWorkoutSummary {

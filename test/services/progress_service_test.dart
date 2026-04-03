@@ -15,7 +15,7 @@ void main() {
     expect(snapshot.nextRoutine?.id, 'push_day');
     expect(snapshot.nextRoutineGroupName, 'Push / Pull / Legs');
     expect(snapshot.recentWorkouts, isNotEmpty);
-    expect(snapshot.monthFrequency.days, hasLength(42));
+    expect(snapshot.calendarSessions, isNotEmpty);
   });
 
   test('dashboard snapshot follows the active routine group queue', () {

@@ -418,7 +418,7 @@ class DashboardScreen extends ConsumerWidget {
         PageSection(
           title: l10n.workoutFrequency,
           child: WorkoutFrequencyCalendar(
-            frequency: snapshot.monthFrequency,
+            sessions: snapshot.calendarSessions,
             onDateTap: (date, count) {
               // Find workouts on this date
               final dayWorkouts = state.completedSessions.where((session) {

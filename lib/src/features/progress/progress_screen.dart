@@ -79,7 +79,7 @@ class ProgressScreen extends ConsumerWidget {
                     PageSection(
                       title: l10n.personalRecords,
                       child: Column(
-                        children: snapshot.personalRecords.take(6).map((
+                        children: snapshot.personalRecords.map((
                           record,
                         ) {
                           final subtitle = record.isTimed
