@@ -78,14 +78,16 @@ Future<TrainingEngine> loadTrainingEngine({
     engine.bootstrapFromHistory(completedSessions);
   }
 
-  final sleepRecords = await healthKit.fetchRecentSleep();
-  for (final record in sleepRecords) {
-    engine.ingestSleep(record);
-  }
+  if (appState.healthKitEnabled) {
+    final sleepRecords = await healthKit.fetchRecentSleep();
+    for (final record in sleepRecords) {
+      engine.ingestSleep(record);
+    }
 
-  final hrvRecords = await healthKit.fetchRecentHrv();
-  for (final record in hrvRecords) {
-    engine.ingestHrv(record);
+    final hrvRecords = await healthKit.fetchRecentHrv();
+    for (final record in hrvRecords) {
+      engine.ingestHrv(record);
+    }
   }
 
   await repository.save(engine.serializeState());
