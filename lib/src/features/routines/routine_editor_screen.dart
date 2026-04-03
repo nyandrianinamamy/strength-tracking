@@ -6,6 +6,7 @@ import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -37,7 +38,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
     final routine = ref.read(appStateControllerProvider).routineById(routineId);
     if (routine != null) {
       _nameController.text = routine.name;
-      _category = _normalizeCategory(routine.category);
+      _category = Routine.normalizeCategory(routine.category);
       _exercises = [...routine.exercises]
         ..sort((a, b) => a.order.compareTo(b.order));
       _initialized = true;
@@ -48,20 +49,6 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
-  }
-
-  /// Normalizes legacy localized category values to non-localized keys.
-  static String _normalizeCategory(String category) {
-    switch (category.toLowerCase()) {
-      case 'strength' || 'force':
-        return 'strength';
-      case 'hypertrophy' || 'hypertrophie':
-        return 'hypertrophy';
-      case 'mobility' || 'mobilité':
-        return 'mobility';
-      default:
-        return 'strength';
-    }
   }
 
   int get _estimatedDurationMin {
@@ -85,7 +72,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       final routine = state.routineById(widget.routineId!);
       if (routine != null) {
         _nameController.text = routine.name;
-        _category = _normalizeCategory(routine.category);
+        _category = Routine.normalizeCategory(routine.category);
         _exercises = [...routine.exercises]
           ..sort((a, b) => a.order.compareTo(b.order));
       }

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
@@ -60,6 +62,17 @@ class _RoutineGroupEditorScreenState
     }
 
     _initialized = true;
+  }
+
+  String _displayCategory(BuildContext context, String raw) {
+    final l10n = AppLocalizations.of(context)!;
+    final key = Routine.normalizeCategory(raw);
+    return switch (key) {
+      'strength' => l10n.strength,
+      'hypertrophy' => l10n.hypertrophy,
+      'mobility' => l10n.mobility,
+      _ => raw,
+    };
   }
 
   @override
@@ -159,7 +172,7 @@ class _RoutineGroupEditorScreenState
                     key: ValueKey(entry.value),
                     index: entry.key,
                     title: state.routineById(entry.value)?.name ?? 'Routine',
-                    subtitle: state.routineById(entry.value)?.category ?? '',
+                    subtitle: _displayCategory(context, state.routineById(entry.value)?.category ?? ''),
                     onRemove: () {
                       setState(() {
                         _routineIds.removeAt(entry.key);

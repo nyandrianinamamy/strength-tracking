@@ -13,6 +13,21 @@ class Routine {
   final String id;
   final String name;
   final String category;
+
+  /// Normalizes a category value (possibly a legacy localized string)
+  /// to a non-localized key ('strength', 'hypertrophy', 'mobility').
+  static String normalizeCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'strength' || 'force':
+        return 'strength';
+      case 'hypertrophy' || 'hypertrophie':
+        return 'hypertrophy';
+      case 'mobility' || 'mobilité':
+        return 'mobility';
+      default:
+        return category;
+    }
+  }
   final List<RoutineExercise> exercises;
   final int estimatedDurationMin;
   final bool archived;

@@ -3,6 +3,7 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/smart_planner_controller.dart';
@@ -30,19 +31,27 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         groupNameByRoutineId[routineId] = group.name;
       }
     }
-    String displayCategory(String key) => switch (key.toLowerCase()) {
-      'strength' => l10n.strength,
-      'hypertrophy' => l10n.hypertrophy,
-      'mobility' => l10n.mobility,
-      _ => key,
-    };
-    final rawCategories = {
+    String displayCategory(String raw) {
+      final key = Routine.normalizeCategory(raw);
+      return switch (key) {
+        'strength' => l10n.strength,
+        'hypertrophy' => l10n.hypertrophy,
+        'mobility' => l10n.mobility,
+        _ => raw,
+      };
+    }
+    final normalizedCategories = {
       for (final routine in state.routines.where((item) => !item.archived))
-        routine.category,
+        Routine.normalizeCategory(routine.category),
     };
-    final categories = [
+    final categories = <String>[
       l10n.all,
-      ...rawCategories.map(displayCategory),
+      ...normalizedCategories.map<String>((key) => switch (key) {
+        'strength' => l10n.strength,
+        'hypertrophy' => l10n.hypertrophy,
+        'mobility' => l10n.mobility,
+        _ => key,
+      }),
     ];
     final routines = state.routines.where((routine) {
       if (routine.archived) {
