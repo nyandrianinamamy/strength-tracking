@@ -1,5 +1,6 @@
 // lib/src/features/smart_planner/smart_planner_screen.dart
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -108,7 +109,8 @@ class SmartPlannerScreen extends ConsumerWidget {
           },
           onRegenerate: () => notifier.generatePlan(exercises),
           onAdopt: () {
-            notifier.adopt(appStateController);
+            final l10n = AppLocalizations.of(context)!;
+            notifier.adopt(appStateController, category: l10n.strength);
             notifier.reset();
             context.go('/routines');
           },

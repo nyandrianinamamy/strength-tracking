@@ -253,7 +253,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
 
   // ── Adoption ──────────────────────────────────────────────────────────────
 
-  void adopt(AppStateController appStateController) {
+  void adopt(AppStateController appStateController, {required String category}) {
     final plan = state.generatedPlan;
     if (plan == null) return;
 
@@ -343,7 +343,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
       return Routine(
         id: id,
         name: name,
-        category: 'Strength',
+        category: category,
         exercises: exercises,
         estimatedDurationMin: session.estimatedDuration.inMinutes,
         archived: false,
