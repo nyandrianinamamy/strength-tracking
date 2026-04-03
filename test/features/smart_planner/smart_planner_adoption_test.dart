@@ -28,7 +28,7 @@ void main() {
       final appState = container.read(appStateControllerProvider.notifier);
 
       // No plan generated — adopt should be a no-op
-      planner.adopt(appState, category: 'Strength');
+      planner.adopt(appState);
 
       final state = container.read(appStateControllerProvider);
       expect(state.routines, isEmpty);
@@ -59,7 +59,7 @@ void main() {
         expect(plannerState.generatedPlan!.sessions, hasLength(3));
 
         // Adopt the plan
-        planner.adopt(appStateCtrl, category: 'Strength');
+        planner.adopt(appStateCtrl);
 
         final appState = container.read(appStateControllerProvider);
 
@@ -112,14 +112,14 @@ void main() {
         planner.toggleDay(3); // Wed
         planner.generatePlan([]);
 
-        planner.adopt(appStateCtrl, category: 'Strength');
+        planner.adopt(appStateCtrl);
 
         final appState = container.read(appStateControllerProvider);
         expect(appState.routines, hasLength(3));
 
-        // All routines should have category "Strength" (compatible with editor)
+        // All routines should have non-localized category key
         for (final routine in appState.routines) {
-          expect(routine.category, equals('Strength'));
+          expect(routine.category, equals('strength'));
         }
 
         // Group name should contain split label and "Week of"
@@ -148,7 +148,7 @@ void main() {
         final plannerState = container.read(smartPlannerControllerProvider);
         final sessions = plannerState.generatedPlan!.sessions;
 
-        planner.adopt(appStateCtrl, category: 'Strength');
+        planner.adopt(appStateCtrl);
 
         final appState = container.read(appStateControllerProvider);
 
@@ -193,7 +193,7 @@ void main() {
         planner.toggleDay(3);
         planner.toggleDay(5);
         planner.generatePlan([]);
-        planner.adopt(appStateCtrl, category: 'Strength');
+        planner.adopt(appStateCtrl);
 
         final firstState = container.read(appStateControllerProvider);
         expect(firstState.routines, hasLength(3));
@@ -201,7 +201,7 @@ void main() {
 
         // Generate and adopt a second time
         planner.generatePlan([]);
-        planner.adopt(appStateCtrl, category: 'Strength');
+        planner.adopt(appStateCtrl);
 
         final secondState = container.read(appStateControllerProvider);
         expect(secondState.routines, hasLength(6));
@@ -230,7 +230,7 @@ void main() {
             .map((e) => e.exerciseId)
             .toSet();
 
-        planner.adopt(appStateCtrl, category: 'Strength');
+        planner.adopt(appStateCtrl);
 
         final appState = container.read(appStateControllerProvider);
 

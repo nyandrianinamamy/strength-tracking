@@ -22,7 +22,7 @@ class RoutineEditorScreen extends ConsumerStatefulWidget {
 
 class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
   final _nameController = TextEditingController();
-  String _category = 'Strength';
+  String _category = 'strength';
   List<RoutineExercise> _exercises = [];
   bool _initialized = false;
 
@@ -37,7 +37,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
     final routine = ref.read(appStateControllerProvider).routineById(routineId);
     if (routine != null) {
       _nameController.text = routine.name;
-      _category = routine.category;
+      _category = _normalizeCategory(routine.category);
       _exercises = [...routine.exercises]
         ..sort((a, b) => a.order.compareTo(b.order));
       _initialized = true;
@@ -48,6 +48,20 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  /// Normalizes legacy localized category values to non-localized keys.
+  static String _normalizeCategory(String category) {
+    switch (category.toLowerCase()) {
+      case 'strength' || 'force':
+        return 'strength';
+      case 'hypertrophy' || 'hypertrophie':
+        return 'hypertrophy';
+      case 'mobility' || 'mobilité':
+        return 'mobility';
+      default:
+        return 'strength';
+    }
   }
 
   int get _estimatedDurationMin {
@@ -71,7 +85,7 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
       final routine = state.routineById(widget.routineId!);
       if (routine != null) {
         _nameController.text = routine.name;
-        _category = routine.category;
+        _category = _normalizeCategory(routine.category);
         _exercises = [...routine.exercises]
           ..sort((a, b) => a.order.compareTo(b.order));
       }
@@ -121,10 +135,15 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
           const SizedBox(height: 16),
           DropdownButtonFormField<String>(
             initialValue: _category,
-            items: <String>[l10n.strength, l10n.hypertrophy, l10n.mobility]
+            items: <String, String>{
+              'strength': l10n.strength,
+              'hypertrophy': l10n.hypertrophy,
+              'mobility': l10n.mobility,
+            }
+                .entries
                 .map(
-                  (category) =>
-                      DropdownMenuItem<String>(value: category, child: Text(category)),
+                  (e) =>
+                      DropdownMenuItem<String>(value: e.key, child: Text(e.value)),
                 )
                 .toList(),
             onChanged: (value) {

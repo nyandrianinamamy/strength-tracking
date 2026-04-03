@@ -30,18 +30,25 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         groupNameByRoutineId[routineId] = group.name;
       }
     }
+    String displayCategory(String key) => switch (key.toLowerCase()) {
+      'strength' => l10n.strength,
+      'hypertrophy' => l10n.hypertrophy,
+      'mobility' => l10n.mobility,
+      _ => key,
+    };
+    final rawCategories = {
+      for (final routine in state.routines.where((item) => !item.archived))
+        routine.category,
+    };
     final categories = [
       l10n.all,
-      ...{
-        for (final routine in state.routines.where((item) => !item.archived))
-          routine.category,
-      },
+      ...rawCategories.map(displayCategory),
     ];
     final routines = state.routines.where((routine) {
       if (routine.archived) {
         return false;
       }
-      if (_category != null && routine.category != _category) {
+      if (_category != null && displayCategory(routine.category) != _category) {
         return false;
       }
       if (_query.isEmpty) {
