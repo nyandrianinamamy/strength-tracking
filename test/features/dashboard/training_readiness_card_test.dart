@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/dashboard/training_readiness_card.dart';
@@ -27,8 +28,9 @@ Widget _buildTestApp({
         engineRepository ?? MemoryTrainingEngineStateRepository(),
       ),
     ],
-    child: const MaterialApp(
-      home: Scaffold(
+    child: MaterialApp(
+      theme: AppTheme.light(),
+      home: const Scaffold(
         body: TrainingReadinessCard(),
       ),
     ),
@@ -77,7 +79,7 @@ void main() {
     await tester.pumpWidget(_buildTestApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Adaptive Readiness'), findsOneWidget);
+    expect(find.text('Training Readiness'), findsOneWidget);
     expect(find.text('Complete a workout to unlock adaptive guidance.'), findsOneWidget);
   });
 
@@ -93,8 +95,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('Adaptive Readiness'), findsOneWidget);
-    expect(find.textContaining('Readiness score'), findsOneWidget);
-    expect(find.textContaining('/100'), findsOneWidget);
+    expect(find.text('TRAINING READINESS'), findsOneWidget);
+    expect(find.textContaining('FATIGUE'), findsOneWidget);
   });
 }
