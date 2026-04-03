@@ -44,5 +44,23 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # Xcode 26 beta: device_info_plus 12.4.0 calls [NSProcessInfo isiOSAppOnVision]
+    # which doesn't exist in this SDK yet. Patch the source to use respondsToSelector.
+    # Safe to remove once device_info_plus ships a compatible release.
+    if target.name == 'device_info_plus'
+      source_file = File.join(installer.sandbox.pod_dir('device_info_plus'),
+        'ios', 'device_info_plus', 'Sources', 'device_info_plus', 'FPPDeviceInfoPlusPlugin.m')
+      if File.exist?(source_file)
+        content = File.read(source_file)
+        if content.include?('isiOSAppOnVision')
+          patched = content.gsub(
+            /if \(@available\(iOS 26\.1, \*\)\) \{\s*isiOSAppOnVision = \[NSNumber numberWithBool:\[info isiOSAppOnVision\]\];\s*\}/,
+            'if ([info respondsToSelector:@selector(isiOSAppOnVision)]) { isiOSAppOnVision = [NSNumber numberWithBool:((BOOL (*)(id, SEL))objc_msgSend)(info, @selector(isiOSAppOnVision))]; }'
+          )
+          File.write(source_file, patched) if patched != content
+        end
+      end
+    end
   end
 end

@@ -247,6 +247,34 @@ class AccountSection extends ConsumerWidget {
                     );
               },
             ),
+            if (defaultTargetPlatform == TargetPlatform.iOS) ...[
+              const SizedBox(height: 20),
+              Text(
+                'Apple Health',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 4),
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Sleep & HRV'),
+                subtitle: Text(
+                  'Read sleep and heart rate variability data to improve training recommendations.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: context.appColors.subtleText,
+                  ),
+                ),
+                value: ref.watch(appStateControllerProvider).healthKitEnabled,
+                onChanged: (enabled) {
+                  ref
+                      .read(appStateControllerProvider.notifier)
+                      .updateState(
+                        (s) => s.copyWith(healthKitEnabled: enabled),
+                      );
+                },
+              ),
+            ],
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),

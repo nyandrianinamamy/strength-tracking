@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
-import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 
 class MuscleHeatmapCard extends ConsumerWidget {
   const MuscleHeatmapCard({super.key});
@@ -12,7 +12,10 @@ class MuscleHeatmapCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appStateControllerProvider);
-    final fatigue = ref.read(muscleHeatmapServiceProvider).computeFatigue(state);
+    final fatigue = ref.watch(engineHeatmapDataProvider).maybeWhen(
+      data: (data) => data,
+      orElse: () => const <Muscle, MuscleData>{},
+    );
     final l10n = AppLocalizations.of(context)!;
     final appColors = context.appColors;
     final heatmapColors = appColors.heatmapGradient;

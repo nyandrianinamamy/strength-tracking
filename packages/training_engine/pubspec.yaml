@@ -1,0 +1,9 @@
+name: training_engine
+description: Hypertrophy-focused training auto-regulation engine for Kotrana.
+version: 0.1.0
+
+environment:
+  sdk: ^3.11.1
+
+dev_dependencies:
+  test: ^1.25.0

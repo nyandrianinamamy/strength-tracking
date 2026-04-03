@@ -16,6 +16,7 @@ class AppState {
     this.preferredLanguage = '',
     this.preferredTheme = '',
     this.activeRoutineGroupId,
+    this.healthKitEnabled = false,
   });
 
   final List<Exercise> exercises;
@@ -28,6 +29,7 @@ class AppState {
   final String preferredLanguage;
   final String preferredTheme;
   final String? activeRoutineGroupId;
+  final bool healthKitEnabled;
 
   factory AppState.empty() {
     return const AppState(
@@ -50,6 +52,7 @@ class AppState {
     String? preferredTheme,
     String? activeRoutineGroupId,
     bool clearActiveRoutineGroupId = false,
+    bool? healthKitEnabled,
   }) {
     return AppState(
       exercises: exercises ?? this.exercises,
@@ -64,6 +67,7 @@ class AppState {
       activeRoutineGroupId: clearActiveRoutineGroupId
           ? null
           : activeRoutineGroupId ?? this.activeRoutineGroupId,
+      healthKitEnabled: healthKitEnabled ?? this.healthKitEnabled,
     );
   }
 
@@ -120,6 +124,7 @@ class AppState {
       preferredLanguage: json['preferredLanguage'] as String? ?? '',
       preferredTheme: json['preferredTheme'] as String? ?? '',
       activeRoutineGroupId: json['activeRoutineGroupId'] as String?,
+      healthKitEnabled: json['healthKitEnabled'] as bool? ?? false,
     );
   }
 
@@ -135,6 +140,7 @@ class AppState {
       'preferredLanguage': preferredLanguage,
       'preferredTheme': preferredTheme,
       'activeRoutineGroupId': activeRoutineGroupId,
+      'healthKitEnabled': healthKitEnabled,
     };
   }
 }

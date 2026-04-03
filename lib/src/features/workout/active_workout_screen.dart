@@ -17,9 +17,9 @@ import 'package:strength_training_tracker/src/features/workout/workout_controlle
 import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
-import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_service.dart';
 import 'package:strength_training_tracker/src/features/notifications/rest_timer_notification_service.dart';
-import 'package:strength_training_tracker/src/features/progress/adaptive_progression_service.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_ui_adapter.dart';
 import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -1129,9 +1129,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     onLogSet: _resetRestTimer,
                     onShowComment: () => _showCommentDialog(context),
                     preferredUnit: state.preferredUnit,
-                    progressionService: ref.read(
-                      adaptiveProgressionServiceProvider,
-                    ),
                     timedCountdownRemaining: _timedCountdownRemaining,
                     timedExerciseRunning: _timedExerciseRunning,
                     onStartTimed: _startTimedExercise,
@@ -1271,7 +1268,234 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 }
 
-class _ExercisePage extends StatelessWidget {
+double? _parseOptionalRpe(String rawValue) {
+  final trimmed = rawValue.trim();
+  if (trimmed.isEmpty) {
+    return null;
+  }
+
+  final parsed = double.tryParse(trimmed.replaceAll(',', '.'));
+  if (parsed == null || parsed <= 0 || parsed > 10) {
+    return null;
+  }
+  return parsed;
+}
+
+String _rpeDescription(double value) {
+  if (value >= 10) return 'Max effort. 0 reps in reserve (RIR).';
+  if (value >= 9.5) return 'Could not do more reps, but could add slightly more weight.';
+  if (value >= 9) return '1 rep in reserve (RIR).';
+  if (value >= 8.5) return '1-2 reps in reserve (RIR).';
+  if (value >= 8) return '2 reps in reserve (RIR).';
+  if (value >= 7.5) return '2-3 reps in reserve (RIR).';
+  if (value >= 7) return '3 reps in reserve (RIR).';
+  if (value >= 5) return '4-6 reps in reserve. Warm-up weight.';
+  return 'Very light effort. Active recovery.';
+}
+
+Color _rpeColor(double rpe) {
+  final intensity = (rpe - 1) / 9;
+  final hue = 220.0 * (1 - intensity);
+  return HSLColor.fromAHSL(1.0, hue, 0.9, 0.55).toColor();
+}
+
+Future<double?> showRpeModal(BuildContext context, {double? initialRpe}) {
+  return showModalBottomSheet<double>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => _RpeModalContent(initialRpe: initialRpe ?? 8.0),
+  );
+}
+
+class _RpeModalContent extends StatefulWidget {
+  const _RpeModalContent({required this.initialRpe});
+  final double initialRpe;
+
+  @override
+  State<_RpeModalContent> createState() => _RpeModalContentState();
+}
+
+class _RpeModalContentState extends State<_RpeModalContent> {
+  late double _rpe;
+
+  @override
+  void initState() {
+    super.initState();
+    _rpe = widget.initialRpe;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _rpeColor(_rpe);
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Log Set RPE',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'Select RPE:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  _rpe % 1 == 0
+                      ? _rpe.toInt().toString()
+                      : _rpe.toStringAsFixed(1),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: color,
+                inactiveTrackColor: color.withValues(alpha: 0.2),
+                thumbColor: color,
+                overlayColor: color.withValues(alpha: 0.15),
+                trackHeight: 6,
+              ),
+              child: Slider(
+                value: _rpe,
+                min: 1,
+                max: 10,
+                divisions: 18,
+                onChanged: (v) => setState(() => _rpe = v),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('1', style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  )),
+                  Text('5', style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  )),
+                  Text('10', style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  )),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 20, color: color),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'What this means',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _rpeDescription(_rpe),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: color,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context, _rpe),
+                child: const Text(
+                  'Save & Log Set',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+String _setTitle(CompletedSet set, String preferredUnit) {
+  final baseTitle = set.durationSeconds > 0
+      ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
+      : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}';
+
+  if (set.rpe == null) {
+    return baseTitle;
+  }
+
+  return '$baseTitle • RPE ${set.rpe!.toStringAsFixed(1)}';
+}
+
+class _ExercisePage extends ConsumerWidget {
   const _ExercisePage({
     super.key,
     required this.pageIndex,
@@ -1288,7 +1512,6 @@ class _ExercisePage extends StatelessWidget {
     required this.onLogSet,
     required this.onShowComment,
     required this.preferredUnit,
-    required this.progressionService,
     required this.timedCountdownRemaining,
     required this.timedExerciseRunning,
     required this.onStartTimed,
@@ -1311,7 +1534,6 @@ class _ExercisePage extends StatelessWidget {
   final ValueChanged<int> onLogSet;
   final VoidCallback onShowComment;
   final String preferredUnit;
-  final AdaptiveProgressionService progressionService;
   final int timedCountdownRemaining;
   final bool timedExerciseRunning;
   final ValueChanged<int> onStartTimed;
@@ -1320,7 +1542,7 @@ class _ExercisePage extends StatelessWidget {
   final void Function(String exerciseId, int durationSeconds) onInitTimed;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final appColors = context.appColors;
@@ -1336,11 +1558,9 @@ class _ExercisePage extends StatelessWidget {
             .where((set) => set.exerciseId == prescription.exerciseId)
             .toList()
           ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
-    final suggestion = progressionService.suggestionForExercise(
-      state: state,
-      exercise: exercise,
-      prescription: prescription,
-    );
+    final suggestion = ref
+        .watch(engineWeightSuggestionProvider(prescription.exerciseId))
+        .valueOrNull;
 
     // Pre-fill weight/reps when switching to this exercise (deferred to avoid
     // modifying controllers during build)
@@ -1375,6 +1595,20 @@ class _ExercisePage extends StatelessWidget {
           onInitTimed(prescription.exerciseId, prescription.targetDurationSeconds);
         });
       }
+    } else if (exercise?.exerciseType != 'timed' &&
+        currentSets.isEmpty &&
+        weightController.text.isEmpty &&
+        suggestion != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (weightController.text.isEmpty) {
+          weightController.text = AppFormatters.decimal(
+            AppFormatters.convertWeight(
+              suggestion.suggestedWeightKg,
+              preferredUnit,
+            ),
+          );
+        }
+      });
     }
 
     final highestPrevWeight = previousPerformance.isEmpty
@@ -1560,6 +1794,7 @@ class _ExercisePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       TextField(
+                        key: const ValueKey('active-workout-weight-input'),
                         controller: weightController,
                         textAlign: TextAlign.center,
                         keyboardType: const TextInputType.numberWithOptions(
@@ -1592,6 +1827,7 @@ class _ExercisePage extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       TextField(
+                        key: const ValueKey('active-workout-reps-input'),
                         controller: repsController,
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
@@ -1613,7 +1849,8 @@ class _ExercisePage extends StatelessWidget {
                   child: SizedBox(
                     height: 56,
                     child: FilledButton.icon(
-                      onPressed: () {
+                      key: const ValueKey('active-workout-log-set-button'),
+                      onPressed: () async {
                         final rawWeight = double.tryParse(
                           weightController.text.replaceAll(',', '.'),
                         );
@@ -1626,10 +1863,14 @@ class _ExercisePage extends StatelessWidget {
                         final reps = int.tryParse(repsController.text);
                         if (weight == null || reps == null || reps <= 0) return;
 
+                        final rpe = await showRpeModal(context);
+                        if (rpe == null) return; // user dismissed
+
                         controller.logSet(
                           weightKg: weight,
                           reps: reps,
                           note: setNoteController.text.trim(),
+                          rpe: rpe,
                         );
                         setNoteController.clear();
                         onLogSet(prescription.restSeconds);
@@ -1763,9 +2004,7 @@ class _ExercisePage extends StatelessWidget {
                             );
                           },
                           title: Text(
-                            set.durationSeconds > 0
-                                ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
-                                : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                            _setTitle(set, preferredUnit),
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           subtitle: Text(AppFormatters.time(set.completedAt)),
@@ -1863,6 +2102,9 @@ class _ExercisePage extends StatelessWidget {
             ),
     );
     final repsCtrl = TextEditingController(text: '${set.reps}');
+    final rpeCtrl = TextEditingController(
+      text: set.rpe == null ? '' : set.rpe!.toStringAsFixed(1),
+    );
 
     showDialog(
       context: context,
@@ -1897,6 +2139,20 @@ class _ExercisePage extends StatelessWidget {
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(labelText: 'Reps'),
                     ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: rpeCtrl,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                      ],
+                      decoration: const InputDecoration(
+                        labelText: 'RPE',
+                        hintText: 'Optional, 1-10',
+                      ),
+                    ),
                   ],
                 ),
           actions: [
@@ -1922,12 +2178,16 @@ class _ExercisePage extends StatelessWidget {
                       ? null
                       : AppFormatters.convertToKg(rawWeight, preferredUnit);
                   final reps = int.tryParse(repsCtrl.text);
+                  final rpe = _parseOptionalRpe(rpeCtrl.text);
+                  if (rpeCtrl.text.trim().isNotEmpty && rpe == null) return;
                   if (weight == null || reps == null || reps <= 0) return;
                   controller.updateSet(
                     set.exerciseId,
                     set.setNumber,
                     weightKg: weight,
                     reps: reps,
+                    rpe: rpe,
+                    clearRpe: rpeCtrl.text.trim().isEmpty,
                   );
                 }
                 Navigator.pop(dialogContext);
@@ -1947,7 +2207,7 @@ class _ProgressionHint extends StatelessWidget {
     required this.preferredUnit,
   });
 
-  final WeightSuggestion? suggestion;
+  final EngineWeightSuggestion? suggestion;
   final String preferredUnit;
 
   @override
@@ -1991,29 +2251,29 @@ class _ProgressionHint extends StatelessWidget {
     );
   }
 
-  String _directionLabel(WeightSuggestion suggestion) {
+  String _directionLabel(EngineWeightSuggestion suggestion) {
     switch (suggestion.direction) {
-      case ProgressionDirection.up:
+      case EngineSuggestionDirection.up:
         return 'up from last time';
-      case ProgressionDirection.hold:
+      case EngineSuggestionDirection.hold:
         return 'hold steady';
-      case ProgressionDirection.down:
+      case EngineSuggestionDirection.down:
         return 'slight deload';
     }
   }
 }
 
-class _ActiveMuscleHeatmap extends StatefulWidget {
+class _ActiveMuscleHeatmap extends ConsumerStatefulWidget {
   const _ActiveMuscleHeatmap({required this.exercise, required this.state});
 
   final Exercise exercise;
   final AppState state;
 
   @override
-  State<_ActiveMuscleHeatmap> createState() => _ActiveMuscleHeatmapState();
+  ConsumerState<_ActiveMuscleHeatmap> createState() => _ActiveMuscleHeatmapState();
 }
 
-class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
+class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final Animation<double> _pulseAnimation;
@@ -2042,19 +2302,17 @@ class _ActiveMuscleHeatmapState extends State<_ActiveMuscleHeatmap>
     final appColors = context.appColors;
     final exercise = widget.exercise;
     final state = widget.state;
-    final fatigue = MuscleHeatmapService().computeFatigue(state);
+    final fatigue = ref.watch(engineHeatmapDataProvider).maybeWhen(
+      data: (data) => data,
+      orElse: () => const <Muscle, MuscleData>{},
+    );
+    const adapter = TrainingEngineUiAdapter();
 
     // Build the set of active Muscle enums for this exercise
-    final activeMuscles = <Muscle>{};
-    for (final name in exercise.primaryMuscles) {
-      final mapped = MuscleHeatmapService.muscleMapping[name] ?? [];
-      activeMuscles.addAll(mapped);
-    }
-    final secondaryMuscles = <Muscle>{};
-    for (final name in exercise.secondaryMuscles) {
-      final mapped = MuscleHeatmapService.muscleMapping[name] ?? [];
-      secondaryMuscles.addAll(mapped);
-    }
+    final activeMuscles = adapter.appMusclesToHeatmap(exercise.primaryMuscles);
+    final secondaryMuscles = adapter.appMusclesToHeatmap(
+      exercise.secondaryMuscles,
+    );
 
     return AnimatedBuilder(
       animation: _pulseAnimation,

@@ -523,20 +523,64 @@ class CategoryChips extends StatelessWidget {
 // WorkoutFrequencyCalendar (kept as-is for later polishing)
 // ---------------------------------------------------------------------------
 
-class WorkoutFrequencyCalendar extends StatelessWidget {
+class WorkoutFrequencyCalendar extends StatefulWidget {
   const WorkoutFrequencyCalendar({
     super.key,
-    required this.frequency,
+    required this.sessions,
     this.onDateTap,
   });
 
-  final MonthFrequency frequency;
+  final List<MonthFrequencySession> sessions;
   final void Function(DateTime date, int workoutCount)? onDateTap;
+
+  @override
+  State<WorkoutFrequencyCalendar> createState() =>
+      _WorkoutFrequencyCalendarState();
+}
+
+class _WorkoutFrequencyCalendarState extends State<WorkoutFrequencyCalendar> {
+  late DateTime _month;
+
+  @override
+  void initState() {
+    super.initState();
+    _month = DateTime(DateTime.now().year, DateTime.now().month);
+  }
+
+  MonthFrequency _buildFrequency() {
+    final firstDay = DateTime(_month.year, _month.month, 1);
+    final offset = firstDay.weekday % 7;
+    final start = firstDay.subtract(Duration(days: offset));
+    final counts = <String, int>{};
+
+    for (final session in widget.sessions) {
+      final key = '${session.date.year}-${session.date.month}-${session.date.day}';
+      counts[key] = (counts[key] ?? 0) + 1;
+    }
+
+    final days = <CalendarDayEntry>[];
+    final now = DateTime.now();
+    for (var i = 0; i < 42; i++) {
+      final date = start.add(Duration(days: i));
+      final key = '${date.year}-${date.month}-${date.day}';
+      days.add(CalendarDayEntry(
+        date: date,
+        inMonth: date.month == _month.month,
+        workouts: counts[key] ?? 0,
+        isToday: date.year == now.year &&
+            date.month == now.month &&
+            date.day == now.day,
+      ));
+    }
+
+    return MonthFrequency(month: _month, days: days);
+  }
 
   @override
   Widget build(BuildContext context) {
     const weekDays = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
     final primary = Theme.of(context).colorScheme.primary;
+    final frequency = _buildFrequency();
 
     return Card(
       child: Padding(
@@ -544,12 +588,32 @@ class WorkoutFrequencyCalendar extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              AppFormatters.monthYear(frequency.month),
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w800),
+            Row(
+              children: [
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _month = DateTime(_month.year, _month.month - 1);
+                  }),
+                  child: Icon(Icons.chevron_left, color: primary),
+                ),
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      AppFormatters.monthYear(frequency.month),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => setState(() {
+                    _month = DateTime(_month.year, _month.month + 1);
+                  }),
+                  child: Icon(Icons.chevron_right, color: primary),
+                ),
+              ],
             ),
             const SizedBox(height: 16),
             Row(
@@ -612,8 +676,8 @@ class WorkoutFrequencyCalendar extends StatelessWidget {
                 }
 
                 return GestureDetector(
-                  onTap: day.inMonth && day.workouts > 0
-                      ? () => onDateTap?.call(day.date, day.workouts)
+                  onTap: day.workouts > 0
+                      ? () => widget.onDateTap?.call(day.date, day.workouts)
                       : null,
                   child: DecoratedBox(
                     decoration: BoxDecoration(

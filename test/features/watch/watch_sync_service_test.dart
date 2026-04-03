@@ -7,8 +7,11 @@ import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
+import 'package:training_engine/training_engine.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +19,10 @@ void main() {
   const methodChannel = MethodChannel('com.strengthapp/watch');
   const eventChannel = EventChannel('com.strengthapp/watch_events');
 
-  ProviderContainer buildContainer({AppState? initialState}) {
+  ProviderContainer buildContainer({
+    AppState? initialState,
+    TrainingEngineStateRepository? trainingEngineRepository,
+  }) {
     final repository = MemoryAppStateRepository(
       initialState: initialState ?? DemoSeedData.initialState(),
     );
@@ -25,6 +31,9 @@ void main() {
       overrides: [
         appStateRepositoryProvider.overrideWithValue(repository),
         initialAppStateProvider.overrideWithValue(repository.state),
+        trainingEngineStateRepositoryProvider.overrideWithValue(
+          trainingEngineRepository ?? MemoryTrainingEngineStateRepository(),
+        ),
       ],
     );
   }
@@ -47,6 +56,41 @@ void main() {
   Future<void> pumpEvents() async {
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
+  }
+
+  Map<String, dynamic> savedEngineState() {
+    final engine = TrainingEngine(
+      registry: ExerciseRegistry.withDefaults(),
+      profile: UserProfile(
+        sex: Sex.male,
+        age: 28,
+        bodyWeightKg: 80,
+        experience: ExperienceLevel.intermediate,
+        goal: HypertrophyGoal.hypertrophy,
+        availableDays: const [1, 3, 5],
+        maxSessionDuration: const Duration(minutes: 60),
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
+
+    engine.ingestSession(
+      EngineSession(
+        id: 'watch-session',
+        startedAt: DateTime.utc(2026, 4, 1, 17, 0),
+        endedAt: DateTime.utc(2026, 4, 1, 18, 0),
+        sets: [
+          LoggedSet(
+            exerciseId: 'barbell_bench_press',
+            weightKg: 80,
+            reps: 12,
+            rpe: 8.0,
+            completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+          ),
+        ],
+      ),
+    );
+
+    return engine.serializeState();
   }
 
   group('WatchSyncService', () {
@@ -142,6 +186,31 @@ void main() {
         methodCalls.where((call) => call.method == 'sendSessionUpdate'),
         hasLength(2),
       );
+    });
+
+    test('watch snapshot uses engine recommendation when app history is empty', () async {
+      final seededState = DemoSeedData.initialState().copyWith(
+        sessions: [buildActiveSession('push_day')],
+      );
+      final container = buildContainer(
+        initialState: seededState,
+        trainingEngineRepository: MemoryTrainingEngineStateRepository(
+          initialState: savedEngineState(),
+        ),
+      );
+      addTearDown(container.dispose);
+
+      container.read(watchSyncServiceProvider).initialize();
+      await pumpEvents();
+
+      final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
+      final session = arguments['session'] as Map<dynamic, dynamic>;
+      final exercises = session['exercises'] as List<dynamic>;
+      final bench = exercises
+          .map((item) => item as Map<dynamic, dynamic>)
+          .firstWhere((item) => item['exerciseId'] == 'barbell_bench_press');
+
+      expect(bench['suggestedWeightKg'], greaterThan(0));
     });
 
     test('starting and completing a session sends update then end', () async {
