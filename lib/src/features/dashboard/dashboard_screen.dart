@@ -29,7 +29,7 @@ class DashboardScreen extends ConsumerWidget {
     final appColors = context.appColors;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
       children: [
         // Step 1: Profile header
         Row(

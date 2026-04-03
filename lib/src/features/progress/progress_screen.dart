@@ -50,7 +50,7 @@ class ProgressScreen extends ConsumerWidget {
             child: TabBarView(
               children: [
                 ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   children: [
                     GridView.count(
                           crossAxisCount: 2,
@@ -114,7 +114,7 @@ class ProgressScreen extends ConsumerWidget {
                   ],
                 ),
                 ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   children: snapshot.topLifts.map((lift) {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 14),
@@ -165,7 +165,7 @@ class ProgressScreen extends ConsumerWidget {
                   }).toList(),
                 ),
                 ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                   children: [
                     PageSection(
                       title: l10n.weeklyVolume,

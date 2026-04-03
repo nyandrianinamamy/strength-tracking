@@ -47,7 +47,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
       children: [
         Row(
           children: [
