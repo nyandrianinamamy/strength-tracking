@@ -10,7 +10,7 @@ import 'package:training_engine/training_engine.dart';
 
 class SmartPlannerState {
   const SmartPlannerState({
-    this.selectedDays = const [],
+    this.selectedDays = const {},
     this.goal = HypertrophyGoal.hypertrophy,
     this.maxDurationMinutes = 60,
     this.preferredExercises = const [],
@@ -20,10 +20,9 @@ class SmartPlannerState {
     this.editedExerciseKeys = const {},
   });
 
-  /// ISO weekday list (1 = Monday … 7 = Sunday). Values are 0-based if
-  /// the planner convention uses 0 = Monday; the controller accepts whatever
-  /// the caller uses – it just stores and forwards them to the engine.
-  final List<int> selectedDays;
+  /// Selected training days. Values follow the engine convention
+  /// (0 = Sunday, 1 = Monday, etc.).
+  final Set<int> selectedDays;
 
   final HypertrophyGoal goal;
 
@@ -39,7 +38,7 @@ class SmartPlannerState {
   final int wizardStep;
 
   /// Keys of exercises that the user manually edited, encoded as
-  /// "<sessionIndex>-<exerciseIndex>".
+  /// "<sessionIndex>:<exerciseIndex>".
   final Set<String> editedExerciseKeys;
 
   // ---------------------------------------------------------------------------
@@ -50,7 +49,7 @@ class SmartPlannerState {
   /// or null when no days are selected.
   SplitType? get detectedSplit {
     if (selectedDays.isEmpty) return null;
-    return selectSplit(selectedDays);
+    return selectSplit(selectedDays.toList());
   }
 
   // ---------------------------------------------------------------------------
@@ -58,7 +57,7 @@ class SmartPlannerState {
   // ---------------------------------------------------------------------------
 
   SmartPlannerState copyWith({
-    List<int>? selectedDays,
+    Set<int>? selectedDays,
     HypertrophyGoal? goal,
     int? maxDurationMinutes,
     List<String>? preferredExercises,
@@ -102,13 +101,13 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
   // ── Wizard config mutations ───────────────────────────────────────────────
 
   void toggleDay(int day) {
-    final current = List<int>.from(state.selectedDays);
-    if (current.contains(day)) {
-      current.remove(day);
+    final days = Set<int>.from(state.selectedDays);
+    if (days.contains(day)) {
+      days.remove(day);
     } else {
-      current.add(day);
+      days.add(day);
     }
-    state = state.copyWith(selectedDays: current);
+    state = state.copyWith(selectedDays: days);
   }
 
   void setGoal(HypertrophyGoal goal) {
@@ -137,7 +136,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
     final registry = PlannerRegistryAdapter.buildRegistry(appExercises);
 
     final config = PlannerConfig(
-      availableDays: state.selectedDays,
+      availableDays: state.selectedDays.toList(),
       maxSessionDuration: Duration(minutes: state.maxDurationMinutes),
       goal: state.goal,
       preferredExercises: state.preferredExercises,
@@ -208,7 +207,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
       weekStart: plan.weekStart,
     );
 
-    final key = '$sessionIndex-$exerciseIndex';
+    final key = '$sessionIndex:$exerciseIndex';
     state = state.copyWith(
       generatedPlan: newPlan,
       editedExerciseKeys: {...state.editedExerciseKeys, key},

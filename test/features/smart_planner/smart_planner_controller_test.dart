@@ -38,7 +38,7 @@ void main() {
       final ctrl = container.read(smartPlannerControllerProvider.notifier);
 
       ctrl.toggleDay(1);
-      expect(container.read(smartPlannerControllerProvider).selectedDays, [1]);
+      expect(container.read(smartPlannerControllerProvider).selectedDays, {1});
 
       ctrl.toggleDay(3);
       expect(
@@ -50,7 +50,7 @@ void main() {
       ctrl.toggleDay(1);
       expect(
         container.read(smartPlannerControllerProvider).selectedDays,
-        [3],
+        {3},
       );
     });
 
@@ -146,6 +146,7 @@ void main() {
         stateAfter.generatedPlan!.sessions.first.exercises.first.targetSets,
         newSets,
       );
+      expect(stateAfter.editedExerciseKeys, contains('0:0'));
     });
   });
 }
