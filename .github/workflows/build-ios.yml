@@ -25,16 +25,6 @@ jobs:
       - name: Install CocoaPods dependencies
         run: cd ios && pod install
 
-      - name: Extract version from tag
-        id: version
-        run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
-          echo "number=${TAG#v}" >> "$GITHUB_OUTPUT"
-
-      - name: Build Flutter iOS (release, no-codesign)
-        run: flutter build ios --release --no-codesign --build-name=${{ steps.version.outputs.number }}
-
       - name: Setup Ruby and Fastlane
         uses: ruby/setup-ruby@v1
         with:
