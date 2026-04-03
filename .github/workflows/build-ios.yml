@@ -46,6 +46,12 @@ jobs:
           echo "MATCH_GIT_URL=${MATCH_GIT_URL}"
           git ls-remote "${MATCH_GIT_URL}"
 
+      - name: Extract version from tag
+        id: version
+        run: |
+          TAG="${GITHUB_REF#refs/tags/v}"
+          echo "number=${TAG}" >> "$GITHUB_OUTPUT"
+
       - name: Build and upload to TestFlight
         working-directory: ios
         env:
@@ -54,4 +60,5 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+          BUILD_VERSION: ${{ steps.version.outputs.number }}
         run: bundle exec fastlane beta

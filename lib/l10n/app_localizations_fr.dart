@@ -497,6 +497,16 @@ class AppLocalizationsFr extends AppLocalizations {
   String get signedInRestored => 'Connecté et données restaurées';
 
   @override
+  String get signOut => 'Se déconnecter';
+
+  @override
+  String get signOutTitle => 'Se déconnecter ?';
+
+  @override
+  String get signOutConfirm =>
+      'Vous serez déconnecté et redirigé vers l\'écran d\'accueil. Vos données restent sauvegardées dans le cloud.';
+
+  @override
   String get unitPreference => 'Unité de mesure';
 
   @override

@@ -4,6 +4,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/core/utils/force_update.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
@@ -78,23 +79,6 @@ class AccountSection extends ConsumerWidget {
                   }
                 },
               ),
-              const SizedBox(height: 12),
-              _AuthButton(
-                icon: Icons.apple,
-                label: l10n.linkApple,
-                onTap: () async {
-                  try {
-                    await authService.linkWithApple();
-                    if (context.mounted) Navigator.pop(context);
-                  } catch (e) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(SnackBar(content: Text('Failed: $e')));
-                    }
-                  }
-                },
-              ),
               const SizedBox(height: 20),
               Row(
                 children: [
@@ -126,12 +110,6 @@ class AccountSection extends ConsumerWidget {
                 label: l10n.signInGoogle,
                 onTap: () => _signInAndReplace(context, ref, 'google'),
               ),
-              const SizedBox(height: 12),
-              _AuthButton(
-                icon: Icons.apple,
-                label: l10n.signInApple,
-                onTap: () => _signInAndReplace(context, ref, 'apple'),
-              ),
             ] else ...[
               Text(
                 l10n.dataSynced,
@@ -139,6 +117,12 @@ class AccountSection extends ConsumerWidget {
                 style: Theme.of(
                   context,
                 ).textTheme.bodyMedium?.copyWith(color: context.appColors.subtleText),
+              ),
+              const SizedBox(height: 12),
+              _AuthButton(
+                icon: Icons.logout_rounded,
+                label: l10n.signOut,
+                onTap: () => _signOutAndReset(context, ref),
               ),
             ],
             const SizedBox(height: 24),
@@ -469,11 +453,8 @@ class AccountSection extends ConsumerWidget {
 
     try {
       final authService = ref.read(authServiceProvider);
-      final user = provider == 'google'
-          ? await authService.signInWithGoogle()
-          : await authService.signInWithApple();
+      final user = await authService.signInWithGoogle();
 
-      // Load data from the signed-in account's Firestore
       final repository = FirestoreAppStateRepository(userId: user.uid);
       final cloudState = await repository.load();
 
@@ -484,6 +465,51 @@ class AccountSection extends ConsumerWidget {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(l10n.signedInRestored)));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${l10n.signInFailed}: $e')));
+      }
+    }
+  }
+
+  Future<void> _signOutAndReset(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.signOutTitle),
+        content: Text(l10n.signOutConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(l10n.signOut),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      await authService.signOut();
+
+      ref.read(appStateControllerProvider.notifier).replaceState(
+        AppState.empty(),
+      );
+
+      if (context.mounted) {
+        Navigator.pop(context);
       }
     } catch (e) {
       if (context.mounted) {
