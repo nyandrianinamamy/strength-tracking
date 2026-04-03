@@ -178,6 +178,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get startTraining => 'Start Training';
 
   @override
+  String get tryWithDemoData => 'Explore with Demo Data';
+
+  @override
   String get orSignIn => 'or sign in to restore your data';
 
   @override
