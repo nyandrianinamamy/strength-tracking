@@ -305,5 +305,28 @@
 
   "archiveRoutine": "Archive Routine",
   "archiveRoutineTitle": "Archive this routine?",
-  "archiveRoutineConfirm": "The routine will be hidden from your library, but all workout history will be preserved."
+  "archiveRoutineConfirm": "The routine will be hidden from your library, but all workout history will be preserved.",
+
+  "smartPlannerTitle": "Smart Planner",
+  "generateSmartPlan": "Generate Smart Plan",
+  "smartPlanSubtitle": "AI-powered weekly training plan",
+  "trainingDays": "Training Days",
+  "goalAndDuration": "Goal & Duration",
+  "preferences": "Preferences",
+  "optional": "Optional",
+  "trainingGoal": "Training Goal",
+  "maxSessionDuration": "Max Session Duration",
+  "preferredExercises": "Preferred Exercises",
+  "preferredExercisesHint": "These will be prioritized in your plan.",
+  "excludedExercises": "Excluded Exercises",
+  "excludedExercisesHint": "These will be excluded from your plan.",
+  "generate": "Generate",
+  "regenerate": "Regenerate",
+  "adoptPlan": "Adopt Plan",
+  "yourPlan": "Your Plan",
+  "sessionsPerWeek": "{count} sessions per week",
+  "@sessionsPerWeek": { "placeholders": { "count": {} } },
+  "noAlternatives": "No alternatives available",
+  "skip": "Skip",
+  "general": "General"
 }
