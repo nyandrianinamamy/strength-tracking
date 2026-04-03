@@ -1,8 +1,13 @@
 // lib/src/features/smart_planner/smart_planner_controller.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
+import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
+import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/planner_registry_adapter.dart';
 import 'package:training_engine/training_engine.dart';
+import 'package:uuid/uuid.dart';
 
 // ---------------------------------------------------------------------------
 // State
@@ -244,6 +249,92 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
     );
 
     state = state.copyWith(generatedPlan: newPlan);
+  }
+
+  // ── Adoption ──────────────────────────────────────────────────────────────
+
+  void adopt(AppStateController appStateController) {
+    final plan = state.generatedPlan;
+    if (plan == null) return;
+
+    const uuid = Uuid();
+
+    // Map from SplitType to human-readable label
+    final splitLabel = switch (plan.splitType) {
+      SplitType.fullBody => 'Full Body',
+      SplitType.upperLower => 'Upper/Lower',
+      SplitType.pushPullLegs => 'Push/Pull/Legs',
+    };
+
+    // Day name abbreviations (0 = Sun, 1 = Mon, …, 6 = Sat)
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    // Focus name for routine name
+    String focusLabel(SessionFocus focus) => switch (focus) {
+      SessionFocus.fullBody => 'Full Body',
+      SessionFocus.push => 'Push',
+      SessionFocus.pull => 'Pull',
+      SessionFocus.legs => 'Legs',
+      SessionFocus.upper => 'Upper',
+      SessionFocus.lower => 'Lower',
+    };
+
+    // Build Routines from PlannedSessions
+    final routines = plan.sessions.map((session) {
+      final id = uuid.v4();
+      final dayName = dayNames[session.dayOfWeek % 7];
+      final name = '${focusLabel(session.focus)} — $dayName';
+
+      final exercises = [
+        for (int i = 0; i < session.exercises.length; i++)
+          RoutineExercise(
+            exerciseId: session.exercises[i].exerciseId,
+            targetSets: session.exercises[i].targetSets,
+            targetReps: session.exercises[i].targetReps,
+            restSeconds: session.exercises[i].restSeconds,
+            order: i,
+          ),
+      ];
+
+      return Routine(
+        id: id,
+        name: name,
+        category: splitLabel,
+        exercises: exercises,
+        estimatedDurationMin: session.estimatedDuration.inMinutes,
+        archived: false,
+      );
+    }).toList();
+
+    // Build RoutineGroup
+    final routineIds = routines.map((r) => r.id).toList();
+    final weekStart = plan.weekStart;
+    final groupName =
+        '$splitLabel — Week of ${_monthName(weekStart.month)} ${weekStart.day}';
+
+    final group = RoutineGroup(
+      id: uuid.v4(),
+      name: groupName,
+      routineIds: routineIds,
+      pendingRoutineIds: routineIds,
+    );
+
+    // Persist via AppStateController
+    appStateController.updateState((current) {
+      return current.copyWith(
+        routines: [...current.routines, ...routines],
+        routineGroups: [...current.routineGroups, group],
+        activeRoutineGroupId: group.id,
+      );
+    });
+  }
+
+  static String _monthName(int month) {
+    const names = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    ];
+    return names[(month - 1).clamp(0, 11)];
   }
 
   // ── Reset ─────────────────────────────────────────────────────────────────
