@@ -90,15 +90,21 @@ void main() {
       find.byKey(const ValueKey('active-workout-reps-input')),
       '6',
     );
-    await tester.enterText(
-      find.byKey(const ValueKey('active-workout-rpe-input')),
-      '8.5',
-    );
-
+    // Tap Log — RPE modal should appear
     await tester.tap(find.byKey(const ValueKey('active-workout-log-set-button')));
     await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
 
-    expect(find.textContaining('RPE 8.5'), findsOneWidget);
+    // The RPE modal is shown
+    expect(find.text('Log Set RPE'), findsOneWidget);
+    expect(find.byType(Slider), findsOneWidget);
+
+    // Accept the default RPE 8.0 and log the set
+    await tester.tap(find.text('Save & Log Set'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+
+    expect(find.textContaining('RPE 8.0'), findsWidgets);
   });
 
   testWidgets('shows an engine-backed load suggestion without app history', (

@@ -43,7 +43,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     with SingleTickerProviderStateMixin {
   final _weightController = TextEditingController();
   final _repsController = TextEditingController();
-  final _setRpeController = TextEditingController();
   final _setNoteController = TextEditingController();
   late final Timer _ticker;
   late final PageController _pageController;
@@ -152,7 +151,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     _restTimerNotificationService.cancel();
     _weightController.dispose();
     _repsController.dispose();
-    _setRpeController.dispose();
     _setNoteController.dispose();
     _pageController.dispose();
     _arrowAnimController.dispose();
@@ -1124,7 +1122,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                     controller: controller,
                     weightController: _weightController,
                     repsController: _repsController,
-                    setRpeController: _setRpeController,
                     setNoteController: _setNoteController,
                     lastExerciseId: _lastExerciseId,
                     onExerciseIdChanged: (id) => _lastExerciseId = id,
@@ -1284,6 +1281,208 @@ double? _parseOptionalRpe(String rawValue) {
   return parsed;
 }
 
+String _rpeDescription(double value) {
+  if (value >= 10) return 'Max effort. 0 reps in reserve (RIR).';
+  if (value >= 9.5) return 'Could not do more reps, but could add slightly more weight.';
+  if (value >= 9) return '1 rep in reserve (RIR).';
+  if (value >= 8.5) return '1-2 reps in reserve (RIR).';
+  if (value >= 8) return '2 reps in reserve (RIR).';
+  if (value >= 7.5) return '2-3 reps in reserve (RIR).';
+  if (value >= 7) return '3 reps in reserve (RIR).';
+  if (value >= 5) return '4-6 reps in reserve. Warm-up weight.';
+  return 'Very light effort. Active recovery.';
+}
+
+Color _rpeColor(double rpe) {
+  final intensity = (rpe - 1) / 9;
+  final hue = 220.0 * (1 - intensity);
+  return HSLColor.fromAHSL(1.0, hue, 0.9, 0.55).toColor();
+}
+
+Future<double?> showRpeModal(BuildContext context, {double? initialRpe}) {
+  return showModalBottomSheet<double>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => _RpeModalContent(initialRpe: initialRpe ?? 8.0),
+  );
+}
+
+class _RpeModalContent extends StatefulWidget {
+  const _RpeModalContent({required this.initialRpe});
+  final double initialRpe;
+
+  @override
+  State<_RpeModalContent> createState() => _RpeModalContentState();
+}
+
+class _RpeModalContentState extends State<_RpeModalContent> {
+  late double _rpe;
+
+  @override
+  void initState() {
+    super.initState();
+    _rpe = widget.initialRpe;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _rpeColor(_rpe);
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Log Set RPE',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  'Select RPE:',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  _rpe % 1 == 0
+                      ? _rpe.toInt().toString()
+                      : _rpe.toStringAsFixed(1),
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: color,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: color,
+                inactiveTrackColor: color.withValues(alpha: 0.2),
+                thumbColor: color,
+                overlayColor: color.withValues(alpha: 0.15),
+                trackHeight: 6,
+              ),
+              child: Slider(
+                value: _rpe,
+                min: 1,
+                max: 10,
+                divisions: 18,
+                onChanged: (v) => setState(() => _rpe = v),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('1', style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  )),
+                  Text('5', style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  )),
+                  Text('10', style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+                  )),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 20, color: color),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'What this means',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _rpeDescription(_rpe),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: color,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                onPressed: () => Navigator.pop(context, _rpe),
+                child: const Text(
+                  'Save & Log Set',
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 String _setTitle(CompletedSet set, String preferredUnit) {
   final baseTitle = set.durationSeconds > 0
       ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
@@ -1306,7 +1505,6 @@ class _ExercisePage extends ConsumerWidget {
     required this.controller,
     required this.weightController,
     required this.repsController,
-    required this.setRpeController,
     required this.setNoteController,
     required this.lastExerciseId,
     required this.onExerciseIdChanged,
@@ -1329,7 +1527,6 @@ class _ExercisePage extends ConsumerWidget {
   final WorkoutController controller;
   final TextEditingController weightController;
   final TextEditingController repsController;
-  final TextEditingController setRpeController;
   final TextEditingController setNoteController;
   final String? lastExerciseId;
   final ValueChanged<String> onExerciseIdChanged;
@@ -1390,14 +1587,11 @@ class _ExercisePage extends ConsumerWidget {
               : '';
           repsController.text =
               lastSet?.reps.toString() ?? '${prescription.targetReps}';
-          setRpeController.text =
-              lastSet?.rpe == null ? '' : lastSet!.rpe!.toStringAsFixed(1);
           setNoteController.clear();
         });
       } else {
         // Restore (or initialize) timed exercise state for this exercise
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          setRpeController.clear();
           onInitTimed(prescription.exerciseId, prescription.targetDurationSeconds);
         });
       }
@@ -1656,7 +1850,7 @@ class _ExercisePage extends ConsumerWidget {
                     height: 56,
                     child: FilledButton.icon(
                       key: const ValueKey('active-workout-log-set-button'),
-                      onPressed: () {
+                      onPressed: () async {
                         final rawWeight = double.tryParse(
                           weightController.text.replaceAll(',', '.'),
                         );
@@ -1667,12 +1861,10 @@ class _ExercisePage extends ConsumerWidget {
                                 preferredUnit,
                               );
                         final reps = int.tryParse(repsController.text);
-                        final rpe = _parseOptionalRpe(setRpeController.text);
-                        if (setRpeController.text.trim().isNotEmpty &&
-                            rpe == null) {
-                          return;
-                        }
                         if (weight == null || reps == null || reps <= 0) return;
+
+                        final rpe = await showRpeModal(context);
+                        if (rpe == null) return; // user dismissed
 
                         controller.logSet(
                           weightKg: weight,
@@ -1689,19 +1881,6 @@ class _ExercisePage extends ConsumerWidget {
                   ),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              key: const ValueKey('active-workout-rpe-input'),
-              controller: setRpeController,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [
-                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-              ],
-              decoration: const InputDecoration(
-                labelText: 'RPE',
-                hintText: 'Optional, 1-10',
-              ),
             ),
             const SizedBox(height: 14),
           ], // end else (strength)
