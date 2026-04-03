@@ -37,7 +37,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         'strength' => l10n.strength,
         'hypertrophy' => l10n.hypertrophy,
         'mobility' => l10n.mobility,
-        _ => raw,
+        _ => l10n.strength,
       };
     }
     final normalizedCategories = {
@@ -50,7 +50,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         'strength' => l10n.strength,
         'hypertrophy' => l10n.hypertrophy,
         'mobility' => l10n.mobility,
-        _ => key,
+        _ => l10n.strength,
       }),
     ];
     final routines = state.routines.where((routine) {

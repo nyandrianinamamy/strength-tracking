@@ -21,7 +21,7 @@ String? _displayCategory(AppLocalizations l10n, String? raw) {
     'strength' => l10n.strength,
     'hypertrophy' => l10n.hypertrophy,
     'mobility' => l10n.mobility,
-    _ => raw,
+    _ => l10n.strength,
   };
 }
 

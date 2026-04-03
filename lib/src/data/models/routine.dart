@@ -25,7 +25,7 @@ class Routine {
       case 'mobility' || 'mobilité':
         return 'mobility';
       default:
-        return category;
+        return 'strength';
     }
   }
   final List<RoutineExercise> exercises;
