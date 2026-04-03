@@ -2,6 +2,15 @@
 import 'package:flutter/material.dart';
 import 'package:training_engine/training_engine.dart';
 
+const _blue600 = Color(0xFF2563EB);
+const _slate900 = Color(0xFF0F172A);
+const _slate500 = Color(0xFF64748B);
+const _slate200 = Color(0xFFE2E8F0);
+const _slate100 = Color(0xFFF1F5F9);
+const _slate50 = Color(0xFFF8FAFC);
+const _purple600 = Color(0xFF9333EA);
+const _purple100 = Color(0xFFF3E8FF);
+
 // ---------------------------------------------------------------------------
 // Day & focus label helpers
 // ---------------------------------------------------------------------------
@@ -81,24 +90,67 @@ class SessionCard extends StatelessWidget {
     final durationMin = session.estimatedDuration.inMinutes;
     final count = session.exercises.length;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: ExpansionTile(
-        title: Text('$dayName \u2014 $focusStr'),
-        subtitle: Text('$durationMin min \u2022 $count exercises'),
-        children: [
-          for (int i = 0; i < session.exercises.length; i++)
-            _ExerciseRow(
-              exercise: session.exercises[i],
-              exerciseIndex: i,
-              sessionIndex: sessionIndex,
-              name: exerciseNameResolver(session.exercises[i].exerciseId),
-              isEdited: editedKeys.contains('$sessionIndex:$i'),
-              onUpdated: onExerciseUpdated,
-              onRemoved: onExerciseRemoved,
-              onSwapRequested: onExerciseSwapRequested,
-            ),
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _slate200),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 4,
+            offset: Offset(0, 1),
+          ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          title: Text(
+            '$dayName \u2014 $focusStr',
+            style: const TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              color: _slate900,
+            ),
+          ),
+          subtitle: Text(
+            '$durationMin min \u2022 $count exercises',
+            style: const TextStyle(
+              fontSize: 13,
+              color: _slate500,
+            ),
+          ),
+          trailing: const Icon(
+            Icons.chevron_right,
+            color: _slate500,
+          ),
+          children: [
+            Container(
+              color: _slate50,
+              child: Column(
+                children: [
+                  for (int i = 0; i < session.exercises.length; i++) ...[
+                    if (i > 0)
+                      Divider(height: 1, color: _slate200, indent: 16, endIndent: 16),
+                    _ExerciseRow(
+                      exercise: session.exercises[i],
+                      exerciseIndex: i,
+                      sessionIndex: sessionIndex,
+                      name: exerciseNameResolver(session.exercises[i].exerciseId),
+                      isEdited: editedKeys.contains('$sessionIndex:$i'),
+                      onUpdated: onExerciseUpdated,
+                      onRemoved: onExerciseRemoved,
+                      onSwapRequested: onExerciseSwapRequested,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -138,29 +190,30 @@ class _ExerciseRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final subtitleParts = <InlineSpan>[
       TextSpan(
         text:
             '${exercise.targetSets}\u00d7${exercise.targetReps}'
             ' @${exercise.targetRpe.toStringAsFixed(1)}'
             ' ${exercise.restSeconds}s rest',
+        style: const TextStyle(fontSize: 12, color: _slate500),
       ),
       if (exercise.isSupersetPair) ...[
         const TextSpan(text: '  '),
         WidgetSpan(
           alignment: PlaceholderAlignment.middle,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: theme.colorScheme.secondaryContainer,
+              color: _purple100,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: Text(
+            child: const Text(
               'SS',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSecondaryContainer,
-                fontWeight: FontWeight.bold,
+              style: TextStyle(
+                color: _purple600,
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -171,9 +224,9 @@ class _ExerciseRow extends StatelessWidget {
     return Dismissible(
       key: ValueKey('exercise_$sessionIndex:$exerciseIndex'),
       direction: DismissDirection.endToStart,
-      background: ColoredBox(
-        color: theme.colorScheme.error,
-        child: const Align(
+      background: const ColoredBox(
+        color: Color(0xFFEF4444),
+        child: Align(
           alignment: Alignment.centerRight,
           child: Padding(
             padding: EdgeInsets.only(right: 16),
@@ -182,49 +235,88 @@ class _ExerciseRow extends StatelessWidget {
         ),
       ),
       onDismissed: (_) => onRemoved(exerciseIndex),
-      child: ListTile(
-        leading: isEdited
-            ? Icon(Icons.edit, size: 18, color: theme.colorScheme.primary)
-            : null,
-        title: Text(name),
-        subtitle: Text.rich(TextSpan(children: subtitleParts)),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _Stepper(
-              value: exercise.targetSets,
-              onDecrement: () => onUpdated(
-                sessionIndex: sessionIndex,
-                exerciseIndex: exerciseIndex,
-                sets: (exercise.targetSets - 1).clamp(1, 99),
-                reps: null,
-              ),
-              onIncrement: () => onUpdated(
-                sessionIndex: sessionIndex,
-                exerciseIndex: exerciseIndex,
-                sets: exercise.targetSets + 1,
-                reps: null,
-              ),
-            ),
-            const SizedBox(width: 8),
-            _Stepper(
-              value: exercise.targetReps,
-              onDecrement: () => onUpdated(
-                sessionIndex: sessionIndex,
-                exerciseIndex: exerciseIndex,
-                sets: null,
-                reps: (exercise.targetReps - 1).clamp(1, 99),
-              ),
-              onIncrement: () => onUpdated(
-                sessionIndex: sessionIndex,
-                exerciseIndex: exerciseIndex,
-                sets: null,
-                reps: exercise.targetReps + 1,
-              ),
-            ),
-          ],
-        ),
+      child: InkWell(
         onTap: () => onSwapRequested(exerciseIndex),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Leading indicator: edit icon if modified, small dot otherwise
+              SizedBox(
+                width: 20,
+                child: isEdited
+                    ? const Icon(Icons.edit, size: 16, color: _blue600)
+                    : Container(
+                        width: 6,
+                        height: 6,
+                        margin: const EdgeInsets.only(left: 7),
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _slate500,
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 10),
+              // Name + subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: _slate900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text.rich(TextSpan(children: subtitleParts)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // Steppers
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _Stepper(
+                    value: exercise.targetSets,
+                    onDecrement: () => onUpdated(
+                      sessionIndex: sessionIndex,
+                      exerciseIndex: exerciseIndex,
+                      sets: (exercise.targetSets - 1).clamp(1, 99),
+                      reps: null,
+                    ),
+                    onIncrement: () => onUpdated(
+                      sessionIndex: sessionIndex,
+                      exerciseIndex: exerciseIndex,
+                      sets: exercise.targetSets + 1,
+                      reps: null,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  _Stepper(
+                    value: exercise.targetReps,
+                    onDecrement: () => onUpdated(
+                      sessionIndex: sessionIndex,
+                      exerciseIndex: exerciseIndex,
+                      sets: null,
+                      reps: (exercise.targetReps - 1).clamp(1, 99),
+                    ),
+                    onIncrement: () => onUpdated(
+                      sessionIndex: sessionIndex,
+                      exerciseIndex: exerciseIndex,
+                      sets: null,
+                      reps: exercise.targetReps + 1,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -247,33 +339,47 @@ class _Stepper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        InkWell(
-          onTap: onDecrement,
-          borderRadius: BorderRadius.circular(4),
-          child: const Padding(
-            padding: EdgeInsets.all(4),
-            child: Icon(Icons.remove, size: 16),
+    return Container(
+      decoration: BoxDecoration(
+        color: _slate100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          InkWell(
+            onTap: onDecrement,
+            borderRadius: const BorderRadius.horizontal(
+              left: Radius.circular(8),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Icon(Icons.remove, size: 14, color: _slate500),
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Text(
-            '$value',
-            style: Theme.of(context).textTheme.bodySmall,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Text(
+              '$value',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: _slate900,
+              ),
+            ),
           ),
-        ),
-        InkWell(
-          onTap: onIncrement,
-          borderRadius: BorderRadius.circular(4),
-          child: const Padding(
-            padding: EdgeInsets.all(4),
-            child: Icon(Icons.add, size: 16),
+          InkWell(
+            onTap: onIncrement,
+            borderRadius: const BorderRadius.horizontal(
+              right: Radius.circular(8),
+            ),
+            child: const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Icon(Icons.add, size: 14, color: _slate500),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

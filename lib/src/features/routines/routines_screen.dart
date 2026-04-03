@@ -143,22 +143,65 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
         ),
         const SizedBox(height: 24),
         Card(
-          child: ListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-            leading: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
-              child: Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.tertiary),
-            ),
-            title: const Text(
-              'Generate Smart Plan',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-            subtitle: const Text('AI-powered weekly training plan'),
-            trailing: const Icon(Icons.chevron_right),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(color: context.appColors.border),
+          ),
+          elevation: 1,
+          shadowColor: Colors.black12,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
             onTap: () {
               ref.read(smartPlannerControllerProvider.notifier).reset();
               context.push('/routines/smart-planner');
             },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF3E8FF).withValues(alpha: 0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: Color(0xFF9333EA),
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Generate Smart Plan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'AI-powered weekly training plan',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right,
+                    color: Color(0xFF64748B),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 14),

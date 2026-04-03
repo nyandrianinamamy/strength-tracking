@@ -28,7 +28,7 @@ void main() {
   group('SmartPlannerScreen integration', () {
     testWidgets('full flow: pick days → set goal → generate → adopt',
         (tester) async {
-      // Use a very tall surface so Stepper controls always fall within viewport.
+      // Use a very tall surface so all controls always fall within viewport.
       tester.view.physicalSize = const Size(800, 2400);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -49,11 +49,7 @@ void main() {
       await tester.tap(find.text('Fri'));
       await tester.pumpAndSettle();
 
-      // Tap the "Next" FilledButton to advance to step 2.
-      // The Stepper's AnimatedCrossFade puts the active step's content in
-      // the top child, which has IgnorePointer(ignoring: false).
-      // We tap the first "Next" button — it may emit a warnIfMissed warning
-      // but still delivers the tap to the underlying gesture detector.
+      // Tap the single "Next" FilledButton to advance to step 2.
       await tester.tap(find.widgetWithText(FilledButton, 'Next').first);
       await tester.pumpAndSettle();
 
@@ -63,22 +59,13 @@ void main() {
       expect(find.text('Training Goal'), findsOneWidget);
 
       // Tap "Next" to advance to step 3.
-      // Now currentStep == 1; step 1's controls are in the AnimatedCrossFade
-      // topChild. The .first "Next" is step 0's (collapsed, IgnorePointer).
-      // Step 1's controls are second; use the Stepper's onStepContinue via
-      // the details.onStepContinue callback to simulate the tap correctly.
-      // Since we know step 1's controls button is the second "Next", use
-      // index 1 (at(1)).
-      final nextFinders = find.widgetWithText(FilledButton, 'Next');
-      await tester.tap(nextFinders.at(1));
+      await tester.tap(find.widgetWithText(FilledButton, 'Next').first);
       await tester.pumpAndSettle();
 
       // ── Step 3: Preferences → Generate ───────────────────────────────────
 
       // We should now be on step 3 (index 2). Tap "Generate".
-      // Step 2's controls are the third "Generate" button (index 2).
-      final generateFinders = find.widgetWithText(FilledButton, 'Generate');
-      await tester.tap(generateFinders.at(2));
+      await tester.tap(find.widgetWithText(FilledButton, 'Generate').first);
       await tester.pumpAndSettle();
 
       // ── Preview mode ──────────────────────────────────────────────────────

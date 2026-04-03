@@ -4,6 +4,11 @@ import 'package:training_engine/training_engine.dart';
 
 import 'session_card.dart';
 
+const _blue600 = Color(0xFF2563EB);
+const _slate900 = Color(0xFF0F172A);
+const _slate500 = Color(0xFF64748B);
+const _slate200 = Color(0xFFE2E8F0);
+
 // ---------------------------------------------------------------------------
 // Split type label helper
 // ---------------------------------------------------------------------------
@@ -74,75 +79,111 @@ class PlanPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final sessionCount = plan.sessions.length;
 
-    return ListView(
+    return Column(
       children: [
-        // ---------------------------------------------------------------
-        // Header
-        // ---------------------------------------------------------------
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-          child: Text(
-            _splitLabel(plan.splitType),
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          child: Text(
-            '$sessionCount sessions per week',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-
-        // ---------------------------------------------------------------
-        // Session cards
-        // ---------------------------------------------------------------
-        for (int i = 0; i < plan.sessions.length; i++)
-          SessionCard(
-            session: plan.sessions[i],
-            sessionIndex: i,
-            exerciseNameResolver: exerciseNameResolver,
-            editedKeys: editedKeys,
-            onExerciseUpdated: onExerciseUpdated,
-            onExerciseRemoved: (exerciseIndex) => onExerciseRemoved(
-              sessionIndex: i,
-              exerciseIndex: exerciseIndex,
-            ),
-            onExerciseSwapRequested: (exerciseIndex) =>
-                onExerciseSwapRequested(
-              sessionIndex: i,
-              exerciseIndex: exerciseIndex,
-            ),
-          ),
-
-        // ---------------------------------------------------------------
-        // Action row
-        // ---------------------------------------------------------------
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-          child: Row(
+        Expanded(
+          child: ListView(
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onRegenerate,
-                  child: const Text('Regenerate'),
+              // ---------------------------------------------------------------
+              // Header
+              // ---------------------------------------------------------------
+              Container(
+                width: double.infinity,
+                color: Colors.white,
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _splitLabel(plan.splitType),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                        color: _slate900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$sessionCount sessions per week',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: _slate500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: onAdopt,
-                  child: const Text('Adopt Plan'),
+              const Divider(height: 1, color: _slate200),
+              const SizedBox(height: 8),
+
+              // ---------------------------------------------------------------
+              // Session cards
+              // ---------------------------------------------------------------
+              for (int i = 0; i < plan.sessions.length; i++)
+                SessionCard(
+                  session: plan.sessions[i],
+                  sessionIndex: i,
+                  exerciseNameResolver: exerciseNameResolver,
+                  editedKeys: editedKeys,
+                  onExerciseUpdated: onExerciseUpdated,
+                  onExerciseRemoved: (exerciseIndex) => onExerciseRemoved(
+                    sessionIndex: i,
+                    exerciseIndex: exerciseIndex,
+                  ),
+                  onExerciseSwapRequested: (exerciseIndex) =>
+                      onExerciseSwapRequested(
+                    sessionIndex: i,
+                    exerciseIndex: exerciseIndex,
+                  ),
                 ),
-              ),
+
+              const SizedBox(height: 8),
             ],
+          ),
+        ),
+
+        // ---------------------------------------------------------------
+        // Action row — fixed at bottom with SafeArea
+        // ---------------------------------------------------------------
+        SafeArea(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              border: Border(top: BorderSide(color: _slate200)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: onRegenerate,
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: const Text('Regenerate'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: _slate900,
+                      side: const BorderSide(color: _slate200, width: 1.5),
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: onAdopt,
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: const Text('Adopt Plan'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _blue600,
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

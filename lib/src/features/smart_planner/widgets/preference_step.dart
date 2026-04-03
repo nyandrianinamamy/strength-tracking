@@ -1,6 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 
+const _blue600 = Color(0xFF2563EB);
+const _blue50 = Color(0xFFEFF6FF);
+const _red500 = Color(0xFFEF4444);
+const _red50 = Color(0xFFFEF2F2);
+const _slate900 = Color(0xFF0F172A);
+const _slate600 = Color(0xFF475569);
+const _slate200 = Color(0xFFE2E8F0);
+const _slate50 = Color(0xFFF8FAFC);
+
 /// A widget that shows two multi-select lists: preferred exercises and
 /// excluded exercises. Selecting an exercise in one list automatically
 /// removes it from the other (mutual exclusion).
@@ -48,57 +57,111 @@ class PreferenceStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-          child: Text(
-            'Preferred Exercises',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
-          ),
+        // ── Preferred exercises ──────────────────────────────────────────
+        // Section header — text matches test expectation ("Preferred Exercises")
+        _SectionHeader(
+          label: 'Preferred Exercises',
+          color: _blue600,
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+        const SizedBox(height: 4),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
           child: Text(
             'These exercises will be prioritised in your plan.',
-            style: theme.textTheme.bodySmall,
+            style: TextStyle(fontSize: 12, color: _slate600),
           ),
         ),
-        for (final exercise in exercises)
-          CheckboxListTile(
-            key: ValueKey('preferred_${exercise.id}'),
-            title: Text(exercise.name),
-            value: preferredIds.contains(exercise.id),
-            onChanged: (_) => _togglePreferred(exercise.id),
+        Container(
+          decoration: BoxDecoration(
+            color: _slate50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _slate200),
           ),
-        const Divider(height: 32),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
-          child: Text(
-            'Excluded Exercises',
-            style: theme.textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.bold),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (final exercise in exercises)
+                CheckboxListTile(
+                  key: ValueKey('preferred_${exercise.id}'),
+                  title: Text(exercise.name),
+                  value: preferredIds.contains(exercise.id),
+                  onChanged: (_) => _togglePreferred(exercise.id),
+                  activeColor: _blue600,
+                  checkboxShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  tileColor: preferredIds.contains(exercise.id)
+                      ? _blue50
+                      : Colors.transparent,
+                ),
+            ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+
+        const SizedBox(height: 24),
+
+        // ── Excluded exercises ───────────────────────────────────────────
+        _SectionHeader(
+          label: 'Excluded Exercises',
+          color: _red500,
+        ),
+        const SizedBox(height: 4),
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8),
           child: Text(
             'These exercises will never appear in your plan.',
-            style: theme.textTheme.bodySmall,
+            style: TextStyle(fontSize: 12, color: _slate600),
           ),
         ),
-        for (final exercise in exercises)
-          CheckboxListTile(
-            key: ValueKey('excluded_${exercise.id}'),
-            title: Text(exercise.name),
-            value: excludedIds.contains(exercise.id),
-            onChanged: (_) => _toggleExcluded(exercise.id),
+        Container(
+          decoration: BoxDecoration(
+            color: _slate50,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: _slate200),
           ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              for (final exercise in exercises)
+                CheckboxListTile(
+                  key: ValueKey('excluded_${exercise.id}'),
+                  title: Text(exercise.name),
+                  value: excludedIds.contains(exercise.id),
+                  onChanged: (_) => _toggleExcluded(exercise.id),
+                  activeColor: _red500,
+                  checkboxShape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                  tileColor: excludedIds.contains(exercise.id)
+                      ? _red50
+                      : Colors.transparent,
+                ),
+            ],
+          ),
+        ),
       ],
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label,
+      style: TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w700,
+        color: color,
+      ),
     );
   }
 }
