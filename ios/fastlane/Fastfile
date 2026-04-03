@@ -49,6 +49,14 @@ platform :ios do
       bundle_identifier: "dev.mamy-r.kotrana.watchkitapp",
     )
 
+    # Set version from tag (CI passes BUILD_VERSION env var)
+    if ENV["BUILD_VERSION"]
+      increment_version_number(
+        version_number: ENV["BUILD_VERSION"],
+        xcodeproj: "Runner.xcodeproj",
+      )
+    end
+
     # Build the Xcode archive with proper signing
     build_app(
       workspace: "Runner.xcworkspace",
