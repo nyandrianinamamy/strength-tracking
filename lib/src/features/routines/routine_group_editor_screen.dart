@@ -5,7 +5,6 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
-import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
