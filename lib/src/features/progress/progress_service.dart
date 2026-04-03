@@ -7,6 +7,7 @@ import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
+import 'package:training_engine/training_engine.dart' show compositeE1rm;
 
 final progressServiceProvider = Provider<ProgressService>((ref) {
   return ProgressService();
@@ -296,7 +297,12 @@ class ProgressService {
   }
 
   double _estimatedOneRepMax(CompletedSet set) {
-    return set.weightKg * (1 + (set.reps / 30));
+    if (set.reps <= 0 || set.weightKg <= 0) return 0;
+    return compositeE1rm(
+      weight: set.weightKg,
+      reps: set.reps,
+      rpe: set.rpe ?? 8.0,
+    );
   }
 
   List<ExercisePersonalRecord> _personalRecords(AppState state) {
