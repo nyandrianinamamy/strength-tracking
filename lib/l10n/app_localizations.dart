@@ -428,6 +428,12 @@ abstract class AppLocalizations {
   /// **'Start Training'**
   String get startTraining;
 
+  /// No description provided for @tryWithDemoData.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore with Demo Data'**
+  String get tryWithDemoData;
+
   /// No description provided for @orSignIn.
   ///
   /// In en, this message translates to:

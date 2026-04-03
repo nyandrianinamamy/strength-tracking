@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -68,6 +69,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         preferredUnit: _selectedUnit,
       ),
     );
+    context.go('/');
+  }
+
+  void _loadDemoData() {
+    final demoState = DemoSeedData.initialState();
+    ref.read(appStateControllerProvider.notifier).replaceState(demoState);
     context.go('/');
   }
 
@@ -144,6 +151,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   ),
                 ),
                 child: Text(l10n.next),
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _loadDemoData,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                icon: const Icon(Icons.play_circle_outline),
+                label: Text(l10n.tryWithDemoData),
               ),
             ),
             const SizedBox(height: 40),
