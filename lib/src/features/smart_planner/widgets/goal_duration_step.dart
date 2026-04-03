@@ -127,33 +127,42 @@ class _GoalSegmentedButton extends StatelessWidget {
         children: [
           for (final (value, label) in _options)
             Expanded(
-              child: GestureDetector(
-                onTap: () => onGoalChanged(value),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 150),
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: goal == value ? Colors.white : Colors.transparent,
+              child: Semantics(
+                selected: goal == value,
+                button: true,
+                label: label,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => onGoalChanged(value),
                     borderRadius: BorderRadius.circular(9),
-                    boxShadow: goal == value
-                        ? [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 4,
-                              offset: const Offset(0, 1),
-                            ),
-                          ]
-                        : null,
-                  ),
-                  child: Text(
-                    label,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: goal == value
-                          ? FontWeight.w700
-                          : FontWeight.w500,
-                      color: goal == value ? _slate900 : _slate600,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        color: goal == value ? Colors.white : Colors.transparent,
+                        borderRadius: BorderRadius.circular(9),
+                        boxShadow: goal == value
+                            ? [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.08),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Text(
+                        label,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: goal == value
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          color: goal == value ? _slate900 : _slate600,
+                        ),
+                      ),
                     ),
                   ),
                 ),
