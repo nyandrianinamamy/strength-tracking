@@ -174,8 +174,14 @@ Future<void> completeQuickWorkout(
     await tester.pump(const Duration(milliseconds: 100));
   }
 
-  // Tap LOG (l10n: "LOG")
+  // Tap LOG (l10n: "LOG") — opens RPE modal
   await tester.tap(find.text('LOG'));
+  for (int i = 0; i < 15; i++) {
+    await tester.pump(const Duration(milliseconds: 100));
+  }
+
+  // RPE modal: accept default RPE and tap "Save & Log Set"
+  await tester.tap(find.text('Save & Log Set'));
   for (int i = 0; i < 10; i++) {
     await tester.pump(const Duration(milliseconds: 100));
   }

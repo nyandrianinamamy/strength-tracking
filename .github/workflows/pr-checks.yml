@@ -21,12 +21,16 @@ jobs:
           cache: true
 
       - run: flutter pub get
+      - run: cd packages/training_engine && dart pub get
 
       - name: Analyze
         run: flutter analyze --no-fatal-infos
 
-      - name: Unit tests
+      - name: Unit tests (app)
         run: flutter test
+
+      - name: Unit tests (training_engine)
+        run: cd packages/training_engine && dart test
 
   e2e:
     name: E2E Tests

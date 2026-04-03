@@ -1,8 +1,13 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_controller.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 
 final workoutControllerProvider = Provider<WorkoutController>(
   WorkoutController.new,
@@ -20,6 +25,7 @@ class WorkoutController {
     required double weightKg,
     required int reps,
     String note = '',
+    double? rpe,
   }) {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
@@ -48,6 +54,7 @@ class WorkoutController {
       reps: reps,
       completedAt: DateTime.now(),
       note: note,
+      rpe: rpe,
     );
 
     var nextExerciseIndex = session.currentExerciseIndex;
@@ -144,6 +151,8 @@ class WorkoutController {
     double? weightKg,
     int? reps,
     int? durationSeconds,
+    double? rpe,
+    bool clearRpe = false,
   }) {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
@@ -155,6 +164,8 @@ class WorkoutController {
           weightKg: weightKg ?? s.weightKg,
           reps: reps ?? s.reps,
           durationSeconds: durationSeconds ?? s.durationSeconds,
+          rpe: rpe,
+          clearRpe: clearRpe,
         );
       }
       return s;
@@ -231,6 +242,7 @@ class WorkoutController {
       rpe: rpe ?? session.rpe ?? 8.0,
     );
 
+    unawaited(_syncTrainingEngine(updatedSession));
     _persistSession(updatedSession);
     _ref
         .read(routineGroupControllerProvider)
@@ -342,5 +354,24 @@ class WorkoutController {
                 .toList(),
           ),
         );
+  }
+
+  Future<void> _syncTrainingEngine(WorkoutSession session) async {
+    if (session.completedSets.isEmpty) {
+      return;
+    }
+
+    try {
+      final adapter = _ref.read(trainingEngineAdapterProvider);
+      final engineSession = adapter.toEngineSession(session);
+      if (engineSession == null) {
+        return;
+      }
+      await _ref
+          .read(trainingEngineControllerProvider)
+          .ingestSession(engineSession);
+    } catch (error) {
+      debugPrint('Failed to sync completed workout into training engine: $error');
+    }
   }
 }

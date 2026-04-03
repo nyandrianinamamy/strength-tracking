@@ -10,6 +10,7 @@ import 'package:strength_training_tracker/src/features/progress/progress_service
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_card.dart';
+import 'package:strength_training_tracker/src/features/dashboard/training_readiness_card.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -28,7 +29,7 @@ class DashboardScreen extends ConsumerWidget {
     final appColors = context.appColors;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
       children: [
         // Step 1: Profile header
         Row(
@@ -190,7 +191,17 @@ class DashboardScreen extends ConsumerWidget {
           },
         ),
         const SizedBox(height: 20),
-        const PageSection(title: 'Muscle Fatigue', child: MuscleHeatmapCard()),
+        PageSection(
+          title: 'Muscle Fatigue',
+          action: TextButton.icon(
+            onPressed: () => context.push('/debug/training-engine'),
+            icon: const Icon(Icons.science_outlined),
+            label: const Text('Engine Debug'),
+          ),
+          child: const MuscleHeatmapCard(),
+        ),
+        const SizedBox(height: 20),
+        const TrainingReadinessCard(),
         const SizedBox(height: 28),
 
         // Step 3: Next Workout card
@@ -250,7 +261,11 @@ class DashboardScreen extends ConsumerWidget {
                               ? l10n.createRoutineToStart
                               : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
                           style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: colorScheme.onPrimary.withValues(alpha: 0.7)),
+                              ?.copyWith(
+                                color: colorScheme.onPrimary.withValues(
+                                  alpha: 0.7,
+                                ),
+                              ),
                         ),
                       ),
                     ],
@@ -304,7 +319,9 @@ class DashboardScreen extends ConsumerWidget {
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: colorScheme.onPrimary,
-                        side: BorderSide(color: colorScheme.primary.withValues(alpha: 0.6)),
+                        side: BorderSide(
+                          color: colorScheme.primary.withValues(alpha: 0.6),
+                        ),
                         minimumSize: const Size.fromHeight(48),
                       ),
                       onPressed: nextRoutine == null
@@ -383,7 +400,9 @@ class DashboardScreen extends ConsumerWidget {
                               l10n.volume,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: colorScheme.onSurface.withValues(alpha: 0.54),
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.54,
+                                ),
                               ),
                             ),
                           ],
@@ -399,7 +418,7 @@ class DashboardScreen extends ConsumerWidget {
         PageSection(
           title: l10n.workoutFrequency,
           child: WorkoutFrequencyCalendar(
-            frequency: snapshot.monthFrequency,
+            sessions: snapshot.calendarSessions,
             onDateTap: (date, count) {
               // Find workouts on this date
               final dayWorkouts = state.completedSessions.where((session) {
@@ -539,7 +558,9 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                         trailing: record.isTimed
                             ? Text(
-                                AppFormatters.duration(Duration(seconds: record.durationSeconds)),
+                                AppFormatters.duration(
+                                  Duration(seconds: record.durationSeconds),
+                                ),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),

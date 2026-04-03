@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/dashboard/persistent_start_session.dart';
+
 class AppShellScaffold extends StatefulWidget {
   const AppShellScaffold({
     super.key,
@@ -110,11 +112,21 @@ class _AppShellScaffoldState extends State<AppShellScaffold>
 
     return Scaffold(
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: animatedChild,
-          ),
+        child: Stack(
+          children: [
+            Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 600),
+                child: animatedChild,
+              ),
+            ),
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: PersistentStartSession(),
+            ),
+          ],
         ),
       ),
       bottomNavigationBar: NavigationBar(

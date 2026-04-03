@@ -6,6 +6,7 @@ import 'package:strength_training_tracker/src/features/exercises/exercise_editor
 import 'package:strength_training_tracker/src/features/exercises/exercises_screen.dart';
 import 'package:strength_training_tracker/src/features/onboarding/onboarding_screen.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_screen.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_debug_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_groups_screen.dart';
@@ -40,27 +41,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: '/',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: DashboardScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: DashboardScreen()),
           ),
           GoRoute(
             path: '/routines',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: RoutinesScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: RoutinesScreen()),
           ),
           GoRoute(
             path: '/exercises',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ExercisesScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ExercisesScreen()),
           ),
           GoRoute(
             path: '/progress',
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ProgressScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProgressScreen()),
+          ),
+          GoRoute(
+            path: '/debug/training-engine',
+            builder: (context, state) => const TrainingEngineDebugScreen(),
           ),
         ],
       ),
@@ -78,9 +79,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/routine-groups/:groupId/edit',
-        builder: (context, state) => RoutineGroupEditorScreen(
-          groupId: state.pathParameters['groupId'],
-        ),
+        builder: (context, state) =>
+            RoutineGroupEditorScreen(groupId: state.pathParameters['groupId']),
       ),
       GoRoute(
         path: '/routine/:routineId/edit',

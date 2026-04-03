@@ -9,14 +9,18 @@ import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 
 class AppBootstrapResult {
   const AppBootstrapResult({
     required this.repository,
+    required this.trainingEngineStateRepository,
     required this.initialState,
     required this.auth,
   });
   final AppStateRepository repository;
+  final TrainingEngineStateRepository trainingEngineStateRepository;
   final AppState initialState;
   final FirebaseAuth auth;
 }
@@ -26,6 +30,7 @@ Future<AppBootstrapResult> initializeApp({
   FirebaseAuth? auth,
 }) async {
   AppStateRepository repository;
+  late TrainingEngineStateRepository trainingEngineStateRepository;
   AppState initialState;
   final injectedAuth = auth;
 
@@ -59,6 +64,8 @@ Future<AppBootstrapResult> initializeApp({
 
     // Migrate from SharedPreferences if data exists
     final preferences = await SharedPreferences.getInstance();
+    trainingEngineStateRepository =
+        SharedPreferencesTrainingEngineStateRepository(preferences);
     const migrationKey = 'strength_training_tracker_state_v1';
     final localData = preferences.getString(migrationKey);
     if (localData != null && localData.isNotEmpty) {
@@ -83,6 +90,7 @@ Future<AppBootstrapResult> initializeApp({
 
     return AppBootstrapResult(
       repository: repository,
+      trainingEngineStateRepository: trainingEngineStateRepository,
       initialState: initialState,
       auth: firebaseAuth,
     );
@@ -90,6 +98,8 @@ Future<AppBootstrapResult> initializeApp({
     // Fallback to SharedPreferences if Firebase fails
     debugPrint('Firebase init failed, falling back to local storage: $e');
     final preferences = await SharedPreferences.getInstance();
+    trainingEngineStateRepository =
+        SharedPreferencesTrainingEngineStateRepository(preferences);
     repository = SharedPreferencesAppStateRepository(preferences);
     initialState = await repository.load();
 
@@ -102,6 +112,7 @@ Future<AppBootstrapResult> initializeApp({
 
     return AppBootstrapResult(
       repository: repository,
+      trainingEngineStateRepository: trainingEngineStateRepository,
       initialState: initialState,
       auth: injectedAuth ?? FirebaseAuth.instance,
     );
@@ -113,6 +124,9 @@ ProviderContainer buildContainer(AppBootstrapResult result) {
     overrides: [
       appStateRepositoryProvider.overrideWithValue(result.repository),
       initialAppStateProvider.overrideWithValue(result.initialState),
+      trainingEngineStateRepositoryProvider.overrideWithValue(
+        result.trainingEngineStateRepository,
+      ),
       authServiceProvider.overrideWithValue(AuthService(result.auth)),
     ],
   );
