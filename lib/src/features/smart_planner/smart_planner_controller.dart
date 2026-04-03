@@ -259,7 +259,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
 
     const uuid = Uuid();
 
-    // Map from SplitType to human-readable label
+    // Map from SplitType to human-readable label (for group name only)
     final splitLabel = switch (plan.splitType) {
       SplitType.fullBody => 'Full Body',
       SplitType.upperLower => 'Upper/Lower',
@@ -278,6 +278,50 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
       SessionFocus.upper => 'Upper',
       SessionFocus.lower => 'Lower',
     };
+
+    // Collect all exercise IDs used in the plan
+    final usedExerciseIds = <String>{};
+    for (final session in plan.sessions) {
+      for (final ex in session.exercises) {
+        usedExerciseIds.add(ex.exerciseId);
+      }
+    }
+
+    // Find exercise IDs that don't exist in AppState and create Exercise
+    // records from the engine registry so downstream screens can resolve them.
+    final currentState = appStateController.state;
+    final existingIds = currentState.exercises.map((e) => e.id).toSet();
+    final missingIds = usedExerciseIds.difference(existingIds);
+    final newExercises = <Exercise>[];
+
+    if (missingIds.isNotEmpty) {
+      final registry = PlannerRegistryAdapter.buildRegistry(
+        currentState.exercises,
+      );
+      for (final id in missingIds) {
+        final engineEx = registry.lookup(id);
+        if (engineEx == null) continue;
+
+        final primaryMuscles = engineEx.muscleMap
+            .where((m) => m.role == MuscleRole.primary)
+            .map((m) => m.muscleId)
+            .toList();
+        final secondaryMuscles = engineEx.muscleMap
+            .where((m) => m.role != MuscleRole.primary)
+            .map((m) => m.muscleId)
+            .toList();
+
+        newExercises.add(Exercise(
+          id: engineEx.id,
+          name: engineEx.name,
+          primaryMuscles: primaryMuscles,
+          secondaryMuscles: secondaryMuscles,
+          equipment: [engineEx.equipment.name],
+          instructions: '',
+          archived: false,
+        ));
+      }
+    }
 
     // Build Routines from PlannedSessions
     final routines = plan.sessions.map((session) {
@@ -299,7 +343,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
       return Routine(
         id: id,
         name: name,
-        category: splitLabel,
+        category: 'Strength',
         exercises: exercises,
         estimatedDurationMin: session.estimatedDuration.inMinutes,
         archived: false,
@@ -322,6 +366,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
     // Persist via AppStateController
     appStateController.updateState((current) {
       return current.copyWith(
+        exercises: [...current.exercises, ...newExercises],
         routines: [...current.routines, ...routines],
         routineGroups: [...current.routineGroups, group],
         activeRoutineGroupId: group.id,

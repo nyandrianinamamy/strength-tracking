@@ -117,9 +117,9 @@ void main() {
         final appState = container.read(appStateControllerProvider);
         expect(appState.routines, hasLength(3));
 
-        // All routines should have category "Push/Pull/Legs"
+        // All routines should have category "Strength" (compatible with editor)
         for (final routine in appState.routines) {
-          expect(routine.category, equals('Push/Pull/Legs'));
+          expect(routine.category, equals('Strength'));
         }
 
         // Group name should contain split label and "Week of"
@@ -206,6 +206,52 @@ void main() {
         final secondState = container.read(appStateControllerProvider);
         expect(secondState.routines, hasLength(6));
         expect(secondState.routineGroups, hasLength(2));
+      },
+    );
+
+    test(
+      '6. adopt() creates Exercise records for engine-default exercise IDs',
+      () {
+        final container = _buildContainer();
+        addTearDown(container.dispose);
+
+        final planner =
+            container.read(smartPlannerControllerProvider.notifier);
+        final appStateCtrl =
+            container.read(appStateControllerProvider.notifier);
+
+        // Start with empty exercises — planner will use engine defaults
+        planner.toggleDay(1);
+        planner.generatePlan([]);
+
+        final plannerState = container.read(smartPlannerControllerProvider);
+        final plannedExerciseIds = plannerState.generatedPlan!.sessions
+            .expand((s) => s.exercises)
+            .map((e) => e.exerciseId)
+            .toSet();
+
+        planner.adopt(appStateCtrl);
+
+        final appState = container.read(appStateControllerProvider);
+
+        // Every exercise ID used in routines should be resolvable
+        for (final routine in appState.routines) {
+          for (final re in routine.exercises) {
+            final found = appState.exerciseById(re.exerciseId);
+            expect(
+              found,
+              isNotNull,
+              reason: 'Exercise ${re.exerciseId} should exist in AppState',
+            );
+          }
+        }
+
+        // New Exercise records should have been created
+        expect(appState.exercises, isNotEmpty);
+        expect(
+          appState.exercises.map((e) => e.id).toSet(),
+          containsAll(plannedExerciseIds),
+        );
       },
     );
   });
