@@ -336,8 +336,6 @@ class _StepperIndicator extends StatelessWidget {
 
   final int currentStep;
 
-  static const _stepTitles = ['Days', 'Goal', 'Prefs'];
-
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -443,7 +441,7 @@ class _Step1Content extends StatelessWidget {
         const SizedBox(height: 20),
         DayPicker(
           selectedDays: selectedDays,
-          onDayToggled: notifier.toggleDay as ValueChanged<int>,
+          onDayToggled: notifier.toggleDay,
           splitLabel: null, // We render it ourselves below
         ),
         if (splitLabel != null) ...[

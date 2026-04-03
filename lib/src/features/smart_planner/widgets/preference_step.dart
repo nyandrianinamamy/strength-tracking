@@ -5,7 +5,6 @@ const _blue600 = Color(0xFF2563EB);
 const _blue50 = Color(0xFFEFF6FF);
 const _red500 = Color(0xFFEF4444);
 const _red50 = Color(0xFFFEF2F2);
-const _slate900 = Color(0xFF0F172A);
 const _slate600 = Color(0xFF475569);
 const _slate200 = Color(0xFFE2E8F0);
 const _slate50 = Color(0xFFF8FAFC);

@@ -2,7 +2,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/planner_registry_adapter.dart';
-import 'package:training_engine/training_engine.dart';
 
 void main() {
   group('PlannerRegistryAdapter', () {
