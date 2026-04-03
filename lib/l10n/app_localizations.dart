@@ -1040,6 +1040,24 @@ abstract class AppLocalizations {
   /// **'Signed in and data restored'**
   String get signedInRestored;
 
+  /// No description provided for @signOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out'**
+  String get signOut;
+
+  /// No description provided for @signOutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign Out?'**
+  String get signOutTitle;
+
+  /// No description provided for @signOutConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'You will be signed out and returned to the onboarding screen. Your data remains saved in the cloud.'**
+  String get signOutConfirm;
+
   /// No description provided for @unitPreference.
   ///
   /// In en, this message translates to:

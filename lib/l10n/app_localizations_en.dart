@@ -495,6 +495,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signedInRestored => 'Signed in and data restored';
 
   @override
+  String get signOut => 'Sign Out';
+
+  @override
+  String get signOutTitle => 'Sign Out?';
+
+  @override
+  String get signOutConfirm =>
+      'You will be signed out and returned to the onboarding screen. Your data remains saved in the cloud.';
+
+  @override
   String get unitPreference => 'Unit Preference';
 
   @override

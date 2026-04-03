@@ -199,21 +199,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 label: Text(l10n.continueWithGoogle),
               ),
             ),
-            const SizedBox(height: 12),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: _isSigningIn ? null : () => _signInWith('apple'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.apple),
-                label: Text(l10n.continueWithApple),
-              ),
-            ),
             if (_isSigningIn) ...[
               const SizedBox(height: 16),
               const CircularProgressIndicator(),
