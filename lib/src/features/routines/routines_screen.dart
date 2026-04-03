@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
+import 'package:strength_training_tracker/src/features/smart_planner/smart_planner_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class RoutinesScreen extends ConsumerStatefulWidget {
@@ -125,6 +126,26 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
               setState(() => _category = v == l10n.all ? null : v),
         ),
         const SizedBox(height: 24),
+        Card(
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            leading: CircleAvatar(
+              backgroundColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.1),
+              child: Icon(Icons.auto_awesome, color: Theme.of(context).colorScheme.tertiary),
+            ),
+            title: const Text(
+              'Generate Smart Plan',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            subtitle: const Text('AI-powered weekly training plan'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () {
+              ref.read(smartPlannerControllerProvider.notifier).reset();
+              context.push('/routines/smart-planner');
+            },
+          ),
+        ),
+        const SizedBox(height: 14),
         DashedBorderCard(
           onTap: () => context.push('/routine/new'),
           child: Padding(
