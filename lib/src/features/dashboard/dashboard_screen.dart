@@ -410,6 +410,7 @@ class DashboardScreen extends ConsumerWidget {
 
               showModalBottomSheet(
                 context: context,
+                useRootNavigator: true,
                 shape: const RoundedRectangleBorder(
                   borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
                 ),
@@ -507,6 +508,10 @@ class DashboardScreen extends ConsumerWidget {
         // Step 6: Recent PRs
         PageSection(
           title: l10n.recentPrsTitle,
+          trailing: TextButton(
+            onPressed: () => context.go('/progress'),
+            child: Text(l10n.viewAll),
+          ),
           child: snapshot.recentPrs.isEmpty
               ? EmptyStateCard(title: l10n.noPrsYet, body: l10n.prsWillAppear)
               : Column(
@@ -555,7 +560,7 @@ class DashboardScreen extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    '1RM ${AppFormatters.decimal(record.estimatedOneRepMax)}',
+                                    '1RM ${AppFormatters.weight(record.estimatedOneRepMax, state.preferredUnit)}',
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: colorScheme.primary,

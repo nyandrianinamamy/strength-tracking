@@ -218,6 +218,12 @@ abstract class AppLocalizations {
   /// **'Recent PRs'**
   String get recentPrsTitle;
 
+  /// No description provided for @viewAll.
+  ///
+  /// In en, this message translates to:
+  /// **'View all'**
+  String get viewAll;
+
   /// No description provided for @noPrsYet.
   ///
   /// In en, this message translates to:

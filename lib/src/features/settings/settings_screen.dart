@@ -12,6 +12,7 @@ import 'package:strength_training_tracker/src/data/repository/app_state_reposito
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
+import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -39,6 +40,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _weightController = TextEditingController(
       text: state.weight != null ? '${state.weight}' : '',
     );
+    _syncHealthKitStatus();
+  }
+
+  /// Sync the toggle with actual HealthKit authorization status on iOS.
+  Future<void> _syncHealthKitStatus() async {
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
+    final state = ref.read(appStateControllerProvider);
+    if (!state.healthKitEnabled) return;
+    // If user had previously enabled it, verify we still have access
+    final authorized = await const HealthKitDataSource().requestAuthorization();
+    if (!authorized && mounted) {
+      ref.read(appStateControllerProvider.notifier).updateState(
+        (s) => s.copyWith(healthKitEnabled: false),
+      );
+    }
   }
 
   @override
@@ -470,12 +486,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             ),
                       ),
                       value: state.healthKitEnabled,
-                      onChanged: (enabled) {
-                        ref
-                            .read(appStateControllerProvider.notifier)
-                            .updateState(
-                              (s) => s.copyWith(healthKitEnabled: enabled),
-                            );
+                      onChanged: (enabled) async {
+                        if (enabled) {
+                          final authorized = await const HealthKitDataSource()
+                              .requestAuthorization();
+                          if (!mounted) return;
+                          ref
+                              .read(appStateControllerProvider.notifier)
+                              .updateState(
+                                (s) => s.copyWith(healthKitEnabled: authorized),
+                              );
+                        } else {
+                          ref
+                              .read(appStateControllerProvider.notifier)
+                              .updateState(
+                                (s) => s.copyWith(healthKitEnabled: false),
+                              );
+                        }
                       },
                     ),
                   ],

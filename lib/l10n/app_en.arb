@@ -21,6 +21,7 @@
   "startRoutinePrompt": "Start a routine and your recent sessions will appear here.",
   "workoutFrequency": "Workout Frequency",
   "recentPrsTitle": "Recent PRs",
+  "viewAll": "View all",
   "noPrsYet": "No PRs detected yet",
   "prsWillAppear": "Your strongest sets will surface here as soon as you complete a session.",
   "volume": "Volume",

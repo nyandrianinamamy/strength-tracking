@@ -136,6 +136,8 @@ struct TimedExerciseView: View {
                     }
                 }
                 .padding(.top, 6)
+                .padding(.bottom, 8)
+                .padding(.horizontal, 4)
             }
             .padding(.horizontal, 4)
         }

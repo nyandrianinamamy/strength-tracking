@@ -59,7 +59,6 @@ class WorkoutSummaryScreen extends ConsumerWidget {
       (total, set) => total + (set.weightKg * set.reps),
     );
     final prs = ref.read(progressServiceProvider).sessionPrs(state, sessionId);
-    final rpe = session.rpe ?? 8.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -324,78 +323,22 @@ class WorkoutSummaryScreen extends ConsumerWidget {
               }).toList(),
             ),
           ),
-          const SizedBox(height: 28),
-
-          // RPE section with restyled card
-          Card(
-            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.howDidItFeel,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'RPE ${rpe.toStringAsFixed(1)}',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Text(
-                        l10n.easy,
-                        style:
-                            Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: context.appColors.subtleText,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                      ),
-                      Expanded(
-                        child: Slider(
-                          value: rpe,
-                          min: 5,
-                          max: 10,
-                          divisions: 10,
-                          onChanged: (value) {
-                            ref
-                                .read(workoutControllerProvider)
-                                .updateRpe(sessionId, value);
-                          },
-                        ),
-                      ),
-                      Text(
-                        l10n.hard,
-                        style:
-                            Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: context.appColors.subtleText,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                      ),
-                    ],
-                  ),
-                  if (session.sessionNote.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      session.sessionNote,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: context.appColors.subtleText),
-                    ),
-                  ],
-                ],
+          if (session.sessionNote.isNotEmpty) ...[
+            const SizedBox(height: 28),
+            Card(
+              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+              child: Padding(
+                padding: const EdgeInsets.all(18),
+                child: Text(
+                  session.sessionNote,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: context.appColors.subtleText),
+                ),
               ),
             ),
-          ),
+          ],
           const SizedBox(height: 24),
 
           // Action buttons

@@ -15,6 +15,9 @@ struct StrengthExerciseView: View {
     @State private var weight: Double = 0
     @State private var reps: Int = 8
     @State private var editingWeight: Bool = true
+    @State private var lastRestAlertSecond: Int? = nil
+    @State private var lastRestAlertSetCount: Int? = nil
+    @FocusState private var crownFocused: Bool
 
     private var nextSetNumber: Int {
         exercise.completedSets.count + 1
@@ -28,6 +31,7 @@ struct StrengthExerciseView: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let restInfo = computeRestRemaining(now: context.date)
             let sessionTime = elapsedSessionTime(now: context.date)
+            let _ = playRestHapticsIfNeeded(remaining: restInfo.remaining, setCount: restInfo.setCount)
 
             VStack(spacing: 0) {
                 Spacer().frame(height: 4)
@@ -73,7 +77,7 @@ struct StrengthExerciseView: View {
                             .font(.system(size: 24, weight: .black))
                             .tracking(-1.2)
                             .foregroundColor(editingWeight ? .blue : .blue.opacity(0.5))
-                            .onTapGesture { editingWeight = true }
+                            .onTapGesture { editingWeight = true; crownFocused = true }
 
                         Text("x")
                             .font(.system(size: 14, weight: .bold))
@@ -83,9 +87,9 @@ struct StrengthExerciseView: View {
                             .font(.system(size: 24, weight: .black))
                             .tracking(-1.2)
                             .foregroundColor(!editingWeight ? .primary : .primary.opacity(0.7))
-                            .onTapGesture { editingWeight = false }
+                            .onTapGesture { editingWeight = false; crownFocused = true }
                     }
-                    .focusable(true)
+                    .focused($crownFocused)
                     .digitalCrownRotation(
                         editingWeight
                             ? Binding(
@@ -176,6 +180,8 @@ struct StrengthExerciseView: View {
                     }
                 }
                 .padding(.top, 6)
+                .padding(.bottom, 8)
+                .padding(.horizontal, 4)
             }
             .padding(.horizontal, 4)
         }
@@ -193,6 +199,24 @@ struct StrengthExerciseView: View {
             weight = exercise.suggestedWeightKg
             reps = exercise.targetReps
         }
+    }
+
+    @discardableResult
+    private func playRestHapticsIfNeeded(remaining: Int, setCount: Int) -> Bool {
+        if setCount == 0 { return false }
+        if lastRestAlertSetCount != setCount {
+            lastRestAlertSetCount = setCount
+            lastRestAlertSecond = remaining
+            return false
+        }
+        guard lastRestAlertSecond != remaining else { return false }
+        lastRestAlertSecond = remaining
+        if remaining == 3 || remaining == 2 || remaining == 1 {
+            WKInterfaceDevice.current().play(.click)
+        } else if remaining == 0 {
+            WKInterfaceDevice.current().play(.notification)
+        }
+        return true
     }
 
     /// Compute rest remaining from the last completed set's timestamp

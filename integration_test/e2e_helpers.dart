@@ -296,3 +296,30 @@ Future<void> completeQuickWorkout(
     await tester.pump(const Duration(milliseconds: 100));
   }
 }
+
+/// Scroll through available Scrollables until [text] is visible.
+///
+/// The dashboard may contain multiple Scrollable widgets (ListView, etc.)
+/// and the target text may be in any of them. This helper tries each one.
+/// Uses pump() instead of pumpAndSettle() because async providers
+/// (e.g. training readiness) can prevent settling.
+Future<void> scrollToText(WidgetTester tester, String text) async {
+  final scrollables = find.byType(Scrollable).evaluate().length;
+  for (int si = 0; si < scrollables; si++) {
+    for (int scroll = 0; scroll < 15; scroll++) {
+      if (find.text(text).evaluate().isNotEmpty) return;
+      await tester.drag(find.byType(Scrollable).at(si), const Offset(0, -400));
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+    if (find.text(text).evaluate().isNotEmpty) return;
+    // Scroll back up before trying next scrollable
+    for (int scroll = 0; scroll < 15; scroll++) {
+      await tester.drag(find.byType(Scrollable).at(si), const Offset(0, 400));
+      for (int i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+    }
+  }
+}

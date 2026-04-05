@@ -425,4 +425,161 @@ void main() {
       expect(find.text('Clear Workout History'), findsOneWidget);
     });
   });
+
+  // ── Suite 7: Issue fixes ──────────────────────────────────────────────
+  group('Issue fixes', () {
+    testWidgets('PR list shows weight unit in progress screen', (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+      await createTestExercise(tester,
+          name: 'E2E OHP', muscle: 'Deltoids');
+      await createTestRoutine(
+        tester,
+        routineName: 'E2E Shoulders',
+        exerciseName: 'E2E OHP',
+      );
+      await completeQuickWorkout(tester, weight: '60', reps: '5');
+
+      // Navigate home then to Progress
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -500));
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.tap(find.text('Finish & Go Home'));
+      await tester.pumpAndSettle();
+
+      await navigateToTab(tester, 'PROGRESS');
+
+      // The trailing 1RM value should include "kg" unit
+      expect(find.textContaining('kg'), findsWidgets);
+    });
+
+    testWidgets('dashboard Recent PRs shows View all linking to Progress',
+        (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+      await createTestExercise(tester,
+          name: 'E2E Curl', muscle: 'Chest');
+      await createTestRoutine(
+        tester,
+        routineName: 'E2E Arms',
+        exerciseName: 'E2E Curl',
+      );
+      await completeQuickWorkout(tester, weight: '20', reps: '10');
+
+      // Go home
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -500));
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+      await tester.tap(find.text('Finish & Go Home'));
+      // Use pump loops — pumpAndSettle hangs due to async readiness provider
+      for (int i = 0; i < 50; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      // Scroll to "View all" — dashboard has multiple Scrollables
+      await scrollToText(tester, 'View all');
+
+      // Verify "View all" button exists
+      expect(find.text('View all'), findsOneWidget);
+
+      // Tap it — should navigate to Progress tab
+      await tester.tap(find.text('View all'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Performance Lab'), findsOneWidget);
+    });
+
+    testWidgets('workout summary no longer shows session RPE slider',
+        (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+      await createTestExercise(tester,
+          name: 'E2E Row', muscle: 'Upper Back');
+      await createTestRoutine(
+        tester,
+        routineName: 'E2E Back Day',
+        exerciseName: 'E2E Row',
+      );
+      await completeQuickWorkout(tester, weight: '80', reps: '8');
+
+      // Now on workout summary screen
+      // Scroll through entire summary
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -600));
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      // Session RPE slider and its label should be gone
+      expect(find.text('How did it feel?'), findsNothing);
+      expect(find.text('Easy'), findsNothing);
+      expect(find.text('Hard'), findsNothing);
+      expect(find.byType(Slider), findsNothing);
+    });
+
+    testWidgets('keyboard dismisses when switching exercise pages',
+        (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+
+      // Create two exercises and a routine with both
+      await createTestExercise(tester,
+          name: 'E2E Press A', muscle: 'Chest');
+      await createTestExercise(tester,
+          name: 'E2E Press B', muscle: 'Chest');
+      await createTestRoutine(
+        tester,
+        routineName: 'E2E Two Exercise',
+        exerciseName: 'E2E Press A',
+      );
+
+      // Start workout
+      await navigateToTab(tester, 'ROUTINES');
+      await tester.tap(find.byIcon(Icons.play_arrow).first);
+      for (int i = 0; i < 30; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      // Tap weight input to gain focus
+      await tester.tap(find.byType(TextField).first);
+      for (int i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      // Verify something has focus
+      expect(FocusManager.instance.primaryFocus != null, isTrue);
+
+      // Swipe to next exercise
+      await tester.drag(
+        find.byType(PageView),
+        const Offset(-300, 0),
+      );
+      for (int i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 100));
+      }
+
+      // After swipe, focus should be cleared (unfocused)
+      final currentFocus = FocusManager.instance.primaryFocus;
+      // Either no focus or focus is on a non-text-field (e.g. the page itself)
+      final hasFocusedTextField = currentFocus?.context?.widget is EditableText;
+      expect(hasFocusedTextField, isFalse);
+    });
+  });
 }

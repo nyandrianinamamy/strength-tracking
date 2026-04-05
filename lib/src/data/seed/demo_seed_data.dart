@@ -1,3 +1,4 @@
+import 'package:training_engine/training_engine.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
@@ -382,7 +383,42 @@ class DemoSeedData {
       sessions: sessions,
       userName: 'Alex',
       activeRoutineGroupId: 'ppl_split',
+      healthKitEnabled: true,
     );
+  }
+
+  /// Returns mock sleep records for the last 7 nights.
+  static List<SleepRecord> seedSleep() {
+    final now = DateTime.now();
+    return List.generate(7, (i) {
+      final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: 7 - i));
+      // Vary total between 6.5h and 8h
+      final totalMinutes = 390 + (i * 15) % 90;
+      final deep = (totalMinutes * 0.20).round();
+      final rem = (totalMinutes * 0.22).round();
+      final core = totalMinutes - deep - rem;
+      return SleepRecord(
+        date: date,
+        totalSleep: Duration(minutes: totalMinutes),
+        deepSleep: Duration(minutes: deep),
+        remSleep: Duration(minutes: rem),
+        coreSleep: Duration(minutes: core),
+      );
+    });
+  }
+
+  /// Returns mock HRV records for the last 7 days.
+  static List<HrvRecord> seedHrv() {
+    final now = DateTime.now();
+    return List.generate(7, (i) {
+      final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: 7 - i));
+      // SDNN between 35–55 ms, resting HR between 55–65 bpm
+      return HrvRecord(
+        date: date,
+        sdnn: 35.0 + (i * 3.5) % 20,
+        restingHeartRate: 55.0 + (i * 1.5) % 10,
+      );
+    });
   }
 
   /// Returns the full list of ~60 seed exercises with translation keys.
