@@ -47,18 +47,14 @@ Future<AppBootstrapResult> initializeApp({
       await firebaseAuth.setPersistence(Persistence.LOCAL);
     }
 
-    // Sign in (anonymously if no existing session)
-    User user;
-    if (firebaseAuth.currentUser != null) {
-      user = firebaseAuth.currentUser!;
-    } else {
-      final credential = await firebaseAuth.signInAnonymously();
-      user = credential.user!;
+    // Sign in anonymously if no existing session
+    if (firebaseAuth.currentUser == null) {
+      await firebaseAuth.signInAnonymously();
     }
 
     final firestoreInstance = firestore ?? FirebaseFirestore.instance;
     repository = FirestoreAppStateRepository(
-      userId: user.uid,
+      auth: firebaseAuth,
       firestore: firestoreInstance,
     );
 

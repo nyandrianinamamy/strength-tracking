@@ -171,6 +171,8 @@
   "signOut": "Se déconnecter",
   "signOutTitle": "Se déconnecter ?",
   "signOutConfirm": "Vous serez déconnecté et redirigé vers l'écran d'accueil. Vos données restent sauvegardées dans le cloud.",
+  "signOutAnonymousTitle": "Réinitialiser le compte ?",
+  "signOutAnonymousConfirm": "Vos données actuelles seront définitivement perdues car ce compte n'est pas lié à Google ou Apple. Cette action est irréversible.",
   "unitPreference": "Unité de mesure",
   "data": "Données",
   "loadSampleData": "Charger exercices et routines d'exemple",

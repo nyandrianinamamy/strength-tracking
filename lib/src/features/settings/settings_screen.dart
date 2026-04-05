@@ -7,7 +7,6 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/core/utils/force_update.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
@@ -119,9 +118,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       final authService = ref.read(authServiceProvider);
-      final user = await authService.signInWithGoogle();
+      await authService.signInWithGoogle();
 
-      final repository = FirestoreAppStateRepository(userId: user.uid);
+      final repository = FirestoreAppStateRepository(auth: authService.firebaseAuth);
       final cloudState = await repository.load();
 
       ref.read(appStateControllerProvider.notifier).replaceState(cloudState);
@@ -142,11 +141,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _signOutAndReset() async {
     final l10n = AppLocalizations.of(context)!;
+    final isAnon = ref.read(authServiceProvider).isAnonymous;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(l10n.signOutTitle),
-        content: Text(l10n.signOutConfirm),
+        title: Text(isAnon ? l10n.signOutAnonymousTitle : l10n.signOutTitle),
+        content: Text(
+          isAnon ? l10n.signOutAnonymousConfirm : l10n.signOutConfirm,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -157,7 +159,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: Text(l10n.signOut),
+            child: Text(isAnon ? l10n.reset : l10n.signOut),
           ),
         ],
       ),
@@ -166,16 +168,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (confirmed != true || !mounted) return;
 
     try {
+      // Clear in-memory state first (no Firestore write) so there is
+      // never a moment where a valid auth session coexists with stale
+      // profile data that could be accidentally persisted.
+      ref.read(appStateControllerProvider.notifier).clearLocal();
+
       final authService = ref.read(authServiceProvider);
       await authService.signOut();
 
-      ref
-          .read(appStateControllerProvider.notifier)
-          .replaceState(AppState.empty());
+      // Create a fresh anonymous session so the Firestore-backed
+      // repository has a valid user for any post-logout saves.
+      await authService.signInAnonymously();
 
-      // Router redirect will send the user to /onboarding since userName is empty.
+      // Navigate directly to onboarding rather than relying on the
+      // router redirect (which keys off userName.isEmpty and could
+      // false-trigger if a user simply clears their display name).
       if (mounted) {
-        context.go('/');
+        context.go('/onboarding');
       }
     } catch (e) {
       if (mounted) {
@@ -561,6 +570,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.g_mobiledata,
                       label: l10n.signInGoogle,
                       onTap: () => _signInAndReplace('google'),
+                    ),
+                    const SizedBox(height: 12),
+                    _AuthButton(
+                      icon: Icons.logout_rounded,
+                      label: l10n.signOut,
+                      onTap: _signOutAndReset,
                     ),
                   ] else ...[
                     Text(

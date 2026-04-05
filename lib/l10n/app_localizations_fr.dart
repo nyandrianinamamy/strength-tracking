@@ -507,6 +507,13 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vous serez déconnecté et redirigé vers l\'écran d\'accueil. Vos données restent sauvegardées dans le cloud.';
 
   @override
+  String get signOutAnonymousTitle => 'Réinitialiser le compte ?';
+
+  @override
+  String get signOutAnonymousConfirm =>
+      'Vos données actuelles seront définitivement perdues car ce compte n\'est pas lié à Google ou Apple. Cette action est irréversible.';
+
+  @override
   String get unitPreference => 'Unité de mesure';
 
   @override
@@ -974,4 +981,55 @@ class AppLocalizationsFr extends AppLocalizations {
   String syncedDaysAgo(Object days) {
     return 'Synchronisé il y a ${days}j';
   }
+
+  @override
+  String get settings => 'Paramètres';
+
+  @override
+  String get profile => 'Profil';
+
+  @override
+  String get sex => 'Sexe';
+
+  @override
+  String get male => 'Homme';
+
+  @override
+  String get female => 'Femme';
+
+  @override
+  String get age => 'Âge';
+
+  @override
+  String get weight => 'Poids';
+
+  @override
+  String get fitnessGoal => 'Objectif';
+
+  @override
+  String get goalStrength => 'Force';
+
+  @override
+  String get goalHypertrophy => 'Hypertrophie';
+
+  @override
+  String get goalEndurance => 'Endurance';
+
+  @override
+  String get goalWeightLoss => 'Perte de poids';
+
+  @override
+  String get goalGeneralFitness => 'Forme générale';
+
+  @override
+  String get integrations => 'Intégrations';
+
+  @override
+  String get account => 'Compte';
+
+  @override
+  String get aboutYou => 'À propos de vous';
+
+  @override
+  String get years => 'ans';
 }

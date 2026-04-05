@@ -54,12 +54,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     setState(() => _isSigningIn = true);
     try {
       final authService = ref.read(authServiceProvider);
-      final user = provider == 'google'
-          ? await authService.signInWithGoogle()
-          : await authService.signInWithApple();
+      if (provider == 'google') {
+        await authService.signInWithGoogle();
+      } else {
+        await authService.signInWithApple();
+      }
 
       // Load data from the signed-in user's Firestore
-      final repository = FirestoreAppStateRepository(userId: user.uid);
+      final repository = FirestoreAppStateRepository(auth: authService.firebaseAuth);
       final cloudState = await repository.load();
 
       // Update the app state with the cloud data

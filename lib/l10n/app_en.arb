@@ -171,6 +171,8 @@
   "signOut": "Sign Out",
   "signOutTitle": "Sign Out?",
   "signOutConfirm": "You will be signed out and returned to the onboarding screen. Your data remains saved in the cloud.",
+  "signOutAnonymousTitle": "Reset Account?",
+  "signOutAnonymousConfirm": "Your current data will be permanently lost because this account is not linked to Google or Apple. This cannot be undone.",
   "unitPreference": "Unit Preference",
   "data": "Data",
   "loadSampleData": "Load Sample Exercises & Routines",
