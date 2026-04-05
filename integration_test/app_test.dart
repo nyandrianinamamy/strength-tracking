@@ -55,6 +55,8 @@ void main() {
       // Page 3: Units
       expect(find.text('KG'), findsOneWidget);
       expect(find.text('LBS'), findsOneWidget);
+      await tester.ensureVisible(find.text('Start Training'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Start Training'));
       await tester.pumpAndSettle();
 
@@ -104,7 +106,11 @@ void main() {
       await tester.pumpAndSettle();
 
       // Page 3: Units — choose LBS
+      await tester.ensureVisible(find.text('LBS'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('LBS'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Start Training'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('Start Training'));
       await tester.pumpAndSettle();
