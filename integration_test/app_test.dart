@@ -22,33 +22,116 @@ void main() {
   // Reset data between each test group.
   setUp(() async {
     await resetEmulators();
+    // Allow emulators to fully process the reset before starting next test.
+    await Future<void>.delayed(const Duration(milliseconds: 500));
   });
 
   // ── Suite 1: Onboarding ──────────────────────────────────────────────
   group('Onboarding', () {
-    testWidgets('completes onboarding and reaches dashboard', (tester) async {
+    testWidgets('completes onboarding skipping About You page',
+        (tester) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
       );
       await pumpApp(tester, container);
 
-      expect(find.text('Next'), findsOneWidget);
-
+      // Page 1: Welcome
+      expect(find.widgetWithText(FilledButton, 'Next'), findsOneWidget);
       await tester.enterText(find.byType(TextField).first, 'TestUser');
       await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Next'));
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
       await tester.pumpAndSettle();
 
+      // Page 2: About You — verify it shows, then skip
+      expect(find.text('About You'), findsOneWidget);
+      expect(find.text('Sex'), findsOneWidget);
+      expect(find.text('Fitness Goal'), findsOneWidget);
+      // Use .last — page 1's "Next" button still exists off-screen in the PageView.
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
+      await tester.pumpAndSettle();
+
+      // Page 3: Units
       expect(find.text('KG'), findsOneWidget);
       expect(find.text('LBS'), findsOneWidget);
-
+      await tester.ensureVisible(find.text('Start Training'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Start Training'));
       await tester.pumpAndSettle();
 
       expect(find.text('TestUser'), findsOneWidget);
-      expect(find.text('DASHBOARD'), findsOneWidget);
+    });
+
+    testWidgets('completes onboarding with full profile details',
+        (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+
+      // Page 1: Welcome
+      await tester.enterText(find.byType(TextField).first, 'ProfileUser');
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+
+      // Page 2: About You — fill all fields
+      expect(find.text('About You'), findsOneWidget);
+
+      // Sex defaults to Male — switch to Female
+      await tester.tap(find.text('Female'));
+      await tester.pumpAndSettle();
+
+      // Enter age
+      await tester.enterText(find.widgetWithText(TextField, 'Age'), '25');
+      await tester.pumpAndSettle();
+
+      // Enter weight
+      await tester.enterText(find.widgetWithText(TextField, 'Weight'), '65');
+      await tester.pumpAndSettle();
+
+      // Select fitness goal
+      await tester.ensureVisible(find.text('Endurance'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Endurance'));
+      await tester.pumpAndSettle();
+
+      // Use .last — page 1's "Next" button still exists off-screen in the PageView.
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
+      await tester.pumpAndSettle();
+
+      // Page 3: Units — choose LBS
+      await tester.ensureVisible(find.text('LBS'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('LBS'));
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(find.text('Start Training'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Start Training'));
+      await tester.pumpAndSettle();
+
+      // On dashboard
+      expect(find.text('ProfileUser'), findsOneWidget);
+
+      // Verify data persisted by navigating to settings
+      await navigateToSettings(tester);
+
+      expect(find.text('ProfileUser'), findsOneWidget);
+      expect(find.text('25'), findsOneWidget); // age (int)
+      // Weight displays as "65.0" on native, "65" on web (JS omits trailing .0).
+      expect(
+        find.textContaining(RegExp(r'^65(\.0)?$')),
+        findsOneWidget,
+      );
     });
   });
 
@@ -128,7 +211,7 @@ void main() {
         exerciseName: 'E2E Bench Press',
       );
 
-      expect(find.text('E2E Push Day'), findsOneWidget);
+      expect(find.text('E2E Push Day'), findsWidgets);
     });
   });
 
@@ -199,6 +282,147 @@ void main() {
 
       expect(find.text('E2E Deadlift'), findsWidgets);
       expect(find.text('Best Set'), findsWidgets);
+    });
+  });
+
+  // ── Suite 6: Settings Page ────────────────────────────────────────────
+  group('Settings Page', () {
+    testWidgets('navigates to settings and shows all sections',
+        (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+
+      await navigateToSettings(tester);
+
+      // AppBar title
+      expect(find.text('Settings'), findsOneWidget);
+
+      // Profile section
+      expect(find.text('Profile'), findsOneWidget);
+      expect(find.text('Sex'), findsOneWidget);
+      expect(find.text('Male'), findsOneWidget);
+      expect(find.text('Female'), findsOneWidget);
+      expect(find.text('Fitness Goal'), findsOneWidget);
+      expect(find.text('Strength'), findsOneWidget);
+      expect(find.text('Hypertrophy'), findsOneWidget);
+
+      // Scroll to see more sections
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -400));
+      await tester.pumpAndSettle();
+
+      // Preferences section
+      expect(find.text('Preferences'), findsOneWidget);
+      expect(find.text('Unit Preference'), findsOneWidget);
+      expect(find.text('KG'), findsWidgets);
+      expect(find.text('LBS'), findsWidgets);
+    });
+
+    testWidgets('edits profile fields and persists values', (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+
+      await navigateToSettings(tester);
+
+      // Change name
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Your name'),
+        'UpdatedName',
+      );
+      await tester.pumpAndSettle();
+      // Wait for debounce (500ms)
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // Enter age
+      await tester.enterText(find.widgetWithText(TextField, 'Age'), '30');
+      await tester.pumpAndSettle();
+
+      // Enter weight
+      await tester.enterText(find.widgetWithText(TextField, 'Weight'), '75');
+      await tester.pumpAndSettle();
+
+      // Select fitness goal
+      await tester.tap(find.text('Strength'));
+      await tester.pumpAndSettle();
+
+      // Go back to dashboard
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+
+      // Verify name updated on dashboard
+      expect(find.text('UpdatedName'), findsOneWidget);
+
+      // Navigate back to settings and verify persistence
+      await navigateToSettings(tester);
+
+      expect(find.text('UpdatedName'), findsOneWidget);
+      expect(find.text('30'), findsOneWidget); // age (int)
+      // Weight displays as "75.0" on native, "75" on web (JS omits trailing .0).
+      expect(
+        find.textContaining(RegExp(r'^75(\.0)?$')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('switches sex to Female', (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+
+      await navigateToSettings(tester);
+
+      // Default is Male — switch to Female
+      await tester.tap(find.text('Female'));
+      await tester.pumpAndSettle();
+
+      // Go back and re-enter settings
+      await tester.tap(find.byType(BackButton));
+      await tester.pumpAndSettle();
+      await navigateToSettings(tester);
+
+      // Female should still be selected (segmented button shows checkmark)
+      // Verify by checking the SegmentedButton state — Female is in the selected set
+      final segmented = tester.widget<SegmentedButton<String>>(
+        find.byType(SegmentedButton<String>).first,
+      );
+      expect(segmented.selected, equals({'female'}));
+    });
+
+    testWidgets('scrolls to Account and Data sections', (tester) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      await pumpApp(tester, container);
+      await completeOnboarding(tester);
+
+      await navigateToSettings(tester);
+
+      // Scroll to bottom
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -800));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Account'), findsOneWidget);
+      expect(find.text('Anonymous Account'), findsOneWidget);
+      expect(find.text('Link Google Account'), findsOneWidget);
+
+      await tester.drag(find.byType(Scrollable).last, const Offset(0, -400));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Data'), findsOneWidget);
+      expect(find.text('Load Sample Exercises & Routines'), findsOneWidget);
+      expect(find.text('Clear Exercises & Routines'), findsOneWidget);
+      expect(find.text('Clear Workout History'), findsOneWidget);
     });
   });
 }

@@ -171,6 +171,8 @@
   "signOut": "Se déconnecter",
   "signOutTitle": "Se déconnecter ?",
   "signOutConfirm": "Vous serez déconnecté et redirigé vers l'écran d'accueil. Vos données restent sauvegardées dans le cloud.",
+  "signOutAnonymousTitle": "Réinitialiser le compte ?",
+  "signOutAnonymousConfirm": "Vos données actuelles seront définitivement perdues car ce compte n'est pas lié à Google ou Apple. Cette action est irréversible.",
   "unitPreference": "Unité de mesure",
   "data": "Données",
   "loadSampleData": "Charger exercices et routines d'exemple",
@@ -341,5 +343,23 @@
   "syncedHoursAgo": "Synchronisé il y a {hours}h",
   "@syncedHoursAgo": { "placeholders": { "hours": {} } },
   "syncedDaysAgo": "Synchronisé il y a {days}j",
-  "@syncedDaysAgo": { "placeholders": { "days": {} } }
+  "@syncedDaysAgo": { "placeholders": { "days": {} } },
+
+  "settings": "Paramètres",
+  "profile": "Profil",
+  "sex": "Sexe",
+  "male": "Homme",
+  "female": "Femme",
+  "age": "Âge",
+  "weight": "Poids",
+  "fitnessGoal": "Objectif",
+  "goalStrength": "Force",
+  "goalHypertrophy": "Hypertrophie",
+  "goalEndurance": "Endurance",
+  "goalWeightLoss": "Perte de poids",
+  "goalGeneralFitness": "Forme générale",
+  "integrations": "Intégrations",
+  "account": "Compte",
+  "aboutYou": "À propos de vous",
+  "years": "ans"
 }

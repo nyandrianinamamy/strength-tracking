@@ -12,7 +12,10 @@ class AppState {
     this.routineGroups = const [],
     this.userName = '',
     this.preferredUnit = 'kg',
-    this.bodyGender = 'male',
+    this.sex = 'male',
+    this.age,
+    this.weight,
+    this.fitnessGoal = '',
     this.preferredLanguage = '',
     this.preferredTheme = '',
     this.activeRoutineGroupId,
@@ -25,7 +28,10 @@ class AppState {
   final List<WorkoutSession> sessions;
   final String userName;
   final String preferredUnit;
-  final String bodyGender;
+  final String sex;
+  final int? age;
+  final double? weight;
+  final String fitnessGoal;
   final String preferredLanguage;
   final String preferredTheme;
   final String? activeRoutineGroupId;
@@ -47,7 +53,12 @@ class AppState {
     List<WorkoutSession>? sessions,
     String? userName,
     String? preferredUnit,
-    String? bodyGender,
+    String? sex,
+    int? age,
+    bool clearAge = false,
+    double? weight,
+    bool clearWeight = false,
+    String? fitnessGoal,
     String? preferredLanguage,
     String? preferredTheme,
     String? activeRoutineGroupId,
@@ -61,7 +72,10 @@ class AppState {
       sessions: sessions ?? this.sessions,
       userName: userName ?? this.userName,
       preferredUnit: preferredUnit ?? this.preferredUnit,
-      bodyGender: bodyGender ?? this.bodyGender,
+      sex: sex ?? this.sex,
+      age: clearAge ? null : age ?? this.age,
+      weight: clearWeight ? null : weight ?? this.weight,
+      fitnessGoal: fitnessGoal ?? this.fitnessGoal,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       preferredTheme: preferredTheme ?? this.preferredTheme,
       activeRoutineGroupId: clearActiveRoutineGroupId
@@ -120,7 +134,10 @@ class AppState {
           .toList(),
       userName: json['userName'] as String? ?? '',
       preferredUnit: json['preferredUnit'] as String? ?? 'kg',
-      bodyGender: json['bodyGender'] as String? ?? 'male',
+      sex: json['sex'] as String? ?? json['bodyGender'] as String? ?? 'male',
+      age: json['age'] as int?,
+      weight: (json['weight'] as num?)?.toDouble(),
+      fitnessGoal: json['fitnessGoal'] as String? ?? '',
       preferredLanguage: json['preferredLanguage'] as String? ?? '',
       preferredTheme: json['preferredTheme'] as String? ?? '',
       activeRoutineGroupId: json['activeRoutineGroupId'] as String?,
@@ -136,7 +153,10 @@ class AppState {
       'sessions': sessions.map((item) => item.toJson()).toList(),
       'userName': userName,
       'preferredUnit': preferredUnit,
-      'bodyGender': bodyGender,
+      'sex': sex,
+      'age': age,
+      'weight': weight,
+      'fitnessGoal': fitnessGoal,
       'preferredLanguage': preferredLanguage,
       'preferredTheme': preferredTheme,
       'activeRoutineGroupId': activeRoutineGroupId,

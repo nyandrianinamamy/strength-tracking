@@ -1058,6 +1058,18 @@ abstract class AppLocalizations {
   /// **'You will be signed out and returned to the onboarding screen. Your data remains saved in the cloud.'**
   String get signOutConfirm;
 
+  /// No description provided for @signOutAnonymousTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset Account?'**
+  String get signOutAnonymousTitle;
+
+  /// No description provided for @signOutAnonymousConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Your current data will be permanently lost because this account is not linked to Google or Apple. This cannot be undone.'**
+  String get signOutAnonymousConfirm;
+
   /// No description provided for @unitPreference.
   ///
   /// In en, this message translates to:
@@ -1945,6 +1957,108 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Synced {days}d ago'**
   String syncedDaysAgo(Object days);
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @profile.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile;
+
+  /// No description provided for @sex.
+  ///
+  /// In en, this message translates to:
+  /// **'Sex'**
+  String get sex;
+
+  /// No description provided for @male.
+  ///
+  /// In en, this message translates to:
+  /// **'Male'**
+  String get male;
+
+  /// No description provided for @female.
+  ///
+  /// In en, this message translates to:
+  /// **'Female'**
+  String get female;
+
+  /// No description provided for @age.
+  ///
+  /// In en, this message translates to:
+  /// **'Age'**
+  String get age;
+
+  /// No description provided for @weight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get weight;
+
+  /// No description provided for @fitnessGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Fitness Goal'**
+  String get fitnessGoal;
+
+  /// No description provided for @goalStrength.
+  ///
+  /// In en, this message translates to:
+  /// **'Strength'**
+  String get goalStrength;
+
+  /// No description provided for @goalHypertrophy.
+  ///
+  /// In en, this message translates to:
+  /// **'Hypertrophy'**
+  String get goalHypertrophy;
+
+  /// No description provided for @goalEndurance.
+  ///
+  /// In en, this message translates to:
+  /// **'Endurance'**
+  String get goalEndurance;
+
+  /// No description provided for @goalWeightLoss.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight Loss'**
+  String get goalWeightLoss;
+
+  /// No description provided for @goalGeneralFitness.
+  ///
+  /// In en, this message translates to:
+  /// **'General Fitness'**
+  String get goalGeneralFitness;
+
+  /// No description provided for @integrations.
+  ///
+  /// In en, this message translates to:
+  /// **'Integrations'**
+  String get integrations;
+
+  /// No description provided for @account.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get account;
+
+  /// No description provided for @aboutYou.
+  ///
+  /// In en, this message translates to:
+  /// **'About You'**
+  String get aboutYou;
+
+  /// No description provided for @years.
+  ///
+  /// In en, this message translates to:
+  /// **'years'**
+  String get years;
 }
 
 class _AppLocalizationsDelegate

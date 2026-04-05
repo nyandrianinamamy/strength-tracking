@@ -53,16 +53,24 @@ Future<ProviderContainer> bootstrapTestApp({
   required FirebaseFirestore firestore,
   required FirebaseAuth auth,
 }) async {
-  // Sign out any stale user from previous test (emulator reset deletes accounts
-  // but the SDK still caches the old token).
-  if (auth.currentUser != null) {
+  // Always sign out to clear cached credentials — the emulator reset deletes
+  // accounts but the SDK caches the old token. Without sign-out, initializeApp
+  // may reuse a stale anonymous user whose Firestore doc still has data from
+  // the previous test (race between emulator reset and Firestore reads).
+  try {
     await auth.signOut();
+  } catch (_) {
+    // Ignore errors — account may already be deleted by emulator reset.
   }
   final result = await initializeApp(firestore: firestore, auth: auth);
   return buildContainer(result);
 }
 
 /// Pump the app widget and wait for it to settle.
+///
+/// Waits an extra 4 seconds for the "Back online" connectivity snackbar
+/// (triggered by emulator resets) to auto-dismiss so it doesn't obscure
+/// buttons in subsequent interactions.
 Future<void> pumpApp(WidgetTester tester, ProviderContainer container) async {
   await tester.pumpWidget(
     UncontrolledProviderScope(
@@ -70,6 +78,9 @@ Future<void> pumpApp(WidgetTester tester, ProviderContainer container) async {
       child: const StrengthTrainingApp(),
     ),
   );
+  await tester.pumpAndSettle();
+  // Let the connectivity snackbar (duration: 2-3s) appear and dismiss.
+  await tester.pump(const Duration(seconds: 4));
   await tester.pumpAndSettle();
 }
 
@@ -79,13 +90,79 @@ Future<void> navigateToTab(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-/// Complete onboarding: enter name, select KG, start training.
+/// Complete onboarding: enter name, skip About You, select KG, start training.
 Future<void> completeOnboarding(WidgetTester tester) async {
+  // Page 1: Welcome — enter name and advance
   await tester.enterText(find.byType(TextField).first, 'TestUser');
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Next'));
+  // Scroll the Next button into view — on smaller viewports the button may
+  // be below the keyboard or safe area, causing hit-test failures.
+  await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+
+  // Page 2: About You — skip (all fields optional)
+  // Scroll down within the page to ensure the "Next" button is visible —
+  // the fitness goal chips can push it below the fold on smaller viewports.
+  await tester.drag(find.byType(Scrollable).last, const Offset(0, -300));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
+  await tester.pumpAndSettle();
+
+  // Page 3: Units — start training
+  await tester.ensureVisible(find.text('Start Training'));
   await tester.pumpAndSettle();
   await tester.tap(find.text('Start Training'));
+  await tester.pumpAndSettle();
+}
+
+/// Complete onboarding with full profile details.
+Future<void> completeOnboardingWithProfile(
+  WidgetTester tester, {
+  String name = 'TestUser',
+  String age = '28',
+  String weight = '82',
+  String fitnessGoal = 'Hypertrophy',
+}) async {
+  // Page 1: Welcome — enter name
+  await tester.enterText(find.byType(TextField).first, name);
+  await tester.pumpAndSettle();
+  await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+
+  // Page 2: About You — fill in details
+  // Sex defaults to Male (pre-selected)
+  // Enter age
+  await tester.enterText(find.widgetWithText(TextField, 'Age'), age);
+  await tester.pumpAndSettle();
+  // Enter weight
+  await tester.enterText(find.widgetWithText(TextField, 'Weight'), weight);
+  await tester.pumpAndSettle();
+  // Select fitness goal chip — scroll into view first
+  await tester.ensureVisible(find.text(fitnessGoal));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(fitnessGoal));
+  await tester.pumpAndSettle();
+  // Proceed to units page — scroll down to ensure button is visible.
+  await tester.drag(find.byType(Scrollable).last, const Offset(0, -300));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
+  await tester.pumpAndSettle();
+
+  // Page 3: Units — start training
+  await tester.ensureVisible(find.text('Start Training'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Start Training'));
+  await tester.pumpAndSettle();
+}
+
+/// Navigate to settings page from dashboard.
+Future<void> navigateToSettings(WidgetTester tester) async {
+  // Tap the settings gear icon (top-right of dashboard header)
+  await tester.tap(find.byIcon(Icons.settings_outlined));
   await tester.pumpAndSettle();
 }
 
@@ -103,7 +180,15 @@ Future<void> createTestExercise(
     name,
   );
   await tester.pumpAndSettle();
-  // Muscle name appears in both primary and secondary sections — tap the first one (primary).
+
+  // Dismiss keyboard so muscle chips below become visible and tappable.
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
+
+  // Muscle name appears in both primary and secondary sections — scroll to
+  // the first one (primary) and tap it.
+  await tester.ensureVisible(find.text(muscle).first);
+  await tester.pumpAndSettle();
   await tester.tap(find.text(muscle).first);
   await tester.pumpAndSettle();
   await tester.tap(find.text('Save'));
@@ -132,11 +217,23 @@ Future<void> createTestRoutine(
   await tester.tap(find.text('Tap to add exercises'));
   await tester.pumpAndSettle();
 
-  // In the exercise picker bottom sheet, tap the exercise name
+  // The picker search field has autofocus which opens the keyboard.
+  // Type the exercise name to filter, then tap the result.
+  await tester.enterText(
+    find.widgetWithText(TextField, 'Search exercises...'),
+    exerciseName,
+  );
+  await tester.pumpAndSettle();
   await tester.tap(find.text(exerciseName).last);
   await tester.pumpAndSettle();
 
-  // Save — the bottom button says "Create Routine" for new routines
+  // Dismiss any remaining keyboard so "Create Routine" is visible.
+  FocusManager.instance.primaryFocus?.unfocus();
+  await tester.pumpAndSettle();
+
+  // Scroll down and tap "Create Routine".
+  await tester.ensureVisible(find.text('Create Routine'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Create Routine'));
   await tester.pumpAndSettle();
 }

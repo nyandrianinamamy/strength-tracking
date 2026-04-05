@@ -18,7 +18,7 @@ class TrainingEngineAdapter {
   /// this uses conservative host-level defaults until onboarding/profile data
   /// is expanded.
   UserProfile toUserProfile(AppState appState) {
-    final sex = appState.bodyGender.toLowerCase() == 'female'
+    final sex = appState.sex.toLowerCase() == 'female'
         ? Sex.female
         : Sex.male;
 

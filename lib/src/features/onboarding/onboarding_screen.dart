@@ -18,13 +18,19 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _pageController = PageController();
   final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _weightController = TextEditingController();
   String _selectedUnit = 'kg';
+  String _selectedSex = 'male';
+  String _selectedGoal = '';
   bool _isSigningIn = false;
 
   @override
   void dispose() {
     _pageController.dispose();
     _nameController.dispose();
+    _ageController.dispose();
+    _weightController.dispose();
     super.dispose();
   }
 
@@ -36,16 +42,26 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     );
   }
 
+  void _goToUnitsPage() {
+    _pageController.animateToPage(
+      2,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
+  }
+
   Future<void> _signInWith(String provider) async {
     setState(() => _isSigningIn = true);
     try {
       final authService = ref.read(authServiceProvider);
-      final user = provider == 'google'
-          ? await authService.signInWithGoogle()
-          : await authService.signInWithApple();
+      if (provider == 'google') {
+        await authService.signInWithGoogle();
+      } else {
+        await authService.signInWithApple();
+      }
 
       // Load data from the signed-in user's Firestore
-      final repository = FirestoreAppStateRepository(userId: user.uid);
+      final repository = FirestoreAppStateRepository(auth: authService.firebaseAuth);
       final cloudState = await repository.load();
 
       // Update the app state with the cloud data
@@ -63,10 +79,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _startTraining() {
+    final age = int.tryParse(_ageController.text.trim());
+    final weight = double.tryParse(_weightController.text.trim());
     ref.read(appStateControllerProvider.notifier).updateState(
       (s) => s.copyWith(
         userName: _nameController.text.trim(),
         preferredUnit: _selectedUnit,
+        sex: _selectedSex,
+        age: age,
+        weight: weight,
+        fitnessGoal: _selectedGoal,
       ),
     );
     context.go('/');
@@ -87,6 +109,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           physics: const NeverScrollableScrollPhysics(),
           children: [
             _buildWelcomePage(context),
+            _buildAboutYouPage(context),
             _buildUnitsPage(context),
           ],
         ),
@@ -203,6 +226,124 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               const SizedBox(height: 16),
               const CircularProgressIndicator(),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAboutYouPage(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              l10n.aboutYou,
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l10n.optional,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: context.appColors.subtleText,
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              l10n.sex,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SegmentedButton<String>(
+              segments: [
+                ButtonSegment(
+                  value: 'male',
+                  label: Text(l10n.male),
+                  icon: const Icon(Icons.male, size: 18),
+                ),
+                ButtonSegment(
+                  value: 'female',
+                  label: Text(l10n.female),
+                  icon: const Icon(Icons.female, size: 18),
+                ),
+              ],
+              selected: {_selectedSex},
+              onSelectionChanged: (values) =>
+                  setState(() => _selectedSex = values.first),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _ageController,
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                labelText: l10n.age,
+                suffixText: l10n.years,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _weightController,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                labelText: l10n.weight,
+                suffixText: _selectedUnit.toUpperCase(),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n.fitnessGoal,
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ('strength', l10n.goalStrength),
+                ('hypertrophy', l10n.goalHypertrophy),
+                ('endurance', l10n.goalEndurance),
+                ('weight_loss', l10n.goalWeightLoss),
+                ('general_fitness', l10n.goalGeneralFitness),
+              ].map((entry) {
+                final (value, label) = entry;
+                return ChoiceChip(
+                  label: Text(label),
+                  selected: _selectedGoal == value,
+                  onSelected: (selected) => setState(
+                    () => _selectedGoal = selected ? value : '',
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: _goToUnitsPage,
+                style: FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(l10n.next),
+              ),
+            ),
           ],
         ),
       ),

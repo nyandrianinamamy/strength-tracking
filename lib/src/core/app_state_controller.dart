@@ -31,6 +31,12 @@ class AppStateController extends Notifier<AppState> {
     );
   }
 
+  /// Clear in-memory state without persisting to the repository.
+  /// Used during sign-out to avoid writing empty state over the user's cloud data.
+  void clearLocal() {
+    state = AppState.empty();
+  }
+
   void updateState(AppState Function(AppState currentState) update) {
     replaceState(update(state));
   }

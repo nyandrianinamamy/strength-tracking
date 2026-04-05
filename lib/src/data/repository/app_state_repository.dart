@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
@@ -51,15 +52,20 @@ class MemoryAppStateRepository implements AppStateRepository {
 
 class FirestoreAppStateRepository implements AppStateRepository {
   FirestoreAppStateRepository({
-    required this.userId,
+    required this.auth,
     FirebaseFirestore? firestore,
   }) : _firestore = firestore ?? FirebaseFirestore.instance;
 
-  final String userId;
+  final FirebaseAuth auth;
   final FirebaseFirestore _firestore;
 
-  DocumentReference<Map<String, dynamic>> get _doc =>
-      _firestore.collection('users').doc(userId).collection('data').doc('state');
+  DocumentReference<Map<String, dynamic>> get _doc {
+    final user = auth.currentUser;
+    if (user == null) {
+      throw StateError('No authenticated user');
+    }
+    return _firestore.collection('users').doc(user.uid).collection('data').doc('state');
+  }
 
   @override
   Future<AppState> load() async {
