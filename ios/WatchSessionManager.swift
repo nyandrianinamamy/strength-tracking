@@ -1,4 +1,5 @@
 import Foundation
+import HealthKit
 import WatchConnectivity
 import Flutter
 
@@ -10,6 +11,10 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     private var methodChannel: FlutterMethodChannel?
     private var eventSink: FlutterEventSink?
     private var pendingEvents: [[String: Any]] = []
+    private let healthStore = HKHealthStore()
+    /// Tracks which session we already launched the watch app for,
+    /// so we only trigger once per workout.
+    private var lastLaunchedSessionId: String?
 
     private override init() {
         super.init()
@@ -52,10 +57,12 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
                 result(FlutterError(code: "INVALID_ARGS", message: "Expected dictionary", details: nil))
                 return
             }
+            launchWatchAppIfNeeded(args)
             sendToWatch(args)
             result(nil)
 
         case "sendSessionEnd":
+            lastLaunchedSessionId = nil
             sendToWatch(["type": "session_end"])
             result(nil)
 
@@ -67,6 +74,32 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
 
         default:
             result(FlutterMethodNotImplemented)
+        }
+    }
+
+    // MARK: - Auto-launch Watch App
+
+    /// Launches the watch companion app via HealthKit when a new workout session
+    /// starts and the watch is paired. Only triggers once per session.
+    private func launchWatchAppIfNeeded(_ message: [String: Any]) {
+        guard let sessionData = message["session"] as? [String: Any],
+              let sessionId = sessionData["sessionId"] as? String,
+              sessionId != lastLaunchedSessionId,
+              let wcSession = session, wcSession.isPaired,
+              HKHealthStore.isHealthDataAvailable() else { return }
+
+        lastLaunchedSessionId = sessionId
+
+        let config = HKWorkoutConfiguration()
+        config.activityType = .traditionalStrengthTraining
+        config.locationType = .indoor
+
+        healthStore.startWatchApp(with: config) { success, error in
+            if let error = error {
+                print("Failed to launch watch app: \(error)")
+            } else {
+                print("Watch app launch requested: \(success)")
+            }
         }
     }
 
