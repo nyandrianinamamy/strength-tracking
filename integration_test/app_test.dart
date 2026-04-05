@@ -563,8 +563,7 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
       }
 
-      // Verify weight field has focus
-      final weightField = tester.widget<TextField>(find.byType(TextField).first);
+      // Verify something has focus
       expect(FocusManager.instance.primaryFocus != null, isTrue);
 
       // Swipe to next exercise
