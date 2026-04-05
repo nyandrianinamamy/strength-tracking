@@ -1759,6 +1759,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The routine will be hidden from your library, but all workout history will be preserved.'**
   String get archiveRoutineConfirm;
+
+  /// No description provided for @smartPlannerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Smart Planner'**
+  String get smartPlannerTitle;
+
+  /// No description provided for @generateSmartPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate Smart Plan'**
+  String get generateSmartPlan;
+
+  /// No description provided for @smartPlanSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-powered weekly training plan'**
+  String get smartPlanSubtitle;
+
+  /// No description provided for @trainingDays.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Days'**
+  String get trainingDays;
+
+  /// No description provided for @goalAndDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal & Duration'**
+  String get goalAndDuration;
+
+  /// No description provided for @preferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get preferences;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
+  /// No description provided for @trainingGoal.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Goal'**
+  String get trainingGoal;
+
+  /// No description provided for @maxSessionDuration.
+  ///
+  /// In en, this message translates to:
+  /// **'Max Session Duration'**
+  String get maxSessionDuration;
+
+  /// No description provided for @preferredExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferred Exercises'**
+  String get preferredExercises;
+
+  /// No description provided for @preferredExercisesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These will be prioritized in your plan.'**
+  String get preferredExercisesHint;
+
+  /// No description provided for @excludedExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'Excluded Exercises'**
+  String get excludedExercises;
+
+  /// No description provided for @excludedExercisesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These will be excluded from your plan.'**
+  String get excludedExercisesHint;
+
+  /// No description provided for @generate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get generate;
+
+  /// No description provided for @regenerate.
+  ///
+  /// In en, this message translates to:
+  /// **'Regenerate'**
+  String get regenerate;
+
+  /// No description provided for @adoptPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Adopt Plan'**
+  String get adoptPlan;
+
+  /// No description provided for @yourPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Your Plan'**
+  String get yourPlan;
+
+  /// No description provided for @sessionsPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sessions per week'**
+  String sessionsPerWeek(Object count);
+
+  /// No description provided for @noAlternatives.
+  ///
+  /// In en, this message translates to:
+  /// **'No alternatives available'**
+  String get noAlternatives;
+
+  /// No description provided for @skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get skip;
+
+  /// No description provided for @general.
+  ///
+  /// In en, this message translates to:
+  /// **'General'**
+  String get general;
+
+  /// No description provided for @readinessEmptyCold.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete a workout and sync HealthKit to unlock your readiness score.'**
+  String get readinessEmptyCold;
+
+  /// No description provided for @readinessEmptyColdNoHealthKit.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable HealthKit to improve your readiness accuracy with sleep and HRV data.'**
+  String get readinessEmptyColdNoHealthKit;
+
+  /// No description provided for @readinessEmptyAcwrOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync HealthKit to add sleep and HRV data to your readiness score.'**
+  String get readinessEmptyAcwrOnly;
+
+  /// No description provided for @readinessEmptyNoHrv.
+  ///
+  /// In en, this message translates to:
+  /// **'HRV tracking needs 3+ days of data. Keep wearing your device.'**
+  String get readinessEmptyNoHrv;
+
+  /// No description provided for @readinessEmptyManualOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a workout to unlock objective readiness tracking.'**
+  String get readinessEmptyManualOnly;
+
+  /// No description provided for @readinessLimitedData.
+  ///
+  /// In en, this message translates to:
+  /// **'Limited data'**
+  String get readinessLimitedData;
+
+  /// No description provided for @syncedJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced just now'**
+  String get syncedJustNow;
+
+  /// No description provided for @syncedMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {minutes}m ago'**
+  String syncedMinutesAgo(Object minutes);
+
+  /// No description provided for @syncedHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {hours}h ago'**
+  String syncedHoursAgo(Object hours);
+
+  /// No description provided for @syncedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {days}d ago'**
+  String syncedDaysAgo(Object days);
 }
 
 class _AppLocalizationsDelegate

@@ -88,6 +88,10 @@ Future<TrainingEngine> loadTrainingEngine({
     for (final record in hrvRecords) {
       engine.ingestHrv(record);
     }
+
+    if (sleepRecords.isNotEmpty || hrvRecords.isNotEmpty) {
+      engine.stampHealthKitFetch();
+    }
   }
 
   await repository.save(engine.serializeState());
@@ -133,8 +137,25 @@ final engineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
 });
 
 /// Returns the current composite readiness score.
+///
+/// Refreshes HealthKit data if stale (>1 hour since last fetch) before
+/// computing, so the score always reflects recent sleep and HRV data.
 final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
   final engine = await ref.watch(trainingEngineProvider.future);
+  final appState = ref.watch(appStateControllerProvider);
+  final healthKit = ref.watch(healthKitDataSourceProvider);
+
+  if (appState.healthKitEnabled) {
+    await engine.refreshHealthKitIfStale(
+      fetchSleep: () => healthKit.fetchRecentSleep(),
+      fetchHrv: () => healthKit.fetchRecentHrv(),
+    );
+
+    // Persist updated state after refresh
+    final repository = ref.watch(trainingEngineStateRepositoryProvider);
+    await repository.save(engine.serializeState());
+  }
+
   return engine.computeReadiness();
 });
 

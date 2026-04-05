@@ -174,6 +174,38 @@ class TrainingEngine {
     );
   }
 
+  /// Re-fetches HealthKit data if the last fetch is older than [threshold].
+  ///
+  /// Uses callback functions to decouple from the Flutter-layer HealthKit
+  /// data source, keeping the engine package pure Dart.
+  Future<void> refreshHealthKitIfStale({
+    required Future<List<SleepRecord>> Function() fetchSleep,
+    required Future<List<HrvRecord>> Function() fetchHrv,
+    Duration threshold = const Duration(hours: 1),
+  }) async {
+    final lastFetch = _state.lastHealthKitFetch;
+    final now = DateTime.now();
+    if (lastFetch != null && now.difference(lastFetch) < threshold) {
+      return; // Still fresh
+    }
+
+    // Replace history with fresh data to avoid duplicates
+    final sleepRecords = await fetchSleep();
+    _state = _state.copyWith(sleepHistory: sleepRecords);
+
+    final hrvRecords = await fetchHrv();
+    _state = _state.copyWith(hrvHistory: hrvRecords);
+
+    if (sleepRecords.isNotEmpty || hrvRecords.isNotEmpty) {
+      _state = _state.copyWith(lastHealthKitFetch: now);
+    }
+  }
+
+  /// Marks the current time as the last HealthKit fetch.
+  void stampHealthKitFetch() {
+    _state = _state.copyWith(lastHealthKitFetch: DateTime.now());
+  }
+
   // ---------------------------------------------------------------------------
   // Queries
   // ---------------------------------------------------------------------------

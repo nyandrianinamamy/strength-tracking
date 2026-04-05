@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:training_engine/training_engine.dart';
+
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/common_widgets.dart';
@@ -27,13 +30,6 @@ class TrainingReadinessCard extends ConsumerWidget {
         body: 'Adaptive guidance is temporarily unavailable.',
       ),
       data: (engine) {
-        if (engine.state.sessionsIngested == 0) {
-          return const EmptyStateCard(
-            title: 'Training Readiness',
-            body: 'Complete a workout to unlock adaptive guidance.',
-          );
-        }
-
         final readinessAsync = ref.watch(readinessProvider);
         return readinessAsync.when(
           loading: () => const Card(
@@ -46,10 +42,22 @@ class TrainingReadinessCard extends ConsumerWidget {
             title: 'Training Readiness',
             body: 'Adaptive guidance is temporarily unavailable.',
           ),
-          data: (readiness) => _ReadinessCard(
-            readiness: readiness,
-            engine: engine,
-          ),
+          data: (readiness) {
+            if (readiness.tier == ReadinessTier.cold &&
+                engine.state.sessionsIngested == 0) {
+              return EmptyStateCard(
+                title: 'Training Readiness',
+                body: AppLocalizations.of(context)!.readinessEmptyCold,
+              );
+            }
+            if (readiness.tier == ReadinessTier.cold) {
+              return EmptyStateCard(
+                title: 'Training Readiness',
+                body: AppLocalizations.of(context)!.readinessEmptyColdNoHealthKit,
+              );
+            }
+            return _ReadinessCard(readiness: readiness, engine: engine);
+          },
         );
       },
     );
@@ -115,6 +123,16 @@ class _ReadinessCard extends StatelessWidget {
                           color: subtleText,
                         ),
                       ),
+                      if (readiness.tier != ReadinessTier.full) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          AppLocalizations.of(context)!.readinessLimitedData,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: subtleText,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -194,6 +212,13 @@ class _ReadinessCard extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Last sync footer
+            if (engine.state.lastHealthKitFetch != null)
+              _SyncFooter(
+                lastSync: engine.state.lastHealthKitFetch!,
+                subtleText: subtleText,
+              ),
           ],
         ),
       ),
@@ -318,6 +343,63 @@ class _DataColumn extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SyncFooter extends StatefulWidget {
+  const _SyncFooter({required this.lastSync, required this.subtleText});
+
+  final DateTime lastSync;
+  final Color subtleText;
+
+  @override
+  State<_SyncFooter> createState() => _SyncFooterState();
+}
+
+class _SyncFooterState extends State<_SyncFooter> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _syncLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final diff = DateTime.now().difference(widget.lastSync);
+    if (diff.inMinutes < 1) return l10n.syncedJustNow;
+    if (diff.inMinutes < 60) return l10n.syncedMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.syncedHoursAgo(diff.inHours);
+    return l10n.syncedDaysAgo(diff.inDays);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.sync, size: 12, color: widget.subtleText),
+          const SizedBox(width: 4),
+          Text(
+            _syncLabel(context),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: widget.subtleText,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

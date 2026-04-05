@@ -863,4 +863,111 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get archiveRoutineConfirm =>
       'The routine will be hidden from your library, but all workout history will be preserved.';
+
+  @override
+  String get smartPlannerTitle => 'Smart Planner';
+
+  @override
+  String get generateSmartPlan => 'Generate Smart Plan';
+
+  @override
+  String get smartPlanSubtitle => 'AI-powered weekly training plan';
+
+  @override
+  String get trainingDays => 'Training Days';
+
+  @override
+  String get goalAndDuration => 'Goal & Duration';
+
+  @override
+  String get preferences => 'Preferences';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
+  String get trainingGoal => 'Training Goal';
+
+  @override
+  String get maxSessionDuration => 'Max Session Duration';
+
+  @override
+  String get preferredExercises => 'Preferred Exercises';
+
+  @override
+  String get preferredExercisesHint =>
+      'These will be prioritized in your plan.';
+
+  @override
+  String get excludedExercises => 'Excluded Exercises';
+
+  @override
+  String get excludedExercisesHint => 'These will be excluded from your plan.';
+
+  @override
+  String get generate => 'Generate';
+
+  @override
+  String get regenerate => 'Regenerate';
+
+  @override
+  String get adoptPlan => 'Adopt Plan';
+
+  @override
+  String get yourPlan => 'Your Plan';
+
+  @override
+  String sessionsPerWeek(Object count) {
+    return '$count sessions per week';
+  }
+
+  @override
+  String get noAlternatives => 'No alternatives available';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get general => 'General';
+
+  @override
+  String get readinessEmptyCold =>
+      'Complete a workout and sync HealthKit to unlock your readiness score.';
+
+  @override
+  String get readinessEmptyColdNoHealthKit =>
+      'Enable HealthKit to improve your readiness accuracy with sleep and HRV data.';
+
+  @override
+  String get readinessEmptyAcwrOnly =>
+      'Sync HealthKit to add sleep and HRV data to your readiness score.';
+
+  @override
+  String get readinessEmptyNoHrv =>
+      'HRV tracking needs 3+ days of data. Keep wearing your device.';
+
+  @override
+  String get readinessEmptyManualOnly =>
+      'Log a workout to unlock objective readiness tracking.';
+
+  @override
+  String get readinessLimitedData => 'Limited data';
+
+  @override
+  String get syncedJustNow => 'Synced just now';
+
+  @override
+  String syncedMinutesAgo(Object minutes) {
+    return 'Synced ${minutes}m ago';
+  }
+
+  @override
+  String syncedHoursAgo(Object hours) {
+    return 'Synced ${hours}h ago';
+  }
+
+  @override
+  String syncedDaysAgo(Object days) {
+    return 'Synced ${days}d ago';
+  }
 }

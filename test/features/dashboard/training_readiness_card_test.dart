@@ -1,14 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/dashboard/training_readiness_card.dart';
+import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:training_engine/training_engine.dart';
+
+class _FakeHealthKitDataSource extends HealthKitDataSource {
+  const _FakeHealthKitDataSource();
+
+  @override
+  Future<List<SleepRecord>> fetchRecentSleep({int days = 14}) async => [];
+
+  @override
+  Future<List<HrvRecord>> fetchRecentHrv({int days = 14}) async => [];
+}
 
 Widget _buildTestApp({
   AppState initialState = const AppState(
@@ -27,9 +39,14 @@ Widget _buildTestApp({
       trainingEngineStateRepositoryProvider.overrideWithValue(
         engineRepository ?? MemoryTrainingEngineStateRepository(),
       ),
+      healthKitDataSourceProvider.overrideWithValue(
+        const _FakeHealthKitDataSource(),
+      ),
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: const Scaffold(
         body: TrainingReadinessCard(),
       ),
@@ -80,7 +97,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Training Readiness'), findsOneWidget);
-    expect(find.text('Complete a workout to unlock adaptive guidance.'), findsOneWidget);
+    expect(
+      find.text(
+        'Complete a workout and sync HealthKit to unlock your readiness score.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('renders readiness summary when saved engine data exists', (

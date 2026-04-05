@@ -44,6 +44,9 @@ class TrainingState {
   /// How many workout sessions have been ingested into this state.
   final int sessionsIngested;
 
+  /// Wall-clock time of the last HealthKit data fetch, or `null` if never fetched.
+  final DateTime? lastHealthKitFetch;
+
   const TrainingState({
     required this.profile,
     required this.e1rmHistory,
@@ -55,6 +58,7 @@ class TrainingState {
     required this.lastTopSets,
     required this.lastUpdated,
     required this.sessionsIngested,
+    this.lastHealthKitFetch,
   });
 
   // ---------------------------------------------------------------------------
@@ -73,6 +77,7 @@ class TrainingState {
         lastTopSets: {},
         lastUpdated: DateTime.now(),
         sessionsIngested: 0,
+        lastHealthKitFetch: null,
       );
 
   // ---------------------------------------------------------------------------
@@ -91,6 +96,7 @@ class TrainingState {
     Map<String, LoggedSet>? lastTopSets,
     DateTime? lastUpdated,
     int? sessionsIngested,
+    Object? lastHealthKitFetch = _sentinel,
   }) {
     return TrainingState(
       profile: profile ?? this.profile,
@@ -105,6 +111,9 @@ class TrainingState {
       lastTopSets: lastTopSets ?? this.lastTopSets,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       sessionsIngested: sessionsIngested ?? this.sessionsIngested,
+      lastHealthKitFetch: lastHealthKitFetch == _sentinel
+          ? this.lastHealthKitFetch
+          : lastHealthKitFetch as DateTime?,
     );
   }
 
@@ -127,6 +136,7 @@ class TrainingState {
         'lastTopSets': lastTopSets.map((key, set) => MapEntry(key, set.toJson())),
         'lastUpdated': lastUpdated.toIso8601String(),
         'sessionsIngested': sessionsIngested,
+        'lastHealthKitFetch': lastHealthKitFetch?.toIso8601String(),
       };
 
   factory TrainingState.fromJson(Map<String, dynamic> json) {
@@ -176,6 +186,9 @@ class TrainingState {
       lastTopSets: lastTopSets,
       lastUpdated: DateTime.parse(json['lastUpdated'] as String),
       sessionsIngested: json['sessionsIngested'] as int,
+      lastHealthKitFetch: json['lastHealthKitFetch'] == null
+          ? null
+          : DateTime.parse(json['lastHealthKitFetch'] as String),
     );
   }
 }
