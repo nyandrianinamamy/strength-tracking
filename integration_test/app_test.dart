@@ -106,8 +106,8 @@ void main() {
       await navigateToSettings(tester);
 
       expect(find.text('ProfileUser'), findsOneWidget);
-      expect(find.text('25'), findsOneWidget); // age
-      expect(find.text('65'), findsOneWidget); // weight
+      expect(find.text('25'), findsOneWidget); // age (int)
+      expect(find.text('65.0'), findsOneWidget); // weight (double → "65.0")
     });
   });
 
@@ -339,8 +339,8 @@ void main() {
       await navigateToSettings(tester);
 
       expect(find.text('UpdatedName'), findsOneWidget);
-      expect(find.text('30'), findsOneWidget);
-      expect(find.text('75'), findsOneWidget);
+      expect(find.text('30'), findsOneWidget); // age (int)
+      expect(find.text('75.0'), findsOneWidget); // weight (double → "75.0")
     });
 
     testWidgets('switches sex to Female', (tester) async {
