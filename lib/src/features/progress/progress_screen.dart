@@ -97,15 +97,28 @@ class ProgressScreen extends ConsumerWidget {
                               subtitle: Text(subtitle),
                               trailing: record.isTimed
                                   ? null
-                                  : Text(
-                                      AppFormatters.weight(
-                                        record.estimatedOneRepMax,
-                                        state.preferredUnit,
-                                      ),
-                                      style: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontWeight: FontWeight.w900,
-                                      ),
+                                  : Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.end,
+                                      children: [
+                                        Text(
+                                          AppFormatters.weight(
+                                            record.estimatedOneRepMax,
+                                            state.preferredUnit,
+                                          ),
+                                          style: TextStyle(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            fontWeight: FontWeight.w900,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          l10n.estimated1rm,
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            color: context.appColors.subtleText,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                             ),
                           );

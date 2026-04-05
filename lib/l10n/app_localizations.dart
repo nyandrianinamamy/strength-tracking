@@ -224,6 +224,12 @@ abstract class AppLocalizations {
   /// **'View all'**
   String get viewAll;
 
+  /// No description provided for @estimated1rm.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. 1RM'**
+  String get estimated1rm;
+
   /// No description provided for @noPrsYet.
   ///
   /// In en, this message translates to:

@@ -73,6 +73,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get viewAll => 'Tout voir';
 
   @override
+  String get estimated1rm => '1RM est.';
+
+  @override
   String get noPrsYet => 'Aucun record détecté';
 
   @override
