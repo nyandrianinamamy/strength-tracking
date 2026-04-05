@@ -12,7 +12,7 @@ class AppState {
     this.routineGroups = const [],
     this.userName = '',
     this.preferredUnit = 'kg',
-    this.bodyGender = 'male',
+    this.sex = 'male',
     this.preferredLanguage = '',
     this.preferredTheme = '',
     this.activeRoutineGroupId,
@@ -25,7 +25,7 @@ class AppState {
   final List<WorkoutSession> sessions;
   final String userName;
   final String preferredUnit;
-  final String bodyGender;
+  final String sex;
   final String preferredLanguage;
   final String preferredTheme;
   final String? activeRoutineGroupId;
@@ -47,7 +47,7 @@ class AppState {
     List<WorkoutSession>? sessions,
     String? userName,
     String? preferredUnit,
-    String? bodyGender,
+    String? sex,
     String? preferredLanguage,
     String? preferredTheme,
     String? activeRoutineGroupId,
@@ -61,7 +61,7 @@ class AppState {
       sessions: sessions ?? this.sessions,
       userName: userName ?? this.userName,
       preferredUnit: preferredUnit ?? this.preferredUnit,
-      bodyGender: bodyGender ?? this.bodyGender,
+      sex: sex ?? this.sex,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       preferredTheme: preferredTheme ?? this.preferredTheme,
       activeRoutineGroupId: clearActiveRoutineGroupId
@@ -120,7 +120,7 @@ class AppState {
           .toList(),
       userName: json['userName'] as String? ?? '',
       preferredUnit: json['preferredUnit'] as String? ?? 'kg',
-      bodyGender: json['bodyGender'] as String? ?? 'male',
+      sex: json['sex'] as String? ?? json['bodyGender'] as String? ?? 'male',
       preferredLanguage: json['preferredLanguage'] as String? ?? '',
       preferredTheme: json['preferredTheme'] as String? ?? '',
       activeRoutineGroupId: json['activeRoutineGroupId'] as String?,
@@ -136,7 +136,7 @@ class AppState {
       'sessions': sessions.map((item) => item.toJson()).toList(),
       'userName': userName,
       'preferredUnit': preferredUnit,
-      'bodyGender': bodyGender,
+      'sex': sex,
       'preferredLanguage': preferredLanguage,
       'preferredTheme': preferredTheme,
       'activeRoutineGroupId': activeRoutineGroupId,
