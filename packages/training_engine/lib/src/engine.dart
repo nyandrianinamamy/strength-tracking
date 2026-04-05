@@ -202,6 +202,11 @@ class TrainingEngine {
     _state = _state.copyWith(lastHealthKitFetch: now);
   }
 
+  /// Marks the current time as the last HealthKit fetch.
+  void stampHealthKitFetch() {
+    _state = _state.copyWith(lastHealthKitFetch: DateTime.now());
+  }
+
   // ---------------------------------------------------------------------------
   // Queries
   // ---------------------------------------------------------------------------

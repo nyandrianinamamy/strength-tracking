@@ -88,6 +88,8 @@ Future<TrainingEngine> loadTrainingEngine({
     for (final record in hrvRecords) {
       engine.ingestHrv(record);
     }
+
+    engine.stampHealthKitFetch();
   }
 
   await repository.save(engine.serializeState());
