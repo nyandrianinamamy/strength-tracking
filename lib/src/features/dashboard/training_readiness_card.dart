@@ -211,10 +211,36 @@ class _ReadinessCard extends StatelessWidget {
                 ],
               ),
             ),
+
+            // Last sync footer
+            if (engine.state.lastHealthKitFetch != null) ...[
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.sync, size: 12, color: subtleText),
+                  const SizedBox(width: 4),
+                  Text(
+                    _syncLabel(engine.state.lastHealthKitFetch!, context),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: subtleText,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  String _syncLabel(DateTime lastSync, BuildContext context) {
+    final diff = DateTime.now().difference(lastSync);
+    if (diff.inMinutes < 1) return 'Synced just now';
+    if (diff.inMinutes < 60) return 'Synced ${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return 'Synced ${diff.inHours}h ago';
+    return 'Synced ${diff.inDays}d ago';
   }
 
   String _headlineForScore(int score) {
