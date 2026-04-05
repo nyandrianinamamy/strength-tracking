@@ -341,5 +341,23 @@
   "syncedHoursAgo": "Synced {hours}h ago",
   "@syncedHoursAgo": { "placeholders": { "hours": {} } },
   "syncedDaysAgo": "Synced {days}d ago",
-  "@syncedDaysAgo": { "placeholders": { "days": {} } }
+  "@syncedDaysAgo": { "placeholders": { "days": {} } },
+
+  "settings": "Settings",
+  "profile": "Profile",
+  "sex": "Sex",
+  "male": "Male",
+  "female": "Female",
+  "age": "Age",
+  "weight": "Weight",
+  "fitnessGoal": "Fitness Goal",
+  "goalStrength": "Strength",
+  "goalHypertrophy": "Hypertrophy",
+  "goalEndurance": "Endurance",
+  "goalWeightLoss": "Weight Loss",
+  "goalGeneralFitness": "General Fitness",
+  "integrations": "Integrations",
+  "account": "Account",
+  "aboutYou": "About You",
+  "years": "years"
 }
