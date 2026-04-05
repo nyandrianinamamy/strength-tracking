@@ -13,6 +13,9 @@ class AppState {
     this.userName = '',
     this.preferredUnit = 'kg',
     this.sex = 'male',
+    this.age,
+    this.weight,
+    this.fitnessGoal = '',
     this.preferredLanguage = '',
     this.preferredTheme = '',
     this.activeRoutineGroupId,
@@ -26,6 +29,9 @@ class AppState {
   final String userName;
   final String preferredUnit;
   final String sex;
+  final int? age;
+  final double? weight;
+  final String fitnessGoal;
   final String preferredLanguage;
   final String preferredTheme;
   final String? activeRoutineGroupId;
@@ -48,6 +54,11 @@ class AppState {
     String? userName,
     String? preferredUnit,
     String? sex,
+    int? age,
+    bool clearAge = false,
+    double? weight,
+    bool clearWeight = false,
+    String? fitnessGoal,
     String? preferredLanguage,
     String? preferredTheme,
     String? activeRoutineGroupId,
@@ -62,6 +73,9 @@ class AppState {
       userName: userName ?? this.userName,
       preferredUnit: preferredUnit ?? this.preferredUnit,
       sex: sex ?? this.sex,
+      age: clearAge ? null : age ?? this.age,
+      weight: clearWeight ? null : weight ?? this.weight,
+      fitnessGoal: fitnessGoal ?? this.fitnessGoal,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       preferredTheme: preferredTheme ?? this.preferredTheme,
       activeRoutineGroupId: clearActiveRoutineGroupId
@@ -121,6 +135,9 @@ class AppState {
       userName: json['userName'] as String? ?? '',
       preferredUnit: json['preferredUnit'] as String? ?? 'kg',
       sex: json['sex'] as String? ?? json['bodyGender'] as String? ?? 'male',
+      age: json['age'] as int?,
+      weight: (json['weight'] as num?)?.toDouble(),
+      fitnessGoal: json['fitnessGoal'] as String? ?? '',
       preferredLanguage: json['preferredLanguage'] as String? ?? '',
       preferredTheme: json['preferredTheme'] as String? ?? '',
       activeRoutineGroupId: json['activeRoutineGroupId'] as String?,
@@ -137,6 +154,9 @@ class AppState {
       'userName': userName,
       'preferredUnit': preferredUnit,
       'sex': sex,
+      'age': age,
+      'weight': weight,
+      'fitnessGoal': fitnessGoal,
       'preferredLanguage': preferredLanguage,
       'preferredTheme': preferredTheme,
       'activeRoutineGroupId': activeRoutineGroupId,
