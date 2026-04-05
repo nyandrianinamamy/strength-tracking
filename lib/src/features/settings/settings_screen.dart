@@ -197,18 +197,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     // Resync text controllers when state changes externally
     // (e.g., sign-in replaces state with cloud data).
+    // Compare parsed values (not strings) for numeric fields to avoid
+    // overwriting mid-edit — e.g. user types "7" → state becomes 7.0 →
+    // "7" != "7.0" would cause a spurious overwrite.
     ref.listen(appStateControllerProvider, (_, next) {
       if (_nameController.text != next.userName) {
         _nameDebounce?.cancel();
         _nameController.text = next.userName;
       }
-      final ageText = next.age != null ? '${next.age}' : '';
-      if (_ageController.text != ageText) {
-        _ageController.text = ageText;
+      if (int.tryParse(_ageController.text.trim()) != next.age) {
+        _ageController.text = next.age != null ? '${next.age}' : '';
       }
-      final weightText = next.weight != null ? '${next.weight}' : '';
-      if (_weightController.text != weightText) {
-        _weightController.text = weightText;
+      if (double.tryParse(_weightController.text.trim()) != next.weight) {
+        _weightController.text = next.weight != null ? '${next.weight}' : '';
       }
     });
 
