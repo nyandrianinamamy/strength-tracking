@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
-import 'package:strength_training_tracker/src/features/auth/account_section.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
@@ -83,42 +82,9 @@ class DashboardScreen extends ConsumerWidget {
               },
             ),
             const Spacer(),
-            Stack(
-              children: [
-                IconButton(
-                  onPressed: () {
-                    showModalBottomSheet(
-                      context: context,
-                      isScrollControlled: true,
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(20),
-                        ),
-                      ),
-                      builder: (_) => DraggableScrollableSheet(
-                        initialChildSize: 0.7,
-                        minChildSize: 0.4,
-                        maxChildSize: 0.9,
-                        expand: false,
-                        builder: (_, _) => const AccountSection(),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.notifications_none),
-                ),
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: colorScheme.error,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
+            IconButton(
+              onPressed: () => context.push('/settings'),
+              icon: const Icon(Icons.settings_outlined),
             ),
           ],
         ),

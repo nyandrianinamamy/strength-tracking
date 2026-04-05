@@ -13,6 +13,7 @@ import 'package:strength_training_tracker/src/features/routines/routine_groups_s
 import 'package:strength_training_tracker/src/features/routines/routines_screen.dart';
 import 'package:strength_training_tracker/src/features/workout/active_workout_screen.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_summary_screen.dart';
+import 'package:strength_training_tracker/src/features/settings/settings_screen.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/smart_planner_screen.dart';
 import 'package:strength_training_tracker/src/shared/widgets/app_shell_scaffold.dart';
 
@@ -110,6 +111,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/routines/smart-planner',
         builder: (context, state) => const SmartPlannerScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
       ),
     ],
   );
