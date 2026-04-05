@@ -13,7 +13,7 @@ void main() {
         exercises: [],
         routines: [],
         sessions: [],
-        bodyGender: 'female',
+        sex: 'female',
       );
 
       final profile = adapter.toUserProfile(appState);

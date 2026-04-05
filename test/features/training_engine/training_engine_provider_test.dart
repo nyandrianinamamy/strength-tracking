@@ -50,7 +50,7 @@ AppState _appStateWithCompletedSession() {
         rpe: 8.0,
       ),
     ],
-    bodyGender: 'male',
+    sex: 'male',
   );
 }
 
@@ -93,7 +93,7 @@ AppState _appStateWithTimedOnlyCompletedSession() {
         rpe: 7.0,
       ),
     ],
-    bodyGender: 'male',
+    sex: 'male',
   );
 }
 

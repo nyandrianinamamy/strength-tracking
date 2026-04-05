@@ -38,7 +38,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                             aspectRatio: 0.5,
                             child: BodyHeatmap(
                               side: BodySide.front,
-                              gender: state.bodyGender == 'female'
+                              gender: state.sex == 'female'
                                   ? BodyGender.female
                                   : BodyGender.male,
                               data: fatigue,
@@ -59,7 +59,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
                             aspectRatio: 0.5,
                             child: BodyHeatmap(
                               side: BodySide.back,
-                              gender: state.bodyGender == 'female'
+                              gender: state.sex == 'female'
                                   ? BodyGender.female
                                   : BodyGender.male,
                               data: fatigue,

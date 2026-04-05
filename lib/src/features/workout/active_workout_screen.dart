@@ -2343,7 +2343,7 @@ class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
             aspectRatio: 0.42,
             child: BodyHeatmap(
               side: side,
-              gender: state.bodyGender == 'female'
+              gender: state.sex == 'female'
                   ? BodyGender.female
                   : BodyGender.male,
               data: highlightedData,

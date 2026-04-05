@@ -170,11 +170,11 @@ class AccountSection extends ConsumerWidget {
                   icon: Icon(Icons.female, size: 18),
                 ),
               ],
-              selected: {ref.watch(appStateControllerProvider).bodyGender},
+              selected: {ref.watch(appStateControllerProvider).sex},
               onSelectionChanged: (values) {
                 ref
                     .read(appStateControllerProvider.notifier)
-                    .updateState((s) => s.copyWith(bodyGender: values.first));
+                    .updateState((s) => s.copyWith(sex: values.first));
               },
             ),
             const SizedBox(height: 20),
