@@ -127,7 +127,11 @@ void main() {
 
       expect(find.text('ProfileUser'), findsOneWidget);
       expect(find.text('25'), findsOneWidget); // age (int)
-      expect(find.text('65.0'), findsOneWidget); // weight (double → "65.0")
+      // Weight displays as "65.0" on native, "65" on web (JS omits trailing .0).
+      expect(
+        find.textContaining(RegExp(r'^65(\.0)?$')),
+        findsOneWidget,
+      );
     });
   });
 
@@ -360,7 +364,11 @@ void main() {
 
       expect(find.text('UpdatedName'), findsOneWidget);
       expect(find.text('30'), findsOneWidget); // age (int)
-      expect(find.text('75.0'), findsOneWidget); // weight (double → "75.0")
+      // Weight displays as "75.0" on native, "75" on web (JS omits trailing .0).
+      expect(
+        find.textContaining(RegExp(r'^75(\.0)?$')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('switches sex to Female', (tester) async {
