@@ -73,6 +73,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get viewAll => 'View all';
 
   @override
+  String get estimated1rm => 'Est. 1RM';
+
+  @override
   String get noPrsYet => 'No PRs detected yet';
 
   @override
