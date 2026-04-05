@@ -866,4 +866,94 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get archiveRoutineConfirm =>
       'La routine sera masquée de votre bibliothèque, mais tout l\'historique des séances sera conservé.';
+
+  @override
+  String get smartPlannerTitle => 'Planificateur intelligent';
+
+  @override
+  String get generateSmartPlan => 'Générer un plan intelligent';
+
+  @override
+  String get smartPlanSubtitle =>
+      'Plan d\'entraînement hebdomadaire assisté par IA';
+
+  @override
+  String get trainingDays => 'Jours d\'entraînement';
+
+  @override
+  String get goalAndDuration => 'Objectif et durée';
+
+  @override
+  String get preferences => 'Préférences';
+
+  @override
+  String get optional => 'Optionnel';
+
+  @override
+  String get trainingGoal => 'Objectif d\'entraînement';
+
+  @override
+  String get maxSessionDuration => 'Durée maximale de séance';
+
+  @override
+  String get preferredExercises => 'Exercices préférés';
+
+  @override
+  String get preferredExercisesHint =>
+      'Ceux-ci seront priorisés dans votre plan.';
+
+  @override
+  String get excludedExercises => 'Exercices exclus';
+
+  @override
+  String get excludedExercisesHint => 'Ceux-ci seront exclus de votre plan.';
+
+  @override
+  String get generate => 'Générer';
+
+  @override
+  String get regenerate => 'Régénérer';
+
+  @override
+  String get adoptPlan => 'Adopter le plan';
+
+  @override
+  String get yourPlan => 'Votre plan';
+
+  @override
+  String sessionsPerWeek(Object count) {
+    return '$count séances par semaine';
+  }
+
+  @override
+  String get noAlternatives => 'Aucune alternative disponible';
+
+  @override
+  String get skip => 'Passer';
+
+  @override
+  String get general => 'Général';
+
+  @override
+  String get readinessEmptyCold =>
+      'Termine un entraînement et synchronise HealthKit pour débloquer ton score de préparation.';
+
+  @override
+  String get readinessEmptyColdNoHealthKit =>
+      'Active HealthKit pour améliorer la précision de ton score avec le sommeil et le VFC.';
+
+  @override
+  String get readinessEmptyAcwrOnly =>
+      'Synchronise HealthKit pour ajouter le sommeil et le VFC à ton score.';
+
+  @override
+  String get readinessEmptyNoHrv =>
+      'Le suivi VFC nécessite 3+ jours de données. Continue de porter ton appareil.';
+
+  @override
+  String get readinessEmptyManualOnly =>
+      'Enregistre un entraînement pour débloquer le suivi objectif.';
+
+  @override
+  String get readinessLimitedData => 'Données limitées';
 }

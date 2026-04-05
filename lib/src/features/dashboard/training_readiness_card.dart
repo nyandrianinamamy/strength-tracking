@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:training_engine/training_engine.dart';
 
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../shared/widgets/common_widgets.dart';
 import '../training_engine/training_engine_provider.dart';
@@ -27,13 +29,6 @@ class TrainingReadinessCard extends ConsumerWidget {
         body: 'Adaptive guidance is temporarily unavailable.',
       ),
       data: (engine) {
-        if (engine.state.sessionsIngested == 0) {
-          return const EmptyStateCard(
-            title: 'Training Readiness',
-            body: 'Complete a workout to unlock adaptive guidance.',
-          );
-        }
-
         final readinessAsync = ref.watch(readinessProvider);
         return readinessAsync.when(
           loading: () => const Card(
@@ -46,10 +41,29 @@ class TrainingReadinessCard extends ConsumerWidget {
             title: 'Training Readiness',
             body: 'Adaptive guidance is temporarily unavailable.',
           ),
-          data: (readiness) => _ReadinessCard(
-            readiness: readiness,
-            engine: engine,
-          ),
+          data: (readiness) {
+            // Educational messages for cold-start and low-data tiers
+            if (readiness.tier == ReadinessTier.cold &&
+                engine.state.sessionsIngested == 0) {
+              return EmptyStateCard(
+                title: 'Training Readiness',
+                body: AppLocalizations.of(context)!.readinessEmptyCold,
+              );
+            }
+            if (readiness.tier == ReadinessTier.cold) {
+              return EmptyStateCard(
+                title: 'Training Readiness',
+                body: AppLocalizations.of(context)!.readinessEmptyColdNoHealthKit,
+              );
+            }
+            if (readiness.tier == ReadinessTier.manualOnly) {
+              return EmptyStateCard(
+                title: 'Training Readiness',
+                body: AppLocalizations.of(context)!.readinessEmptyManualOnly,
+              );
+            }
+            return _ReadinessCard(readiness: readiness, engine: engine);
+          },
         );
       },
     );
@@ -115,6 +129,16 @@ class _ReadinessCard extends StatelessWidget {
                           color: subtleText,
                         ),
                       ),
+                      if (readiness.tier != ReadinessTier.full) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          _limitedDataHint(readiness.tier),
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: subtleText,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -212,6 +236,19 @@ class _ReadinessCard extends StatelessWidget {
     if (score >= 60) return 'Your recovery is stable today.';
     if (score >= 40) return 'Give your body more time to recover.';
     return 'Consider a deload or rest day.';
+  }
+
+  String _limitedDataHint(ReadinessTier tier) {
+    switch (tier) {
+      case ReadinessTier.noHrv:
+        return 'HRV tracking needs 3+ days of data';
+      case ReadinessTier.noSleep:
+        return 'Sleep data unavailable';
+      case ReadinessTier.acwrOnly:
+        return 'Sync HealthKit for better accuracy';
+      default:
+        return 'Limited data';
+    }
   }
 
   _DataSummary _sleepSummary() {

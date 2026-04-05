@@ -328,5 +328,11 @@
   "@sessionsPerWeek": { "placeholders": { "count": {} } },
   "noAlternatives": "No alternatives available",
   "skip": "Skip",
-  "general": "General"
+  "general": "General",
+  "readinessEmptyCold": "Complete a workout and sync HealthKit to unlock your readiness score.",
+  "readinessEmptyColdNoHealthKit": "Enable HealthKit to improve your readiness accuracy with sleep and HRV data.",
+  "readinessEmptyAcwrOnly": "Sync HealthKit to add sleep and HRV data to your readiness score.",
+  "readinessEmptyNoHrv": "HRV tracking needs 3+ days of data. Keep wearing your device.",
+  "readinessEmptyManualOnly": "Log a workout to unlock objective readiness tracking.",
+  "readinessLimitedData": "Limited data"
 }

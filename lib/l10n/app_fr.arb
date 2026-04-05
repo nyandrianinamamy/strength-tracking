@@ -328,5 +328,11 @@
   "@sessionsPerWeek": { "placeholders": { "count": {} } },
   "noAlternatives": "Aucune alternative disponible",
   "skip": "Passer",
-  "general": "Général"
+  "general": "Général",
+  "readinessEmptyCold": "Termine un entraînement et synchronise HealthKit pour débloquer ton score de préparation.",
+  "readinessEmptyColdNoHealthKit": "Active HealthKit pour améliorer la précision de ton score avec le sommeil et le VFC.",
+  "readinessEmptyAcwrOnly": "Synchronise HealthKit pour ajouter le sommeil et le VFC à ton score.",
+  "readinessEmptyNoHrv": "Le suivi VFC nécessite 3+ jours de données. Continue de porter ton appareil.",
+  "readinessEmptyManualOnly": "Enregistre un entraînement pour débloquer le suivi objectif.",
+  "readinessLimitedData": "Données limitées"
 }
