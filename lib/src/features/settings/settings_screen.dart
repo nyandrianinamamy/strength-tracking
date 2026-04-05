@@ -61,8 +61,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _onAgeChanged(String value) {
-    final parsed = int.tryParse(value);
-    if (parsed != null) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      ref
+          .read(appStateControllerProvider.notifier)
+          .updateState((s) => s.copyWith(clearAge: true));
+      return;
+    }
+    final parsed = int.tryParse(trimmed);
+    if (parsed != null && parsed > 0) {
       ref
           .read(appStateControllerProvider.notifier)
           .updateState((s) => s.copyWith(age: parsed));
@@ -70,8 +77,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _onWeightChanged(String value) {
-    final parsed = double.tryParse(value);
-    if (parsed != null) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) {
+      ref
+          .read(appStateControllerProvider.notifier)
+          .updateState((s) => s.copyWith(clearWeight: true));
+      return;
+    }
+    final parsed = double.tryParse(trimmed);
+    if (parsed != null && parsed > 0) {
       ref
           .read(appStateControllerProvider.notifier)
           .updateState((s) => s.copyWith(weight: parsed));
@@ -180,6 +194,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final authService = ref.read(authServiceProvider);
     final user = authService.currentUser;
     final isAnonymous = authService.isAnonymous;
+
+    // Resync text controllers when state changes externally
+    // (e.g., sign-in replaces state with cloud data).
+    ref.listen(appStateControllerProvider, (_, next) {
+      if (_nameController.text != next.userName) {
+        _nameDebounce?.cancel();
+        _nameController.text = next.userName;
+      }
+      final ageText = next.age != null ? '${next.age}' : '';
+      if (_ageController.text != ageText) {
+        _ageController.text = ageText;
+      }
+      final weightText = next.weight != null ? '${next.weight}' : '';
+      if (_weightController.text != weightText) {
+        _weightController.text = weightText;
+      }
+    });
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.settings)),
