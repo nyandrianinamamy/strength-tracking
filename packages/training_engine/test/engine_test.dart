@@ -489,6 +489,103 @@ void main() {
     });
   });
 
+  group('refreshHealthKitIfStale', () {
+    test('fetches when lastHealthKitFetch is null', () async {
+      final engine = _engine();
+
+      var fetchCount = 0;
+      Future<List<SleepRecord>> fakeSleep() async {
+        fetchCount++;
+        return [];
+      }
+      Future<List<HrvRecord>> fakeHrv() async => [];
+
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: fakeSleep,
+        fetchHrv: fakeHrv,
+      );
+
+      expect(fetchCount, 1);
+      expect(engine.state.lastHealthKitFetch, isNotNull);
+    });
+
+    test('skips fetch when within threshold', () async {
+      final engine = _engine();
+
+      var fetchCount = 0;
+      Future<List<SleepRecord>> fakeSleep() async {
+        fetchCount++;
+        return [];
+      }
+      Future<List<HrvRecord>> fakeHrv() async => [];
+
+      // First call — should fetch
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: fakeSleep,
+        fetchHrv: fakeHrv,
+      );
+      expect(fetchCount, 1);
+
+      // Second call — should skip (within 1h)
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: fakeSleep,
+        fetchHrv: fakeHrv,
+      );
+      expect(fetchCount, 1);
+    });
+
+    test('fetches again after threshold expires', () async {
+      final engine = _engine();
+
+      var fetchCount = 0;
+      Future<List<SleepRecord>> fakeSleep() async {
+        fetchCount++;
+        return [];
+      }
+      Future<List<HrvRecord>> fakeHrv() async => [];
+
+      // First fetch
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: fakeSleep,
+        fetchHrv: fakeHrv,
+        threshold: Duration.zero, // force immediate staleness
+      );
+      expect(fetchCount, 1);
+
+      // Second fetch — threshold is zero so always stale
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: fakeSleep,
+        fetchHrv: fakeHrv,
+        threshold: Duration.zero,
+      );
+      expect(fetchCount, 2);
+    });
+
+    test('ingests fetched sleep and hrv records', () async {
+      final engine = _engine();
+
+      final sleepRecord = SleepRecord(
+        date: DateTime.now(),
+        totalSleep: const Duration(hours: 7),
+        deepSleep: const Duration(hours: 2),
+        remSleep: const Duration(hours: 1, minutes: 30),
+        coreSleep: const Duration(hours: 3, minutes: 30),
+      );
+      final hrvRecord = HrvRecord(
+        date: DateTime.now(),
+        sdnn: 45.0,
+      );
+
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: () async => [sleepRecord],
+        fetchHrv: () async => [hrvRecord],
+      );
+
+      expect(engine.state.sleepHistory, hasLength(1));
+      expect(engine.state.hrvHistory, hasLength(1));
+    });
+  });
+
   group('TrainingEngine.ingestSleep and ingestHrv', () {
     test('sleep history is populated and trimmed to at most 15 entries (14-day window)', () {
       final engine = _engine();
