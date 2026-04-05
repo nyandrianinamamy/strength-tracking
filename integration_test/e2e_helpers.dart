@@ -81,17 +81,25 @@ Future<void> navigateToTab(WidgetTester tester, String label) async {
 
 /// Complete onboarding: enter name, skip About You, select KG, start training.
 Future<void> completeOnboarding(WidgetTester tester) async {
-  // Page 1: Welcome — enter name
+  // Page 1: Welcome — enter name and advance
   await tester.enterText(find.byType(TextField).first, 'TestUser');
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Next'));
+  // Scroll the Next button into view — on smaller viewports the button may
+  // be below the keyboard or safe area, causing hit-test failures.
+  await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next'));
   await tester.pumpAndSettle();
 
   // Page 2: About You — skip (all fields optional)
-  await tester.tap(find.text('Next'));
+  await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next'));
   await tester.pumpAndSettle();
 
   // Page 3: Units — start training
+  await tester.ensureVisible(find.text('Start Training'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Start Training'));
   await tester.pumpAndSettle();
 }
@@ -107,7 +115,9 @@ Future<void> completeOnboardingWithProfile(
   // Page 1: Welcome — enter name
   await tester.enterText(find.byType(TextField).first, name);
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Next'));
+  await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next'));
   await tester.pumpAndSettle();
 
   // Page 2: About You — fill in details
@@ -118,14 +128,20 @@ Future<void> completeOnboardingWithProfile(
   // Enter weight
   await tester.enterText(find.widgetWithText(TextField, 'Weight'), weight);
   await tester.pumpAndSettle();
-  // Select fitness goal chip
+  // Select fitness goal chip — scroll into view first
+  await tester.ensureVisible(find.text(fitnessGoal));
+  await tester.pumpAndSettle();
   await tester.tap(find.text(fitnessGoal));
   await tester.pumpAndSettle();
   // Proceed to units page
-  await tester.tap(find.text('Next'));
+  await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+  await tester.pumpAndSettle();
+  await tester.tap(find.widgetWithText(FilledButton, 'Next'));
   await tester.pumpAndSettle();
 
   // Page 3: Units — start training
+  await tester.ensureVisible(find.text('Start Training'));
+  await tester.pumpAndSettle();
   await tester.tap(find.text('Start Training'));
   await tester.pumpAndSettle();
 }

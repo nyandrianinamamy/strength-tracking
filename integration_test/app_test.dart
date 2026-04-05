@@ -35,17 +35,21 @@ void main() {
       await pumpApp(tester, container);
 
       // Page 1: Welcome
-      expect(find.text('Next'), findsOneWidget);
+      expect(find.widgetWithText(FilledButton, 'Next'), findsOneWidget);
       await tester.enterText(find.byType(TextField).first, 'TestUser');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Next'));
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
       await tester.pumpAndSettle();
 
       // Page 2: About You — verify it shows, then skip
       expect(find.text('About You'), findsOneWidget);
       expect(find.text('Sex'), findsOneWidget);
       expect(find.text('Fitness Goal'), findsOneWidget);
-      await tester.tap(find.text('Next'));
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
       await tester.pumpAndSettle();
 
       // Page 3: Units
@@ -68,7 +72,9 @@ void main() {
       // Page 1: Welcome
       await tester.enterText(find.byType(TextField).first, 'ProfileUser');
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Next'));
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
       await tester.pumpAndSettle();
 
       // Page 2: About You — fill all fields
@@ -87,10 +93,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Select fitness goal
+      await tester.ensureVisible(find.text('Endurance'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Endurance'));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Next'));
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
       await tester.pumpAndSettle();
 
       // Page 3: Units — choose LBS
@@ -293,8 +303,8 @@ void main() {
       // Preferences section
       expect(find.text('Preferences'), findsOneWidget);
       expect(find.text('Unit Preference'), findsOneWidget);
-      expect(find.text('KG'), findsOneWidget);
-      expect(find.text('LBS'), findsOneWidget);
+      expect(find.text('KG'), findsWidgets);
+      expect(find.text('LBS'), findsWidgets);
     });
 
     testWidgets('edits profile fields and persists values', (tester) async {
