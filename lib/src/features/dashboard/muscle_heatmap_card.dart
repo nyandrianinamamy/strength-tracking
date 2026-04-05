@@ -145,6 +145,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
     final appColors = context.appColors;
     showModalBottomSheet(
       context: context,
+      useRootNavigator: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

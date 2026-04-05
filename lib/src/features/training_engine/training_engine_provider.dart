@@ -7,6 +7,7 @@ import 'package:training_engine/training_engine.dart';
 
 import '../../core/app_state_controller.dart';
 import '../../data/models/app_state.dart';
+import '../../data/seed/demo_seed_data.dart';
 import 'training_engine_ui_adapter.dart';
 import 'healthkit_data_source.dart';
 import 'training_engine_adapter.dart';
@@ -79,12 +80,19 @@ Future<TrainingEngine> loadTrainingEngine({
   }
 
   if (appState.healthKitEnabled) {
-    final sleepRecords = await healthKit.fetchRecentSleep();
+    var sleepRecords = await healthKit.fetchRecentSleep();
+    var hrvRecords = await healthKit.fetchRecentHrv();
+
+    // Fall back to demo data when HealthKit returns nothing (e.g. simulator)
+    if (sleepRecords.isEmpty && hrvRecords.isEmpty) {
+      sleepRecords = DemoSeedData.seedSleep();
+      hrvRecords = DemoSeedData.seedHrv();
+    }
+
     for (final record in sleepRecords) {
       engine.ingestSleep(record);
     }
 
-    final hrvRecords = await healthKit.fetchRecentHrv();
     for (final record in hrvRecords) {
       engine.ingestHrv(record);
     }

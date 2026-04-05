@@ -70,6 +70,9 @@ class AppLocalizationsFr extends AppLocalizations {
   String get recentPrsTitle => 'Records récents';
 
   @override
+  String get viewAll => 'Tout voir';
+
+  @override
   String get noPrsYet => 'Aucun record détecté';
 
   @override

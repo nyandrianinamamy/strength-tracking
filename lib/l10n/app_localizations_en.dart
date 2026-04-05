@@ -70,6 +70,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recentPrsTitle => 'Recent PRs';
 
   @override
+  String get viewAll => 'View all';
+
+  @override
   String get noPrsYet => 'No PRs detected yet';
 
   @override

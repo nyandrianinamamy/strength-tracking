@@ -56,6 +56,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   int _lastBeepedSetCount = -1;
   int? _lastHapticRestSetCount;
   int? _lastHapticRestSecond;
+  // Cached rest value — computed once per tick to avoid jitter from multiple
+  // DateTime.now() calls within the same tick.
+  int _cachedRemainingRest = 0;
 
   // Timed exercise countdown state — per exercise so switching doesn't reset
   final Map<String, _TimedExerciseState> _timedExerciseStates = {};
@@ -78,7 +81,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     super.initState();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) {
-        final remainingRest = _remainingRest;
+        _cachedRemainingRest = _computeRemainingRest();
+        final remainingRest = _cachedRemainingRest;
 
         _handleRestTimerHaptics(remainingRest);
 
@@ -411,7 +415,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     });
   }
 
-  int get _remainingRest {
+  int get _remainingRest => _cachedRemainingRest;
+
+  int _computeRemainingRest() {
     // Compute from persisted data so it survives app switches
     final state = ref.read(appStateControllerProvider);
     final session = state.activeSession;
@@ -1102,6 +1108,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 controller: _pageController,
                 itemCount: exerciseCount + 1,
                 onPageChanged: (index) {
+                  FocusScope.of(context).unfocus();
                   setState(() => _currentPage = index);
                   if (index < exerciseCount) {
                     WidgetsBinding.instance.addPostFrameCallback((_) {

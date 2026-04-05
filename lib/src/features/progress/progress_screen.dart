@@ -98,8 +98,9 @@ class ProgressScreen extends ConsumerWidget {
                               trailing: record.isTimed
                                   ? null
                                   : Text(
-                                      AppFormatters.decimal(
+                                      AppFormatters.weight(
                                         record.estimatedOneRepMax,
+                                        state.preferredUnit,
                                       ),
                                       style: TextStyle(
                                         color: Theme.of(context).colorScheme.primary,
