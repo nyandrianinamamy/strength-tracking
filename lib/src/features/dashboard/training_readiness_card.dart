@@ -62,6 +62,18 @@ class TrainingReadinessCard extends ConsumerWidget {
                 body: AppLocalizations.of(context)!.readinessEmptyManualOnly,
               );
             }
+            if (readiness.tier == ReadinessTier.acwrOnly) {
+              return EmptyStateCard(
+                title: 'Training Readiness',
+                body: AppLocalizations.of(context)!.readinessEmptyAcwrOnly,
+              );
+            }
+            if (readiness.tier == ReadinessTier.noHrv) {
+              return EmptyStateCard(
+                title: 'Training Readiness',
+                body: AppLocalizations.of(context)!.readinessEmptyNoHrv,
+              );
+            }
             return _ReadinessCard(readiness: readiness, engine: engine);
           },
         );
@@ -132,7 +144,7 @@ class _ReadinessCard extends StatelessWidget {
                       if (readiness.tier != ReadinessTier.full) ...[
                         const SizedBox(height: 4),
                         Text(
-                          _limitedDataHint(readiness.tier),
+                          AppLocalizations.of(context)!.readinessLimitedData,
                           style: Theme.of(context).textTheme.labelSmall?.copyWith(
                             color: subtleText,
                             fontStyle: FontStyle.italic,
@@ -236,19 +248,6 @@ class _ReadinessCard extends StatelessWidget {
     if (score >= 60) return 'Your recovery is stable today.';
     if (score >= 40) return 'Give your body more time to recover.';
     return 'Consider a deload or rest day.';
-  }
-
-  String _limitedDataHint(ReadinessTier tier) {
-    switch (tier) {
-      case ReadinessTier.noHrv:
-        return 'HRV tracking needs 3+ days of data';
-      case ReadinessTier.noSleep:
-        return 'Sleep data unavailable';
-      case ReadinessTier.acwrOnly:
-        return 'Sync HealthKit for better accuracy';
-      default:
-        return 'Limited data';
-    }
   }
 
   _DataSummary _sleepSummary() {

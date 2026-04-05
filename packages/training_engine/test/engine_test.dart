@@ -385,6 +385,18 @@ void main() {
 
       expect(engine2.state.sessionsIngested, equals(2));
     });
+
+    test('lastHealthKitFetch survives serialization roundtrip', () {
+      final engine = _engine();
+      engine.stampHealthKitFetch();
+      expect(engine.state.lastHealthKitFetch, isNotNull);
+
+      final json = engine.serializeState();
+      final engine2 = _engine();
+      engine2.restoreState(json);
+
+      expect(engine2.state.lastHealthKitFetch, isNotNull);
+    });
   });
 
   group('TrainingEngine.bootstrapFromHistory', () {
