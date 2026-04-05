@@ -506,9 +506,16 @@ void main() {
       final engine = _engine();
 
       var fetchCount = 0;
+      final sleepRecord = SleepRecord(
+        date: DateTime.now(),
+        totalSleep: const Duration(hours: 7),
+        deepSleep: const Duration(hours: 2),
+        remSleep: const Duration(hours: 1, minutes: 30),
+        coreSleep: const Duration(hours: 3, minutes: 30),
+      );
       Future<List<SleepRecord>> fakeSleep() async {
         fetchCount++;
-        return [];
+        return [sleepRecord];
       }
       Future<List<HrvRecord>> fakeHrv() async => [];
 
@@ -525,13 +532,20 @@ void main() {
       final engine = _engine();
 
       var fetchCount = 0;
+      final sleepRecord = SleepRecord(
+        date: DateTime.now(),
+        totalSleep: const Duration(hours: 7),
+        deepSleep: const Duration(hours: 2),
+        remSleep: const Duration(hours: 1, minutes: 30),
+        coreSleep: const Duration(hours: 3, minutes: 30),
+      );
       Future<List<SleepRecord>> fakeSleep() async {
         fetchCount++;
-        return [];
+        return [sleepRecord];
       }
       Future<List<HrvRecord>> fakeHrv() async => [];
 
-      // First call — should fetch
+      // First call — should fetch and stamp (non-empty results)
       await engine.refreshHealthKitIfStale(
         fetchSleep: fakeSleep,
         fetchHrv: fakeHrv,
@@ -595,6 +609,54 @@ void main() {
 
       expect(engine.state.sleepHistory, hasLength(1));
       expect(engine.state.hrvHistory, hasLength(1));
+    });
+
+    test('does not stamp lastHealthKitFetch when results are empty', () async {
+      final engine = _engine();
+
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: () async => [],
+        fetchHrv: () async => [],
+      );
+
+      expect(engine.state.lastHealthKitFetch, isNull);
+    });
+
+    test('replaces history instead of appending on subsequent refresh', () async {
+      final engine = _engine();
+
+      final record1 = SleepRecord(
+        date: DateTime.now().subtract(const Duration(days: 1)),
+        totalSleep: const Duration(hours: 7),
+        deepSleep: const Duration(hours: 2),
+        remSleep: const Duration(hours: 1, minutes: 30),
+        coreSleep: const Duration(hours: 3, minutes: 30),
+      );
+      final record2 = SleepRecord(
+        date: DateTime.now(),
+        totalSleep: const Duration(hours: 8),
+        deepSleep: const Duration(hours: 2),
+        remSleep: const Duration(hours: 2),
+        coreSleep: const Duration(hours: 4),
+      );
+
+      // First refresh returns one record
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: () async => [record1],
+        fetchHrv: () async => [],
+        threshold: Duration.zero,
+      );
+      expect(engine.state.sleepHistory, hasLength(1));
+
+      // Second refresh returns a different single record — should replace, not append
+      await engine.refreshHealthKitIfStale(
+        fetchSleep: () async => [record2],
+        fetchHrv: () async => [],
+        threshold: Duration.zero,
+      );
+      expect(engine.state.sleepHistory, hasLength(1));
+      expect(engine.state.sleepHistory.first.totalSleep,
+          equals(const Duration(hours: 8)));
     });
   });
 

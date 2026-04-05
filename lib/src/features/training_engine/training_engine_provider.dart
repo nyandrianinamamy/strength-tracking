@@ -89,7 +89,9 @@ Future<TrainingEngine> loadTrainingEngine({
       engine.ingestHrv(record);
     }
 
-    engine.stampHealthKitFetch();
+    if (sleepRecords.isNotEmpty || hrvRecords.isNotEmpty) {
+      engine.stampHealthKitFetch();
+    }
   }
 
   await repository.save(engine.serializeState());

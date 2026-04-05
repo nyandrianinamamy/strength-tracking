@@ -42,7 +42,6 @@ class TrainingReadinessCard extends ConsumerWidget {
             body: 'Adaptive guidance is temporarily unavailable.',
           ),
           data: (readiness) {
-            // Educational messages for cold-start and low-data tiers
             if (readiness.tier == ReadinessTier.cold &&
                 engine.state.sessionsIngested == 0) {
               return EmptyStateCard(
@@ -54,24 +53,6 @@ class TrainingReadinessCard extends ConsumerWidget {
               return EmptyStateCard(
                 title: 'Training Readiness',
                 body: AppLocalizations.of(context)!.readinessEmptyColdNoHealthKit,
-              );
-            }
-            if (readiness.tier == ReadinessTier.manualOnly) {
-              return EmptyStateCard(
-                title: 'Training Readiness',
-                body: AppLocalizations.of(context)!.readinessEmptyManualOnly,
-              );
-            }
-            if (readiness.tier == ReadinessTier.acwrOnly) {
-              return EmptyStateCard(
-                title: 'Training Readiness',
-                body: AppLocalizations.of(context)!.readinessEmptyAcwrOnly,
-              );
-            }
-            if (readiness.tier == ReadinessTier.noHrv) {
-              return EmptyStateCard(
-                title: 'Training Readiness',
-                body: AppLocalizations.of(context)!.readinessEmptyNoHrv,
               );
             }
             return _ReadinessCard(readiness: readiness, engine: engine);

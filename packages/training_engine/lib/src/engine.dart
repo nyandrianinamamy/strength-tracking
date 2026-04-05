@@ -189,17 +189,16 @@ class TrainingEngine {
       return; // Still fresh
     }
 
+    // Replace history with fresh data to avoid duplicates
     final sleepRecords = await fetchSleep();
-    for (final record in sleepRecords) {
-      ingestSleep(record);
-    }
+    _state = _state.copyWith(sleepHistory: sleepRecords);
 
     final hrvRecords = await fetchHrv();
-    for (final record in hrvRecords) {
-      ingestHrv(record);
-    }
+    _state = _state.copyWith(hrvHistory: hrvRecords);
 
-    _state = _state.copyWith(lastHealthKitFetch: now);
+    if (sleepRecords.isNotEmpty || hrvRecords.isNotEmpty) {
+      _state = _state.copyWith(lastHealthKitFetch: now);
+    }
   }
 
   /// Marks the current time as the last HealthKit fetch.
