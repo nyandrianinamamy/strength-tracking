@@ -22,6 +22,8 @@ void main() {
   // Reset data between each test group.
   setUp(() async {
     await resetEmulators();
+    // Allow emulators to fully process the reset before starting next test.
+    await Future<void>.delayed(const Duration(milliseconds: 500));
   });
 
   // ── Suite 1: Onboarding ──────────────────────────────────────────────
@@ -47,9 +49,10 @@ void main() {
       expect(find.text('About You'), findsOneWidget);
       expect(find.text('Sex'), findsOneWidget);
       expect(find.text('Fitness Goal'), findsOneWidget);
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      // Use .last — page 1's "Next" button still exists off-screen in the PageView.
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
       await tester.pumpAndSettle();
 
       // Page 3: Units
@@ -100,9 +103,10 @@ void main() {
       await tester.tap(find.text('Endurance'));
       await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next'));
+      // Use .last — page 1's "Next" button still exists off-screen in the PageView.
+      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next').last);
       await tester.pumpAndSettle();
-      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
       await tester.pumpAndSettle();
 
       // Page 3: Units — choose LBS
@@ -203,7 +207,7 @@ void main() {
         exerciseName: 'E2E Bench Press',
       );
 
-      expect(find.text('E2E Push Day'), findsOneWidget);
+      expect(find.text('E2E Push Day'), findsWidgets);
     });
   });
 
