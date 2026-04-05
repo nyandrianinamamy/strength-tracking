@@ -79,13 +79,61 @@ Future<void> navigateToTab(WidgetTester tester, String label) async {
   await tester.pumpAndSettle();
 }
 
-/// Complete onboarding: enter name, select KG, start training.
+/// Complete onboarding: enter name, skip About You, select KG, start training.
 Future<void> completeOnboarding(WidgetTester tester) async {
+  // Page 1: Welcome — enter name
   await tester.enterText(find.byType(TextField).first, 'TestUser');
   await tester.pumpAndSettle();
   await tester.tap(find.text('Next'));
   await tester.pumpAndSettle();
+
+  // Page 2: About You — skip (all fields optional)
+  await tester.tap(find.text('Next'));
+  await tester.pumpAndSettle();
+
+  // Page 3: Units — start training
   await tester.tap(find.text('Start Training'));
+  await tester.pumpAndSettle();
+}
+
+/// Complete onboarding with full profile details.
+Future<void> completeOnboardingWithProfile(
+  WidgetTester tester, {
+  String name = 'TestUser',
+  String age = '28',
+  String weight = '82',
+  String fitnessGoal = 'Hypertrophy',
+}) async {
+  // Page 1: Welcome — enter name
+  await tester.enterText(find.byType(TextField).first, name);
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('Next'));
+  await tester.pumpAndSettle();
+
+  // Page 2: About You — fill in details
+  // Sex defaults to Male (pre-selected)
+  // Enter age
+  await tester.enterText(find.widgetWithText(TextField, 'Age'), age);
+  await tester.pumpAndSettle();
+  // Enter weight
+  await tester.enterText(find.widgetWithText(TextField, 'Weight'), weight);
+  await tester.pumpAndSettle();
+  // Select fitness goal chip
+  await tester.tap(find.text(fitnessGoal));
+  await tester.pumpAndSettle();
+  // Proceed to units page
+  await tester.tap(find.text('Next'));
+  await tester.pumpAndSettle();
+
+  // Page 3: Units — start training
+  await tester.tap(find.text('Start Training'));
+  await tester.pumpAndSettle();
+}
+
+/// Navigate to settings page from dashboard.
+Future<void> navigateToSettings(WidgetTester tester) async {
+  // Tap the settings gear icon (top-right of dashboard header)
+  await tester.tap(find.byIcon(Icons.settings_outlined));
   await tester.pumpAndSettle();
 }
 
