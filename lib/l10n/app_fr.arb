@@ -334,5 +334,12 @@
   "readinessEmptyAcwrOnly": "Synchronise HealthKit pour ajouter le sommeil et le VFC à ton score.",
   "readinessEmptyNoHrv": "Le suivi VFC nécessite 3+ jours de données. Continue de porter ton appareil.",
   "readinessEmptyManualOnly": "Enregistre un entraînement pour débloquer le suivi objectif.",
-  "readinessLimitedData": "Données limitées"
+  "readinessLimitedData": "Données limitées",
+  "syncedJustNow": "Synchronisé à l'instant",
+  "syncedMinutesAgo": "Synchronisé il y a {minutes}m",
+  "@syncedMinutesAgo": { "placeholders": { "minutes": {} } },
+  "syncedHoursAgo": "Synchronisé il y a {hours}h",
+  "@syncedHoursAgo": { "placeholders": { "hours": {} } },
+  "syncedDaysAgo": "Synchronisé il y a {days}j",
+  "@syncedDaysAgo": { "placeholders": { "days": {} } }
 }

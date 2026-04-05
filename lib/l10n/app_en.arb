@@ -334,5 +334,12 @@
   "readinessEmptyAcwrOnly": "Sync HealthKit to add sleep and HRV data to your readiness score.",
   "readinessEmptyNoHrv": "HRV tracking needs 3+ days of data. Keep wearing your device.",
   "readinessEmptyManualOnly": "Log a workout to unlock objective readiness tracking.",
-  "readinessLimitedData": "Limited data"
+  "readinessLimitedData": "Limited data",
+  "syncedJustNow": "Synced just now",
+  "syncedMinutesAgo": "Synced {minutes}m ago",
+  "@syncedMinutesAgo": { "placeholders": { "minutes": {} } },
+  "syncedHoursAgo": "Synced {hours}h ago",
+  "@syncedHoursAgo": { "placeholders": { "hours": {} } },
+  "syncedDaysAgo": "Synced {days}d ago",
+  "@syncedDaysAgo": { "placeholders": { "days": {} } }
 }

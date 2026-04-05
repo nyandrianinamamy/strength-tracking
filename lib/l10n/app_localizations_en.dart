@@ -952,4 +952,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get readinessLimitedData => 'Limited data';
+
+  @override
+  String get syncedJustNow => 'Synced just now';
+
+  @override
+  String syncedMinutesAgo(Object minutes) {
+    return 'Synced ${minutes}m ago';
+  }
+
+  @override
+  String syncedHoursAgo(Object hours) {
+    return 'Synced ${hours}h ago';
+  }
+
+  @override
+  String syncedDaysAgo(Object days) {
+    return 'Synced ${days}d ago';
+  }
 }

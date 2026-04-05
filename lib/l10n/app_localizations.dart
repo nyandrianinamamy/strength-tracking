@@ -1921,6 +1921,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Limited data'**
   String get readinessLimitedData;
+
+  /// No description provided for @syncedJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced just now'**
+  String get syncedJustNow;
+
+  /// No description provided for @syncedMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {minutes}m ago'**
+  String syncedMinutesAgo(Object minutes);
+
+  /// No description provided for @syncedHoursAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {hours}h ago'**
+  String syncedHoursAgo(Object hours);
+
+  /// No description provided for @syncedDaysAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'Synced {days}d ago'**
+  String syncedDaysAgo(Object days);
 }
 
 class _AppLocalizationsDelegate

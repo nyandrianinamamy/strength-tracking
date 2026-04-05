@@ -956,4 +956,22 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get readinessLimitedData => 'Données limitées';
+
+  @override
+  String get syncedJustNow => 'Synchronisé à l\'instant';
+
+  @override
+  String syncedMinutesAgo(Object minutes) {
+    return 'Synchronisé il y a ${minutes}m';
+  }
+
+  @override
+  String syncedHoursAgo(Object hours) {
+    return 'Synchronisé il y a ${hours}h';
+  }
+
+  @override
+  String syncedDaysAgo(Object days) {
+    return 'Synchronisé il y a ${days}j';
+  }
 }

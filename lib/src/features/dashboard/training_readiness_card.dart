@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -213,34 +214,15 @@ class _ReadinessCard extends StatelessWidget {
             ),
 
             // Last sync footer
-            if (engine.state.lastHealthKitFetch != null) ...[
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.sync, size: 12, color: subtleText),
-                  const SizedBox(width: 4),
-                  Text(
-                    _syncLabel(engine.state.lastHealthKitFetch!, context),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: subtleText,
-                    ),
-                  ),
-                ],
+            if (engine.state.lastHealthKitFetch != null)
+              _SyncFooter(
+                lastSync: engine.state.lastHealthKitFetch!,
+                subtleText: subtleText,
               ),
-            ],
           ],
         ),
       ),
     );
-  }
-
-  String _syncLabel(DateTime lastSync, BuildContext context) {
-    final diff = DateTime.now().difference(lastSync);
-    if (diff.inMinutes < 1) return 'Synced just now';
-    if (diff.inMinutes < 60) return 'Synced ${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return 'Synced ${diff.inHours}h ago';
-    return 'Synced ${diff.inDays}d ago';
   }
 
   String _headlineForScore(int score) {
@@ -361,6 +343,63 @@ class _DataColumn extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _SyncFooter extends StatefulWidget {
+  const _SyncFooter({required this.lastSync, required this.subtleText});
+
+  final DateTime lastSync;
+  final Color subtleText;
+
+  @override
+  State<_SyncFooter> createState() => _SyncFooterState();
+}
+
+class _SyncFooterState extends State<_SyncFooter> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  String _syncLabel(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final diff = DateTime.now().difference(widget.lastSync);
+    if (diff.inMinutes < 1) return l10n.syncedJustNow;
+    if (diff.inMinutes < 60) return l10n.syncedMinutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.syncedHoursAgo(diff.inHours);
+    return l10n.syncedDaysAgo(diff.inDays);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.sync, size: 12, color: widget.subtleText),
+          const SizedBox(width: 4),
+          Text(
+            _syncLabel(context),
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: widget.subtleText,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
