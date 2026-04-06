@@ -72,6 +72,7 @@ class MetricCard extends StatelessWidget {
     required this.detail,
     required this.icon,
     this.badge,
+    this.onTap,
   });
 
   final String label;
@@ -79,10 +80,14 @@ class MetricCard extends StatelessWidget {
   final String detail;
   final IconData icon;
   final Widget? badge;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+      onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -125,6 +130,7 @@ class MetricCard extends StatelessWidget {
               ),
           ],
         ),
+      ),
       ),
     );
   }

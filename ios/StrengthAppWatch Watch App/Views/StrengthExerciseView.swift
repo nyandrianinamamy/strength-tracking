@@ -214,7 +214,7 @@ struct StrengthExerciseView: View {
         if remaining == 3 || remaining == 2 || remaining == 1 {
             WKInterfaceDevice.current().play(.click)
         } else if remaining == 0 {
-            WKInterfaceDevice.current().play(.notification)
+            WKInterfaceDevice.current().play(.success)
         }
         return true
     }

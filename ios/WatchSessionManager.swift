@@ -90,15 +90,28 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
 
         lastLaunchedSessionId = sessionId
 
-        let config = HKWorkoutConfiguration()
-        config.activityType = .traditionalStrengthTraining
-        config.locationType = .indoor
-
-        healthStore.startWatchApp(with: config) { success, error in
+        let workoutType = HKObjectType.workoutType()
+        healthStore.requestAuthorization(toShare: [workoutType], read: [workoutType]) { [weak self] authorized, error in
+            guard let self = self else { return }
             if let error = error {
-                print("Failed to launch watch app: \(error)")
-            } else {
-                print("Watch app launch requested: \(success)")
+                print("HealthKit authorization error: \(error)")
+                return
+            }
+            guard authorized else {
+                print("HealthKit workout authorization denied")
+                return
+            }
+
+            let config = HKWorkoutConfiguration()
+            config.activityType = .traditionalStrengthTraining
+            config.locationType = .indoor
+
+            self.healthStore.startWatchApp(with: config) { success, error in
+                if let error = error {
+                    print("Failed to launch watch app: \(error)")
+                } else {
+                    print("Watch app launch requested: \(success)")
+                }
             }
         }
     }
