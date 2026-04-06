@@ -145,6 +145,7 @@ class DashboardScreen extends ConsumerWidget {
                   value: '${snapshot.personalRecordCount}',
                   detail: 'Estimated 1RM tracked automatically',
                   icon: Icons.workspace_premium_rounded,
+                  onTap: () => context.go('/progress'),
                   badge: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -519,6 +520,7 @@ class DashboardScreen extends ConsumerWidget {
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
                       child: ListTile(
+                        onTap: () => context.go('/progress'),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 18,
                           vertical: 8,

@@ -112,7 +112,7 @@ final class StrengthLiveActivityManager: NSObject {
         )
         let content = ActivityContent(
             state: contentState,
-            staleDate: payload.restEndAt
+            staleDate: nil
         )
 
         if let activity = existingActivity(sessionId: payload.sessionId) {

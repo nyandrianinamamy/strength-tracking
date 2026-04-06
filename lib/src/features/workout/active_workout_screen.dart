@@ -336,6 +336,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     _lastHapticRestSecond = remainingRest;
 
     switch (remainingRest) {
+      case 3:
+        unawaited(_playRestClickHaptic());
+        break;
       case 2:
         unawaited(_playRestClickHaptic());
         break;

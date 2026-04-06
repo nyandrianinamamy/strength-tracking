@@ -181,7 +181,7 @@ struct TimedExerciseView: View {
                             timer?.invalidate()
                             timer = nil
                             isRunning = false
-                            WKInterfaceDevice.current().play(.notification)
+                            WKInterfaceDevice.current().play(.success)
                             let duration = elapsed
                             elapsed = 0
                             logCompleted(duration: duration)
@@ -232,7 +232,7 @@ struct TimedExerciseView: View {
                         timer?.invalidate()
                         timer = nil
                         isRunning = false
-                        WKInterfaceDevice.current().play(.notification)
+                        WKInterfaceDevice.current().play(.success)
                         let duration = elapsed
                         elapsed = 0
                         logCompleted(duration: duration)
@@ -317,7 +317,7 @@ struct TimedExerciseView: View {
         }
 
         if remaining <= 0 {
-            WKInterfaceDevice.current().play(.notification)
+            WKInterfaceDevice.current().play(.success)
             restTimer?.invalidate()
             restTimer = nil
             restTimerStart = nil
