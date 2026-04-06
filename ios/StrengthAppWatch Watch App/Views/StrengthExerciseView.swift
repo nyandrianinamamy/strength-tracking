@@ -15,8 +15,7 @@ struct StrengthExerciseView: View {
     @State private var weight: Double = 0
     @State private var reps: Int = 8
     @State private var editingWeight: Bool = true
-    @State private var lastRestAlertSecond: Int? = nil
-    @State private var lastRestAlertSetCount: Int? = nil
+    @State private var restHapticTimer: Timer? = nil
     @FocusState private var crownFocused: Bool
 
     private var nextSetNumber: Int {
@@ -31,7 +30,6 @@ struct StrengthExerciseView: View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
             let restInfo = computeRestRemaining(now: context.date)
             let sessionTime = elapsedSessionTime(now: context.date)
-            let _ = playRestHapticsIfNeeded(remaining: restInfo.remaining, setCount: restInfo.setCount)
 
             VStack(spacing: 0) {
                 Spacer().frame(height: 4)
@@ -185,8 +183,18 @@ struct StrengthExerciseView: View {
             }
             .padding(.horizontal, 4)
         }
-        .onAppear { prefillValues() }
-        .onChange(of: exercise.completedSets.count) { _ in prefillValues() }
+        .onAppear {
+            prefillValues()
+            startRestHapticTimer()
+        }
+        .onDisappear {
+            restHapticTimer?.invalidate()
+            restHapticTimer = nil
+        }
+        .onChange(of: exercise.completedSets.count) { _ in
+            prefillValues()
+            startRestHapticTimer()
+        }
     }
 
     // MARK: - Helpers
@@ -201,26 +209,33 @@ struct StrengthExerciseView: View {
         }
     }
 
-    @discardableResult
-    private func playRestHapticsIfNeeded(remaining: Int, setCount: Int) -> Bool {
-        if setCount == 0 { return false }
-        if lastRestAlertSetCount != setCount {
-            lastRestAlertSetCount = setCount
-            lastRestAlertSecond = remaining
-            return false
+    private func startRestHapticTimer() {
+        restHapticTimer?.invalidate()
+        restHapticTimer = nil
+
+        guard let lastSet = exercise.completedSets.last,
+              let completedAt = parseISO8601(lastSet.completedAt) else { return }
+
+        let totalRest = exercise.restSeconds
+        guard totalRest > 0 else { return }
+
+        let elapsed = Int(Date().timeIntervalSince(completedAt))
+        guard totalRest - elapsed > 0 else { return }
+
+        restHapticTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [completedAt, totalRest] _ in
+            let rem = totalRest - Int(Date().timeIntervalSince(completedAt))
+            if rem == 3 || rem == 2 || rem == 1 {
+                WKInterfaceDevice.current().play(.click)
+            }
+            if rem <= 0 {
+                WKInterfaceDevice.current().play(.success)
+                restHapticTimer?.invalidate()
+                restHapticTimer = nil
+            }
         }
-        guard lastRestAlertSecond != remaining else { return false }
-        let previousSecond = lastRestAlertSecond
-        lastRestAlertSecond = remaining
-        if remaining == 3 || remaining == 2 || remaining == 1 {
-            WKInterfaceDevice.current().play(.click)
-        } else if remaining == 0, let prev = previousSecond, prev > 0 {
-            WKInterfaceDevice.current().play(.success)
-        }
-        return true
     }
 
-    /// Compute rest remaining from the last completed set's timestamp
+    /// Compute rest remaining for display only (no haptics)
     private func computeRestRemaining(now: Date) -> (remaining: Int, setCount: Int) {
         guard let lastSet = exercise.completedSets.last,
               let completedAt = parseISO8601(lastSet.completedAt) else {

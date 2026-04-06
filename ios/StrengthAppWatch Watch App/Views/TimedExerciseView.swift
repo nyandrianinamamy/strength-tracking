@@ -306,7 +306,12 @@ struct TimedExerciseView: View {
     }
 
     private func updateRestRemaining() {
-        let start = restTimerStart ?? Date()
+        guard let start = restTimerStart else {
+            restTimer?.invalidate()
+            restTimer = nil
+            restRemaining = 0
+            return
+        }
         let elapsedRest = Int(Date().timeIntervalSince(start))
         let remaining = max(0, exercise.restSeconds - elapsedRest)
         restRemaining = remaining
@@ -317,13 +322,11 @@ struct TimedExerciseView: View {
         }
 
         if remaining <= 0 {
-            if lastRestAlertSecond != 0 {
-                lastRestAlertSecond = 0
-                WKInterfaceDevice.current().play(.success)
-            }
+            WKInterfaceDevice.current().play(.success)
             restTimer?.invalidate()
             restTimer = nil
             restTimerStart = nil
+            lastRestAlertSecond = nil
         }
     }
 }
