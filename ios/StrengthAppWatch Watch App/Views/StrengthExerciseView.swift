@@ -210,10 +210,11 @@ struct StrengthExerciseView: View {
             return false
         }
         guard lastRestAlertSecond != remaining else { return false }
+        let previousSecond = lastRestAlertSecond
         lastRestAlertSecond = remaining
         if remaining == 3 || remaining == 2 || remaining == 1 {
             WKInterfaceDevice.current().play(.click)
-        } else if remaining == 0 {
+        } else if remaining == 0, let prev = previousSecond, prev > 0 {
             WKInterfaceDevice.current().play(.success)
         }
         return true

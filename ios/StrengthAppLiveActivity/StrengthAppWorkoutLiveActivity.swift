@@ -2,7 +2,7 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-@available(iOSApplicationExtension 16.2, *)
+@available(iOS 16.2, *)
 struct StrengthAppWorkoutLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: StrengthLiveActivityAttributes.self) { context in
@@ -51,7 +51,8 @@ struct StrengthAppWorkoutLiveActivity: Widget {
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
             } compactTrailing: {
-                if let restEndAt = context.state.restEndAt, context.state.hasActiveRest {
+                if let restEndAt = context.state.restEndAt, context.state.hasActiveRest,
+                   restEndAt >= context.state.updatedAt {
                     Text(timerInterval: context.state.updatedAt...restEndAt, countsDown: true)
                         .monospacedDigit()
                         .font(.caption2.weight(.bold))
@@ -70,7 +71,7 @@ struct StrengthAppWorkoutLiveActivity: Widget {
     }
 }
 
-@available(iOSApplicationExtension 16.2, *)
+@available(iOS 16.2, *)
 private struct WorkoutLiveActivityView: View {
     let context: ActivityViewContext<StrengthLiveActivityAttributes>
 
@@ -126,7 +127,7 @@ private struct WorkoutLiveActivityView: View {
     }
 }
 
-@available(iOSApplicationExtension 16.2, *)
+@available(iOS 16.2, *)
 private struct MetricCard: View {
     let title: String
     let value: String
@@ -157,7 +158,7 @@ private struct MetricCard: View {
     }
 }
 
-@available(iOSApplicationExtension 16.2, *)
+@available(iOS 16.2, *)
 private struct RestFooterView: View {
     let context: ActivityViewContext<StrengthLiveActivityAttributes>
 
@@ -166,7 +167,8 @@ private struct RestFooterView: View {
             Image(systemName: context.state.hasActiveRest ? "timer" : "figure.cooldown")
                 .foregroundStyle(context.state.hasActiveRest ? Color.orange : Color.green)
 
-            if let restEndAt = context.state.restEndAt, context.state.hasActiveRest {
+            if let restEndAt = context.state.restEndAt, context.state.hasActiveRest,
+               restEndAt >= context.state.updatedAt {
                 Text("Rest")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)

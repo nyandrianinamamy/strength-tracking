@@ -317,11 +317,13 @@ struct TimedExerciseView: View {
         }
 
         if remaining <= 0 {
-            WKInterfaceDevice.current().play(.success)
+            if lastRestAlertSecond != 0 {
+                lastRestAlertSecond = 0
+                WKInterfaceDevice.current().play(.success)
+            }
             restTimer?.invalidate()
             restTimer = nil
             restTimerStart = nil
-            lastRestAlertSecond = nil
         }
     }
 }
