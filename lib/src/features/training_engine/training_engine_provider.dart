@@ -144,6 +144,42 @@ final engineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
   return ref.watch(trainingEngineUiAdapterProvider).toHeatmapData(fatigueMap);
 });
 
+/// Returns heatmap data that includes real-time fatigue from the active
+/// workout session. Falls back to [engineHeatmapDataProvider] when there
+/// is no active session or no logged sets.
+final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
+  ref,
+) async {
+  final appState = ref.watch(appStateControllerProvider);
+  final activeSession = appState.activeSession;
+  final activeSets = activeSession?.completedSets ?? [];
+
+  // No active workout — use the standard engine-only heatmap
+  if (activeSets.isEmpty) {
+    return ref.watch(engineHeatmapDataProvider.future);
+  }
+
+  final engine = await ref.watch(trainingEngineProvider.future);
+  if (engine.state.sessionsIngested == 0 && activeSets.isEmpty) {
+    return <Muscle, MuscleData>{};
+  }
+
+  // Convert app CompletedSets to engine LoggedSets
+  final engineSets = activeSets
+      .where((s) => s.reps > 0)
+      .map((s) => LoggedSet(
+            exerciseId: s.exerciseId,
+            weightKg: s.weightKg,
+            reps: s.reps,
+            rpe: s.rpe ?? 8.0,
+            completedAt: s.completedAt,
+          ))
+      .toList();
+
+  final fatigueMap = engine.previewFatigueWithSets(engineSets);
+  return ref.watch(trainingEngineUiAdapterProvider).toHeatmapData(fatigueMap);
+});
+
 /// Returns the current composite readiness score.
 ///
 /// Refreshes HealthKit data if stale (>1 hour since last fetch) before
