@@ -35,10 +35,12 @@ void main() {
     expect(find.text('Workout Library'), findsNothing);
     expect(find.text('Alex'), findsOneWidget);
 
-    await tester.tap(find.text('EXERCISES'));
+    await tester.tap(find.descendant(
+      of: find.byType(NavigationRail),
+      matching: find.text('Exercises'),
+    ));
     await tester.pumpAndSettle();
 
-    expect(find.text('Exercises'), findsOneWidget);
     expect(find.text('New Exercise'), findsOneWidget);
   });
 
@@ -51,6 +53,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.text('DASHBOARD'), findsOneWidget);
+    expect(find.text('Dashboard'), findsOneWidget);
   });
 }

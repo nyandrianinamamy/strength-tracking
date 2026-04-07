@@ -92,7 +92,7 @@ class _AppShellScaffoldState extends State<AppShellScaffold>
                       (item) => NavigationRailDestination(
                         icon: Icon(item.icon),
                         selectedIcon: Icon(item.selectedIcon),
-                        label: Text(item.label.toUpperCase()),
+                        label: Text(item.label),
                       ),
                     )
                     .toList(),
@@ -141,7 +141,7 @@ class _AppShellScaffoldState extends State<AppShellScaffold>
               (item) => NavigationDestination(
                 icon: Icon(item.icon),
                 selectedIcon: Icon(item.selectedIcon),
-                label: item.label.toUpperCase(),
+                label: item.label,
               ),
             )
             .toList(),
