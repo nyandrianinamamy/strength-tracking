@@ -77,6 +77,7 @@ class _RoutineGroupEditorScreenState
   @override
   Widget build(BuildContext context) {
     _ensureInitialized();
+    final l10n = AppLocalizations.of(context)!;
 
     final state = ref.watch(appStateControllerProvider);
     final availableRoutineIds =
@@ -90,13 +91,13 @@ class _RoutineGroupEditorScreenState
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.groupId == null ? 'New Group' : 'Edit Group'),
+        title: Text(widget.groupId == null ? l10n.newGroup : l10n.editGroup),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 8),
             child: FilledButton(
               onPressed: _canSave ? () => _save(context) : null,
-              child: const Text('Save'),
+              child: Text(l10n.save),
             ),
           ),
         ],
@@ -107,9 +108,9 @@ class _RoutineGroupEditorScreenState
         children: [
           TextField(
             controller: _nameController,
-            decoration: const InputDecoration(
-              labelText: 'Group name',
-              hintText: 'Push / Pull / Legs',
+            decoration: InputDecoration(
+              labelText: l10n.groupName,
+              hintText: l10n.groupNameHint,
             ),
           ),
           const SizedBox(height: 16),
@@ -117,21 +118,21 @@ class _RoutineGroupEditorScreenState
             contentPadding: EdgeInsets.zero,
             value: _makeActive,
             onChanged: (value) => setState(() => _makeActive = value),
-            title: const Text('Use as active rotation'),
-            subtitle: const Text(
-              'The active group drives the dashboard recommendation.',
+            title: Text(l10n.useAsActiveRotation),
+            subtitle: Text(
+              l10n.activeGroupDrivesDashboard,
             ),
           ),
           const SizedBox(height: 24),
           Text(
-            'Ordered routines',
+            l10n.orderedRoutines,
             style: Theme.of(
               context,
             ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 8),
           Text(
-            'These run in sequence. You can reorder them and skip one from the dashboard when needed.',
+            l10n.orderedRoutinesDescription,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: context.appColors.subtleText),
@@ -139,8 +140,8 @@ class _RoutineGroupEditorScreenState
           const SizedBox(height: 16),
           if (_routineIds.isEmpty)
             EmptyStateCard(
-              title: 'Add at least two routines',
-              body: 'Choose the routines that belong to this split.',
+              title: l10n.addAtLeastTwoRoutines,
+              body: l10n.chooseRoutinesForSplit,
               dashed: true,
               icon: Icons.playlist_add_check_rounded,
               action: FilledButton.icon(
@@ -148,7 +149,7 @@ class _RoutineGroupEditorScreenState
                     ? null
                     : () => _showRoutinePicker(context, availableRoutines),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Routines'),
+                label: Text(l10n.addRoutines),
               ),
             )
           else
@@ -198,8 +199,8 @@ class _RoutineGroupEditorScreenState
                     const SizedBox(width: 8),
                     Text(
                       availableRoutines.isEmpty
-                          ? 'All routines are already assigned'
-                          : 'Add more routines',
+                          ? l10n.allRoutinesAssigned
+                          : l10n.addMoreRoutines,
                       style: TextStyle(color: context.appColors.subtleText),
                     ),
                   ],
@@ -212,7 +213,7 @@ class _RoutineGroupEditorScreenState
             onPressed: _canSave ? () => _save(context) : null,
             icon: const Icon(Icons.check_circle_outline),
             label: Text(
-              widget.groupId == null ? 'Create Group' : 'Save Changes',
+              widget.groupId == null ? l10n.createGroup : l10n.saveChanges,
             ),
           ),
           if (widget.groupId != null) ...[
@@ -221,7 +222,7 @@ class _RoutineGroupEditorScreenState
               onPressed: () => _delete(context),
               style: OutlinedButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
               icon: const Icon(Icons.delete_outline),
-              label: const Text('Delete Group'),
+              label: Text(l10n.deleteGroup),
             ),
           ],
         ],
@@ -233,6 +234,7 @@ class _RoutineGroupEditorScreenState
     BuildContext context,
     List<Routine> availableRoutines,
   ) async {
+    final l10n = AppLocalizations.of(context)!;
     final selectedId = await showModalBottomSheet<String>(
       context: context,
       showDragHandle: true,
@@ -241,10 +243,10 @@ class _RoutineGroupEditorScreenState
           child: ListView(
             shrinkWrap: true,
             children: [
-              const ListTile(
+              ListTile(
                 title: Text(
-                  'Add routine',
-                  style: TextStyle(fontWeight: FontWeight.w800),
+                  l10n.addRoutineSheet,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
               ...availableRoutines.map((routine) {
@@ -293,22 +295,23 @@ class _RoutineGroupEditorScreenState
   }
 
   Future<void> _delete(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete group?'),
-        content: const Text(
-          'This removes the sequence, but keeps all routines and workout history.',
+        title: Text(l10n.deleteGroupConfirm),
+        content: Text(
+          l10n.deleteGroupMessage,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
             style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-            child: const Text('Delete'),
+            child: Text(l10n.delete),
           ),
         ],
       ),

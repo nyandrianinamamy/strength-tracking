@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/planner_registry_adapter.dart';
@@ -23,6 +24,7 @@ class SmartPlannerScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final plannerState = ref.watch(smartPlannerControllerProvider);
     final notifier = ref.read(smartPlannerControllerProvider.notifier);
     final appState = ref.watch(appStateControllerProvider);
@@ -45,7 +47,7 @@ class SmartPlannerScreen extends ConsumerWidget {
 
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Your Plan'),
+          title: Text(l10n.yourPlan),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => notifier.reset(),
@@ -107,13 +109,13 @@ class SmartPlannerScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Swap Exercise',
-                          style: TextStyle(
+                          l10n.swapExerciseTitle,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
                             color: _slate900,
@@ -123,9 +125,9 @@ class SmartPlannerScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 8),
                     if (alternatives.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text('No alternatives available.'),
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(l10n.noAlternatives),
                       )
                     else
                       ListView(
@@ -201,9 +203,9 @@ class SmartPlannerScreen extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF8FAFC),
         elevation: 0,
-        title: const Text(
-          'Smart Planner',
-          style: TextStyle(
+        title: Text(
+          l10n.smartPlannerTitle,
+          style: const TextStyle(
             color: _slate900,
             fontWeight: FontWeight.w700,
           ),
@@ -256,7 +258,7 @@ class SmartPlannerScreen extends ConsumerWidget {
                   TextButton(
                     onPressed: goBack,
                     child: Text(
-                      currentStep == 0 ? 'Cancel' : 'Back',
+                      currentStep == 0 ? l10n.cancel : l10n.backButton,
                       style: const TextStyle(color: _slate500),
                     ),
                   ),
@@ -264,9 +266,9 @@ class SmartPlannerScreen extends ConsumerWidget {
                   if (isLastStep) ...[
                     TextButton(
                       onPressed: () => notifier.generatePlan(exercises),
-                      child: const Text(
-                        'Skip',
-                        style: TextStyle(color: _slate500),
+                      child: Text(
+                        l10n.skip,
+                        style: const TextStyle(color: _slate500),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -282,7 +284,7 @@ class SmartPlannerScreen extends ConsumerWidget {
                       ),
                     ),
                     child: Text(
-                      isLastStep ? 'Generate' : 'Next',
+                      isLastStep ? l10n.generate : l10n.next,
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                       ),
@@ -404,10 +406,10 @@ class _StepCircle extends StatelessWidget {
 // Step 1 — Training Days
 // ---------------------------------------------------------------------------
 
-String _splitTypeLabel(SplitType split) => switch (split) {
-  SplitType.fullBody => 'Full Body',
-  SplitType.upperLower => 'Upper/Lower',
-  SplitType.pushPullLegs => 'Push/Pull/Legs',
+String _splitTypeLabel(SplitType split, AppLocalizations l10n) => switch (split) {
+  SplitType.fullBody => l10n.fullBody,
+  SplitType.upperLower => l10n.upperLower,
+  SplitType.pushPullLegs => l10n.pushPullLegs,
 };
 
 class _Step1Content extends StatelessWidget {
@@ -418,25 +420,26 @@ class _Step1Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final selectedDays = plannerState.selectedDays;
     final rawSplit = plannerState.detectedSplit;
-    final splitLabel = rawSplit != null ? _splitTypeLabel(rawSplit) : null;
+    final splitLabel = rawSplit != null ? _splitTypeLabel(rawSplit, l10n) : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Training Days',
-          style: TextStyle(
+        Text(
+          l10n.trainingDays,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: _slate900,
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Which days can you commit to working out?',
-          style: TextStyle(fontSize: 14, color: _slate500),
+        Text(
+          l10n.whichDaysCommit,
+          style: const TextStyle(fontSize: 14, color: _slate500),
         ),
         const SizedBox(height: 20),
         DayPicker(
@@ -457,9 +460,9 @@ class _Step1Content extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Detected Split',
-                  style: TextStyle(
+                Text(
+                  l10n.detectedSplit,
+                  style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                     color: _slate500,
@@ -477,7 +480,7 @@ class _Step1Content extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '${selectedDays.length} days selected',
+                  l10n.nDaysSelected(selectedDays.length),
                   style: const TextStyle(fontSize: 13, color: _slate500),
                 ),
               ],
@@ -501,21 +504,22 @@ class _Step2Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Goal & Duration',
-          style: TextStyle(
+        Text(
+          l10n.goalAndDuration,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: _slate900,
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'What are you training for and how long can you work out?',
-          style: TextStyle(fontSize: 14, color: _slate500),
+        Text(
+          l10n.whatTrainingFor,
+          style: const TextStyle(fontSize: 14, color: _slate500),
         ),
         const SizedBox(height: 24),
         GoalDurationStep(
@@ -546,21 +550,22 @@ class _Step3Content extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Preferences',
-          style: TextStyle(
+        Text(
+          l10n.preferences,
+          style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: _slate900,
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Optional — customise which exercises appear in your plan.',
-          style: TextStyle(fontSize: 14, color: _slate500),
+        Text(
+          l10n.optionalCustomise,
+          style: const TextStyle(fontSize: 14, color: _slate500),
         ),
         const SizedBox(height: 24),
         PreferenceStep(

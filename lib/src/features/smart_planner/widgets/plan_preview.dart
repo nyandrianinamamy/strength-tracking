@@ -1,5 +1,6 @@
 // lib/src/features/smart_planner/widgets/plan_preview.dart
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:training_engine/training_engine.dart';
 
 import 'session_card.dart';
@@ -13,14 +14,14 @@ const _slate200 = Color(0xFFE2E8F0);
 // Split type label helper
 // ---------------------------------------------------------------------------
 
-String _splitLabel(SplitType split) {
+String _splitLabel(SplitType split, AppLocalizations l10n) {
   switch (split) {
     case SplitType.fullBody:
-      return 'Full Body';
+      return l10n.fullBody;
     case SplitType.upperLower:
-      return 'Upper/Lower';
+      return l10n.upperLower;
     case SplitType.pushPullLegs:
-      return 'Push/Pull/Legs';
+      return l10n.pushPullLegs;
   }
 }
 
@@ -79,6 +80,7 @@ class PlanPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final sessionCount = plan.sessions.length;
 
     return Column(
@@ -97,7 +99,7 @@ class PlanPreview extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _splitLabel(plan.splitType),
+                      _splitLabel(plan.splitType, l10n),
                       style: const TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.w800,
@@ -106,7 +108,7 @@ class PlanPreview extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '$sessionCount sessions per week',
+                      l10n.sessionsPerWeek(sessionCount),
                       style: const TextStyle(
                         fontSize: 14,
                         color: _slate500,
@@ -160,7 +162,7 @@ class PlanPreview extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: onRegenerate,
                     icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: const Text('Regenerate'),
+                    label: Text(l10n.regenerate),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: _slate900,
                       side: const BorderSide(color: _slate200, width: 1.5),
@@ -174,7 +176,7 @@ class PlanPreview extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: onAdopt,
                     icon: const Icon(Icons.check_circle_outline, size: 18),
-                    label: const Text('Adopt Plan'),
+                    label: Text(l10n.adoptPlan),
                     style: FilledButton.styleFrom(
                       backgroundColor: _blue600,
                       shape: const StadiumBorder(),

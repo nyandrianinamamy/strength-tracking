@@ -1038,4 +1038,496 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get years => 'ans';
+
+  @override
+  String get navDashboard => 'Tableau de bord';
+
+  @override
+  String get navRoutines => 'Routines';
+
+  @override
+  String get navProgress => 'Progression';
+
+  @override
+  String get offlineMessage =>
+      'Vous êtes hors ligne — modifications enregistrées localement';
+
+  @override
+  String get backOnline => 'De retour en ligne';
+
+  @override
+  String get workoutSummary => 'Résumé de la séance';
+
+  @override
+  String get summaryUnavailable => 'Résumé indisponible';
+
+  @override
+  String get workoutNotFound => 'Cette séance est introuvable.';
+
+  @override
+  String get resumeStaleSession => 'Reprendre la session inactive ?';
+
+  @override
+  String staleSessionMessage(Object duration) {
+    return 'Cette séance est inactive depuis $duration. Vous pouvez la reprendre, la terminer ou l\'abandonner.';
+  }
+
+  @override
+  String get finishNow => 'Terminer maintenant';
+
+  @override
+  String get discard => 'Abandonner';
+
+  @override
+  String get noMatchingExercises => 'Aucun exercice correspondant';
+
+  @override
+  String get switchNow => 'Changer maintenant';
+
+  @override
+  String get logSetRpe => 'Enregistrer RPE du set';
+
+  @override
+  String get selectRpe => 'Sélectionner RPE :';
+
+  @override
+  String get whatThisMeans => 'Ce que cela signifie';
+
+  @override
+  String get personalBest => 'RP';
+
+  @override
+  String get durationMin => 'Durée (min)';
+
+  @override
+  String weightWithUnit(Object unit) {
+    return 'Poids ($unit)';
+  }
+
+  @override
+  String get repsLabel => 'Reps';
+
+  @override
+  String get rpeLabel => 'RPE';
+
+  @override
+  String get rpeHint => 'Optionnel, 1-10';
+
+  @override
+  String get noSuggestionYet => 'Pas encore de suggestion';
+
+  @override
+  String get sessionNoValidRoutine => 'La session n\'a pas de routine valide';
+
+  @override
+  String get routineDeletedMessage =>
+      'La routine de cette session a peut-être été supprimée. Abandonnez cette session pour continuer.';
+
+  @override
+  String editSetNumber(Object number) {
+    return 'Modifier set $number';
+  }
+
+  @override
+  String get newGroup => 'Nouveau groupe';
+
+  @override
+  String get editGroup => 'Modifier le groupe';
+
+  @override
+  String get groupName => 'Nom du groupe';
+
+  @override
+  String get groupNameHint => 'Push / Pull / Legs';
+
+  @override
+  String get useAsActiveRotation => 'Utiliser comme rotation active';
+
+  @override
+  String get activeGroupDrivesDashboard =>
+      'Le groupe actif détermine la recommandation du tableau de bord.';
+
+  @override
+  String get orderedRoutines => 'Routines ordonnées';
+
+  @override
+  String get orderedRoutinesDescription =>
+      'Elles s\'enchaînent dans l\'ordre. Vous pouvez les réorganiser et en passer une depuis le tableau de bord.';
+
+  @override
+  String get addAtLeastTwoRoutines => 'Ajoutez au moins deux routines';
+
+  @override
+  String get chooseRoutinesForSplit =>
+      'Choisissez les routines qui font partie de ce split.';
+
+  @override
+  String get addRoutines => 'Ajouter des routines';
+
+  @override
+  String get allRoutinesAssigned => 'Toutes les routines sont déjà assignées';
+
+  @override
+  String get addMoreRoutines => 'Ajouter des routines';
+
+  @override
+  String get createGroup => 'Créer le groupe';
+
+  @override
+  String get deleteGroup => 'Supprimer le groupe';
+
+  @override
+  String get deleteGroupConfirm => 'Supprimer le groupe ?';
+
+  @override
+  String get deleteGroupMessage =>
+      'Cela supprime la séquence, mais conserve toutes les routines et l\'historique.';
+
+  @override
+  String get addRoutineSheet => 'Ajouter une routine';
+
+  @override
+  String get routineGroups => 'Groupes de routines';
+
+  @override
+  String get newGroupTooltip => 'Nouveau groupe';
+
+  @override
+  String get routineGroupsDescription =>
+      'Créez des splits ordonnés comme PPL ou Haut/Bas et choisissez lequel guide la recommandation du tableau de bord.';
+
+  @override
+  String get noRoutineGroupsYet => 'Aucun groupe de routines';
+
+  @override
+  String get createGroupToSequence =>
+      'Créez un groupe pour transformer l\'entraînement suivant en une vraie séquence.';
+
+  @override
+  String get activeLabel => 'Actif';
+
+  @override
+  String nRoutines(Object count) {
+    return '$count routines';
+  }
+
+  @override
+  String currentCycle(Object names) {
+    return 'Cycle actuel : $names';
+  }
+
+  @override
+  String get groups => 'Groupes';
+
+  @override
+  String get noActiveGroup => 'Aucun groupe actif';
+
+  @override
+  String get createGroupPrompt =>
+      'Créez un groupe de routines pour gérer votre séquence.';
+
+  @override
+  String nRoutinesInRotation(Object count) {
+    return '$count routines en rotation';
+  }
+
+  @override
+  String get createLabel => 'Créer';
+
+  @override
+  String get manageLabel => 'Gérer';
+
+  @override
+  String get sleepAndHrv => 'Sommeil et VFC';
+
+  @override
+  String get sleepHrvDescription =>
+      'Lire les données de sommeil et de variabilité cardiaque pour améliorer les recommandations.';
+
+  @override
+  String failedError(Object error) {
+    return 'Échec : $error';
+  }
+
+  @override
+  String get clearWorkoutHistory => 'Effacer l\'historique des séances';
+
+  @override
+  String get clearWorkoutHistoryConfirm =>
+      'Effacer l\'historique des séances ?';
+
+  @override
+  String get clearWorkoutHistoryMessage =>
+      'Cela supprimera toutes les séances et données de performance. Vos exercices et routines seront conservés.';
+
+  @override
+  String get workoutHistoryCleared => 'Historique des séances effacé';
+
+  @override
+  String get themeLabel => 'Thème';
+
+  @override
+  String get appleHealth => 'Apple Health';
+
+  @override
+  String get muscleFatigue => 'Fatigue musculaire';
+
+  @override
+  String get engineDebug => 'Debug moteur';
+
+  @override
+  String get skipForNow => 'Passer pour le moment';
+
+  @override
+  String get workoutPaused => 'Séance en pause';
+
+  @override
+  String get workoutLabel => 'Séance';
+
+  @override
+  String get reviewSession => 'Revoir la session';
+
+  @override
+  String nExercisesRemaining(Object count) {
+    return '$count exercices restants';
+  }
+
+  @override
+  String get estimated1rmTracked => '1RM estimé suivi automatiquement';
+
+  @override
+  String get trainingReadiness => 'Préparation à l\'entraînement';
+
+  @override
+  String get adaptiveGuidanceUnavailable =>
+      'Les conseils adaptatifs sont temporairement indisponibles.';
+
+  @override
+  String get sleepLabel => 'SOMMEIL';
+
+  @override
+  String get hrvLabel => 'VFC';
+
+  @override
+  String get fatigueLabel => 'FATIGUE';
+
+  @override
+  String get primedToPerform => 'Prêt à performer';
+
+  @override
+  String get goodToGo => 'Prêt à y aller';
+
+  @override
+  String get takeItLighter => 'Allez-y doucement';
+
+  @override
+  String get recoveryOptimal => 'Votre récupération est optimale aujourd\'hui.';
+
+  @override
+  String get recoveryStable => 'Votre récupération est stable aujourd\'hui.';
+
+  @override
+  String get giveBodyTime =>
+      'Accordez plus de temps à votre corps pour récupérer.';
+
+  @override
+  String get considerDeload =>
+      'Envisagez une séance légère ou un jour de repos.';
+
+  @override
+  String get noData => 'Pas de données';
+
+  @override
+  String get optimalStatus => 'Optimal';
+
+  @override
+  String get fairStatus => 'Correct';
+
+  @override
+  String get lowStatus => 'Bas';
+
+  @override
+  String get measuredStatus => 'Mesuré';
+
+  @override
+  String get balancedStatus => 'Équilibré';
+
+  @override
+  String get moderateValue => 'Modéré';
+
+  @override
+  String get highValue => 'Élevé';
+
+  @override
+  String get recoveringStatus => 'En récupération';
+
+  @override
+  String get edit => 'Modifier';
+
+  @override
+  String get archiveLabel => 'Archiver';
+
+  @override
+  String get timedType => 'Chronométré';
+
+  @override
+  String get machinePhoto => 'Photo de la machine';
+
+  @override
+  String get addMachinePhoto => 'Ajoutez une photo de la machine';
+
+  @override
+  String get bestTime => 'Meilleur temps';
+
+  @override
+  String get bestSet => 'Meilleur set';
+
+  @override
+  String get estimated1rmLong => '1RM estimé';
+
+  @override
+  String get achievedLabel => 'Atteint';
+
+  @override
+  String get volumeData => 'Données de volume';
+
+  @override
+  String weekOf(Object date) {
+    return 'Semaine du $date';
+  }
+
+  @override
+  String get whichDaysCommit => 'Quels jours pouvez-vous vous entraîner ?';
+
+  @override
+  String get detectedSplit => 'Split détecté';
+
+  @override
+  String nDaysSelected(Object count) {
+    return '$count jours sélectionnés';
+  }
+
+  @override
+  String get whatTrainingFor =>
+      'Quel est votre objectif et combien de temps pouvez-vous vous entraîner ?';
+
+  @override
+  String get optionalCustomise =>
+      'Optionnel — personnalisez les exercices de votre plan.';
+
+  @override
+  String get backButton => 'Retour';
+
+  @override
+  String get fullBody => 'Full Body';
+
+  @override
+  String get upperLower => 'Haut/Bas';
+
+  @override
+  String get pushPullLegs => 'Push/Pull/Legs';
+
+  @override
+  String get exercisesPrioritised =>
+      'Ces exercices seront priorisés dans votre plan.';
+
+  @override
+  String get exercisesNeverAppear =>
+      'Ces exercices n\'apparaîtront jamais dans votre plan.';
+
+  @override
+  String get swapExerciseTitle => 'Changer d\'exercice';
+
+  @override
+  String get dayMon => 'Lun';
+
+  @override
+  String get dayTue => 'Mar';
+
+  @override
+  String get dayWed => 'Mer';
+
+  @override
+  String get dayThu => 'Jeu';
+
+  @override
+  String get dayFri => 'Ven';
+
+  @override
+  String get daySat => 'Sam';
+
+  @override
+  String get daySun => 'Dim';
+
+  @override
+  String get restTimerComplete => 'Repos terminé';
+
+  @override
+  String restCompleteBody(Object exercise) {
+    return 'Repos terminé. Retour à $exercise.';
+  }
+
+  @override
+  String nSets(Object count) {
+    return '$count séries';
+  }
+
+  @override
+  String setNColon(Object number) {
+    return 'Set $number :';
+  }
+
+  @override
+  String setNOfM(Object current, Object total) {
+    return 'SET $current SUR $total';
+  }
+
+  @override
+  String get saveAndLogSet => 'Sauver et enregistrer';
+
+  @override
+  String get allExercisesCompleteExcl => 'Tous les exercices terminés !';
+
+  @override
+  String get addAnotherOrFinishWorkout =>
+      'Ajoutez un exercice ou terminez votre séance.';
+
+  @override
+  String get exerciseFallback => 'Exercice';
+
+  @override
+  String get routineFallback => 'Routine';
+
+  @override
+  String vsLastWeek(Object delta) {
+    return '$delta vs semaine dernière';
+  }
+
+  @override
+  String est1rmValue(Object value) {
+    return '1RM est. : $value';
+  }
+
+  @override
+  String setTimedSummary(Object number, Object duration) {
+    return 'Set $number : $duration min';
+  }
+
+  @override
+  String setWeightSummary(Object number, Object weight, Object reps) {
+    return 'Set $number : $weight x $reps';
+  }
+
+  @override
+  String setWeightRpeSummary(
+    Object number,
+    Object weight,
+    Object reps,
+    Object rpe,
+  ) {
+    return 'Set $number : $weight x $reps • RPE $rpe';
+  }
+
+  @override
+  String get autoLabel => 'Auto';
 }

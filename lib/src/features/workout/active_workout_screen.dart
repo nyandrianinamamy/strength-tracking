@@ -384,10 +384,13 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 nextExercise == null
                     ? 'your workout'
                     : ExerciseTranslations.displayName(context, nextExercise);
+            final l10n = AppLocalizations.of(context)!;
             unawaited(_restTimerNotificationService.primePermission());
             _restTimerNotificationService.scheduleRestEnd(
               duration: Duration(seconds: restSeconds),
               exerciseName: exerciseName,
+              notificationTitle: l10n.restTimerComplete,
+              notificationBody: l10n.restCompleteBody(exerciseName),
             );
           }
         }
@@ -508,27 +511,28 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     }
 
     _staleSessionPromptShown = true;
+    final l10n = AppLocalizations.of(context)!;
     final idleLabel = _staleSessionService.idleLabel(session);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('Resume stale session?'),
+          title: Text(l10n.resumeStaleSession),
           content: Text(
-            'This workout has been idle for $idleLabel. You can resume it, finish it now, or discard it.',
+            l10n.staleSessionMessage(idleLabel),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Resume'),
+              child: Text(l10n.resume),
             ),
             TextButton(
               onPressed: () {
                 Navigator.of(dialogContext).pop();
                 _showFinishConfirmation(context);
               },
-              child: const Text('Finish now'),
+              child: Text(l10n.finishNow),
             ),
             TextButton(
               onPressed: () {
@@ -537,7 +541,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 context.go('/');
               },
               style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
-              child: const Text('Discard'),
+              child: Text(l10n.discard),
             ),
           ],
         );
@@ -734,7 +738,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         child: filtered.isEmpty
                             ? Center(
                                 child: Text(
-                                  'No matching exercises',
+                                  l10n.noMatchingExercises,
                                   style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(color: swapAppColors.subtleText),
                                 ),
@@ -813,7 +817,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             Icon(Icons.emoji_events_rounded, size: 64, color: colorScheme.primary),
             const SizedBox(height: 20),
             Text(
-              'All exercises complete!',
+              l10n.allExercisesComplete,
               style: Theme.of(
                 context,
               ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900),
@@ -821,7 +825,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Add another exercise or finish your workout.',
+              l10n.addAnotherOrFinish,
               style: Theme.of(
                 context,
               ).textTheme.bodyMedium?.copyWith(color: appColors.subtleText),
@@ -846,7 +850,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   ),
                 ),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Exercise'),
+                label: Text(l10n.addExercise),
               ),
             ),
             const SizedBox(height: 14),
@@ -914,7 +918,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'Session has no valid routine',
+                  l10n.sessionNoValidRoutine,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -922,7 +926,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'The routine for this session may have been deleted. Discard this session to continue.',
+                  l10n.routineDeletedMessage,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: context.appColors.subtleText,
                   ),
@@ -986,7 +990,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                               context,
                               currentExercise,
                             )
-                          : 'Exercise',
+                          : l10n.exerciseFallback,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -1003,7 +1007,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        'SET ${currentExerciseSets + 1} OF ${currentPrescription.targetSets}',
+                        l10n.setNOfM(currentExerciseSets + 1, currentPrescription.targetSets),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w800,
@@ -1260,7 +1264,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                 const SizedBox(width: 12),
                                 FilledButton(
                                   onPressed: _switchToNextExerciseNow,
-                                  child: const Text('Switch now'),
+                                  child: Text(l10n.switchNow),
                                 ),
                               ],
                             ),
@@ -1339,6 +1343,7 @@ class _RpeModalContentState extends State<_RpeModalContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final color = _rpeColor(_rpe);
 
     return SafeArea(
@@ -1362,7 +1367,7 @@ class _RpeModalContentState extends State<_RpeModalContent> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Log Set RPE',
+                  l10n.logSetRpe,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -1379,7 +1384,7 @@ class _RpeModalContentState extends State<_RpeModalContent> {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  'Select RPE:',
+                  l10n.selectRpe,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                   ),
@@ -1449,7 +1454,7 @@ class _RpeModalContentState extends State<_RpeModalContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'What this means',
+                          l10n.whatThisMeans,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -1480,8 +1485,8 @@ class _RpeModalContentState extends State<_RpeModalContent> {
                   ),
                 ),
                 onPressed: () => Navigator.pop(context, _rpe),
-                child: const Text(
-                  'Save & Log Set',
+                child: Text(
+                  l10n.saveAndLogSet,
                   style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                 ),
               ),
@@ -1493,10 +1498,10 @@ class _RpeModalContentState extends State<_RpeModalContent> {
   }
 }
 
-String _setTitle(CompletedSet set, String preferredUnit) {
+String _setTitle(CompletedSet set, String preferredUnit, AppLocalizations l10n) {
   final baseTitle = set.durationSeconds > 0
-      ? 'Set ${set.setNumber}: ${(set.durationSeconds / 60).round()} min'
-      : 'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}';
+      ? l10n.setTimedSummary(set.setNumber, (set.durationSeconds / 60).round())
+      : l10n.setWeightSummary(set.setNumber, AppFormatters.weight(set.weightKg, preferredUnit), set.reps);
 
   if (set.rpe == null) {
     return baseTitle;
@@ -1870,7 +1875,7 @@ class _ExercisePage extends ConsumerWidget {
                         onLogSet(prescription.restSeconds);
                       },
                       icon: const Icon(Icons.check_circle_outline_rounded),
-                      label: const Text('LOG'),
+                      label: Text(l10n.log),
                     ),
                   ),
                 ),
@@ -1998,7 +2003,7 @@ class _ExercisePage extends ConsumerWidget {
                             );
                           },
                           title: Text(
-                            _setTitle(set, preferredUnit),
+                            _setTitle(set, preferredUnit, l10n),
                             style: const TextStyle(fontWeight: FontWeight.w800),
                           ),
                           subtitle: Text(AppFormatters.time(set.completedAt)),
@@ -2054,7 +2059,7 @@ class _ExercisePage extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
-                                    'PB',
+                                    l10n.personalBest,
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelSmall
@@ -2104,14 +2109,14 @@ class _ExercisePage extends ConsumerWidget {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('${l10n.editSet} ${set.setNumber}'),
+          title: Text(l10n.editSetNumber(set.setNumber)),
           content: isTimed
               ? TextField(
                   controller: weightCtrl,
                   autofocus: true,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: 'Duration (min)',
+                  decoration: InputDecoration(
+                    labelText: l10n.durationMin,
                   ),
                 )
               : Column(
@@ -2124,14 +2129,14 @@ class _ExercisePage extends ConsumerWidget {
                         decimal: true,
                       ),
                       decoration: InputDecoration(
-                        labelText: 'Weight ($preferredUnit)',
+                        labelText: l10n.weightWithUnit(preferredUnit),
                       ),
                     ),
                     const SizedBox(height: 12),
                     TextField(
                       controller: repsCtrl,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(labelText: 'Reps'),
+                      decoration: InputDecoration(labelText: l10n.repsLabel),
                     ),
                     const SizedBox(height: 12),
                     TextField(
@@ -2142,9 +2147,9 @@ class _ExercisePage extends ConsumerWidget {
                       inputFormatters: [
                         FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                       ],
-                      decoration: const InputDecoration(
-                        labelText: 'RPE',
-                        hintText: 'Optional, 1-10',
+                      decoration: InputDecoration(
+                        labelText: l10n.rpeLabel,
+                        hintText: l10n.rpeHint,
                       ),
                     ),
                   ],
@@ -2206,8 +2211,9 @@ class _ProgressionHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final text = suggestion == null
-        ? 'No suggestion yet'
+        ? l10n.noSuggestionYet
         : 'Suggested ${AppFormatters.weight(suggestion!.suggestedWeightKg, preferredUnit)} · ${_directionLabel(suggestion!)}';
 
     final colorScheme = Theme.of(context).colorScheme;

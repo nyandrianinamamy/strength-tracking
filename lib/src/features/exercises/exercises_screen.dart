@@ -174,11 +174,11 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                   .archive(exercise.id as String);
                             }
                           },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(value: 'edit', child: Text('Edit')),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
                             PopupMenuItem(
                               value: 'archive',
-                              child: Text('Archive'),
+                              child: Text(l10n.archiveLabel),
                             ),
                           ],
                         ),

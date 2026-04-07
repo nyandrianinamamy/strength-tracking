@@ -149,23 +149,23 @@ class ProgressScreen extends ConsumerWidget {
                               children: [
                                 if (lift.isTimed)
                                   _LiftChip(
-                                    label: 'Best Time',
+                                    label: l10n.bestTime,
                                     value: AppFormatters.duration(Duration(seconds: lift.durationSeconds)),
                                   )
                                 else ...[
                                   _LiftChip(
-                                    label: 'Best Set',
+                                    label: l10n.bestSet,
                                     value:
                                         '${AppFormatters.weight(lift.bestSetWeightKg, state.preferredUnit)} x ${lift.reps}',
                                   ),
                                   _LiftChip(
-                                    label: 'Estimated 1RM',
+                                    label: l10n.estimated1rmLong,
                                     value:
                                         AppFormatters.weight(lift.estimatedOneRepMax, state.preferredUnit),
                                   ),
                                 ],
                                 _LiftChip(
-                                  label: 'Achieved',
+                                  label: l10n.achievedLabel,
                                   value: AppFormatters.monthDay(
                                     lift.achievedAt,
                                   ),
@@ -192,7 +192,7 @@ class ProgressScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 28),
                     PageSection(
-                      title: 'Volume Data',
+                      title: l10n.volumeData,
                       child: Column(
                         children: snapshot.weeklyVolume.reversed.take(6).map((
                           point,
@@ -201,7 +201,7 @@ class ProgressScreen extends ConsumerWidget {
                             margin: const EdgeInsets.only(bottom: 12),
                             child: ListTile(
                               title: Text(
-                                'Week of ${AppFormatters.monthDay(point.weekStart)}',
+                                l10n.weekOf(AppFormatters.monthDay(point.weekStart)),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),

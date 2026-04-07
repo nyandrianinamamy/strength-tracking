@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 
 const _blue600 = Color(0xFF2563EB);
@@ -56,21 +57,22 @@ class PreferenceStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── Preferred exercises ──────────────────────────────────────────
         // Section header — text matches test expectation ("Preferred Exercises")
         _SectionHeader(
-          label: 'Preferred Exercises',
+          label: l10n.preferredExercises,
           color: _blue600,
         ),
         const SizedBox(height: 4),
-        const Padding(
-          padding: EdgeInsets.only(bottom: 8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            'These exercises will be prioritised in your plan.',
-            style: TextStyle(fontSize: 12, color: _slate600),
+            l10n.exercisesPrioritised,
+            style: const TextStyle(fontSize: 12, color: _slate600),
           ),
         ),
         Container(
@@ -104,15 +106,15 @@ class PreferenceStep extends StatelessWidget {
 
         // ── Excluded exercises ───────────────────────────────────────────
         _SectionHeader(
-          label: 'Excluded Exercises',
+          label: l10n.excludedExercises,
           color: _red500,
         ),
         const SizedBox(height: 4),
-        const Padding(
-          padding: EdgeInsets.only(bottom: 8),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
           child: Text(
-            'These exercises will never appear in your plan.',
-            style: TextStyle(fontSize: 12, color: _slate600),
+            l10n.exercisesNeverAppear,
+            style: const TextStyle(fontSize: 12, color: _slate600),
           ),
         ),
         Container(

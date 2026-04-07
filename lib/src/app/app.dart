@@ -41,15 +41,19 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
       final messenger = _messengerKey.currentState;
       if (messenger == null) return;
 
+      final ctx = _messengerKey.currentContext;
+      if (ctx == null) return;
+      final l10n = AppLocalizations.of(ctx)!;
+
       if (isOffline && !_wasOffline) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('You\'re offline — changes saved locally'),
-          duration: Duration(seconds: 3),
+        messenger.showSnackBar(SnackBar(
+          content: Text(l10n.offlineMessage),
+          duration: const Duration(seconds: 3),
         ));
       } else if (!isOffline && _wasOffline) {
-        messenger.showSnackBar(const SnackBar(
-          content: Text('Back online'),
-          duration: Duration(seconds: 2),
+        messenger.showSnackBar(SnackBar(
+          content: Text(l10n.backOnline),
+          duration: const Duration(seconds: 2),
         ));
       }
       _wasOffline = isOffline;
