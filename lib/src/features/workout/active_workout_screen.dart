@@ -1605,20 +1605,6 @@ class _ExercisePage extends ConsumerWidget {
           onInitTimed(prescription.exerciseId, prescription.targetDurationSeconds);
         });
       }
-    } else if (exercise?.exerciseType != 'timed' &&
-        currentSets.isEmpty &&
-        weightController.text.isEmpty &&
-        suggestion != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (weightController.text.isEmpty) {
-          weightController.text = AppFormatters.decimal(
-            AppFormatters.convertWeight(
-              suggestion.suggestedWeightKg,
-              preferredUnit,
-            ),
-          );
-        }
-      });
     }
 
     final highestPrevWeight = previousPerformance.isEmpty
@@ -1778,13 +1764,11 @@ class _ExercisePage extends ConsumerWidget {
             Center(
               child: DigitalTimer(remaining: Duration(seconds: remainingRest)),
             ),
-            if (currentSets.isEmpty) ...[
-              const SizedBox(height: 12),
-              _ProgressionHint(
-                suggestion: suggestion,
-                preferredUnit: preferredUnit,
-              ),
-            ],
+            const SizedBox(height: 12),
+            _ProgressionHint(
+              suggestion: suggestion,
+              preferredUnit: preferredUnit,
+            ),
             const SizedBox(height: 24),
 
             // 3-column input grid: weight, reps, log button
