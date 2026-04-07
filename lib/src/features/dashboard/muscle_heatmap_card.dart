@@ -12,7 +12,7 @@ class MuscleHeatmapCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appStateControllerProvider);
-    final fatigue = ref.watch(engineHeatmapDataProvider).maybeWhen(
+    final fatigue = ref.watch(liveEngineHeatmapDataProvider).maybeWhen(
       data: (data) => data,
       orElse: () => const <Muscle, MuscleData>{},
     );
