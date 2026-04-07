@@ -92,7 +92,6 @@ class MetricCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
             const SizedBox(height: 8),
@@ -123,7 +122,7 @@ class MetricCard extends StatelessWidget {
                 detail,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.primary,
                       fontWeight: FontWeight.w700,
                     ),

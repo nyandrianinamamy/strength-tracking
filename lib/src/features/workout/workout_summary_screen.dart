@@ -19,15 +19,22 @@ class WorkoutSummaryScreen extends ConsumerWidget {
   String _setSummaryText(
     AppState state,
     CompletedSet set,
+    AppLocalizations l10n,
   ) {
-    final baseText =
-        'Set ${set.setNumber}: ${AppFormatters.weight(set.weightKg, state.preferredUnit)} x ${set.reps}';
-
     if (set.rpe == null) {
-      return baseText;
+      return l10n.setWeightSummary(
+        set.setNumber,
+        AppFormatters.weight(set.weightKg, state.preferredUnit),
+        set.reps,
+      );
     }
 
-    return '$baseText • RPE ${set.rpe!.toStringAsFixed(1)}';
+    return l10n.setWeightRpeSummary(
+      set.setNumber,
+      AppFormatters.weight(set.weightKg, state.preferredUnit),
+      set.reps,
+      set.rpe!.toStringAsFixed(1),
+    );
   }
 
   @override
@@ -37,13 +44,13 @@ class WorkoutSummaryScreen extends ConsumerWidget {
     final session = state.sessionById(sessionId);
     if (session == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Workout Summary')),
-        body: const Center(
+        appBar: AppBar(title: Text(l10n.workoutSummary)),
+        body: Center(
           child: Padding(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: EmptyStateCard(
-              title: 'Summary unavailable',
-              body: 'That workout could not be found.',
+              title: l10n.summaryUnavailable,
+              body: l10n.workoutNotFound,
             ),
           ),
         ),
@@ -118,7 +125,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  routine?.name ?? 'Workout',
+                  routine?.name ?? l10n.workoutLabel,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -176,7 +183,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                 child: StatCard(
                   label: l10n.time,
                   value: AppFormatters.duration(duration),
-                  subtext: 'DURATION',
+                  subtext: l10n.duration,
                   showAccent: true,
                 ),
               ),
@@ -185,7 +192,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                 child: StatCard(
                   label: l10n.exercises,
                   value: '${routine?.exercises.length ?? 0}',
-                  subtext: 'TOTAL',
+                  subtext: l10n.total,
                   showAccent: true,
                 ),
               ),
@@ -242,7 +249,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                'Est. 1RM: ${AppFormatters.decimal(pr.estimatedOneRepMax)}',
+                                l10n.est1rmValue(AppFormatters.decimal(pr.estimatedOneRepMax)),
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -278,7 +285,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: Text(
-                                exercise?.name ?? 'Exercise',
+                                exercise?.name ?? l10n.exerciseFallback,
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleMedium
@@ -295,7 +302,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                '${sets.length} sets',
+                                l10n.nSets(sets.length),
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
@@ -312,7 +319,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 6),
                             child: Text(
-                              _setSummaryText(state, set),
+                              _setSummaryText(state, set, l10n),
                             ),
                           );
                         }),

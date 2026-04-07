@@ -105,8 +105,8 @@ class DashboardScreen extends ConsumerWidget {
                   label: l10n.workouts,
                   value: '${snapshot.totalWorkouts}',
                   detail: snapshot.workoutDelta >= 0
-                      ? '+${snapshot.workoutDelta} vs last week'
-                      : '${snapshot.workoutDelta} vs last week',
+                      ? l10n.vsLastWeek('+${snapshot.workoutDelta}')
+                      : l10n.vsLastWeek('${snapshot.workoutDelta}'),
                   icon: Icons.local_fire_department_rounded,
                   badge: Container(
                     padding: const EdgeInsets.symmetric(
@@ -143,7 +143,7 @@ class DashboardScreen extends ConsumerWidget {
                 MetricCard(
                   label: l10n.recentPrs,
                   value: '${snapshot.personalRecordCount}',
-                  detail: 'Estimated 1RM tracked automatically',
+                  detail: l10n.estimated1rmTracked,
                   icon: Icons.workspace_premium_rounded,
                   onTap: () => context.go('/progress'),
                   badge: Container(
@@ -171,11 +171,11 @@ class DashboardScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 20),
         PageSection(
-          title: 'Muscle Fatigue',
+          title: l10n.muscleFatigue,
           action: TextButton.icon(
             onPressed: () => context.push('/debug/training-engine'),
             icon: const Icon(Icons.science_outlined),
-            label: const Text('Engine Debug'),
+            label: Text(l10n.engineDebug),
           ),
           child: const MuscleHeatmapCard(),
         ),
@@ -196,7 +196,7 @@ class DashboardScreen extends ConsumerWidget {
                   Text(
                     (activeSession != null
                             ? activeSessionIsStale
-                                  ? 'Workout paused'
+                                  ? l10n.workoutPaused
                                   : l10n.sessionInProgress
                             : snapshot.nextRoutineGroupName ??
                                   _displayCategory(l10n, nextRoutine?.category) ??
@@ -212,7 +212,7 @@ class DashboardScreen extends ConsumerWidget {
                   Text(
                     activeSession != null
                         ? state.routineById(activeSession.routineId)?.name ??
-                              'Workout'
+                              l10n.workoutLabel
                         : nextRoutine?.name ?? l10n.noRoutineAvailable,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       color: colorScheme.onPrimary,
@@ -234,8 +234,8 @@ class DashboardScreen extends ConsumerWidget {
                           activeSession != null
                               ? activeSessionIsStale
                                     ? snapshot.activeSessionIdleLabel ??
-                                          'Paused'
-                                    : '${state.routineById(activeSession.routineId)?.exercises.length ?? 0} exercises remaining'
+                                          l10n.workoutPaused
+                                    : l10n.nExercisesRemaining(state.routineById(activeSession.routineId)?.exercises.length ?? 0)
                               : nextRoutine == null
                               ? l10n.createRoutineToStart
                               : '${nextRoutine.estimatedDurationMin} min \u2022 ${nextRoutine.exercises.length} exercises',
@@ -286,7 +286,7 @@ class DashboardScreen extends ConsumerWidget {
                     label: Text(
                       activeSession != null
                           ? activeSessionIsStale
-                                ? 'Review session'
+                                ? l10n.reviewSession
                                 : l10n.resumeSession
                           : l10n.startSession,
                     ),
@@ -311,7 +311,7 @@ class DashboardScreen extends ConsumerWidget {
                                   .skipNextInGroup(activeGroup.id);
                             },
                       icon: const Icon(Icons.skip_next_rounded),
-                      label: const Text('Skip for now'),
+                      label: Text(l10n.skipForNow),
                     ),
                   ],
                 ],
@@ -476,7 +476,7 @@ class DashboardScreen extends ConsumerWidget {
                                 ),
                               ),
                               title: Text(
-                                routine?.name ?? 'Workout',
+                                routine?.name ?? l10n.workoutLabel,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),

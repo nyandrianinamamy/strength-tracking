@@ -1,5 +1,6 @@
 // lib/src/features/smart_planner/widgets/day_picker.dart
 import 'package:flutter/material.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 
 /// A 7-day toggle row.
 ///
@@ -23,20 +24,19 @@ class DayPicker extends StatelessWidget {
   final ValueChanged<int> onDayToggled;
   final String? splitLabel;
 
-  // Day labels and their corresponding int values.
-  // Order: Mon-Sun so weekdays come first.
-  static const List<(String label, int value)> _days = [
-    ('Mon', 1),
-    ('Tue', 2),
-    ('Wed', 3),
-    ('Thu', 4),
-    ('Fri', 5),
-    ('Sat', 6),
-    ('Sun', 0),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final days = [
+      (l10n.dayMon, 1),
+      (l10n.dayTue, 2),
+      (l10n.dayWed, 3),
+      (l10n.dayThu, 4),
+      (l10n.dayFri, 5),
+      (l10n.daySat, 6),
+      (l10n.daySun, 0),
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -45,7 +45,7 @@ class DayPicker extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            for (final (label, value) in _days)
+            for (final (label, value) in days)
               _DayChip(
                 label: label,
                 value: value,

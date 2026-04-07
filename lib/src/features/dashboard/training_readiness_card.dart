@@ -25,9 +25,9 @@ class TrainingReadinessCard extends ConsumerWidget {
           child: Center(child: CircularProgressIndicator()),
         ),
       ),
-      error: (error, stackTrace) => const EmptyStateCard(
-        title: 'Training Readiness',
-        body: 'Adaptive guidance is temporarily unavailable.',
+      error: (error, stackTrace) => EmptyStateCard(
+        title: AppLocalizations.of(context)!.trainingReadiness,
+        body: AppLocalizations.of(context)!.adaptiveGuidanceUnavailable,
       ),
       data: (engine) {
         final readinessAsync = ref.watch(readinessProvider);
@@ -38,21 +38,21 @@ class TrainingReadinessCard extends ConsumerWidget {
               child: Center(child: CircularProgressIndicator()),
             ),
           ),
-          error: (error, stackTrace) => const EmptyStateCard(
-            title: 'Training Readiness',
-            body: 'Adaptive guidance is temporarily unavailable.',
+          error: (error, stackTrace) => EmptyStateCard(
+            title: AppLocalizations.of(context)!.trainingReadiness,
+            body: AppLocalizations.of(context)!.adaptiveGuidanceUnavailable,
           ),
           data: (readiness) {
             if (readiness.tier == ReadinessTier.cold &&
                 engine.state.sessionsIngested == 0) {
               return EmptyStateCard(
-                title: 'Training Readiness',
+                title: AppLocalizations.of(context)!.trainingReadiness,
                 body: AppLocalizations.of(context)!.readinessEmptyCold,
               );
             }
             if (readiness.tier == ReadinessTier.cold) {
               return EmptyStateCard(
-                title: 'Training Readiness',
+                title: AppLocalizations.of(context)!.trainingReadiness,
                 body: AppLocalizations.of(context)!.readinessEmptyColdNoHealthKit,
               );
             }
@@ -72,13 +72,14 @@ class _ReadinessCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final score = readiness.score.round().clamp(0, 100);
     final primary = Theme.of(context).colorScheme.primary;
     final subtleText = context.appColors.subtleText;
 
-    final sleepData = _sleepSummary();
-    final hrvData = _hrvSummary();
-    final fatigueData = _fatigueSummary();
+    final sleepData = _sleepSummary(l10n);
+    final hrvData = _hrvSummary(l10n);
+    final fatigueData = _fatigueSummary(l10n);
 
     return Card(
       child: Padding(
@@ -92,7 +93,7 @@ class _ReadinessCard extends StatelessWidget {
                 Icon(Icons.monitor_heart_outlined, size: 14, color: subtleText),
                 const SizedBox(width: 4),
                 Text(
-                  'TRAINING READINESS',
+                  l10n.trainingReadiness.toUpperCase(),
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: subtleText,
                     letterSpacing: 0.5,
@@ -111,14 +112,14 @@ class _ReadinessCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _headlineForScore(score),
+                        _headlineForScore(score, l10n),
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _subtitleForScore(score),
+                        _subtitleForScore(score, l10n),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: subtleText,
                         ),
@@ -172,7 +173,7 @@ class _ReadinessCard extends StatelessWidget {
                   Expanded(
                     child: _DataColumn(
                       icon: Icons.nightlight_round_outlined,
-                      label: 'SLEEP',
+                      label: l10n.sleepLabel,
                       value: sleepData.value,
                       status: sleepData.status,
                       statusColor: primary,
@@ -187,7 +188,7 @@ class _ReadinessCard extends StatelessWidget {
                   Expanded(
                     child: _DataColumn(
                       icon: Icons.favorite_outline,
-                      label: 'HRV',
+                      label: l10n.hrvLabel,
                       value: hrvData.value,
                       status: hrvData.status,
                       statusColor: primary,
@@ -202,7 +203,7 @@ class _ReadinessCard extends StatelessWidget {
                   Expanded(
                     child: _DataColumn(
                       icon: Icons.bolt_outlined,
-                      label: 'FATIGUE',
+                      label: l10n.fatigueLabel,
                       value: fatigueData.value,
                       status: fatigueData.status,
                       statusColor: primary,
@@ -225,23 +226,23 @@ class _ReadinessCard extends StatelessWidget {
     );
   }
 
-  String _headlineForScore(int score) {
-    if (score >= 80) return 'Primed to perform';
-    if (score >= 60) return 'Good to go';
-    if (score >= 40) return 'Recovering';
-    return 'Take it lighter';
+  String _headlineForScore(int score, AppLocalizations l10n) {
+    if (score >= 80) return l10n.primedToPerform;
+    if (score >= 60) return l10n.goodToGo;
+    if (score >= 40) return l10n.recoveringStatus;
+    return l10n.takeItLighter;
   }
 
-  String _subtitleForScore(int score) {
-    if (score >= 80) return 'Your recovery is optimal today.';
-    if (score >= 60) return 'Your recovery is stable today.';
-    if (score >= 40) return 'Give your body more time to recover.';
-    return 'Consider a deload or rest day.';
+  String _subtitleForScore(int score, AppLocalizations l10n) {
+    if (score >= 80) return l10n.recoveryOptimal;
+    if (score >= 60) return l10n.recoveryStable;
+    if (score >= 40) return l10n.giveBodyTime;
+    return l10n.considerDeload;
   }
 
-  _DataSummary _sleepSummary() {
+  _DataSummary _sleepSummary(AppLocalizations l10n) {
     final sleep = engine.state.sleepHistory;
-    if (sleep.isEmpty) return const _DataSummary(value: '--', status: 'No data');
+    if (sleep.isEmpty) return _DataSummary(value: '--', status: l10n.noData);
 
     final latest = sleep.last;
     final hours = latest.totalSleep.inMinutes ~/ 60;
@@ -249,44 +250,44 @@ class _ReadinessCard extends StatelessWidget {
     final value = '${hours}h ${mins}m';
 
     final totalMins = latest.totalSleep.inMinutes;
-    final status = totalMins >= 420 ? 'Optimal' : totalMins >= 360 ? 'Fair' : 'Low';
+    final status = totalMins >= 420 ? l10n.optimalStatus : totalMins >= 360 ? l10n.fairStatus : l10n.lowStatus;
     return _DataSummary(value: value, status: status);
   }
 
-  _DataSummary _hrvSummary() {
+  _DataSummary _hrvSummary(AppLocalizations l10n) {
     final hrv = engine.state.hrvHistory;
-    if (hrv.isEmpty) return const _DataSummary(value: '--', status: 'No data');
+    if (hrv.isEmpty) return _DataSummary(value: '--', status: l10n.noData);
 
     final latest = hrv.last;
     final value = '${latest.sdnn.round()} ms';
 
     final score = readiness.componentScores['hrv'];
     final status = score == null
-        ? 'Measured'
+        ? l10n.measuredStatus
         : score >= 70
-            ? 'Balanced'
+            ? l10n.balancedStatus
             : score >= 40
-                ? 'Fair'
-                : 'Low';
+                ? l10n.fairStatus
+                : l10n.lowStatus;
     return _DataSummary(value: value, status: status);
   }
 
-  _DataSummary _fatigueSummary() {
+  _DataSummary _fatigueSummary(AppLocalizations l10n) {
     final fatigueMap = engine.fullFatigueMap();
     if (fatigueMap.isEmpty) {
-      return const _DataSummary(value: '--', status: 'No data');
+      return _DataSummary(value: '--', status: l10n.noData);
     }
 
     final maxFatigue = fatigueMap.values
         .map((s) => s.level)
         .reduce((a, b) => a > b ? a : b);
 
-    final value = maxFatigue < 20 ? 'Low' : maxFatigue < 50 ? 'Moderate' : 'High';
+    final value = maxFatigue < 20 ? l10n.lowStatus : maxFatigue < 50 ? l10n.moderateValue : l10n.highValue;
     final status = maxFatigue < 20
-        ? 'Recovered'
+        ? l10n.recovered
         : maxFatigue < 50
-            ? 'Recovering'
-            : 'Fatigued';
+            ? l10n.recoveringStatus
+            : l10n.fatigued;
     return _DataSummary(value: value, status: status);
   }
 }

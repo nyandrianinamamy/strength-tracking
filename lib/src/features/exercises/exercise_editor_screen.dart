@@ -188,7 +188,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           ),
           const SizedBox(height: 20),
           Text(
-            'Machine Photo',
+            l10n.machinePhoto,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
@@ -253,7 +253,7 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
                         Icon(Icons.add_a_photo_rounded, size: 36, color: context.appColors.subtleText),
                         const SizedBox(height: 8),
                         Text(
-                          'Add a photo of the machine',
+                          l10n.addMachinePhoto,
                           style: TextStyle(color: context.appColors.subtleText, fontSize: 14),
                         ),
                       ],
@@ -262,9 +262,9 @@ class _ExerciseEditorScreenState extends ConsumerState<ExerciseEditorScreen> {
           ),
           const SizedBox(height: 16),
           SegmentedButton<String>(
-            segments: const [
-              ButtonSegment(value: 'strength', label: Text('Strength'), icon: Icon(Icons.fitness_center)),
-              ButtonSegment(value: 'timed', label: Text('Timed'), icon: Icon(Icons.timer)),
+            segments: [
+              ButtonSegment(value: 'strength', label: Text(l10n.strength), icon: const Icon(Icons.fitness_center)),
+              ButtonSegment(value: 'timed', label: Text(l10n.timedType), icon: const Icon(Icons.timer)),
             ],
             selected: {_exerciseType},
             onSelectionChanged: (values) {

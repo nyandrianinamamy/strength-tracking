@@ -2071,6 +2071,869 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'years'**
   String get years;
+
+  /// No description provided for @navDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'Dashboard'**
+  String get navDashboard;
+
+  /// No description provided for @navRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Routines'**
+  String get navRoutines;
+
+  /// No description provided for @navProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'Progress'**
+  String get navProgress;
+
+  /// No description provided for @offlineMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re offline — changes saved locally'**
+  String get offlineMessage;
+
+  /// No description provided for @backOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Back online'**
+  String get backOnline;
+
+  /// No description provided for @workoutSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout Summary'**
+  String get workoutSummary;
+
+  /// No description provided for @summaryUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Summary unavailable'**
+  String get summaryUnavailable;
+
+  /// No description provided for @workoutNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'That workout could not be found.'**
+  String get workoutNotFound;
+
+  /// No description provided for @resumeStaleSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Resume stale session?'**
+  String get resumeStaleSession;
+
+  /// No description provided for @staleSessionMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This workout has been idle for {duration}. You can resume it, finish it now, or discard it.'**
+  String staleSessionMessage(Object duration);
+
+  /// No description provided for @finishNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish now'**
+  String get finishNow;
+
+  /// No description provided for @discard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get discard;
+
+  /// No description provided for @noMatchingExercises.
+  ///
+  /// In en, this message translates to:
+  /// **'No matching exercises'**
+  String get noMatchingExercises;
+
+  /// No description provided for @switchNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch now'**
+  String get switchNow;
+
+  /// No description provided for @logSetRpe.
+  ///
+  /// In en, this message translates to:
+  /// **'Log Set RPE'**
+  String get logSetRpe;
+
+  /// No description provided for @selectRpe.
+  ///
+  /// In en, this message translates to:
+  /// **'Select RPE:'**
+  String get selectRpe;
+
+  /// No description provided for @whatThisMeans.
+  ///
+  /// In en, this message translates to:
+  /// **'What this means'**
+  String get whatThisMeans;
+
+  /// No description provided for @personalBest.
+  ///
+  /// In en, this message translates to:
+  /// **'PB'**
+  String get personalBest;
+
+  /// No description provided for @durationMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Duration (min)'**
+  String get durationMin;
+
+  /// No description provided for @weightWithUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight ({unit})'**
+  String weightWithUnit(Object unit);
+
+  /// No description provided for @repsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Reps'**
+  String get repsLabel;
+
+  /// No description provided for @rpeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'RPE'**
+  String get rpeLabel;
+
+  /// No description provided for @rpeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional, 1-10'**
+  String get rpeHint;
+
+  /// No description provided for @noSuggestionYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No suggestion yet'**
+  String get noSuggestionYet;
+
+  /// No description provided for @sessionNoValidRoutine.
+  ///
+  /// In en, this message translates to:
+  /// **'Session has no valid routine'**
+  String get sessionNoValidRoutine;
+
+  /// No description provided for @routineDeletedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'The routine for this session may have been deleted. Discard this session to continue.'**
+  String get routineDeletedMessage;
+
+  /// No description provided for @editSetNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Set {number}'**
+  String editSetNumber(Object number);
+
+  /// No description provided for @newGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'New Group'**
+  String get newGroup;
+
+  /// No description provided for @editGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit Group'**
+  String get editGroup;
+
+  /// No description provided for @groupName.
+  ///
+  /// In en, this message translates to:
+  /// **'Group name'**
+  String get groupName;
+
+  /// No description provided for @groupNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Push / Pull / Legs'**
+  String get groupNameHint;
+
+  /// No description provided for @useAsActiveRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use as active rotation'**
+  String get useAsActiveRotation;
+
+  /// No description provided for @activeGroupDrivesDashboard.
+  ///
+  /// In en, this message translates to:
+  /// **'The active group drives the dashboard recommendation.'**
+  String get activeGroupDrivesDashboard;
+
+  /// No description provided for @orderedRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Ordered routines'**
+  String get orderedRoutines;
+
+  /// No description provided for @orderedRoutinesDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'These run in sequence. You can reorder them and skip one from the dashboard when needed.'**
+  String get orderedRoutinesDescription;
+
+  /// No description provided for @addAtLeastTwoRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Add at least two routines'**
+  String get addAtLeastTwoRoutines;
+
+  /// No description provided for @chooseRoutinesForSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the routines that belong to this split.'**
+  String get chooseRoutinesForSplit;
+
+  /// No description provided for @addRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Routines'**
+  String get addRoutines;
+
+  /// No description provided for @allRoutinesAssigned.
+  ///
+  /// In en, this message translates to:
+  /// **'All routines are already assigned'**
+  String get allRoutinesAssigned;
+
+  /// No description provided for @addMoreRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'Add more routines'**
+  String get addMoreRoutines;
+
+  /// No description provided for @createGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Group'**
+  String get createGroup;
+
+  /// No description provided for @deleteGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Group'**
+  String get deleteGroup;
+
+  /// No description provided for @deleteGroupConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete group?'**
+  String get deleteGroupConfirm;
+
+  /// No description provided for @deleteGroupMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This removes the sequence, but keeps all routines and workout history.'**
+  String get deleteGroupMessage;
+
+  /// No description provided for @addRoutineSheet.
+  ///
+  /// In en, this message translates to:
+  /// **'Add routine'**
+  String get addRoutineSheet;
+
+  /// No description provided for @routineGroups.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine Groups'**
+  String get routineGroups;
+
+  /// No description provided for @newGroupTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'New group'**
+  String get newGroupTooltip;
+
+  /// No description provided for @routineGroupsDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Build ordered splits like PPL or Upper/Lower and choose which one drives the dashboard recommendation.'**
+  String get routineGroupsDescription;
+
+  /// No description provided for @noRoutineGroupsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No routine groups yet'**
+  String get noRoutineGroupsYet;
+
+  /// No description provided for @createGroupToSequence.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a group to turn Next Workout into a real sequence.'**
+  String get createGroupToSequence;
+
+  /// No description provided for @activeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get activeLabel;
+
+  /// No description provided for @nRoutines.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} routines'**
+  String nRoutines(Object count);
+
+  /// No description provided for @currentCycle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current cycle: {names}'**
+  String currentCycle(Object names);
+
+  /// No description provided for @groups.
+  ///
+  /// In en, this message translates to:
+  /// **'Groups'**
+  String get groups;
+
+  /// No description provided for @noActiveGroup.
+  ///
+  /// In en, this message translates to:
+  /// **'No active group'**
+  String get noActiveGroup;
+
+  /// No description provided for @createGroupPrompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Create a routine group to drive your dashboard sequence.'**
+  String get createGroupPrompt;
+
+  /// No description provided for @nRoutinesInRotation.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} routines in rotation'**
+  String nRoutinesInRotation(Object count);
+
+  /// No description provided for @createLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get createLabel;
+
+  /// No description provided for @manageLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage'**
+  String get manageLabel;
+
+  /// No description provided for @sleepAndHrv.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep & HRV'**
+  String get sleepAndHrv;
+
+  /// No description provided for @sleepHrvDescription.
+  ///
+  /// In en, this message translates to:
+  /// **'Read sleep and heart rate variability data to improve training recommendations.'**
+  String get sleepHrvDescription;
+
+  /// No description provided for @failedError.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed: {error}'**
+  String failedError(Object error);
+
+  /// No description provided for @clearWorkoutHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Workout History'**
+  String get clearWorkoutHistory;
+
+  /// No description provided for @clearWorkoutHistoryConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Workout History?'**
+  String get clearWorkoutHistoryConfirm;
+
+  /// No description provided for @clearWorkoutHistoryMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'This will delete all workout sessions and performance data. Your exercises and routines will be kept.'**
+  String get clearWorkoutHistoryMessage;
+
+  /// No description provided for @workoutHistoryCleared.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout history cleared'**
+  String get workoutHistoryCleared;
+
+  /// No description provided for @themeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Theme'**
+  String get themeLabel;
+
+  /// No description provided for @appleHealth.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Health'**
+  String get appleHealth;
+
+  /// No description provided for @muscleFatigue.
+  ///
+  /// In en, this message translates to:
+  /// **'Muscle Fatigue'**
+  String get muscleFatigue;
+
+  /// No description provided for @engineDebug.
+  ///
+  /// In en, this message translates to:
+  /// **'Engine Debug'**
+  String get engineDebug;
+
+  /// No description provided for @skipForNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip for now'**
+  String get skipForNow;
+
+  /// No description provided for @workoutPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout paused'**
+  String get workoutPaused;
+
+  /// No description provided for @workoutLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Workout'**
+  String get workoutLabel;
+
+  /// No description provided for @reviewSession.
+  ///
+  /// In en, this message translates to:
+  /// **'Review session'**
+  String get reviewSession;
+
+  /// No description provided for @nExercisesRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} exercises remaining'**
+  String nExercisesRemaining(Object count);
+
+  /// No description provided for @estimated1rmTracked.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated 1RM tracked automatically'**
+  String get estimated1rmTracked;
+
+  /// No description provided for @trainingReadiness.
+  ///
+  /// In en, this message translates to:
+  /// **'Training Readiness'**
+  String get trainingReadiness;
+
+  /// No description provided for @adaptiveGuidanceUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Adaptive guidance is temporarily unavailable.'**
+  String get adaptiveGuidanceUnavailable;
+
+  /// No description provided for @sleepLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'SLEEP'**
+  String get sleepLabel;
+
+  /// No description provided for @hrvLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'HRV'**
+  String get hrvLabel;
+
+  /// No description provided for @fatigueLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'FATIGUE'**
+  String get fatigueLabel;
+
+  /// No description provided for @primedToPerform.
+  ///
+  /// In en, this message translates to:
+  /// **'Primed to perform'**
+  String get primedToPerform;
+
+  /// No description provided for @goodToGo.
+  ///
+  /// In en, this message translates to:
+  /// **'Good to go'**
+  String get goodToGo;
+
+  /// No description provided for @takeItLighter.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it lighter'**
+  String get takeItLighter;
+
+  /// No description provided for @recoveryOptimal.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery is optimal today.'**
+  String get recoveryOptimal;
+
+  /// No description provided for @recoveryStable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your recovery is stable today.'**
+  String get recoveryStable;
+
+  /// No description provided for @giveBodyTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Give your body more time to recover.'**
+  String get giveBodyTime;
+
+  /// No description provided for @considerDeload.
+  ///
+  /// In en, this message translates to:
+  /// **'Consider a deload or rest day.'**
+  String get considerDeload;
+
+  /// No description provided for @noData.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get noData;
+
+  /// No description provided for @optimalStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Optimal'**
+  String get optimalStatus;
+
+  /// No description provided for @fairStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get fairStatus;
+
+  /// No description provided for @lowStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Low'**
+  String get lowStatus;
+
+  /// No description provided for @measuredStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Measured'**
+  String get measuredStatus;
+
+  /// No description provided for @balancedStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Balanced'**
+  String get balancedStatus;
+
+  /// No description provided for @moderateValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Moderate'**
+  String get moderateValue;
+
+  /// No description provided for @highValue.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get highValue;
+
+  /// No description provided for @recoveringStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Recovering'**
+  String get recoveringStatus;
+
+  /// No description provided for @edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get edit;
+
+  /// No description provided for @archiveLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Archive'**
+  String get archiveLabel;
+
+  /// No description provided for @timedType.
+  ///
+  /// In en, this message translates to:
+  /// **'Timed'**
+  String get timedType;
+
+  /// No description provided for @machinePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine Photo'**
+  String get machinePhoto;
+
+  /// No description provided for @addMachinePhoto.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a photo of the machine'**
+  String get addMachinePhoto;
+
+  /// No description provided for @bestTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Time'**
+  String get bestTime;
+
+  /// No description provided for @bestSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Best Set'**
+  String get bestSet;
+
+  /// No description provided for @estimated1rmLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated 1RM'**
+  String get estimated1rmLong;
+
+  /// No description provided for @achievedLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Achieved'**
+  String get achievedLabel;
+
+  /// No description provided for @volumeData.
+  ///
+  /// In en, this message translates to:
+  /// **'Volume Data'**
+  String get volumeData;
+
+  /// No description provided for @weekOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Week of {date}'**
+  String weekOf(Object date);
+
+  /// No description provided for @whichDaysCommit.
+  ///
+  /// In en, this message translates to:
+  /// **'Which days can you commit to working out?'**
+  String get whichDaysCommit;
+
+  /// No description provided for @detectedSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Detected Split'**
+  String get detectedSplit;
+
+  /// No description provided for @nDaysSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} days selected'**
+  String nDaysSelected(Object count);
+
+  /// No description provided for @whatTrainingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'What are you training for and how long can you work out?'**
+  String get whatTrainingFor;
+
+  /// No description provided for @optionalCustomise.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — customise which exercises appear in your plan.'**
+  String get optionalCustomise;
+
+  /// No description provided for @backButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get backButton;
+
+  /// No description provided for @fullBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Body'**
+  String get fullBody;
+
+  /// No description provided for @upperLower.
+  ///
+  /// In en, this message translates to:
+  /// **'Upper/Lower'**
+  String get upperLower;
+
+  /// No description provided for @pushPullLegs.
+  ///
+  /// In en, this message translates to:
+  /// **'Push/Pull/Legs'**
+  String get pushPullLegs;
+
+  /// No description provided for @exercisesPrioritised.
+  ///
+  /// In en, this message translates to:
+  /// **'These exercises will be prioritised in your plan.'**
+  String get exercisesPrioritised;
+
+  /// No description provided for @exercisesNeverAppear.
+  ///
+  /// In en, this message translates to:
+  /// **'These exercises will never appear in your plan.'**
+  String get exercisesNeverAppear;
+
+  /// No description provided for @swapExerciseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap Exercise'**
+  String get swapExerciseTitle;
+
+  /// No description provided for @dayMon.
+  ///
+  /// In en, this message translates to:
+  /// **'Mon'**
+  String get dayMon;
+
+  /// No description provided for @dayTue.
+  ///
+  /// In en, this message translates to:
+  /// **'Tue'**
+  String get dayTue;
+
+  /// No description provided for @dayWed.
+  ///
+  /// In en, this message translates to:
+  /// **'Wed'**
+  String get dayWed;
+
+  /// No description provided for @dayThu.
+  ///
+  /// In en, this message translates to:
+  /// **'Thu'**
+  String get dayThu;
+
+  /// No description provided for @dayFri.
+  ///
+  /// In en, this message translates to:
+  /// **'Fri'**
+  String get dayFri;
+
+  /// No description provided for @daySat.
+  ///
+  /// In en, this message translates to:
+  /// **'Sat'**
+  String get daySat;
+
+  /// No description provided for @daySun.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun'**
+  String get daySun;
+
+  /// No description provided for @restTimerComplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest timer complete'**
+  String get restTimerComplete;
+
+  /// No description provided for @restCompleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest complete. Back to {exercise}.'**
+  String restCompleteBody(Object exercise);
+
+  /// No description provided for @nSets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} sets'**
+  String nSets(Object count);
+
+  /// No description provided for @setNColon.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}:'**
+  String setNColon(Object number);
+
+  /// No description provided for @setNOfM.
+  ///
+  /// In en, this message translates to:
+  /// **'SET {current} OF {total}'**
+  String setNOfM(Object current, Object total);
+
+  /// No description provided for @saveAndLogSet.
+  ///
+  /// In en, this message translates to:
+  /// **'Save & Log Set'**
+  String get saveAndLogSet;
+
+  /// No description provided for @allExercisesCompleteExcl.
+  ///
+  /// In en, this message translates to:
+  /// **'All exercises complete!'**
+  String get allExercisesCompleteExcl;
+
+  /// No description provided for @addAnotherOrFinishWorkout.
+  ///
+  /// In en, this message translates to:
+  /// **'Add another exercise or finish your workout.'**
+  String get addAnotherOrFinishWorkout;
+
+  /// No description provided for @exerciseFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get exerciseFallback;
+
+  /// No description provided for @routineFallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Routine'**
+  String get routineFallback;
+
+  /// No description provided for @vsLastWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{delta} vs last week'**
+  String vsLastWeek(Object delta);
+
+  /// No description provided for @est1rmValue.
+  ///
+  /// In en, this message translates to:
+  /// **'Est. 1RM: {value}'**
+  String est1rmValue(Object value);
+
+  /// No description provided for @setTimedSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}: {duration} min'**
+  String setTimedSummary(Object number, Object duration);
+
+  /// No description provided for @setWeightSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}: {weight} x {reps}'**
+  String setWeightSummary(Object number, Object weight, Object reps);
+
+  /// No description provided for @setWeightRpeSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Set {number}: {weight} x {reps} • RPE {rpe}'**
+  String setWeightRpeSummary(
+    Object number,
+    Object weight,
+    Object reps,
+    Object rpe,
+  );
+
+  /// No description provided for @autoLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto'**
+  String get autoLabel;
 }
 
 class _AppLocalizationsDelegate

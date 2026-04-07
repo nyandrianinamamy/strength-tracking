@@ -13,17 +13,28 @@ class RestTimerNotificationService {
     }
   }
 
+  String _notificationTitle = '';
+  String _notificationBody = '';
+
   void scheduleRestEnd({
     required Duration duration,
     required String exerciseName,
+    required String notificationTitle,
+    required String notificationBody,
   }) {
     cancel();
     if (!_isSupported || duration <= Duration.zero) {
       return;
     }
 
+    _notificationTitle = notificationTitle;
+    _notificationBody = notificationBody;
+
     _pendingTimer = Timer(duration, () {
-      unawaited(_showRestCompleteNotification(exerciseName: exerciseName));
+      unawaited(_showRestCompleteNotification(
+        title: _notificationTitle,
+        body: _notificationBody,
+      ));
     });
   }
 
@@ -35,7 +46,8 @@ class RestTimerNotificationService {
   bool get _isSupported => true;
 
   Future<void> _showRestCompleteNotification({
-    required String exerciseName,
+    required String title,
+    required String body,
   }) async {
     if (!_isSupported || web.Notification.permission != 'granted') {
       return;
@@ -46,7 +58,7 @@ class RestTimerNotificationService {
     }
 
     final options = web.NotificationOptions(
-      body: 'Rest complete. Back to $exerciseName.',
+      body: body,
       tag: 'strengthapp-rest-timer',
       icon: 'icons/Icon-192.png',
       badge: 'icons/Icon-maskable-192.png',
@@ -55,9 +67,9 @@ class RestTimerNotificationService {
 
     try {
       final registration = await web.window.navigator.serviceWorker.ready.toDart;
-      await registration.showNotification('Rest timer complete', options).toDart;
+      await registration.showNotification(title, options).toDart;
     } catch (_) {
-      web.Notification('Rest timer complete', options);
+      web.Notification(title, options);
     }
   }
 }

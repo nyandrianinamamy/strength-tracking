@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
@@ -11,6 +12,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
     final groups = [...state.routineGroups]
       ..sort((a, b) {
@@ -24,12 +26,12 @@ class RoutineGroupsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Routine Groups'),
+        title: Text(l10n.routineGroups),
         actions: [
           IconButton(
             onPressed: () => context.push('/routine-groups/new'),
             icon: const Icon(Icons.add_rounded),
-            tooltip: 'New group',
+            tooltip: l10n.newGroupTooltip,
           ),
         ],
       ),
@@ -37,7 +39,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
         children: [
           Text(
-            'Build ordered splits like PPL or Upper/Lower and choose which one drives the dashboard recommendation.',
+            l10n.routineGroupsDescription,
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: context.appColors.subtleText),
@@ -45,14 +47,14 @@ class RoutineGroupsScreen extends ConsumerWidget {
           const SizedBox(height: 18),
           if (groups.isEmpty)
             EmptyStateCard(
-              title: 'No routine groups yet',
-              body: 'Create a group to turn Next Workout into a real sequence.',
+              title: l10n.noRoutineGroupsYet,
+              body: l10n.createGroupToSequence,
               dashed: true,
               icon: Icons.view_carousel_rounded,
               action: FilledButton.icon(
                 onPressed: () => context.push('/routine-groups/new'),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Create Group'),
+                label: Text(l10n.createGroup),
               ),
             )
           else
@@ -101,7 +103,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
-                                  'Active',
+                                  l10n.activeLabel,
                                   style: TextStyle(
                                     color: Theme.of(context).colorScheme.primary,
                                     fontWeight: FontWeight.w700,
@@ -112,7 +114,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          '${routineNames.length} routines',
+                          l10n.nRoutines(routineNames.length),
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: context.appColors.subtleText),
                         ),
@@ -144,7 +146,7 @@ class RoutineGroupsScreen extends ConsumerWidget {
                         if (pendingNames.isNotEmpty) ...[
                           const SizedBox(height: 14),
                           Text(
-                            'Current cycle: ${pendingNames.join(' → ')}',
+                            l10n.currentCycle(pendingNames.join(' → ')),
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(color: context.appColors.subtleText),
                           ),

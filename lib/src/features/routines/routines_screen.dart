@@ -82,7 +82,7 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
             TextButton.icon(
               onPressed: () => context.push('/routine-groups'),
               icon: const Icon(Icons.route_rounded),
-              label: const Text('Groups'),
+              label: Text(l10n.groups),
             ),
           ],
         ),
@@ -98,17 +98,17 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
               child: Icon(Icons.route_rounded, color: Theme.of(context).colorScheme.primary),
             ),
             title: Text(
-              activeGroup?.name ?? 'No active group',
+              activeGroup?.name ?? l10n.noActiveGroup,
               style: const TextStyle(fontWeight: FontWeight.w800),
             ),
             subtitle: Text(
               activeGroup == null
-                  ? 'Create a routine group to drive your dashboard sequence.'
-                  : '${activeGroup.routineIds.length} routines in rotation',
+                  ? l10n.createGroupPrompt
+                  : l10n.nRoutinesInRotation(activeGroup.routineIds.length),
             ),
             trailing: TextButton(
               onPressed: () => context.push('/routine-groups'),
-              child: Text(activeGroup == null ? 'Create' : 'Manage'),
+              child: Text(activeGroup == null ? l10n.createLabel : l10n.manageLabel),
             ),
           ),
         ),
@@ -173,21 +173,21 @@ class _RoutinesScreenState extends ConsumerState<RoutinesScreen> {
                     ),
                   ),
                   const SizedBox(width: 14),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Generate Smart Plan',
-                          style: TextStyle(
+                          l10n.generateSmartPlan,
+                          style: const TextStyle(
                             fontWeight: FontWeight.w800,
                             fontSize: 15,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          'AI-powered weekly training plan',
-                          style: TextStyle(
+                          l10n.smartPlanSubtitle,
+                          style: const TextStyle(
                             fontSize: 13,
                             color: Color(0xFF64748B),
                           ),

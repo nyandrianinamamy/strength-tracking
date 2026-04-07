@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 
 import '../../features/dashboard/persistent_start_session.dart';
 
@@ -55,16 +56,17 @@ class _AppShellScaffoldState extends State<AppShellScaffold>
     super.dispose();
   }
 
-  static final _destinations =
-      <({String label, IconData icon, IconData selectedIcon, String path})>[
-    (label: 'Dashboard', icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, path: '/'),
-    (label: 'Routines', icon: Icons.fitness_center_outlined, selectedIcon: Icons.fitness_center_rounded, path: '/routines'),
-    (label: 'Exercises', icon: Icons.list_alt_outlined, selectedIcon: Icons.list_alt_rounded, path: '/exercises'),
-    (label: 'Progress', icon: Icons.insights_outlined, selectedIcon: Icons.insights_rounded, path: '/progress'),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final destinations =
+        <({String label, IconData icon, IconData selectedIcon, String path})>[
+      (label: l10n.navDashboard, icon: Icons.home_outlined, selectedIcon: Icons.home_rounded, path: '/'),
+      (label: l10n.navRoutines, icon: Icons.fitness_center_outlined, selectedIcon: Icons.fitness_center_rounded, path: '/routines'),
+      (label: l10n.exercises, icon: Icons.list_alt_outlined, selectedIcon: Icons.list_alt_rounded, path: '/exercises'),
+      (label: l10n.navProgress, icon: Icons.insights_outlined, selectedIcon: Icons.insights_rounded, path: '/progress'),
+    ];
+
     final width = MediaQuery.of(context).size.width;
     final selectedIndex = _indexForLocation(widget.currentLocation);
 
@@ -83,14 +85,14 @@ class _AppShellScaffoldState extends State<AppShellScaffold>
                 selectedIndex: selectedIndex,
                 labelType: NavigationRailLabelType.all,
                 onDestinationSelected: (index) {
-                  context.go(_destinations[index].path);
+                  context.go(destinations[index].path);
                 },
-                destinations: _destinations
+                destinations: destinations
                     .map(
                       (item) => NavigationRailDestination(
                         icon: Icon(item.icon),
                         selectedIcon: Icon(item.selectedIcon),
-                        label: Text(item.label.toUpperCase()),
+                        label: Text(item.label),
                       ),
                     )
                     .toList(),
@@ -132,14 +134,14 @@ class _AppShellScaffoldState extends State<AppShellScaffold>
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          context.go(_destinations[index].path);
+          context.go(destinations[index].path);
         },
-        destinations: _destinations
+        destinations: destinations
             .map(
               (item) => NavigationDestination(
                 icon: Icon(item.icon),
                 selectedIcon: Icon(item.selectedIcon),
-                label: item.label.toUpperCase(),
+                label: item.label,
               ),
             )
             .toList(),

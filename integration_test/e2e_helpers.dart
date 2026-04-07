@@ -86,7 +86,7 @@ Future<void> pumpApp(WidgetTester tester, ProviderContainer container) async {
 
 /// Navigate to a tab by tapping the bottom nav label.
 Future<void> navigateToTab(WidgetTester tester, String label) async {
-  await tester.tap(find.text(label));
+  await tester.tap(find.text(label).last);
   await tester.pumpAndSettle();
 }
 
@@ -172,7 +172,7 @@ Future<void> createTestExercise(
   String name = 'E2E Press',
   String muscle = 'Chest',
 }) async {
-  await navigateToTab(tester, 'EXERCISES');
+  await navigateToTab(tester, 'Exercises');
   await tester.tap(find.text('New Exercise'));
   await tester.pumpAndSettle();
   await tester.enterText(
@@ -202,7 +202,7 @@ Future<void> createTestRoutine(
   String routineName = 'E2E Routine',
   String exerciseName = 'E2E Press',
 }) async {
-  await navigateToTab(tester, 'ROUTINES');
+  await navigateToTab(tester, 'Routines');
   await tester.tap(find.text('Create New Routine'));
   await tester.pumpAndSettle();
 
@@ -249,7 +249,7 @@ Future<void> completeQuickWorkout(
 }) async {
   // Start workout from the routines screen's play button instead of dashboard
   // (dashboard may have START SESSION below the fold on small viewports)
-  await navigateToTab(tester, 'ROUTINES');
+  await navigateToTab(tester, 'Routines');
   // Tap the play button (circular icon button) on the routine card
   await tester.tap(find.byIcon(Icons.play_arrow).first);
   // Active workout screen has a running timer — use pump() not pumpAndSettle()

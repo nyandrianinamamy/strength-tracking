@@ -407,10 +407,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: '', label: Text('Auto')),
-                      ButtonSegment(value: 'en', label: Text('EN')),
-                      ButtonSegment(value: 'fr', label: Text('FR')),
+                    segments: [
+                      ButtonSegment(value: '', label: Text(l10n.autoLabel)),
+                      const ButtonSegment(value: 'en', label: Text('EN')),
+                      const ButtonSegment(value: 'fr', label: Text('FR')),
                     ],
                     selected: {state.preferredLanguage},
                     onSelectionChanged: (values) {
@@ -426,7 +426,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
                   // Theme
                   Text(
-                    'Theme',
+                    l10n.themeLabel,
                     style: Theme.of(context)
                         .textTheme
                         .titleSmall
@@ -434,13 +434,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: '', label: Text('Auto')),
-                      ButtonSegment(
+                    segments: [
+                      ButtonSegment(value: '', label: Text(l10n.autoLabel)),
+                      const ButtonSegment(
                         value: 'light',
                         label: Icon(Icons.light_mode, size: 18),
                       ),
-                      ButtonSegment(
+                      const ButtonSegment(
                         value: 'dark',
                         label: Icon(Icons.dark_mode, size: 18),
                       ),
@@ -469,7 +469,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Apple Health',
+                      l10n.appleHealth,
                       style: Theme.of(context)
                           .textTheme
                           .titleSmall
@@ -478,9 +478,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     const SizedBox(height: 4),
                     SwitchListTile.adaptive(
                       contentPadding: EdgeInsets.zero,
-                      title: const Text('Sleep & HRV'),
+                      title: Text(l10n.sleepAndHrv),
                       subtitle: Text(
-                        'Read sleep and heart rate variability data to improve training recommendations.',
+                        l10n.sleepHrvDescription,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: context.appColors.subtleText,
                             ),
@@ -560,7 +560,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         } catch (e) {
                           if (context.mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed: $e')),
+                              SnackBar(content: Text(l10n.failedError('$e'))),
                             );
                           }
                         }
@@ -585,7 +585,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'This will discard your current data and load the linked account\'s data.',
+                      l10n.switchWarning,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: context.appColors.warning,
@@ -709,14 +709,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   const SizedBox(height: 12),
                   _AuthButton(
                     icon: Icons.history_rounded,
-                    label: 'Clear Workout History',
+                    label: l10n.clearWorkoutHistory,
                     onTap: () {
                       showDialog(
                         context: context,
                         builder: (dialogContext) => AlertDialog(
-                          title: const Text('Clear Workout History?'),
-                          content: const Text(
-                            'This will delete all workout sessions and performance data. Your exercises and routines will be kept.',
+                          title: Text(l10n.clearWorkoutHistoryConfirm),
+                          content: Text(
+                            l10n.clearWorkoutHistoryMessage,
                           ),
                           actions: [
                             TextButton(
@@ -742,8 +742,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                     );
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Workout history cleared'),
+                                  SnackBar(
+                                    content: Text(l10n.workoutHistoryCleared),
                                   ),
                                 );
                               },

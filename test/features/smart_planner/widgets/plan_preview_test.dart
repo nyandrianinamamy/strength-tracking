@@ -1,13 +1,18 @@
 // test/features/smart_planner/widgets/plan_preview_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:training_engine/training_engine.dart';
 
 import 'package:strength_training_tracker/src/features/smart_planner/widgets/plan_preview.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/widgets/session_card.dart';
 
 Widget _buildTestApp(Widget child) {
-  return MaterialApp(home: Scaffold(body: child));
+  return MaterialApp(
+    localizationsDelegates: AppLocalizations.localizationsDelegates,
+    supportedLocales: AppLocalizations.supportedLocales,
+    home: Scaffold(body: child),
+  );
 }
 
 String _nameResolver(String id) => 'Exercise $id';
