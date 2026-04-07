@@ -146,7 +146,7 @@ void main() {
       await pumpApp(tester, container);
       await completeOnboarding(tester);
 
-      await navigateToTab(tester, 'EXERCISES');
+      await navigateToTab(tester, 'Exercises');
 
       await tester.tap(find.text('New Exercise'));
       await tester.pumpAndSettle();
@@ -270,7 +270,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Now we're back on dashboard inside ShellRoute — bottom nav available
-      await navigateToTab(tester, 'PROGRESS');
+      await navigateToTab(tester, 'Progress');
 
       // Overview tab shows "Personal Records" section
       // Exercise name may appear multiple times across sections
@@ -452,7 +452,7 @@ void main() {
       await tester.tap(find.text('Finish & Go Home'));
       await tester.pumpAndSettle();
 
-      await navigateToTab(tester, 'PROGRESS');
+      await navigateToTab(tester, 'Progress');
 
       // The trailing 1RM value should include "kg" unit
       expect(find.textContaining('kg'), findsWidgets);
@@ -551,7 +551,7 @@ void main() {
       );
 
       // Start workout
-      await navigateToTab(tester, 'ROUTINES');
+      await navigateToTab(tester, 'Routines');
       await tester.tap(find.byIcon(Icons.play_arrow).first);
       for (int i = 0; i < 30; i++) {
         await tester.pump(const Duration(milliseconds: 100));
