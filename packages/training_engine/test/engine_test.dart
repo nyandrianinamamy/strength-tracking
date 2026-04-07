@@ -272,7 +272,10 @@ void main() {
     test('does not mutate engine state', () {
       final engine = _engine();
       engine.ingestSession(_session());
-      final stateBefore = engine.state.fatigueLog.length;
+      final impulseCounts = {
+        for (final e in engine.state.fatigueLog.entries)
+          e.key: e.value.length,
+      };
 
       engine.previewFatigueWithSets([
         LoggedSet(
@@ -284,7 +287,10 @@ void main() {
         ),
       ]);
 
-      expect(engine.state.fatigueLog.length, equals(stateBefore));
+      expect(engine.state.fatigueLog.length, equals(impulseCounts.length));
+      for (final e in engine.state.fatigueLog.entries) {
+        expect(e.value.length, equals(impulseCounts[e.key]));
+      }
     });
 
     test('skips sets with unknown exercise IDs', () {

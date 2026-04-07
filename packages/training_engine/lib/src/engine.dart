@@ -278,7 +278,8 @@ class TrainingEngine {
       final exercise = registry.lookup(entry.key);
       if (exercise == null) continue;
 
-      final e1rm = currentE1rm(entry.key) ?? 100.0;
+      // currentE1rm always returns a value (falls back to baseline estimate)
+      final e1rm = currentE1rm(entry.key)!;
       final impulses = impulse_lib.calculateImpulses(
         sets: entry.value,
         exercise: exercise,
