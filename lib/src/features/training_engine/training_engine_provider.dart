@@ -160,9 +160,6 @@ final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
   }
 
   final engine = await ref.watch(trainingEngineProvider.future);
-  if (engine.state.sessionsIngested == 0 && activeSets.isEmpty) {
-    return <Muscle, MuscleData>{};
-  }
 
   // Convert app CompletedSets to engine LoggedSets
   final engineSets = activeSets
