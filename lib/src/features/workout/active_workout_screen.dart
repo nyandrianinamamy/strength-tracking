@@ -2312,7 +2312,7 @@ class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
     final appColors = context.appColors;
     final exercise = widget.exercise;
     final state = widget.state;
-    final fatigue = ref.watch(engineHeatmapDataProvider).maybeWhen(
+    final fatigue = ref.watch(liveEngineHeatmapDataProvider).maybeWhen(
       data: (data) => data,
       orElse: () => const <Muscle, MuscleData>{},
     );
