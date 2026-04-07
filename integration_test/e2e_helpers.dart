@@ -86,10 +86,7 @@ Future<void> pumpApp(WidgetTester tester, ProviderContainer container) async {
 
 /// Navigate to a tab by tapping the bottom nav label.
 Future<void> navigateToTab(WidgetTester tester, String label) async {
-  await tester.tap(find.descendant(
-    of: find.byType(NavigationBar),
-    matching: find.text(label),
-  ));
+  await tester.tap(find.text(label).last);
   await tester.pumpAndSettle();
 }
 
