@@ -252,6 +252,62 @@ class TrainingEngine {
     );
   }
 
+  /// Returns a fatigue map that includes both persisted fatigue AND the
+  /// projected contribution from [previewSets], without mutating engine state.
+  ///
+  /// Used for live heatmap updates during an active workout.
+  Map<String, fatigue_lib.FatigueStatus> previewFatigueWithSets(
+    List<LoggedSet> previewSets, {
+    DateTime? at,
+  }) {
+    final now = at ?? DateTime.now();
+
+    if (previewSets.isEmpty) {
+      return fullFatigueMap(now);
+    }
+
+    // Group preview sets by exercise
+    final setsByExercise = <String, List<LoggedSet>>{};
+    for (final set in previewSets) {
+      setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
+    }
+
+    // Build temporary impulses from preview sets
+    final previewImpulses = <String, List<FatigueImpulse>>{};
+    for (final entry in setsByExercise.entries) {
+      final exercise = registry.lookup(entry.key);
+      if (exercise == null) continue;
+
+      final e1rm = currentE1rm(entry.key) ?? 100.0;
+      final impulses = impulse_lib.calculateImpulses(
+        sets: entry.value,
+        exercise: exercise,
+        e1rm: e1rm,
+        sessionEndedAt: now,
+      );
+      for (final impulse in impulses) {
+        previewImpulses
+            .putIfAbsent(impulse.muscleId, () => [])
+            .add(impulse);
+      }
+    }
+
+    // Merge persisted fatigue log with preview impulses
+    final mergedLog = <String, List<FatigueImpulse>>{};
+    for (final entry in _state.fatigueLog.entries) {
+      mergedLog[entry.key] = List.of(entry.value);
+    }
+    for (final entry in previewImpulses.entries) {
+      mergedLog.putIfAbsent(entry.key, () => []).addAll(entry.value);
+    }
+
+    return fatigue_lib.fullFatigueMap(
+      mergedLog,
+      now,
+      age: _state.profile.age,
+    );
+  }
+
   /// Returns the current ACWR status, or `null` if not enough data.
   acwr_lib.AcwrStatus? currentAcwr() {
     if (_state.acwrState == null) return null;

@@ -216,6 +216,93 @@ void main() {
     });
   });
 
+  group('TrainingEngine.previewFatigueWithSets', () {
+    test('returns empty map for empty sets list', () {
+      final engine = _engine();
+      final map = engine.previewFatigueWithSets([]);
+      expect(map, isEmpty);
+    });
+
+    test('returns fatigue for muscles targeted by given sets', () {
+      final engine = _engine();
+      final sets = [
+        LoggedSet(
+          exerciseId: 'barbell_back_squat',
+          weightKg: 100.0,
+          reps: 8,
+          rpe: 8.0,
+          completedAt: DateTime.utc(2026, 4, 1, 18, 0),
+        ),
+      ];
+      final map = engine.previewFatigueWithSets(sets);
+      expect(map, isNotEmpty);
+      // Squat targets quadriceps
+      expect(map['quadriceps'], isNotNull);
+      expect(map['quadriceps']!.level, greaterThan(0.0));
+    });
+
+    test('merges preview with existing persisted fatigue', () {
+      final engine = _engine();
+      // Ingest a real session first
+      engine.ingestSession(_session(endedAt: DateTime.utc(2026, 4, 1, 10, 0)));
+      final baseline = engine.fullFatigueMap(DateTime.utc(2026, 4, 1, 18, 0));
+
+      // Preview with additional sets
+      final sets = [
+        LoggedSet(
+          exerciseId: 'barbell_back_squat',
+          weightKg: 120.0,
+          reps: 5,
+          rpe: 9.0,
+          completedAt: DateTime.utc(2026, 4, 1, 18, 0),
+        ),
+      ];
+      final preview = engine.previewFatigueWithSets(
+        sets,
+        at: DateTime.utc(2026, 4, 1, 18, 0),
+      );
+
+      // Preview fatigue should be higher than baseline alone
+      expect(
+        preview['quadriceps']!.level,
+        greaterThan(baseline['quadriceps']!.level),
+      );
+    });
+
+    test('does not mutate engine state', () {
+      final engine = _engine();
+      engine.ingestSession(_session());
+      final stateBefore = engine.state.fatigueLog.length;
+
+      engine.previewFatigueWithSets([
+        LoggedSet(
+          exerciseId: 'barbell_back_squat',
+          weightKg: 100.0,
+          reps: 10,
+          rpe: 9.0,
+          completedAt: DateTime.now(),
+        ),
+      ]);
+
+      expect(engine.state.fatigueLog.length, equals(stateBefore));
+    });
+
+    test('skips sets with unknown exercise IDs', () {
+      final engine = _engine();
+      final sets = [
+        LoggedSet(
+          exerciseId: 'totally_unknown_exercise',
+          weightKg: 50.0,
+          reps: 10,
+          rpe: 7.0,
+          completedAt: DateTime.now(),
+        ),
+      ];
+      final map = engine.previewFatigueWithSets(sets);
+      expect(map, isEmpty);
+    });
+  });
+
   group('TrainingEngine.currentAcwr', () {
     test('returns null before any session', () {
       final engine = _engine();
