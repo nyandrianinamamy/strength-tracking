@@ -652,12 +652,15 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     Routine routine,
     int pageIndex,
   ) async {
+    final controller = ref.read(workoutControllerProvider);
+    final currentExercises = controller.effectiveExercises();
     final picked = await showExercisePickerSheet(
       context,
       isSwap: true,
+      excludeIds: currentExercises.map((e) => e.exerciseId).toSet(),
     );
-    if (picked == null) return;
-    ref.read(workoutControllerProvider).swapExercise(pageIndex, picked.id);
+    if (picked == null || !mounted) return;
+    controller.swapExercise(pageIndex, picked.id);
   }
 
   Widget _buildEndOfWorkoutPage(
@@ -696,7 +699,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               child: OutlinedButton.icon(
                 onPressed: () async {
                   final picked = await showExercisePickerSheet(context);
-                  if (picked == null) return;
+                  if (picked == null || !mounted) return;
                   ref.read(workoutControllerProvider).addExercise(picked.id);
                 },
                 style: OutlinedButton.styleFrom(
