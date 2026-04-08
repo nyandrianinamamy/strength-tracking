@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
+import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_controller.dart';
@@ -21,6 +22,17 @@ class WorkoutController {
   WorkoutSession? resumeActive() =>
       _ref.read(appStateControllerProvider).activeSession;
 
+  /// Returns the session-scoped exercise list if overrides exist,
+  /// otherwise the base routine's exercises.
+  List<RoutineExercise> effectiveExercises() {
+    final state = _ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return [];
+    final routine = state.routineById(session.routineId);
+    if (routine == null) return [];
+    return session.exerciseOverrides ?? routine.exercises;
+  }
+
   WorkoutSession? logSet({
     required double weightKg,
     required int reps,
@@ -34,14 +46,15 @@ class WorkoutController {
     }
 
     final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) {
-      return null;
-    }
+    if (routine == null) return null;
+
+    final exercises = session.exerciseOverrides ?? routine.exercises;
+    if (exercises.isEmpty) return null;
 
     final currentExercise =
-        routine.exercises[session.currentExerciseIndex.clamp(
+        exercises[session.currentExerciseIndex.clamp(
           0,
-          routine.exercises.length - 1,
+          exercises.length - 1,
         )];
     final existingSets = session.completedSets
         .where((set) => set.exerciseId == currentExercise.exerciseId)
@@ -59,7 +72,7 @@ class WorkoutController {
 
     var nextExerciseIndex = session.currentExerciseIndex;
     if (existingSets + 1 >= currentExercise.targetSets &&
-        session.currentExerciseIndex < routine.exercises.length - 1) {
+        session.currentExerciseIndex < exercises.length - 1) {
       nextExerciseIndex += 1;
     }
 
@@ -82,12 +95,15 @@ class WorkoutController {
     if (session == null) return null;
 
     final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) return null;
+    if (routine == null) return null;
+
+    final exercises = session.exerciseOverrides ?? routine.exercises;
+    if (exercises.isEmpty) return null;
 
     final currentExercise =
-        routine.exercises[session.currentExerciseIndex.clamp(
+        exercises[session.currentExerciseIndex.clamp(
           0,
-          routine.exercises.length - 1,
+          exercises.length - 1,
         )];
     final existingSets = session.completedSets
         .where((set) => set.exerciseId == currentExercise.exerciseId)
@@ -105,7 +121,7 @@ class WorkoutController {
 
     var nextExerciseIndex = session.currentExerciseIndex;
     if (existingSets + 1 >= currentExercise.targetSets &&
-        session.currentExerciseIndex < routine.exercises.length - 1) {
+        session.currentExerciseIndex < exercises.length - 1) {
       nextExerciseIndex += 1;
     }
 
@@ -187,13 +203,14 @@ class WorkoutController {
     }
 
     final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) {
-      return null;
-    }
+    if (routine == null) return null;
+
+    final exercises = session.exerciseOverrides ?? routine.exercises;
+    if (exercises.isEmpty) return null;
 
     final nextIndex = (session.currentExerciseIndex + 1).clamp(
       0,
-      routine.exercises.length - 1,
+      exercises.length - 1,
     );
     final updatedSession = session.copyWith(
       lastActivityAt: DateTime.now(),
@@ -211,11 +228,12 @@ class WorkoutController {
     }
 
     final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) {
-      return null;
-    }
+    if (routine == null) return null;
 
-    final clampedIndex = index.clamp(0, routine.exercises.length - 1);
+    final exercises = session.exerciseOverrides ?? routine.exercises;
+    if (exercises.isEmpty) return null;
+
+    final clampedIndex = index.clamp(0, exercises.length - 1);
     if (clampedIndex == session.currentExerciseIndex) {
       return session;
     }
@@ -305,9 +323,6 @@ class WorkoutController {
     );
   }
 
-  /// Swaps the exercise at [exerciseIndex] in the active session's routine
-  /// with [newExerciseId]. This modifies the routine in-place for the current
-  /// session; the user can always swap back or edit the routine later.
   void swapExercise(int exerciseIndex, String newExerciseId) {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
@@ -316,28 +331,48 @@ class WorkoutController {
     final routine = state.routineById(session.routineId);
     if (routine == null) return;
 
-    if (exerciseIndex < 0 || exerciseIndex >= routine.exercises.length) return;
+    // Snapshot routine exercises into overrides on first edit
+    final exercises = List.of(session.exerciseOverrides ?? routine.exercises);
+    if (exerciseIndex < 0 || exerciseIndex >= exercises.length) return;
 
-    final updatedExercises = List.of(routine.exercises);
-    updatedExercises[exerciseIndex] = updatedExercises[exerciseIndex].copyWith(
+    exercises[exerciseIndex] = exercises[exerciseIndex].copyWith(
       exerciseId: newExerciseId,
     );
 
-    final updatedRoutine = routine.copyWith(exercises: updatedExercises);
-    final updatedSession = session.copyWith(lastActivityAt: DateTime.now());
+    _persistSession(session.copyWith(
+      exerciseOverrides: exercises,
+      lastActivityAt: DateTime.now(),
+    ));
+  }
 
-    _ref
-        .read(appStateControllerProvider.notifier)
-        .updateState(
-          (s) => s.copyWith(
-            routines: s.routines
-                .map((r) => r.id == updatedRoutine.id ? updatedRoutine : r)
-                .toList(),
-            sessions: s.sessions
-                .map((item) => item.id == updatedSession.id ? updatedSession : item)
-                .toList(),
-          ),
-        );
+  void addExercise(String exerciseId) {
+    final state = _ref.read(appStateControllerProvider);
+    final session = state.activeSession;
+    if (session == null) return;
+
+    final routine = state.routineById(session.routineId);
+    if (routine == null) return;
+
+    final exercise = state.exerciseById(exerciseId);
+    final isTimed = exercise?.exerciseType == 'timed';
+
+    final exercises = List.of(session.exerciseOverrides ?? routine.exercises);
+
+    final newRoutineExercise = RoutineExercise(
+      exerciseId: exerciseId,
+      targetSets: isTimed ? 1 : 3,
+      targetReps: isTimed ? 0 : 8,
+      targetDurationSeconds: isTimed ? 60 : 60,
+      restSeconds: isTimed ? 0 : 90,
+      order: exercises.length,
+    );
+
+    exercises.add(newRoutineExercise);
+
+    _persistSession(session.copyWith(
+      exerciseOverrides: exercises,
+      lastActivityAt: DateTime.now(),
+    ));
   }
 
   void _persistSession(WorkoutSession updatedSession) {
