@@ -1522,4 +1522,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoLabel => 'Auto';
+
+  @override
+  String get exercisePickerTitle => 'Add Exercise';
+
+  @override
+  String get swapExercisePickerTitle => 'Swap Exercise';
+
+  @override
+  String createExerciseName(String name) {
+    return 'Create \"$name\"';
+  }
+
+  @override
+  String get quickCreateTitle => 'Quick Create';
+
+  @override
+  String get selectPrimaryMuscle => 'Primary muscle';
+
+  @override
+  String get createAndAdd => 'Create';
 }
