@@ -31,7 +31,13 @@ class ExerciseController {
           exercise.secondaryMuscles.any(
             (muscle) => muscle.toLowerCase().contains(normalized),
           );
-    }).toList()..sort((a, b) => a.name.compareTo(b.name));
+    }).toList()..sort((a, b) {
+      final countCmp = b.useCount.compareTo(a.useCount);
+      if (countCmp != 0) return countCmp;
+      final aTime = a.lastUsedAt ?? DateTime(1970);
+      final bTime = b.lastUsedAt ?? DateTime(1970);
+      return bTime.compareTo(aTime);
+    });
   }
 
   Exercise create({
@@ -111,6 +117,25 @@ class ExerciseController {
                   (exercise) => exercise.id == exerciseId
                       ? exercise.copyWith(archived: true)
                       : exercise,
+                )
+                .toList(),
+          ),
+        );
+  }
+
+  void recordUsage(String exerciseId) {
+    _ref
+        .read(appStateControllerProvider.notifier)
+        .updateState(
+          (state) => state.copyWith(
+            exercises: state.exercises
+                .map(
+                  (e) => e.id == exerciseId
+                      ? e.copyWith(
+                          useCount: e.useCount + 1,
+                          lastUsedAt: DateTime.now(),
+                        )
+                      : e,
                 )
                 .toList(),
           ),
