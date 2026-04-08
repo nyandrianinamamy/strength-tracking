@@ -68,6 +68,17 @@ A unified **bottom sheet exercise picker** (`ExercisePickerSheet`) reused across
 
 ## Data & State
 
+### Session-scoped exercise list
+
+Currently `WorkoutSession` has no exercise list — it references a `Routine` by ID. Mid-workout changes (swap, add) must NOT mutate the base routine template, or those edits leak into future sessions.
+
+**Fix:** Add `exerciseOverrides` (List<RoutineExercise>?) to `WorkoutSession`.
+- `null` by default — the session uses the routine's exercise list as-is
+- On first mid-session swap or add, snapshot the routine's exercises into `exerciseOverrides`
+- All subsequent reads during the session use `exerciseOverrides` instead of `routine.exercises`
+- The base `Routine` is never modified during an active workout
+- Helper: `effectiveExercises(Routine routine, WorkoutSession session)` returns `session.exerciseOverrides ?? routine.exercises`
+
 ### Exercise usage tracking
 
 - Add `lastUsedAt` (DateTime?) and `useCount` (int) to the Exercise model
@@ -82,8 +93,9 @@ A unified **bottom sheet exercise picker** (`ExercisePickerSheet`) reused across
 
 ### Swap behavior
 
-- **Routine editor:** replaces `exerciseId` in `RoutineExercise`, preserves `targetSets`, `targetReps`, `restSeconds`
-- **Active workout:** marks remaining planned sets for old exercise as skipped, inserts new exercise at same position
+- **Routine editor:** replaces `exerciseId` in `RoutineExercise`, preserves `targetSets`, `targetReps`, `restSeconds` — directly modifies the routine (this is intentional, user is editing the template)
+- **Active workout swap:** snapshots routine exercises into `exerciseOverrides` (if not already), replaces the exercise at the given index — base routine unchanged, already-logged sets for the old exercise remain in `completedSets` with their original `exerciseId`
+- **Active workout add:** snapshots into `exerciseOverrides`, appends new exercise at end — `currentExerciseIndex` unaffected since insertion is at the tail
 
 ## Localization
 

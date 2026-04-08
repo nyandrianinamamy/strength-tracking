@@ -4,7 +4,7 @@
 
 **Goal:** Replace the multi-screen exercise add/swap/create flow with a unified bottom sheet that works in both the routine editor and active workout screen.
 
-**Architecture:** A shared `ExercisePickerSheet` widget with inline quick-create, usage-frequency sorting, and exercise thumbnails. Integrates into existing screens by replacing navigation calls with `showExercisePickerSheet()`. Adds `lastUsedAt`/`useCount` fields to the Exercise model.
+**Architecture:** A shared `ExercisePickerSheet` widget with inline quick-create, usage-frequency sorting, and exercise thumbnails. Integrates into existing screens by replacing navigation calls with `showExercisePickerSheet()`. Adds `lastUsedAt`/`useCount` fields to Exercise model. Adds `exerciseOverrides` to `WorkoutSession` so mid-workout changes (swap/add) don't mutate the base routine.
 
 **Tech Stack:** Flutter, Riverpod, Material 3 bottom sheets, existing `ExerciseController`, `WorkoutController`, `AppState`
 
@@ -958,18 +958,246 @@ git commit -m "feat: wire ExercisePickerSheet into routine editor with swap supp
 
 ---
 
-### Task 6: Wire picker into the active workout screen
+### Task 6: Add exerciseOverrides to WorkoutSession model
+
+Mid-workout changes (swap/add exercise) must NOT mutate the base routine template.
+The fix: add a session-scoped `exerciseOverrides` field to `WorkoutSession`.
 
 **Files:**
-- Modify: `lib/src/features/workout/active_workout_screen.dart`
-- Modify: `lib/src/features/workout/workout_controller.dart`
+- Modify: `lib/src/data/models/workout_session.dart`
+- Test: `test/data/models/workout_session_test.dart`
 
-**Step 1: Add `addExercise` to WorkoutController**
+**Step 1: Write the failing test**
 
-In `lib/src/features/workout/workout_controller.dart`, add this method:
+Create `test/data/models/workout_session_test.dart`:
 
 ```dart
-/// Appends a new exercise to the active session's routine.
+import 'package:flutter_test/flutter_test.dart';
+import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
+import 'package:strength_training_tracker/src/data/models/workout_session.dart';
+
+void main() {
+  group('WorkoutSession exerciseOverrides', () {
+    test('defaults to null', () {
+      final session = WorkoutSession(
+        id: 's1',
+        routineId: 'r1',
+        status: WorkoutSessionStatus.active,
+        startedAt: DateTime.now(),
+        endedAt: null,
+        lastActivityAt: null,
+        currentExerciseIndex: 0,
+        completedSets: [],
+        sessionNote: '',
+        rpe: null,
+      );
+      expect(session.exerciseOverrides, isNull);
+    });
+
+    test('copyWith preserves exerciseOverrides', () {
+      final overrides = [
+        const RoutineExercise(
+          exerciseId: 'ex1',
+          targetSets: 3,
+          targetReps: 8,
+          restSeconds: 90,
+          order: 0,
+        ),
+      ];
+      final session = WorkoutSession(
+        id: 's1',
+        routineId: 'r1',
+        status: WorkoutSessionStatus.active,
+        startedAt: DateTime.now(),
+        endedAt: null,
+        lastActivityAt: null,
+        currentExerciseIndex: 0,
+        completedSets: [],
+        sessionNote: '',
+        rpe: null,
+        exerciseOverrides: overrides,
+      );
+      final updated = session.copyWith(currentExerciseIndex: 1);
+      expect(updated.exerciseOverrides, overrides);
+    });
+
+    test('toJson/fromJson round-trips exerciseOverrides', () {
+      final overrides = [
+        const RoutineExercise(
+          exerciseId: 'ex1',
+          targetSets: 3,
+          targetReps: 8,
+          restSeconds: 90,
+          order: 0,
+        ),
+      ];
+      final session = WorkoutSession(
+        id: 's1',
+        routineId: 'r1',
+        status: WorkoutSessionStatus.active,
+        startedAt: DateTime(2026, 4, 8),
+        endedAt: null,
+        lastActivityAt: null,
+        currentExerciseIndex: 0,
+        completedSets: [],
+        sessionNote: '',
+        rpe: null,
+        exerciseOverrides: overrides,
+      );
+      final json = session.toJson();
+      final restored = WorkoutSession.fromJson(json);
+      expect(restored.exerciseOverrides, isNotNull);
+      expect(restored.exerciseOverrides!.length, 1);
+      expect(restored.exerciseOverrides!.first.exerciseId, 'ex1');
+    });
+
+    test('fromJson defaults exerciseOverrides to null when absent', () {
+      final json = {
+        'id': 's1',
+        'routineId': 'r1',
+        'status': 'active',
+        'startedAt': '2026-04-08T00:00:00.000',
+        'currentExerciseIndex': 0,
+        'completedSets': [],
+        'sessionNote': '',
+      };
+      final session = WorkoutSession.fromJson(json);
+      expect(session.exerciseOverrides, isNull);
+    });
+  });
+}
+```
+
+**Step 2: Run test to verify it fails**
+
+Run: `flutter test test/data/models/workout_session_test.dart`
+Expected: FAIL — `exerciseOverrides` doesn't exist on WorkoutSession
+
+**Step 3: Write minimal implementation**
+
+In `lib/src/data/models/workout_session.dart`:
+
+Add import:
+```dart
+import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
+```
+
+Add to constructor:
+```dart
+this.exerciseOverrides,
+```
+
+Add field:
+```dart
+final List<RoutineExercise>? exerciseOverrides;
+```
+
+Add to `copyWith` parameters:
+```dart
+List<RoutineExercise>? exerciseOverrides,
+bool clearExerciseOverrides = false,
+```
+And in the return body:
+```dart
+exerciseOverrides: clearExerciseOverrides ? null : exerciseOverrides ?? this.exerciseOverrides,
+```
+
+Add to `fromJson`:
+```dart
+exerciseOverrides: json['exerciseOverrides'] != null
+    ? (json['exerciseOverrides'] as List<dynamic>)
+        .map((item) => RoutineExercise.fromJson(item as Map<String, dynamic>))
+        .toList()
+    : null,
+```
+
+Add to `toJson`:
+```dart
+if (exerciseOverrides != null)
+  'exerciseOverrides': exerciseOverrides!.map((e) => e.toJson()).toList(),
+```
+
+**Step 4: Run test to verify it passes**
+
+Run: `flutter test test/data/models/workout_session_test.dart`
+Expected: PASS
+
+**Step 5: Run all tests**
+
+Run: `flutter test`
+Expected: All PASS
+
+**Step 6: Commit**
+
+```bash
+git add lib/src/data/models/workout_session.dart test/data/models/workout_session_test.dart
+git commit -m "feat: add exerciseOverrides to WorkoutSession for session-scoped edits"
+```
+
+---
+
+### Task 7: Wire picker into active workout with session-scoped overrides
+
+Mid-workout swap/add must write to `session.exerciseOverrides`, NOT to the base routine.
+
+**Files:**
+- Modify: `lib/src/features/workout/workout_controller.dart`
+- Modify: `lib/src/features/workout/active_workout_screen.dart`
+- Test: `test/features/workout/workout_controller_test.dart` (extend if exists, or create)
+
+**Step 1: Add helper `effectiveExercises` to WorkoutController**
+
+In `lib/src/features/workout/workout_controller.dart`, add:
+
+```dart
+import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
+
+/// Returns the session-scoped exercise list if overrides exist,
+/// otherwise the base routine's exercises.
+List<RoutineExercise> effectiveExercises() {
+  final state = _ref.read(appStateControllerProvider);
+  final session = state.activeSession;
+  if (session == null) return [];
+  final routine = state.routineById(session.routineId);
+  if (routine == null) return [];
+  return session.exerciseOverrides ?? routine.exercises;
+}
+```
+
+**Step 2: Rewrite `swapExercise` to use session overrides**
+
+Replace the existing `swapExercise` method (lines 308-341) with:
+
+```dart
+/// Swaps the exercise at [exerciseIndex] with [newExerciseId].
+/// Writes to session.exerciseOverrides so the base routine is unchanged.
+void swapExercise(int exerciseIndex, String newExerciseId) {
+  final state = _ref.read(appStateControllerProvider);
+  final session = state.activeSession;
+  if (session == null) return;
+
+  final routine = state.routineById(session.routineId);
+  if (routine == null) return;
+
+  // Snapshot routine exercises into overrides on first edit
+  final exercises = List.of(session.exerciseOverrides ?? routine.exercises);
+  if (exerciseIndex < 0 || exerciseIndex >= exercises.length) return;
+
+  exercises[exerciseIndex] = exercises[exerciseIndex].copyWith(
+    exerciseId: newExerciseId,
+  );
+
+  _persistSession(session.copyWith(
+    exerciseOverrides: exercises,
+    lastActivityAt: DateTime.now(),
+  ));
+}
+```
+
+**Step 3: Add `addExercise` method**
+
+```dart
+/// Appends a new exercise to the active session (session-scoped, base routine unchanged).
 void addExercise(String exerciseId) {
   final state = _ref.read(appStateControllerProvider);
   final session = state.activeSession;
@@ -981,59 +1209,43 @@ void addExercise(String exerciseId) {
   final exercise = state.exerciseById(exerciseId);
   final isTimed = exercise?.exerciseType == 'timed';
 
+  // Snapshot routine exercises into overrides on first edit
+  final exercises = List.of(session.exerciseOverrides ?? routine.exercises);
+
   final newRoutineExercise = RoutineExercise(
     exerciseId: exerciseId,
     targetSets: isTimed ? 1 : 3,
     targetReps: isTimed ? 0 : 8,
     targetDurationSeconds: isTimed ? 60 : 60,
     restSeconds: isTimed ? 0 : 90,
-    order: routine.exercises.length,
+    order: exercises.length,
   );
 
-  final updatedRoutine = routine.copyWith(
-    exercises: [...routine.exercises, newRoutineExercise],
-  );
+  exercises.add(newRoutineExercise);
 
-  _ref
-      .read(appStateControllerProvider.notifier)
-      .updateState(
-        (s) => s.copyWith(
-          routines: s.routines
-              .map((r) => r.id == updatedRoutine.id ? updatedRoutine : r)
-              .toList(),
-        ),
-      );
+  _persistSession(session.copyWith(
+    exerciseOverrides: exercises,
+    lastActivityAt: DateTime.now(),
+  ));
 }
 ```
 
-Add import at top:
-```dart
-import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
-```
+**Step 4: Update active_workout_screen.dart to use effectiveExercises**
 
-**Step 2: Replace the "Add Exercise" button in active workout**
+Wherever the active workout screen reads `routine.exercises` to build the exercise page list, replace with `controller.effectiveExercises()`. Key locations:
 
-In `active_workout_screen.dart`, find the "Add Exercise" button (around line 836-854) that currently navigates to the routine editor. Replace the `onPressed` callback:
+- The exercise page builder that creates one page per exercise
+- The "Add Exercise" button `onPressed` — replace the `context.push('/routine/...')` navigation with:
 
 ```dart
 onPressed: () async {
-  final picked = await showExercisePickerSheet(
-    context: context,
-  );
+  final picked = await showExercisePickerSheet(context: context);
   if (picked == null) return;
-  final controller = ref.read(workoutControllerProvider);
-  controller.addExercise(picked.id);
+  ref.read(workoutControllerProvider).addExercise(picked.id);
 },
 ```
 
-Add import at top:
-```dart
-import 'package:strength_training_tracker/src/shared/widgets/exercise_picker_sheet.dart';
-```
-
-**Step 3: Replace the swap exercise bottom sheet in active workout**
-
-Find the existing swap exercise `showModalBottomSheet` (around lines 660-800) and replace it with the shared picker:
+- The swap exercise bottom sheet — replace the existing inline `showModalBottomSheet` (lines 660-800) with:
 
 ```dart
 final picked = await showExercisePickerSheet(
@@ -1041,25 +1253,49 @@ final picked = await showExercisePickerSheet(
   isSwap: true,
 );
 if (picked == null) return;
-final controller = ref.read(workoutControllerProvider);
-controller.swapExercise(pageIndex, picked.id);
+ref.read(workoutControllerProvider).swapExercise(pageIndex, picked.id);
 ```
 
-**Step 4: Run tests**
+Add import:
+```dart
+import 'package:strength_training_tracker/src/shared/widgets/exercise_picker_sheet.dart';
+```
+
+**Step 5: Write test for session isolation**
+
+Add to workout controller tests:
+
+```dart
+test('addExercise writes to session overrides, not base routine', () {
+  // Setup: create a routine with 1 exercise, start a session
+  // Act: call addExercise with a new exercise ID
+  // Assert: session.exerciseOverrides has 2 entries
+  // Assert: routine.exercises still has 1 entry (unchanged)
+});
+
+test('swapExercise writes to session overrides, not base routine', () {
+  // Setup: create a routine with 1 exercise, start a session
+  // Act: call swapExercise(0, newId)
+  // Assert: session.exerciseOverrides[0].exerciseId == newId
+  // Assert: routine.exercises[0].exerciseId == original (unchanged)
+});
+```
+
+**Step 6: Run tests**
 
 Run: `flutter test`
 Expected: All PASS
 
-**Step 5: Commit**
+**Step 7: Commit**
 
 ```bash
-git add lib/src/features/workout/active_workout_screen.dart lib/src/features/workout/workout_controller.dart
-git commit -m "feat: wire ExercisePickerSheet into active workout screen"
+git add lib/src/features/workout/workout_controller.dart lib/src/features/workout/active_workout_screen.dart test/features/workout/
+git commit -m "feat: wire picker into active workout with session-scoped overrides"
 ```
 
 ---
 
-### Task 7: Record exercise usage on set completion
+### Task 8: Record exercise usage on set completion
 
 **Files:**
 - Modify: `lib/src/features/workout/workout_controller.dart`
@@ -1093,7 +1329,7 @@ git commit -m "feat: record exercise usage on set completion"
 
 ---
 
-### Task 8: Manual testing and polish
+### Task 9: Manual testing and polish
 
 **Step 1: Run the app on simulator**
 
@@ -1117,18 +1353,26 @@ Run: `flutter run`
 4. Tap swap on an exercise → verify picker opens and swap works
 5. Log sets → verify exercise usage counts are tracked
 
-**Step 4: Verify no regressions**
+**Step 4: Verify session isolation (critical)**
+
+1. Start a session with a routine that has 3 exercises
+2. Add an exercise mid-workout → now 4 exercises in session
+3. Complete or discard the session
+4. Open the routine in the editor → verify it still has only 3 exercises (base routine unchanged)
+5. Start a new session with the same routine → verify it has 3 exercises (no leakage from previous session)
+
+**Step 5: Verify no regressions**
 
 - Complete a full workout flow end-to-end
 - Check that exercise creation from the full editor still works
 - Verify l10n works in both English and French
 
-**Step 5: Run full test suite**
+**Step 6: Run full test suite**
 
 Run: `flutter test`
 Expected: All PASS
 
-**Step 6: Final commit (if any polish needed)**
+**Step 7: Final commit (if any polish needed)**
 
 ```bash
 git add -A
