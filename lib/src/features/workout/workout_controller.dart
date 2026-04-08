@@ -6,6 +6,7 @@ import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
+import 'package:strength_training_tracker/src/features/exercises/exercise_controller.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_controller.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
@@ -83,6 +84,7 @@ class WorkoutController {
     );
 
     _persistSession(updatedSession);
+    _ref.read(exerciseControllerProvider).recordUsage(currentExercise.exerciseId);
     return updatedSession;
   }
 
@@ -132,6 +134,7 @@ class WorkoutController {
     );
 
     _persistSession(updatedSession);
+    _ref.read(exerciseControllerProvider).recordUsage(currentExercise.exerciseId);
     return updatedSession;
   }
 
