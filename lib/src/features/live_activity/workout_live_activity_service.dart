@@ -115,15 +115,16 @@ class WorkoutLiveActivityPayload {
     }
 
     final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) {
-      return null;
-    }
+    if (routine == null) return null;
+
+    final exercises = session.exerciseOverrides ?? routine.exercises;
+    if (exercises.isEmpty) return null;
 
     final clampedIndex = session.currentExerciseIndex.clamp(
       0,
-      routine.exercises.length - 1,
+      exercises.length - 1,
     );
-    final currentRoutineExercise = routine.exercises[clampedIndex];
+    final currentRoutineExercise = exercises[clampedIndex];
     final currentExercise = state.exerciseById(
       currentRoutineExercise.exerciseId,
     );
@@ -151,7 +152,7 @@ class WorkoutLiveActivityPayload {
       currentExerciseName: currentExercise.name,
       currentExerciseType: currentExercise.exerciseType,
       currentExerciseIndex: clampedIndex + 1,
-      totalExercises: routine.exercises.length,
+      totalExercises: exercises.length,
       completedSetsText: '${session.completedSets.length} total sets',
       currentExerciseProgressText:
           '$currentExerciseSets/${currentRoutineExercise.targetSets} sets',
@@ -178,7 +179,8 @@ class WorkoutLiveActivityPayload {
     }
 
     RoutineExercise? restExercise;
-    for (final item in routine.exercises) {
+    final exercises = session.exerciseOverrides ?? routine.exercises;
+    for (final item in exercises) {
       if (item.exerciseId == lastSet.exerciseId) {
         restExercise = item;
         break;
