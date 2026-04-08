@@ -10,6 +10,8 @@ class Exercise {
     this.exerciseType = 'strength',
     this.translationKey,
     this.photoBase64,
+    this.useCount = 0,
+    this.lastUsedAt,
   });
 
   final String id;
@@ -22,6 +24,8 @@ class Exercise {
   final String exerciseType;
   final String? translationKey;
   final String? photoBase64;
+  final int useCount;
+  final DateTime? lastUsedAt;
 
   Exercise copyWith({
     String? id,
@@ -35,6 +39,9 @@ class Exercise {
     String? translationKey,
     String? photoBase64,
     bool clearPhoto = false,
+    int? useCount,
+    DateTime? lastUsedAt,
+    bool clearLastUsedAt = false,
   }) {
     return Exercise(
       id: id ?? this.id,
@@ -47,6 +54,8 @@ class Exercise {
       exerciseType: exerciseType ?? this.exerciseType,
       translationKey: translationKey ?? this.translationKey,
       photoBase64: clearPhoto ? null : photoBase64 ?? this.photoBase64,
+      useCount: useCount ?? this.useCount,
+      lastUsedAt: clearLastUsedAt ? null : lastUsedAt ?? this.lastUsedAt,
     );
   }
 
@@ -68,6 +77,10 @@ class Exercise {
       exerciseType: json['exerciseType'] as String? ?? 'strength',
       translationKey: json['translationKey'] as String?,
       photoBase64: json['photoBase64'] as String?,
+      useCount: json['useCount'] as int? ?? 0,
+      lastUsedAt: json['lastUsedAt'] != null
+          ? DateTime.parse(json['lastUsedAt'] as String)
+          : null,
     );
   }
 
@@ -83,6 +96,8 @@ class Exercise {
       'exerciseType': exerciseType,
       if (translationKey != null) 'translationKey': translationKey,
       if (photoBase64 != null) 'photoBase64': photoBase64,
+      'useCount': useCount,
+      if (lastUsedAt != null) 'lastUsedAt': lastUsedAt!.toIso8601String(),
     };
   }
 }
