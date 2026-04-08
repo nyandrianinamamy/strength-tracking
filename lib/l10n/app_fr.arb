@@ -542,5 +542,13 @@
   "@setWeightSummary": { "placeholders": { "number": {}, "weight": {}, "reps": {} } },
   "setWeightRpeSummary": "Set {number} : {weight} x {reps} • RPE {rpe}",
   "@setWeightRpeSummary": { "placeholders": { "number": {}, "weight": {}, "reps": {}, "rpe": {} } },
-  "autoLabel": "Auto"
+  "autoLabel": "Auto",
+
+  "exercisePickerTitle": "Ajouter un exercice",
+  "swapExercisePickerTitle": "Remplacer l'exercice",
+  "createExerciseName": "Créer \"{name}\"",
+  "@createExerciseName": { "placeholders": { "name": { "type": "String" } } },
+  "quickCreateTitle": "Création rapide",
+  "selectPrimaryMuscle": "Muscle principal",
+  "createAndAdd": "Créer"
 }

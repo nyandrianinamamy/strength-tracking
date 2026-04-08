@@ -1,4 +1,5 @@
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
+import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 
 enum WorkoutSessionStatus { active, completed, discarded }
 
@@ -14,6 +15,7 @@ class WorkoutSession {
     required this.completedSets,
     required this.sessionNote,
     required this.rpe,
+    this.exerciseOverrides,
   });
 
   final String id;
@@ -26,6 +28,7 @@ class WorkoutSession {
   final List<CompletedSet> completedSets;
   final String sessionNote;
   final double? rpe;
+  final List<RoutineExercise>? exerciseOverrides;
 
   WorkoutSession copyWith({
     String? id,
@@ -40,6 +43,8 @@ class WorkoutSession {
     double? rpe,
     bool clearEndedAt = false,
     bool clearRpe = false,
+    List<RoutineExercise>? exerciseOverrides,
+    bool clearExerciseOverrides = false,
   }) {
     return WorkoutSession(
       id: id ?? this.id,
@@ -52,6 +57,7 @@ class WorkoutSession {
       completedSets: completedSets ?? this.completedSets,
       sessionNote: sessionNote ?? this.sessionNote,
       rpe: clearRpe ? null : rpe ?? this.rpe,
+      exerciseOverrides: clearExerciseOverrides ? null : exerciseOverrides ?? this.exerciseOverrides,
     );
   }
 
@@ -73,6 +79,11 @@ class WorkoutSession {
           .toList(),
       sessionNote: json['sessionNote'] as String? ?? '',
       rpe: (json['rpe'] as num?)?.toDouble(),
+      exerciseOverrides: json['exerciseOverrides'] != null
+          ? (json['exerciseOverrides'] as List<dynamic>)
+              .map((item) => RoutineExercise.fromJson(item as Map<String, dynamic>))
+              .toList()
+          : null,
     );
   }
 
@@ -88,6 +99,8 @@ class WorkoutSession {
       'completedSets': completedSets.map((item) => item.toJson()).toList(),
       'sessionNote': sessionNote,
       'rpe': rpe,
+      if (exerciseOverrides != null)
+        'exerciseOverrides': exerciseOverrides!.map((e) => e.toJson()).toList(),
     };
   }
 }

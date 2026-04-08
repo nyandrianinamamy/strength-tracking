@@ -23,6 +23,7 @@ import 'package:strength_training_tracker/src/features/training_engine/training_
 import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
+import 'package:strength_training_tracker/src/shared/widgets/exercise_picker_sheet.dart';
 
 class _TimedExerciseState {
   DateTime? start;
@@ -249,14 +250,17 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     if (session == null) return;
 
     final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) return;
+    if (routine == null) return;
+
+    final effectiveExs = session.exerciseOverrides ?? routine.exercises;
+    if (effectiveExs.isEmpty) return;
 
     // Find the prescription that owns the timer, not _currentPage
-    final exerciseIndex = routine.exercises
+    final exerciseIndex = effectiveExs
         .indexWhere((p) => p.exerciseId == exerciseId);
     if (exerciseIndex < 0) return;
 
-    final prescription = routine.exercises[exerciseIndex];
+    final prescription = effectiveExs[exerciseIndex];
 
     // Temporarily navigate to the timed exercise so logTimedSet targets it
     final controller = ref.read(workoutControllerProvider);
@@ -372,13 +376,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         final session = state.activeSession;
         if (session != null) {
           final routine = state.routineById(session.routineId);
-          if (routine != null && routine.exercises.isNotEmpty) {
+          final effectiveExs = session.exerciseOverrides ?? routine?.exercises ?? [];
+          if (routine != null && effectiveExs.isNotEmpty) {
             final nextExerciseIndex = session.currentExerciseIndex.clamp(
               0,
-              routine.exercises.length - 1,
+              effectiveExs.length - 1,
             );
             final nextExercise = state.exerciseById(
-              routine.exercises[nextExerciseIndex].exerciseId,
+              effectiveExs[nextExerciseIndex].exerciseId,
             );
             final exerciseName =
                 nextExercise == null
@@ -440,7 +445,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final routine = state.routineById(session.routineId);
     if (routine == null) return 0;
 
-    final prescription = routine.exercises
+    final effectiveExs = session.exerciseOverrides ?? routine.exercises;
+    final prescription = effectiveExs
         .where((e) => e.exerciseId == lastSet.exerciseId)
         .firstOrNull;
     final restSeconds = prescription?.restSeconds ?? 90;
@@ -640,165 +646,21 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     );
   }
 
-  void _showSwapPicker(
+  Future<void> _showSwapPicker(
     BuildContext context,
     AppState state,
     Routine routine,
     int pageIndex,
-  ) {
-    final l10n = AppLocalizations.of(context)!;
-    final prescription = routine.exercises[pageIndex];
-    final currentExercise = state.exerciseById(prescription.exerciseId);
-    final currentMuscles = currentExercise?.primaryMuscles ?? [];
-
-    final alternatives = state.exercises.where((e) {
-      if (e.archived || e.id == currentExercise?.id) return false;
-      return e.primaryMuscles.any((m) => currentMuscles.contains(m));
-    }).toList();
-
-    final searchController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (sheetContext) {
-        return StatefulBuilder(
-          builder: (ctx, setSheetState) {
-            final swapAppColors = context.appColors;
-            final swapColorScheme = Theme.of(context).colorScheme;
-            final query = searchController.text.toLowerCase();
-            final filtered = query.isEmpty
-                ? alternatives
-                : alternatives.where((e) {
-                    final name = ExerciseTranslations.displayName(
-                      context,
-                      e,
-                    ).toLowerCase();
-                    final muscles = e.primaryMuscles.join(' ').toLowerCase();
-                    return name.contains(query) || muscles.contains(query);
-                  }).toList();
-
-            return DraggableScrollableSheet(
-              initialChildSize: 0.6,
-              minChildSize: 0.4,
-              maxChildSize: 0.9,
-              expand: false,
-              builder: (_, scrollController) {
-                return SafeArea(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 12),
-                      Container(
-                        width: 40,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: swapAppColors.border,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          l10n.swapExercise,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w800),
-                        ),
-                      ),
-                      if (currentMuscles.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            currentMuscles.join(', '),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: swapAppColors.subtleText),
-                          ),
-                        ),
-                      const SizedBox(height: 12),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: TextField(
-                          controller: searchController,
-                          decoration: InputDecoration(
-                            hintText: l10n.searchExercisesEllipsis,
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            isDense: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onChanged: (_) => setSheetState(() {}),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: filtered.isEmpty
-                            ? Center(
-                                child: Text(
-                                  l10n.noMatchingExercises,
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(color: swapAppColors.subtleText),
-                                ),
-                              )
-                            : ListView.builder(
-                                controller: scrollController,
-                                itemCount: filtered.length,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                itemBuilder: (_, index) {
-                                  final exercise = filtered[index];
-                                  return ListTile(
-                                    contentPadding: EdgeInsets.zero,
-                                    title: Text(
-                                      ExerciseTranslations.displayName(
-                                        context,
-                                        exercise,
-                                      ),
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    subtitle: Text(
-                                      exercise.primaryMuscles.join(', '),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: swapAppColors.subtleText,
-                                          ),
-                                    ),
-                                    trailing: Icon(
-                                      Icons.swap_horiz_rounded,
-                                      color: swapColorScheme.primary,
-                                      size: 20,
-                                    ),
-                                    onTap: () {
-                                      final controller = ref.read(
-                                        workoutControllerProvider,
-                                      );
-                                      controller.swapExercise(
-                                        pageIndex,
-                                        exercise.id,
-                                      );
-                                      Navigator.pop(sheetContext);
-                                    },
-                                  );
-                                },
-                              ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
+  ) async {
+    final controller = ref.read(workoutControllerProvider);
+    final currentExercises = controller.effectiveExercises();
+    final picked = await showExercisePickerSheet(
+      context,
+      isSwap: true,
+      excludeIds: currentExercises.map((e) => e.exerciseId).toSet(),
     );
+    if (picked == null || !mounted) return;
+    controller.swapExercise(pageIndex, picked.id);
   }
 
   Widget _buildEndOfWorkoutPage(
@@ -835,13 +697,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () {
-                  // Navigate to routine edit to add exercises
-                  final state = ref.read(appStateControllerProvider);
-                  final session = state.activeSession;
-                  if (session != null) {
-                    context.push('/routine/${session.routineId}/edit');
-                  }
+                onPressed: () async {
+                  final picked = await showExercisePickerSheet(context);
+                  if (picked == null || !mounted) return;
+                  ref.read(workoutControllerProvider).addExercise(picked.id);
                 },
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
@@ -948,9 +807,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       );
     }
 
-    final exerciseCount = routine.exercises.length;
+    final exercises = controller.effectiveExercises();
+    final exerciseCount = exercises.length;
     final currentPrescription =
-        routine.exercises[_currentPage.clamp(0, exerciseCount - 1)];
+        exercises[_currentPage.clamp(0, exerciseCount - 1)];
     final currentExercise = state.exerciseById(currentPrescription.exerciseId);
     final currentExerciseSets = session.completedSets
         .where((s) => s.exerciseId == currentPrescription.exerciseId)
@@ -1561,7 +1421,7 @@ class _ExercisePage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final appColors = context.appColors;
-    final prescription = routine.exercises[pageIndex];
+    final prescription = (session.exerciseOverrides ?? routine.exercises)[pageIndex];
     final exercise = state.exerciseById(prescription.exerciseId);
     final currentSets = session.completedSets
         .where((set) => set.exerciseId == prescription.exerciseId)

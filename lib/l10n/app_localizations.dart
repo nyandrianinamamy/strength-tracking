@@ -2934,6 +2934,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto'**
   String get autoLabel;
+
+  /// No description provided for @exercisePickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Exercise'**
+  String get exercisePickerTitle;
+
+  /// No description provided for @swapExercisePickerTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Swap Exercise'**
+  String get swapExercisePickerTitle;
+
+  /// No description provided for @createExerciseName.
+  ///
+  /// In en, this message translates to:
+  /// **'Create \"{name}\"'**
+  String createExerciseName(String name);
+
+  /// No description provided for @quickCreateTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Create'**
+  String get quickCreateTitle;
+
+  /// No description provided for @selectPrimaryMuscle.
+  ///
+  /// In en, this message translates to:
+  /// **'Primary muscle'**
+  String get selectPrimaryMuscle;
+
+  /// No description provided for @createAndAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get createAndAdd;
 }
 
 class _AppLocalizationsDelegate

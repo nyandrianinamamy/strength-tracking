@@ -10,6 +10,7 @@ import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
+import 'package:strength_training_tracker/src/shared/widgets/exercise_picker_sheet.dart';
 
 class RoutineEditorScreen extends ConsumerStatefulWidget {
   const RoutineEditorScreen({super.key, this.routineId});
@@ -296,6 +297,22 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
                   ),
                 ),
                 IconButton(
+                  icon: const Icon(Icons.swap_horiz_rounded, size: 20),
+                  onPressed: () async {
+                    final picked = await showExercisePickerSheet(
+                      context,
+                      isSwap: true,
+                      excludeIds: _exercises.map((e) => e.exerciseId).toSet(),
+                    );
+                    if (picked == null) return;
+                    setState(() {
+                      _exercises[index] = _exercises[index].copyWith(
+                        exerciseId: picked.id,
+                      );
+                    });
+                  },
+                ),
+                IconButton(
                   icon: Icon(Icons.delete_outline,
                       color: context.appColors.subtleText),
                   onPressed: () {
@@ -378,40 +395,19 @@ class _RoutineEditorScreenState extends ConsumerState<RoutineEditorScreen> {
     BuildContext context,
     List<Exercise> exercises,
   ) async {
-    final picked = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (sheetContext) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.7,
-          minChildSize: 0.4,
-          maxChildSize: 0.9,
-          expand: false,
-          builder: (_, scrollController) {
-            return _ExercisePickerContent(
-              exercises: exercises,
-              addedExerciseIds:
-                  _exercises.map((e) => e.exerciseId).toSet(),
-              scrollController: scrollController,
-            );
-          },
-        );
-      },
+    final picked = await showExercisePickerSheet(
+      context,
+      excludeIds: _exercises.map((e) => e.exerciseId).toSet(),
     );
 
-    if (picked == null) {
-      return;
-    }
+    if (picked == null) return;
 
-    final pickedExercise = ref.read(appStateControllerProvider).exerciseById(picked);
-    final isTimed = pickedExercise?.exerciseType == 'timed';
-
+    final isTimed = picked.exerciseType == 'timed';
     setState(() {
       _exercises = [
         ..._exercises,
         RoutineExercise(
-          exerciseId: picked,
+          exerciseId: picked.id,
           targetSets: isTimed ? 1 : 3,
           targetReps: isTimed ? 0 : 8,
           targetDurationSeconds: isTimed ? 60 : 60,
@@ -583,128 +579,3 @@ class _StepperField extends StatelessWidget {
   }
 }
 
-class _ExercisePickerContent extends StatefulWidget {
-  const _ExercisePickerContent({
-    required this.exercises,
-    required this.addedExerciseIds,
-    required this.scrollController,
-  });
-
-  final List<Exercise> exercises;
-  final Set<String> addedExerciseIds;
-  final ScrollController scrollController;
-
-  @override
-  State<_ExercisePickerContent> createState() =>
-      _ExercisePickerContentState();
-}
-
-class _ExercisePickerContentState extends State<_ExercisePickerContent> {
-  String _query = '';
-  String? _muscle;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final muscles = [
-      l10n.all,
-      ...{
-        for (final exercise in widget.exercises) ...exercise.primaryMuscles,
-      },
-    ]..sort();
-    final filtered = widget.exercises.where((exercise) {
-      if (_muscle != null && !exercise.primaryMuscles.contains(_muscle)) {
-        return false;
-      }
-      if (_query.isEmpty) return true;
-      final q = _query.toLowerCase();
-      final name = exercise.name.toLowerCase();
-      final primary = exercise.primaryMuscles.join(' ').toLowerCase();
-      final secondary = exercise.secondaryMuscles.join(' ').toLowerCase();
-      return name.contains(q) || primary.contains(q) || secondary.contains(q);
-    }).toList();
-
-    return AnimatedPadding(
-      duration: const Duration(milliseconds: 180),
-      curve: Curves.easeOut,
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SafeArea(
-        top: false,
-        child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: TextField(
-              autofocus: true,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.search_rounded),
-                hintText: l10n.searchExercisesEllipsis,
-                filled: true,
-                fillColor: context.appColors.surfaceMuted,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-              onChanged: (value) => setState(() => _query = value.trim()),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            child: CategoryChips(
-              options: muscles,
-              selected: _muscle ?? l10n.all,
-              onSelected: (value) {
-                setState(() => _muscle = value == l10n.all ? null : value);
-              },
-            ),
-          ),
-          Expanded(
-            child: filtered.isEmpty
-                ? EmptyStateCard(
-                    title: l10n.noExercisesFound,
-                    body: l10n.adjustFilter,
-                  )
-                : ListView.builder(
-                    controller: widget.scrollController,
-                    keyboardDismissBehavior:
-                        ScrollViewKeyboardDismissBehavior.onDrag,
-                    itemCount: filtered.length,
-                    itemBuilder: (context, index) {
-                      final exercise = filtered[index];
-                      final alreadyAdded = widget.addedExerciseIds
-                          .contains(exercise.id);
-                      return ListTile(
-                        enabled: !alreadyAdded,
-                        leading: Icon(
-                          exercise.exerciseType == 'timed'
-                              ? Icons.timer_rounded
-                              : Icons.fitness_center_rounded,
-                          color: alreadyAdded
-                              ? context.appColors.subtleText
-                              : Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                        title: Text(exercise.name),
-                        subtitle: Text(exercise.primaryMuscles.join(', ')),
-                        trailing: alreadyAdded
-                            ? Text(
-                                l10n.added,
-                                style: TextStyle(color: context.appColors.subtleText),
-                              )
-                            : const Icon(Icons.add_rounded),
-                        onTap: alreadyAdded
-                            ? null
-                            : () => context.pop(exercise.id),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-      ),
-    );
-  }
-}

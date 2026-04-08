@@ -113,8 +113,9 @@ class WatchSyncService {
     final unit = state.preferredUnit;
     final weightIncrement = unit == 'lbs' ? 5.0 : 2.5;
 
+    final routineExercises = session.exerciseOverrides ?? routine.exercises;
     final exercises = <Map<String, dynamic>>[];
-    for (final re in routine.exercises) {
+    for (final re in routineExercises) {
       final exercise = state.exerciseById(re.exerciseId);
       final name = exercise != null
           ? _localizedExerciseName(exercise, locale)
@@ -358,7 +359,8 @@ class WatchSyncService {
     // Navigate to the exercise if needed
     final routine = state.routineById(session.routineId);
     if (routine != null) {
-      final exerciseIndex = routine.exercises.indexWhere(
+      final effectiveExs = session.exerciseOverrides ?? routine.exercises;
+      final exerciseIndex = effectiveExs.indexWhere(
         (e) => e.exerciseId == exerciseId,
       );
       if (exerciseIndex >= 0 && exerciseIndex != session.currentExerciseIndex) {
@@ -405,7 +407,8 @@ class WatchSyncService {
     // Navigate to the exercise if needed
     final routine = state.routineById(session.routineId);
     if (routine != null) {
-      final exerciseIndex = routine.exercises.indexWhere(
+      final effectiveExs = session.exerciseOverrides ?? routine.exercises;
+      final exerciseIndex = effectiveExs.indexWhere(
         (e) => e.exerciseId == exerciseId,
       );
       if (exerciseIndex >= 0 && exerciseIndex != session.currentExerciseIndex) {
