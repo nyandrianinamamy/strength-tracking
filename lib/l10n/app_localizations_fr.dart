@@ -520,6 +520,16 @@ class AppLocalizationsFr extends AppLocalizations {
       'Vos données actuelles seront définitivement perdues car ce compte n\'est pas lié à Google ou Apple. Cette action est irréversible.';
 
   @override
+  String get deleteAccount => 'Supprimer le compte';
+
+  @override
+  String get deleteAccountTitle => 'Supprimer le compte ?';
+
+  @override
+  String get deleteAccountConfirm =>
+      'Cela supprime définitivement votre compte et toutes les données Kotrana synchronisées. Cette action est irréversible.';
+
+  @override
   String get unitPreference => 'Unité de mesure';
 
   @override

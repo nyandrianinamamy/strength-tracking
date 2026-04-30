@@ -1082,6 +1082,24 @@ abstract class AppLocalizations {
   /// **'Your current data will be permanently lost because this account is not linked to Google or Apple. This cannot be undone.'**
   String get signOutAnonymousConfirm;
 
+  /// No description provided for @deleteAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account'**
+  String get deleteAccount;
+
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Account?'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your account and all synced Kotrana data. This cannot be undone.'**
+  String get deleteAccountConfirm;
+
   /// No description provided for @unitPreference.
   ///
   /// In en, this message translates to:

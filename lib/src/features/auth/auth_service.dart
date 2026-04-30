@@ -109,4 +109,16 @@ class AuthService {
   Future<void> signOut() async {
     await _auth.signOut();
   }
+
+  Future<void> deleteCurrentUser() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw StateError('No authenticated user');
+    }
+    await user.delete();
+  }
+
+  Future<void> revokeAppleToken(String authorizationCode) async {
+    await _auth.revokeTokenWithAuthorizationCode(authorizationCode);
+  }
 }

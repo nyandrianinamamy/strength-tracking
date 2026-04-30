@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 
@@ -23,4 +24,29 @@ void main() {
       expect(loaded.activeRoutineGroupId, state.activeRoutineGroupId);
     },
   );
+
+  test(
+    'shared preferences repository deletes persisted account data',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final preferences = await SharedPreferences.getInstance();
+      final repository = SharedPreferencesAppStateRepository(preferences);
+
+      await repository.save(DemoSeedData.initialState());
+      await repository.deleteUserData();
+
+      final loaded = await repository.load();
+      expect(loaded, AppState.empty());
+    },
+  );
+
+  test('memory repository deletes account data', () async {
+    final repository = MemoryAppStateRepository(
+      initialState: DemoSeedData.initialState(),
+    );
+
+    await repository.deleteUserData();
+
+    expect(repository.state, AppState.empty());
+  });
 }

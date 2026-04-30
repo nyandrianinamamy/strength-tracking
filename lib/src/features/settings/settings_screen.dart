@@ -12,6 +12,7 @@ import 'package:strength_training_tracker/src/data/repository/app_state_reposito
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
+import 'package:strength_training_tracker/src/features/settings/account_deletion_service.dart';
 import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -207,6 +208,54 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         final l10nInner = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${l10nInner.signInFailed}: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.deleteAccountTitle),
+        content: Text(l10n.deleteAccountConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: Text(l10n.deleteAccount),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      final authService = ref.read(authServiceProvider);
+      final deletionService = AccountDeletionService(
+        deleteUserData: ref.read(appStateRepositoryProvider).deleteUserData,
+        deleteCurrentUser: authService.deleteCurrentUser,
+        clearLocalState: ref.read(appStateControllerProvider.notifier).clearLocal,
+        signInAnonymously: authService.signInAnonymously,
+      );
+
+      await deletionService.deleteAccount();
+
+      if (mounted) {
+        context.go('/onboarding');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.failedError('$e'))),
         );
       }
     }
@@ -604,6 +653,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       label: l10n.signOut,
                       onTap: _signOutAndReset,
                     ),
+                    const SizedBox(height: 12),
+                    _AuthButton(
+                      icon: Icons.delete_forever_rounded,
+                      label: l10n.deleteAccount,
+                      onTap: _deleteAccount,
+                    ),
                   ] else ...[
                     Text(
                       l10n.dataSynced,
@@ -617,6 +672,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       icon: Icons.logout_rounded,
                       label: l10n.signOut,
                       onTap: _signOutAndReset,
+                    ),
+                    const SizedBox(height: 12),
+                    _AuthButton(
+                      icon: Icons.delete_forever_rounded,
+                      label: l10n.deleteAccount,
+                      onTap: _deleteAccount,
                     ),
                   ],
                 ],

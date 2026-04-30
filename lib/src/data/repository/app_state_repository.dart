@@ -9,6 +9,7 @@ import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 abstract class AppStateRepository {
   Future<AppState> load();
   Future<void> save(AppState state);
+  Future<void> deleteUserData();
 }
 
 class SharedPreferencesAppStateRepository implements AppStateRepository {
@@ -31,6 +32,11 @@ class SharedPreferencesAppStateRepository implements AppStateRepository {
   Future<void> save(AppState state) async {
     await _preferences.setString(_storageKey, jsonEncode(state.toJson()));
   }
+
+  @override
+  Future<void> deleteUserData() async {
+    await _preferences.remove(_storageKey);
+  }
 }
 
 class MemoryAppStateRepository implements AppStateRepository {
@@ -45,6 +51,11 @@ class MemoryAppStateRepository implements AppStateRepository {
   @override
   Future<void> save(AppState state) async {
     _state = state;
+  }
+
+  @override
+  Future<void> deleteUserData() async {
+    _state = AppState.empty();
   }
 
   AppState get state => _state;
@@ -79,5 +90,10 @@ class FirestoreAppStateRepository implements AppStateRepository {
   @override
   Future<void> save(AppState state) async {
     await _doc.set(state.toJson());
+  }
+
+  @override
+  Future<void> deleteUserData() async {
+    await _doc.delete();
   }
 }

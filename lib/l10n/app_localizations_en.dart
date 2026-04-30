@@ -518,6 +518,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Your current data will be permanently lost because this account is not linked to Google or Apple. This cannot be undone.';
 
   @override
+  String get deleteAccount => 'Delete Account';
+
+  @override
+  String get deleteAccountTitle => 'Delete Account?';
+
+  @override
+  String get deleteAccountConfirm =>
+      'This permanently deletes your account and all synced Kotrana data. This cannot be undone.';
+
+  @override
   String get unitPreference => 'Unit Preference';
 
   @override

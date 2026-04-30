@@ -51,11 +51,19 @@
 ## Milestone 6: Platform & Quality (make it production-grade)
 
 - [ ] **Dark mode** — full dark theme matching existing dark: design tokens
-- [ ] **Delete account** — required for App Store, removes all Firestore data
+- [ ] **Delete account** — App Store blocker: remove Firebase Auth account, Firestore data, local state, and revoke Sign in with Apple credentials when applicable
 - [ ] **Firestore real-time sync** — listen for changes instead of load-once, handles multi-device
 - [ ] **Rate limiting / quota monitoring** — guard against Firestore free tier limits
 - [ ] **Accessibility** — semantic labels, screen reader support, contrast ratios
 - [ ] **Localization (i18n)** — English first, structure for adding languages later
 - [ ] **Analytics / crash reporting** — Firebase Crashlytics + Analytics
-- [ ] **Privacy policy & terms** — hosted page, linked from app settings
+- [ ] **Privacy policy & terms** — App Store blocker: hosted privacy policy and terms/EULA, linked from Settings and App Store Connect
+- [ ] **App Store HealthKit compliance** — disclose sleep, HRV, resting heart rate, and workout writes; ensure HealthKit data is not used for ads/marketing/data mining; add clear fitness/medical disclaimer copy
+- [ ] **Remove public debug surfaces** — gate or remove `/debug/training-engine` and the dashboard `Engine Debug` action from production builds
+- [ ] **Store privacy disclosures** — complete App Store Connect Privacy Nutrition Label for Firebase Auth/Firestore, Google Sign-In, Apple Sign-In, HealthKit, camera/photos, Bluetooth, and diagnostics if added
+- [ ] **Privacy manifests audit** — verify final archive includes required third-party SDK privacy manifests and required-reason API declarations
+- [ ] **App Store Connect setup** — app record, bundle IDs/capabilities for Runner + Live Activity + Watch app, age rating, support URL, DSA/trader status, app review contact, review notes, pricing/availability
+- [ ] **App Store product page assets** — screenshots for required iPhone/Apple Watch sizes, app description, subtitle, keywords, promotional text, support/marketing URLs
+- [ ] **TestFlight pipeline verification** — re-check Fastlane `match` cert repo access, App Store Connect API secrets, archive signing for Runner + Live Activity + Watch app, and upload processing
+- [ ] **Public release smoke tests** — release build on a physical iPhone with paired Watch, onboarding, auth, account deletion, HealthKit opt-in/denial, workout logging, Watch companion, Live Activity, offline mode
 - [ ] **App Store & Play Store submission** — screenshots, metadata, review process
