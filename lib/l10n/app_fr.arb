@@ -450,6 +450,9 @@
   "workoutHistoryCleared": "Historique des séances effacé",
   "themeLabel": "Thème",
   "appleHealth": "Apple Health",
+  "legal": "Mentions légales",
+  "privacyPolicy": "Politique de confidentialité",
+  "termsOfUse": "Conditions d'utilisation",
 
   "muscleFatigue": "Fatigue musculaire",
   "engineDebug": "Debug moteur",

@@ -1280,6 +1280,15 @@ class AppLocalizationsFr extends AppLocalizations {
   String get appleHealth => 'Apple Health';
 
   @override
+  String get legal => 'Mentions légales';
+
+  @override
+  String get privacyPolicy => 'Politique de confidentialité';
+
+  @override
+  String get termsOfUse => 'Conditions d\'utilisation';
+
+  @override
   String get muscleFatigue => 'Fatigue musculaire';
 
   @override

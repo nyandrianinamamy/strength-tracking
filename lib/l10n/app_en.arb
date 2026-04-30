@@ -450,6 +450,9 @@
   "workoutHistoryCleared": "Workout history cleared",
   "themeLabel": "Theme",
   "appleHealth": "Apple Health",
+  "legal": "Legal",
+  "privacyPolicy": "Privacy Policy",
+  "termsOfUse": "Terms of Use",
 
   "muscleFatigue": "Muscle Fatigue",
   "engineDebug": "Engine Debug",

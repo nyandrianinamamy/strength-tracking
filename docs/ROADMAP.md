@@ -57,7 +57,7 @@
 - [ ] **Accessibility** — semantic labels, screen reader support, contrast ratios
 - [ ] **Localization (i18n)** — English first, structure for adding languages later
 - [ ] **Analytics / crash reporting** — Firebase Crashlytics + Analytics
-- [ ] **Privacy policy & terms** — App Store blocker: hosted privacy policy and terms/EULA, linked from Settings and App Store Connect
+- [ ] **Privacy policy & terms** — App Store blocker: static privacy policy and terms pages now live in `web/` and Settings links target Firebase Hosting; still requires publishing the web build and entering the final URLs in App Store Connect
 - [ ] **App Store HealthKit compliance** — disclose sleep, HRV, resting heart rate, and workout writes; ensure HealthKit data is not used for ads/marketing/data mining; add clear fitness/medical disclaimer copy
 - [ ] **Remove public debug surfaces** — gate or remove `/debug/training-engine` and the dashboard `Engine Debug` action from production builds
 - [ ] **Store privacy disclosures** — complete App Store Connect Privacy Nutrition Label for Firebase Auth/Firestore, Google Sign-In, Apple Sign-In, HealthKit, camera/photos, Bluetooth, and diagnostics if added

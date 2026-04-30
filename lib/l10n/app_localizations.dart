@@ -2498,6 +2498,24 @@ abstract class AppLocalizations {
   /// **'Apple Health'**
   String get appleHealth;
 
+  /// No description provided for @legal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get legal;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Use'**
+  String get termsOfUse;
+
   /// No description provided for @muscleFatigue.
   ///
   /// In en, this message translates to:

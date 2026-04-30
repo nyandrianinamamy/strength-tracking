@@ -7,6 +7,8 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/external_url_opener.dart';
+import 'package:strength_training_tracker/src/core/legal_links.dart';
 import 'package:strength_training_tracker/src/core/utils/force_update.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
@@ -52,9 +54,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // If user had previously enabled it, verify we still have access
     final authorized = await const HealthKitDataSource().requestAuthorization();
     if (!authorized && mounted) {
-      ref.read(appStateControllerProvider.notifier).updateState(
-        (s) => s.copyWith(healthKitEnabled: false),
-      );
+      ref
+          .read(appStateControllerProvider.notifier)
+          .updateState((s) => s.copyWith(healthKitEnabled: false));
     }
   }
 
@@ -137,7 +139,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final authService = ref.read(authServiceProvider);
       await authService.signInWithGoogle();
 
-      final repository = FirestoreAppStateRepository(auth: authService.firebaseAuth);
+      final repository = FirestoreAppStateRepository(
+        auth: authService.firebaseAuth,
+      );
       final cloudState = await repository.load();
 
       ref.read(appStateControllerProvider.notifier).replaceState(cloudState);
@@ -243,7 +247,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final deletionService = AccountDeletionService(
         deleteUserData: ref.read(appStateRepositoryProvider).deleteUserData,
         deleteCurrentUser: authService.deleteCurrentUser,
-        clearLocalState: ref.read(appStateControllerProvider.notifier).clearLocal,
+        clearLocalState: ref
+            .read(appStateControllerProvider.notifier)
+            .clearLocal,
         signInAnonymously: authService.signInAnonymously,
       );
 
@@ -254,10 +260,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failedError('$e'))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.failedError('$e'))));
       }
+    }
+  }
+
+  Future<void> _openLegalLink(Uri url) async {
+    try {
+      await const ExternalUrlOpener().open(url);
+    } catch (e) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.failedError('$e'))));
     }
   }
 
@@ -314,10 +332,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // Sex
                   Text(
                     l10n.sex,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
@@ -337,9 +354,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onSelectionChanged: (values) {
                       ref
                           .read(appStateControllerProvider.notifier)
-                          .updateState(
-                            (s) => s.copyWith(sex: values.first),
-                          );
+                          .updateState((s) => s.copyWith(sex: values.first));
                     },
                   ),
                   const SizedBox(height: 16),
@@ -373,39 +388,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // Fitness Goal
                   Text(
                     l10n.fitnessGoal,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: [
-                      ('strength', l10n.goalStrength),
-                      ('hypertrophy', l10n.goalHypertrophy),
-                      ('endurance', l10n.goalEndurance),
-                      ('weight_loss', l10n.goalWeightLoss),
-                      ('general_fitness', l10n.goalGeneralFitness),
-                    ].map((entry) {
-                      final value = entry.$1;
-                      final label = entry.$2;
-                      final isSelected = state.fitnessGoal == value;
-                      return ChoiceChip(
-                        label: Text(label),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          ref
-                              .read(appStateControllerProvider.notifier)
-                              .updateState(
-                                (s) => s.copyWith(
-                                  fitnessGoal: isSelected ? '' : value,
-                                ),
-                              );
-                        },
-                      );
-                    }).toList(),
+                    children:
+                        [
+                          ('strength', l10n.goalStrength),
+                          ('hypertrophy', l10n.goalHypertrophy),
+                          ('endurance', l10n.goalEndurance),
+                          ('weight_loss', l10n.goalWeightLoss),
+                          ('general_fitness', l10n.goalGeneralFitness),
+                        ].map((entry) {
+                          final value = entry.$1;
+                          final label = entry.$2;
+                          final isSelected = state.fitnessGoal == value;
+                          return ChoiceChip(
+                            label: Text(label),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              ref
+                                  .read(appStateControllerProvider.notifier)
+                                  .updateState(
+                                    (s) => s.copyWith(
+                                      fitnessGoal: isSelected ? '' : value,
+                                    ),
+                                  );
+                            },
+                          );
+                        }).toList(),
                   ),
                 ],
               ),
@@ -424,10 +439,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // Unit
                   Text(
                     l10n.unitPreference,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
@@ -449,10 +463,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // Language
                   Text(
                     l10n.language,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
@@ -466,8 +479,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ref
                           .read(appStateControllerProvider.notifier)
                           .updateState(
-                            (s) =>
-                                s.copyWith(preferredLanguage: values.first),
+                            (s) => s.copyWith(preferredLanguage: values.first),
                           );
                     },
                   ),
@@ -476,10 +488,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   // Theme
                   Text(
                     l10n.themeLabel,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   SegmentedButton<String>(
@@ -519,10 +530,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   children: [
                     Text(
                       l10n.appleHealth,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleSmall
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     SwitchListTile.adaptive(
@@ -531,8 +541,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       subtitle: Text(
                         l10n.sleepHrvDescription,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: context.appColors.subtleText,
-                            ),
+                          color: context.appColors.subtleText,
+                        ),
                       ),
                       value: state.healthKitEnabled,
                       onChanged: (enabled) async {
@@ -570,10 +580,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: [
                   CircleAvatar(
                     radius: 32,
-                    backgroundColor: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                     child: Icon(
                       isAnonymous ? Icons.person_outline : Icons.person,
                       size: 32,
@@ -585,18 +594,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     isAnonymous
                         ? l10n.anonymousAccount
                         : user?.displayName ??
-                            user?.email ??
-                            l10n.linkedAccount,
+                              user?.email ??
+                              l10n.linkedAccount,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     isAnonymous ? l10n.linkToSync : user?.email ?? '',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.appColors.subtleText,
-                        ),
+                      color: context.appColors.subtleText,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   if (isAnonymous) ...[
@@ -623,10 +632,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           child: Text(
                             l10n.switchAccount,
-                            style:
-                                Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: context.appColors.subtleText,
-                                    ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: context.appColors.subtleText),
                           ),
                         ),
                         const Expanded(child: Divider()),
@@ -637,9 +644,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       l10n.switchWarning,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: context.appColors.warning,
-                            fontSize: 11,
-                          ),
+                        color: context.appColors.warning,
+                        fontSize: 11,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _AuthButton(
@@ -664,8 +671,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       l10n.dataSynced,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: context.appColors.subtleText,
-                          ),
+                        color: context.appColors.subtleText,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     _AuthButton(
@@ -702,10 +709,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           .read(appStateControllerProvider.notifier)
                           .updateState(
                             (s) => s.copyWith(
-                              exercises: [
-                                ...s.exercises,
-                                ...sample.exercises,
-                              ],
+                              exercises: [...s.exercises, ...sample.exercises],
                               routines: [...s.routines, ...sample.routines],
                               routineGroups: [
                                 ...s.routineGroups,
@@ -751,14 +755,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                       ),
                                     );
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text(l10n.dataCleared),
-                                  ),
+                                  SnackBar(content: Text(l10n.dataCleared)),
                                 );
                               },
                               style: TextButton.styleFrom(
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.error,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
                               ),
                               child: Text(l10n.clear),
                             ),
@@ -776,9 +779,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         context: context,
                         builder: (dialogContext) => AlertDialog(
                           title: Text(l10n.clearWorkoutHistoryConfirm),
-                          content: Text(
-                            l10n.clearWorkoutHistoryMessage,
-                          ),
+                          content: Text(l10n.clearWorkoutHistoryMessage),
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(dialogContext),
@@ -809,8 +810,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                                 );
                               },
                               style: TextButton.styleFrom(
-                                foregroundColor:
-                                    Theme.of(context).colorScheme.error,
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
                               ),
                               child: Text(l10n.clear),
                             ),
@@ -836,6 +838,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: 32),
 
             // ---------------------------------------------------------------
+            // Legal section
+            // ---------------------------------------------------------------
+            PageSection(
+              title: l10n.legal,
+              child: Column(
+                children: [
+                  _AuthButton(
+                    icon: Icons.privacy_tip_outlined,
+                    label: l10n.privacyPolicy,
+                    onTap: () => _openLegalLink(kotranaPrivacyPolicyUrl),
+                  ),
+                  const SizedBox(height: 12),
+                  _AuthButton(
+                    icon: Icons.article_outlined,
+                    label: l10n.termsOfUse,
+                    onTap: () => _openLegalLink(kotranaTermsUrl),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 32),
+
+            // ---------------------------------------------------------------
             // App version
             // ---------------------------------------------------------------
             FutureBuilder<PackageInfo>(
@@ -847,9 +873,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   child: Text(
                     'v${version.version}+${version.buildNumber}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: context.appColors.subtleText,
-                          fontSize: 11,
-                        ),
+                      color: context.appColors.subtleText,
+                      fontSize: 11,
+                    ),
                   ),
                 );
               },
