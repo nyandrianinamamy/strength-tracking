@@ -52,6 +52,7 @@ app.*.map.json
 screenshots/
 maestro/
 ios/build/
+packages/training_engine/build/
 
 # Fastlane
 ios/fastlane/report.xml
