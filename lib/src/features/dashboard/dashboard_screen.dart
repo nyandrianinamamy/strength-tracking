@@ -3,6 +3,7 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/debug_surface.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/core/utils/formatters.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
@@ -172,11 +173,13 @@ class DashboardScreen extends ConsumerWidget {
         const SizedBox(height: 20),
         PageSection(
           title: l10n.muscleFatigue,
-          action: TextButton.icon(
-            onPressed: () => context.push('/debug/training-engine'),
-            icon: const Icon(Icons.science_outlined),
-            label: Text(l10n.engineDebug),
-          ),
+          action: shouldShowTrainingEngineDebug()
+              ? TextButton.icon(
+                  onPressed: () => context.push('/debug/training-engine'),
+                  icon: const Icon(Icons.science_outlined),
+                  label: Text(l10n.engineDebug),
+                )
+              : null,
           child: const MuscleHeatmapCard(),
         ),
         const SizedBox(height: 20),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/core/debug_surface.dart';
 import 'package:strength_training_tracker/src/features/dashboard/dashboard_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercises_screen.dart';
@@ -61,10 +62,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             pageBuilder: (context, state) =>
                 const NoTransitionPage(child: ProgressScreen()),
           ),
-          GoRoute(
-            path: '/debug/training-engine',
-            builder: (context, state) => const TrainingEngineDebugScreen(),
-          ),
+          if (shouldShowTrainingEngineDebug())
+            GoRoute(
+              path: '/debug/training-engine',
+              builder: (context, state) => const TrainingEngineDebugScreen(),
+            ),
         ],
       ),
       GoRoute(
