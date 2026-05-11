@@ -303,7 +303,7 @@ Training engine package capabilities present in source:
 
 Integration caveat:
 
-- The app captures age, weight, and `fitnessGoal` in onboarding/settings, but the training-engine adapter currently uses only sex and still hard-codes other profile/planning inputs; Task 4 is required to close that implementation gap.
+- The app maps captured profile fields into the training engine: sex, age, weight, and `fitnessGoal` are translated into the engine profile, with engine defaults used only when optional app fields are absent.
 
 ## Settings
 

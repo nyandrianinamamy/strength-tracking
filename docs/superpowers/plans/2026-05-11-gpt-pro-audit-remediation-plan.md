@@ -143,7 +143,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 3: Make Completed-Session Engine Ingestion Durable
 
 **Category:** P0 training-engine data integrity
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM verifier passed Task 3; local verification passed `dart format`, package tests (`+61`), and Flutter tests (`+22`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM verifier passed Task 3; local verification passed `dart format`, package tests (`+61`), and Flutter tests (`+22`). Commit: `387ab41`.
 
 **Files:**
 
@@ -194,6 +194,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 4: Map Captured Profile Fields Into the Engine
 
 **Category:** P0 training-engine profile correctness
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run after local subagent slots became stale; GLM proxy review passed Task 4; local verification passed Dart format, diff check, and Flutter tests (`+19`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -218,14 +219,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Replace the current adapter test that expects hard-coded age/bodyweight/goal with failing tests for captured age, weight, sex, and fitness goal mapping.
-- [ ] Add a provider test where saved engine state has an old profile and current `AppState` has new age, weight, sex, and goal.
-- [ ] Implement adapter mapping for age, weight, and fitness goal.
-- [ ] Add profile update or rebuild logic in provider load so restored state reflects current app profile.
-- [ ] Update `docs/app-feature-inventory.md` so it states profile fields are mapped into the engine after this task.
-- [ ] Run `dart format lib/src/features/training_engine/training_engine_adapter.dart lib/src/features/training_engine/training_engine_provider.dart test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart`.
-- [ ] Run `flutter test test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart`.
-- [ ] Commit the profile-mapping changes.
+- [x] Replace the current adapter test that expects hard-coded age/bodyweight/goal with failing tests for captured age, weight, sex, and fitness goal mapping.
+- [x] Add a provider test where saved engine state has an old profile and current `AppState` has new age, weight, sex, and goal.
+- [x] Implement adapter mapping for age, weight, and fitness goal.
+- [x] Add profile update or rebuild logic in provider load so restored state reflects current app profile.
+- [x] Update `docs/app-feature-inventory.md` so it states profile fields are mapped into the engine after this task.
+- [x] Run `dart format lib/src/features/training_engine/training_engine_adapter.dart lib/src/features/training_engine/training_engine_provider.dart test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart`.
+- [x] Run `flutter test test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart`.
+- [x] Commit the profile-mapping changes.
 
 **Acceptance Checks:**
 

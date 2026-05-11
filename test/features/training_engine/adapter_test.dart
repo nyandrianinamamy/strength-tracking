@@ -22,9 +22,49 @@ void main() {
       expect(profile.age, 25);
       expect(profile.bodyWeightKg, 75.0);
       expect(profile.experience, ExperienceLevel.intermediate);
-      expect(profile.goal, HypertrophyGoal.hypertrophy);
+      expect(profile.goal, HypertrophyGoal.general);
       expect(profile.availableDays, [1, 3, 5]);
       expect(profile.maxSessionDuration, const Duration(minutes: 60));
+    });
+
+    test('maps captured age weight and explicit fitness goals', () {
+      const strengthState = AppState(
+        exercises: [],
+        routines: [],
+        sessions: [],
+        age: 41,
+        weight: 93.5,
+        fitnessGoal: 'strength',
+      );
+      const hypertrophyState = AppState(
+        exercises: [],
+        routines: [],
+        sessions: [],
+        fitnessGoal: 'hypertrophy',
+      );
+
+      final strengthProfile = adapter.toUserProfile(strengthState);
+      final hypertrophyProfile = adapter.toUserProfile(hypertrophyState);
+
+      expect(strengthProfile.age, 41);
+      expect(strengthProfile.bodyWeightKg, 93.5);
+      expect(strengthProfile.goal, HypertrophyGoal.strength);
+      expect(hypertrophyProfile.goal, HypertrophyGoal.hypertrophy);
+    });
+
+    test('maps non-strength goals to the general engine goal', () {
+      for (final goal in ['', 'general_fitness', 'endurance', 'weight_loss']) {
+        final profile = adapter.toUserProfile(
+          AppState(
+            exercises: const [],
+            routines: const [],
+            sessions: const [],
+            fitnessGoal: goal,
+          ),
+        );
+
+        expect(profile.goal, HypertrophyGoal.general, reason: goal);
+      }
     });
   });
 

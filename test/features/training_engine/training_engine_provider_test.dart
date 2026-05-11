@@ -326,6 +326,69 @@ void main() {
     );
 
     test(
+      'refreshes restored profile demographics without dropping saved training facts',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          sex: 'female',
+          age: 44,
+          weight: 68.5,
+          fitnessGoal: 'strength',
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+
+        final savedEngine = TrainingEngine(
+          registry: ExerciseRegistry.withDefaults(),
+          profile: UserProfile(
+            sex: Sex.male,
+            age: 30,
+            bodyWeightKg: 82,
+            experience: ExperienceLevel.intermediate,
+            goal: HypertrophyGoal.hypertrophy,
+            availableDays: const [1, 3, 5],
+            maxSessionDuration: const Duration(minutes: 60),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        savedEngine.ingestSession(
+          EngineSession(
+            id: 'completed-session-1',
+            startedAt: DateTime.utc(2026, 2, 1, 17, 0),
+            endedAt: DateTime.utc(2026, 2, 1, 18, 0),
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_bench_press',
+                weightKg: 80,
+                reps: 8,
+                rpe: 8.0,
+                completedAt: DateTime.utc(2026, 2, 1, 17, 10),
+              ),
+            ],
+          ),
+        );
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: savedEngine.serializeState(),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.profile.sex, Sex.female);
+        expect(engine.state.profile.age, 44);
+        expect(engine.state.profile.bodyWeightKg, 68.5);
+        expect(engine.state.profile.goal, HypertrophyGoal.strength);
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
+        expect(engine.state.lastTopSets['barbell_bench_press'], isNotNull);
+        expect(engineRepository.state?['profile']['age'], 44);
+      },
+    );
+
+    test(
       'rebuilds when saved state is missing a completed app session',
       () async {
         final first = _completedSession(

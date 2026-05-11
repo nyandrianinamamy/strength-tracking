@@ -63,11 +63,15 @@ Future<TrainingEngine> loadTrainingEngine({
     final savedState = await repository.load();
     if (savedState != null) {
       engine.restoreState(savedState);
+      final profileWasUpdated = _refreshRestoredProfile(engine, profile);
       final savedTracksSessionIds =
           savedState.containsKey('ingestedSessionIds') ||
           _hasNoSessionDerivedState(engine.state);
       if (savedTracksSessionIds &&
           setEquals(engine.state.ingestedSessionIds, completedSessionIds)) {
+        if (profileWasUpdated) {
+          await repository.save(engine.serializeState());
+        }
         return engine;
       }
 
@@ -128,6 +132,35 @@ bool _hasNoSessionDerivedState(TrainingState state) {
       state.dailyLoads.isEmpty &&
       state.acwrState == null &&
       state.lastTopSets.isEmpty;
+}
+
+bool _refreshRestoredProfile(
+  TrainingEngine engine,
+  UserProfile currentProfile,
+) {
+  final restoredProfile = engine.state.profile;
+  final refreshedProfile = currentProfile.copyWith(
+    createdAt: restoredProfile.createdAt,
+  );
+  if (_sameProfile(restoredProfile, refreshedProfile)) {
+    return false;
+  }
+
+  engine.restoreState(
+    engine.state.copyWith(profile: refreshedProfile).toJson(),
+  );
+  return true;
+}
+
+bool _sameProfile(UserProfile left, UserProfile right) {
+  return left.sex == right.sex &&
+      left.age == right.age &&
+      left.bodyWeightKg == right.bodyWeightKg &&
+      left.experience == right.experience &&
+      left.goal == right.goal &&
+      listEquals(left.availableDays, right.availableDays) &&
+      left.maxSessionDuration == right.maxSessionDuration &&
+      left.createdAt == right.createdAt;
 }
 
 void _preserveHealthKitState(
