@@ -790,6 +790,53 @@ void main() {
       engine.bootstrapFromHistory(sessions);
       expect(engine.state.sessionsIngested, equals(1));
     });
+
+    test(
+      'rebuilds same-day loads deterministically from out-of-order history',
+      () {
+        final morning = _session(
+          id: 'morning',
+          weightKg: 100,
+          reps: 10,
+          endedAt: DateTime(2026, 3, 9, 8),
+        );
+        final evening = _session(
+          id: 'evening',
+          weightKg: 80,
+          reps: 10,
+          endedAt: DateTime(2026, 3, 9, 18),
+        );
+        final nextDay = _session(
+          id: 'next-day',
+          weightKg: 90,
+          reps: 10,
+          endedAt: DateTime(2026, 3, 10, 8),
+        );
+
+        final outOfOrder = _engine()
+          ..bootstrapFromHistory([evening, nextDay, morning]);
+        final chronological = _engine()
+          ..bootstrapFromHistory([morning, evening, nextDay]);
+
+        expect(outOfOrder.state.dailyLoads, hasLength(2));
+        expect(outOfOrder.state.dailyLoads.map((load) => load.volumeLoad), [
+          closeTo(4860, 0.001),
+          closeTo(2430, 0.001),
+        ]);
+        expect(outOfOrder.state.dailyLoads.map((load) => load.date), [
+          DateTime(2026, 3, 9),
+          DateTime(2026, 3, 10),
+        ]);
+        expect(
+          outOfOrder.state.acwrState!.acuteEwma,
+          closeTo(chronological.state.acwrState!.acuteEwma, 0.001),
+        );
+        expect(
+          outOfOrder.state.acwrState!.chronicEwma,
+          closeTo(chronological.state.acwrState!.chronicEwma, 0.001),
+        );
+      },
+    );
   });
 
   group('refreshHealthKitIfStale', () {

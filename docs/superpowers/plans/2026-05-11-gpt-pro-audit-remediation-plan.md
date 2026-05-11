@@ -365,7 +365,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 8: Select Best Estimated e1RM for e1RM History
 
 **Category:** P1 engine formula correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; orchestrator added missing weight and reps tie-breaker coverage; GLM proxy review passed Task 8; local verification passed Dart format, diff check, and package engine/e1RM tests (`+68`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; orchestrator added missing weight and reps tie-breaker coverage; GLM proxy review passed Task 8; local verification passed Dart format, diff check, and package engine/e1RM tests (`+68`). Commit: `7f62db4`.
 
 **Files:**
 
@@ -399,6 +399,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 9: Make ACWR Daily
 
 **Category:** P1 load-model correctness
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; orchestrator tightened remaining debug wording; GLM proxy review passed Task 9; local verification passed Dart format, diff check, wording scan, and package ACWR/engine tests (`+84`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -417,13 +418,13 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add a failing ACWR test comparing two same-day sessions against one combined same-day load.
-- [ ] Add a failing engine bootstrap test with out-of-order same-day sessions.
-- [ ] Implement daily aggregation and deterministic EWMA recomputation from the aggregate daily-load list.
-- [ ] Update debug labels, inventory wording, and exposed model descriptions to describe true daily aggregation.
-- [ ] Run `dart format packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/acwr/ewma.dart packages/training_engine/lib/src/models/daily_load.dart packages/training_engine/test/acwr/acwr_test.dart packages/training_engine/test/engine_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/acwr/acwr_test.dart test/engine_test.dart`.
-- [ ] Commit the ACWR aggregation changes.
+- [x] Add a failing ACWR test comparing two same-day sessions against one combined same-day load.
+- [x] Add a failing engine bootstrap test with out-of-order same-day sessions.
+- [x] Implement daily aggregation and deterministic EWMA recomputation from the aggregate daily-load list.
+- [x] Update debug labels, inventory wording, and exposed model descriptions to describe true daily aggregation.
+- [x] Run `dart format packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/acwr/ewma.dart packages/training_engine/lib/src/models/daily_load.dart packages/training_engine/test/acwr/acwr_test.dart packages/training_engine/test/engine_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/acwr/acwr_test.dart test/engine_test.dart`.
+- [x] Commit the ACWR aggregation changes.
 
 **Acceptance Checks:**
 

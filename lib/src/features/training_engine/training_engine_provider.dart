@@ -450,7 +450,7 @@ final engineDebugPersistedStateSummaryProvider =
       final acwrState = state.acwrState;
       final acwrSummary = acwrState == null
           ? 'Unavailable'
-          : 'acute ${acwrState.acuteEwma.toStringAsFixed(1)} / '
+          : 'daily acute ${acwrState.acuteEwma.toStringAsFixed(1)} / '
                 'chronic ${acwrState.chronicEwma.toStringAsFixed(1)}';
 
       final dailyLoads = state.dailyLoads;

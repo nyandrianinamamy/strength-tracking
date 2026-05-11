@@ -296,7 +296,7 @@ Training engine package capabilities present in source:
 - Estimated 1RM formulas and composite estimator.
 - Fatigue decay and impulse calculation.
 - Muscle registry and normalization.
-- Acute-to-chronic workload ratio helpers.
+- Acute-to-chronic workload ratio helpers over aggregated local-calendar-day loads.
 - Readiness scoring from sleep and HRV records.
 - Load progression recommendations with safety gates and rounding.
 - Planner split selection, session generation, time bounding, substitutions, and missed-session logic.

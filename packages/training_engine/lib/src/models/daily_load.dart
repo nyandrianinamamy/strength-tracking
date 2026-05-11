@@ -1,6 +1,15 @@
+/// Aggregated training load for one local calendar day.
+///
+/// Multiple workout sessions completed on the same local date are folded into
+/// one [DailyLoad] before ACWR EWMA is recomputed.
 class DailyLoad {
+  /// Local calendar day for this aggregate load.
   final DateTime date;
+
+  /// Sum of `weightKg * reps` across all completed sets on [date].
   final double volumeLoad;
+
+  /// Optional session-RPE load summed across the same local calendar day.
   final double? sRpeLoad;
 
   const DailyLoad({

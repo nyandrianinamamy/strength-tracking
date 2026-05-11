@@ -183,23 +183,23 @@ class TrainingEngine {
       volumeLoad += set.weightKg * set.reps;
     }
 
-    // Trim and update daily loads (keep 35 days)
+    // Aggregate and trim local-calendar-day loads (keep 35 days).
     final newDailyLoad = DailyLoad(
-      date: session.endedAt,
+      date: ewma_lib.localCalendarDay(session.endedAt),
       volumeLoad: volumeLoad,
     );
-    final dailyLoads = List<DailyLoad>.from(_state.dailyLoads)
-      ..add(newDailyLoad);
-    final cutoff = now.subtract(const Duration(days: 35));
-    final trimmedDailyLoads = dailyLoads
-        .where((d) => !d.date.isBefore(cutoff))
-        .toList();
+    final cutoff = ewma_lib
+        .localCalendarDay(now)
+        .subtract(const Duration(days: 35));
+    final trimmedDailyLoads = ewma_lib.aggregateDailyLoads([
+      ..._state.dailyLoads,
+      newDailyLoad,
+    ], cutoff: cutoff);
 
-    // Update EWMA
-    final newAcwrState = ewma_lib.updateEwma(
-      previous: _state.acwrState,
-      todayLoad: volumeLoad,
-      today: session.endedAt,
+    // Recompute EWMA from sorted daily aggregates so out-of-order history and
+    // same-day multi-session ingestion produce deterministic ACWR state.
+    final newAcwrState = ewma_lib.recomputeEwmaFromDailyLoads(
+      trimmedDailyLoads,
     );
 
     _state = _state.copyWith(

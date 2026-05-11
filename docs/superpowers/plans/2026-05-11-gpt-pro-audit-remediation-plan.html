@@ -839,8 +839,7 @@ Select Best Estimated e1RM for e1RM History</h2>
 completed red-green code and tests; orchestrator added missing weight
 and reps tie-breaker coverage; GLM proxy review passed Task 8; local
 verification passed Dart format, diff check, and package engine/e1RM
-tests (<code>+68</code>). Commit: recorded in git history after this
-ledger update.</p>
+tests (<code>+68</code>). Commit: <code>7f62db4</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -888,7 +887,13 @@ set.</li>
 </ul>
 <hr />
 <h2 id="task-9-make-acwr-daily">Task 9: Make ACWR Daily</h2>
-<p><strong>Category:</strong> P1 load-model correctness</p>
+<p><strong>Category:</strong> P1 load-model correctness
+<strong>Status:</strong> Completed 2026-05-11. GPT-5.5 implementer
+completed red-green code and tests; orchestrator tightened remaining
+debug wording; GLM proxy review passed Task 9; local verification passed
+Dart format, diff check, wording scan, and package ACWR/engine tests
+(<code>+84</code>). Commit: recorded in git history after this ledger
+update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -917,22 +922,23 @@ describe true daily aggregation.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add a failing ACWR test comparing
-two same-day sessions against one combined same-day load.</label></li>
-<li><label><input type="checkbox" />Add a failing engine bootstrap test
-with out-of-order same-day sessions.</label></li>
-<li><label><input type="checkbox" />Implement daily aggregation and
-deterministic EWMA recomputation from the aggregate daily-load
-list.</label></li>
-<li><label><input type="checkbox" />Update debug labels, inventory
-wording, and exposed model descriptions to describe true daily
+<li><label><input type="checkbox" checked="" />Add a failing ACWR test
+comparing two same-day sessions against one combined same-day
+load.</label></li>
+<li><label><input type="checkbox" checked="" />Add a failing engine
+bootstrap test with out-of-order same-day sessions.</label></li>
+<li><label><input type="checkbox" checked="" />Implement daily
+aggregation and deterministic EWMA recomputation from the aggregate
+daily-load list.</label></li>
+<li><label><input type="checkbox" checked="" />Update debug labels,
+inventory wording, and exposed model descriptions to describe true daily
 aggregation.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>dart format packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/acwr/ewma.dart packages/training_engine/lib/src/models/daily_load.dart packages/training_engine/test/acwr/acwr_test.dart packages/training_engine/test/engine_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>cd packages/training_engine &amp;&amp; dart test test/acwr/acwr_test.dart test/engine_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Commit the ACWR aggregation
-changes.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the ACWR
+aggregation changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>

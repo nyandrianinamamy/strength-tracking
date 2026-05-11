@@ -36,7 +36,7 @@ class TrainingEngineDebugScreen extends ConsumerWidget {
                   title: const Text('Reset Engine State'),
                   content: const Text(
                     'This will clear the persisted training engine state and '
-                    'rebuild from workout history. ACWR history will reset.\n\n'
+                    'rebuild from workout history. Daily ACWR history will reset.\n\n'
                     'Continue?',
                   ),
                   actions: [
@@ -154,7 +154,10 @@ class _EngineStatusCard extends StatelessWidget {
           value: state.sleepHistory.length.toString(),
         ),
         _KvRow(label: 'HRV records', value: state.hrvHistory.length.toString()),
-        _KvRow(label: 'Daily loads', value: state.dailyLoads.length.toString()),
+        _KvRow(
+          label: 'Aggregated daily loads',
+          value: state.dailyLoads.length.toString(),
+        ),
       ],
     );
   }
@@ -327,7 +330,10 @@ class _PersistedStateCard extends StatelessWidget {
       title: 'Persisted State Summary',
       children: [
         _KvRow(label: 'ACWR state', value: summary.acwrSummary),
-        _KvRow(label: 'Daily loads', value: summary.dailyLoadsCount.toString()),
+        _KvRow(
+          label: 'Aggregated daily loads',
+          value: summary.dailyLoadsCount.toString(),
+        ),
         _KvRow(
           label: 'Last top sets',
           value: summary.lastTopSetsCount.toString(),
@@ -339,7 +345,7 @@ class _PersistedStateCard extends StatelessWidget {
         const SizedBox(height: 8),
         if (summary.latestDailyLoad != null) ...[
           Text(
-            'Latest Daily Load',
+            'Latest Aggregated Daily Load',
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
