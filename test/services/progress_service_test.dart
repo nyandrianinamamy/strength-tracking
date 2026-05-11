@@ -1,4 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
+import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
@@ -6,9 +9,62 @@ import 'package:strength_training_tracker/src/features/progress/progress_service
 void main() {
   final service = ProgressService();
 
+  AppState progressStateWithSets({
+    String exerciseId = 'barbell_back_squat',
+    String exerciseName = 'Barbell Back Squat',
+    String exerciseType = 'strength',
+    List<CompletedSet>? sets,
+  }) {
+    final completedAt = DateTime.utc(2026, 5, 1, 18);
+    return AppState(
+      exercises: [
+        Exercise(
+          id: exerciseId,
+          name: exerciseName,
+          primaryMuscles: const ['Quadriceps'],
+          secondaryMuscles: const [],
+          equipment: const ['Barbell'],
+          instructions: '',
+          exerciseType: exerciseType,
+          archived: false,
+        ),
+      ],
+      routines: const [],
+      sessions: [
+        WorkoutSession(
+          id: 'completed-session',
+          routineId: 'routine-1',
+          status: WorkoutSessionStatus.completed,
+          startedAt: completedAt.subtract(const Duration(hours: 1)),
+          endedAt: completedAt,
+          lastActivityAt: completedAt,
+          currentExerciseIndex: 0,
+          completedSets:
+              sets ??
+              [
+                CompletedSet(
+                  exerciseId: exerciseId,
+                  setNumber: 1,
+                  weightKg: 100,
+                  reps: 5,
+                  rpe: 8,
+                  completedAt: completedAt,
+                  note: '',
+                ),
+              ],
+          sessionNote: '',
+          rpe: 8,
+        ),
+      ],
+    );
+  }
+
   test('dashboard snapshot exposes recent workouts and a next routine', () {
     final state = DemoSeedData.initialState();
-    final snapshot = service.dashboardSnapshot(state);
+    final snapshot = service.dashboardSnapshot(
+      state,
+      currentE1rmsByExercise: const {},
+    );
 
     expect(snapshot.totalWorkouts, greaterThan(0));
     expect(snapshot.nextRoutine, isNotNull);
@@ -28,7 +84,10 @@ void main() {
       activeRoutineGroupId: group.id,
     );
 
-    final snapshot = service.dashboardSnapshot(state);
+    final snapshot = service.dashboardSnapshot(
+      state,
+      currentE1rmsByExercise: const {},
+    );
 
     expect(snapshot.nextRoutine?.id, 'leg_day');
     expect(snapshot.nextRoutineGroupName, 'Push / Pull / Legs');
@@ -38,12 +97,64 @@ void main() {
 
   test('progress snapshot computes streak, volume, and personal records', () {
     final state = DemoSeedData.initialState();
-    final snapshot = service.progressSnapshot(state);
+    final snapshot = service.progressSnapshot(
+      state,
+      currentE1rmsByExercise: const {
+        'barbell_bench_press': 100,
+        'barbell_back_squat': 120,
+      },
+    );
 
     expect(snapshot.averageWorkoutDaysPerWeek, greaterThan(0));
     expect(snapshot.personalRecords, isNotEmpty);
     expect(snapshot.weeklyVolume, isNotEmpty);
     expect(snapshot.topLifts.first.estimatedOneRepMax, greaterThan(0));
+  });
+
+  test('progress strength e1RM values come from engine current e1RM', () {
+    final state = progressStateWithSets();
+    const engineRollingE1rm = 321.0;
+
+    final snapshot = service.progressSnapshot(
+      state,
+      currentE1rmsByExercise: const {'barbell_back_squat': engineRollingE1rm},
+    );
+
+    expect(
+      snapshot.personalRecords.single.estimatedOneRepMax,
+      engineRollingE1rm,
+    );
+    expect(snapshot.topLifts.single.estimatedOneRepMax, engineRollingE1rm);
+  });
+
+  test('timed progress records keep duration and no strength e1RM', () {
+    final state = progressStateWithSets(
+      exerciseId: 'plank',
+      exerciseName: 'Plank',
+      exerciseType: 'timed',
+      sets: [
+        CompletedSet(
+          exerciseId: 'plank',
+          setNumber: 1,
+          weightKg: 0,
+          reps: 0,
+          durationSeconds: 120,
+          completedAt: DateTime.utc(2026, 5, 1, 18),
+          note: '',
+        ),
+      ],
+    );
+
+    final snapshot = service.progressSnapshot(
+      state,
+      currentE1rmsByExercise: const {},
+    );
+
+    expect(snapshot.personalRecords.single.isTimed, isTrue);
+    expect(snapshot.personalRecords.single.durationSeconds, 120);
+    expect(snapshot.personalRecords.single.estimatedOneRepMax, 0);
+    expect(snapshot.topLifts.single.isTimed, isTrue);
+    expect(snapshot.topLifts.single.durationSeconds, 120);
   });
 
   test('session PRs detect new performance inside a completed workout', () {
@@ -75,7 +186,10 @@ void main() {
       ],
     );
 
-    final snapshot = service.dashboardSnapshot(state);
+    final snapshot = service.dashboardSnapshot(
+      state,
+      currentE1rmsByExercise: const {},
+    );
 
     expect(snapshot.activeSessionIsStale, isTrue);
     expect(snapshot.activeSessionIdleLabel, contains('idle'));

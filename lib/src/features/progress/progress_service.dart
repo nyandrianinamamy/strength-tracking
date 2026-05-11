@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
 import 'package:training_engine/training_engine.dart' show compositeE1rm;
 
@@ -13,8 +15,29 @@ final progressServiceProvider = Provider<ProgressService>((ref) {
   return ProgressService();
 });
 
+final dashboardSnapshotProvider = FutureProvider<DashboardSnapshot>((
+  ref,
+) async {
+  final state = ref.watch(appStateControllerProvider);
+  final currentE1rms = await ref.watch(engineCurrentE1rmsProvider.future);
+  return ref
+      .watch(progressServiceProvider)
+      .dashboardSnapshot(state, currentE1rmsByExercise: currentE1rms);
+});
+
+final progressSnapshotProvider = FutureProvider<ProgressSnapshot>((ref) async {
+  final state = ref.watch(appStateControllerProvider);
+  final currentE1rms = await ref.watch(engineCurrentE1rmsProvider.future);
+  return ref
+      .watch(progressServiceProvider)
+      .progressSnapshot(state, currentE1rmsByExercise: currentE1rms);
+});
+
 class ProgressService {
-  DashboardSnapshot dashboardSnapshot(AppState state) {
+  DashboardSnapshot dashboardSnapshot(
+    AppState state, {
+    required Map<String, double> currentE1rmsByExercise,
+  }) {
     const staleSessionService = StaleSessionService();
     final completedSessions = state.completedSessions;
     final recentWorkouts = completedSessions
@@ -57,7 +80,10 @@ class ProgressService {
             canSkip: false,
           )
         : _pickNextRoutine(state);
-    final personalRecords = _personalRecords(state);
+    final personalRecords = _personalRecords(
+      state,
+      currentE1rmsByExercise: currentE1rmsByExercise,
+    );
 
     return DashboardSnapshot(
       totalWorkouts: completedSessions.length,
@@ -81,9 +107,15 @@ class ProgressService {
     );
   }
 
-  ProgressSnapshot progressSnapshot(AppState state) {
+  ProgressSnapshot progressSnapshot(
+    AppState state, {
+    required Map<String, double> currentE1rmsByExercise,
+  }) {
     final completedSessions = state.completedSessions;
-    final personalRecords = _personalRecords(state);
+    final personalRecords = _personalRecords(
+      state,
+      currentE1rmsByExercise: currentE1rmsByExercise,
+    );
     final earliest = completedSessions.isEmpty
         ? DateTime.now()
         : (completedSessions.last.endedAt ?? completedSessions.last.startedAt);
@@ -131,7 +163,7 @@ class ProgressService {
       if (exercise == null) continue;
 
       final isTimed = exercise.exerciseType == 'timed';
-      final e1rm = isTimed ? 0.0 : _estimatedOneRepMax(set);
+      final e1rm = isTimed ? 0.0 : _singleSetEstimatedOneRepMax(set);
       final allSets = state.completedSessions
           .where((item) => item.id != session.id)
           .expand((item) => item.completedSets)
@@ -145,7 +177,7 @@ class ProgressService {
         isPr = set.durationSeconds > priorBest;
       } else {
         final priorBest = allSets.fold<double>(0, (best, item) {
-          return math.max(best, _estimatedOneRepMax(item));
+          return math.max(best, _singleSetEstimatedOneRepMax(item));
         });
         isPr = e1rm > priorBest;
       }
@@ -296,7 +328,7 @@ class ProgressService {
     );
   }
 
-  double _estimatedOneRepMax(CompletedSet set) {
+  double _singleSetEstimatedOneRepMax(CompletedSet set) {
     if (set.reps <= 0 || set.weightKg <= 0) return 0;
     return compositeE1rm(
       weight: set.weightKg,
@@ -305,7 +337,10 @@ class ProgressService {
     );
   }
 
-  List<ExercisePersonalRecord> _personalRecords(AppState state) {
+  List<ExercisePersonalRecord> _personalRecords(
+    AppState state, {
+    required Map<String, double> currentE1rmsByExercise,
+  }) {
     final bestByExercise = <String, ExercisePersonalRecord>{};
 
     for (final session in state.completedSessions) {
@@ -314,12 +349,17 @@ class ProgressService {
         if (exercise == null) continue; // skip orphaned exercises
 
         final isTimed = exercise.exerciseType == 'timed';
+        final engineE1rm = isTimed
+            ? 0.0
+            : currentE1rmsByExercise[set.exerciseId];
+        if (!isTimed && engineE1rm == null) continue;
+
         final record = ExercisePersonalRecord(
           exerciseId: set.exerciseId,
           exerciseName: exercise.name,
           weightKg: set.weightKg,
           reps: set.reps,
-          estimatedOneRepMax: isTimed ? 0 : _estimatedOneRepMax(set),
+          estimatedOneRepMax: engineE1rm ?? 0,
           achievedAt: set.completedAt,
           exerciseType: exercise.exerciseType,
           durationSeconds: set.durationSeconds,
@@ -348,7 +388,6 @@ class ProgressService {
       ..sort((a, b) => b.achievedAt.compareTo(a.achievedAt));
     return records;
   }
-
 
   int _activeStreakDays(List<WorkoutSession> sessions) {
     if (sessions.isEmpty) {

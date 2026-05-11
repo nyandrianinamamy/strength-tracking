@@ -176,14 +176,12 @@ ProviderContainer _buildContainer({
 
 class _FakeHealthKitDataSource extends HealthKitDataSource {
   const _FakeHealthKitDataSource({
-    this.sleepRecords = const [],
-    this.hrvRecords = const [],
     this.sleepStatus = HealthKitFetchStatus.success,
     this.hrvStatus = HealthKitFetchStatus.success,
   });
 
-  final List<SleepRecord> sleepRecords;
-  final List<HrvRecord> hrvRecords;
+  final List<SleepRecord> sleepRecords = const [];
+  final List<HrvRecord> hrvRecords = const [];
   final HealthKitFetchStatus sleepStatus;
   final HealthKitFetchStatus hrvStatus;
 
@@ -302,6 +300,41 @@ void main() {
         expect(engineRepository.state, isNotNull);
       },
     );
+
+    test('exposes current rolling e1RM values from engine state', () async {
+      final completedAt = DateTime.utc(2026, 3, 3, 18, 0);
+      final appState = _appStateWithCompletedSessions([
+        _completedSession(
+          id: 'squat-1',
+          completedAt: completedAt.subtract(const Duration(days: 2)),
+          exerciseId: 'barbell_back_squat',
+          weightKg: 100,
+        ),
+        _completedSession(
+          id: 'squat-2',
+          completedAt: completedAt,
+          exerciseId: 'barbell_back_squat',
+          weightKg: 120,
+        ),
+      ]);
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final engineRepository = MemoryTrainingEngineStateRepository();
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final engine = await container.read(trainingEngineProvider.future);
+      final e1rms = await container.read(engineCurrentE1rmsProvider.future);
+
+      expect(e1rms.keys, contains('barbell_back_squat'));
+      expect(
+        e1rms['barbell_back_squat'],
+        engine.currentE1rm('barbell_back_squat'),
+      );
+    });
 
     test(
       'restores saved engine state without bootstrapping app sessions again',

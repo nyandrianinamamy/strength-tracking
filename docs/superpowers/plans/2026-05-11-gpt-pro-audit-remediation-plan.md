@@ -604,7 +604,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 14: Make Smart Planner Adaptation Claims True
 
 **Category:** P2 planner/product consistency
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed the engine-aware planner path; the orchestrator removed the silent engine-context fallback, updated async Smart Planner call sites and adoption tests, and GLM proxy review passed Task 14. Local verification passed Dart format on touched Dart files, diff check, focused Smart Planner tests (`+17`), package planner tests (`+27`), and focused analyzer checks. Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed the engine-aware planner path; the orchestrator removed the silent engine-context fallback, updated async Smart Planner call sites and adoption tests, and GLM proxy review passed Task 14. Local verification passed Dart format on touched Dart files, diff check, focused Smart Planner tests (`+17`), package planner tests (`+27`), and focused analyzer checks. Commit: `65bd56d`.
 
 **Files:**
 
@@ -649,16 +649,24 @@ P2 tasks close broader product and runtime gaps:
 ## Task 15: Align Progress Analytics With the Engine
 
 **Category:** P2 analytics consistency
+**Status:** Completed 2026-05-11. GPT-5.5 implementer moved Progress and Dashboard current/rolling e1RM display to engine-owned rolling e1RM values; the orchestrator localized the dashboard label and removed analyzer noise in the touched provider test; GLM proxy review passed Task 15. Local verification passed Dart format on touched Dart files, diff check, focused Progress/provider tests (`+27`), focused analyzer checks, and web E2E. Commit: recorded in git history after this ledger update.
 
 **Files:**
 
+- Modify: `lib/src/features/dashboard/dashboard_screen.dart`
+- Modify: `lib/src/features/dashboard/persistent_start_session.dart`
 - Modify: `lib/src/features/progress/progress_service.dart`
 - Modify: `lib/src/features/progress/progress_screen.dart`
 - Modify: `lib/src/features/training_engine/training_engine_provider.dart`
+- Modify: `lib/l10n/app_en.arb`
+- Modify: `lib/l10n/app_fr.arb`
+- Modify: `lib/l10n/app_localizations.dart`
+- Modify: `lib/l10n/app_localizations_en.dart`
+- Modify: `lib/l10n/app_localizations_fr.dart`
 - Modify: `docs/app-feature-inventory.md`
 - Test: `test/services/progress_service_test.dart`
 - Test: `test/features/training_engine/training_engine_provider_test.dart`
-- Test: `integration_test/app_test.dart`
+- Verify: `integration_test/app_test.dart` through `tool/ci/run_web_e2e.sh`
 
 **Functional Requirements:**
 
@@ -669,13 +677,13 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing tests that compare Progress e1RM output against engine state.
-- [ ] Update Progress service/provider wiring to read engine state for current or rolling e1RM.
-- [ ] Update docs and UI copy to identify engine state as the source for current or rolling e1RM.
-- [ ] Run `dart format lib/src/features/progress/progress_service.dart lib/src/features/progress/progress_screen.dart lib/src/features/training_engine/training_engine_provider.dart docs/app-feature-inventory.md test/services/progress_service_test.dart test/features/training_engine/training_engine_provider_test.dart integration_test/app_test.dart`.
-- [ ] Run `flutter test test/services/progress_service_test.dart test/features/training_engine/training_engine_provider_test.dart`.
-- [ ] Run `bash tool/ci/run_web_e2e.sh`.
-- [ ] Commit the Progress analytics changes.
+- [x] Add failing tests that compare Progress e1RM output against engine state.
+- [x] Update Progress service/provider wiring to read engine state for current or rolling e1RM.
+- [x] Update docs and UI copy to identify engine state as the source for current or rolling e1RM.
+- [x] Run `dart format lib/src/features/dashboard/dashboard_screen.dart lib/src/features/dashboard/persistent_start_session.dart lib/src/features/progress/progress_service.dart lib/src/features/progress/progress_screen.dart lib/src/features/training_engine/training_engine_provider.dart lib/l10n/app_localizations.dart lib/l10n/app_localizations_en.dart lib/l10n/app_localizations_fr.dart test/services/progress_service_test.dart test/features/training_engine/training_engine_provider_test.dart`.
+- [x] Run `flutter test test/services/progress_service_test.dart test/features/training_engine/training_engine_provider_test.dart`.
+- [x] Run `bash tool/ci/run_web_e2e.sh`.
+- [x] Commit the Progress analytics changes.
 
 **Acceptance Checks:**
 

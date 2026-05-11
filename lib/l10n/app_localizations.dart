@@ -227,7 +227,7 @@ abstract class AppLocalizations {
   /// No description provided for @estimated1rm.
   ///
   /// In en, this message translates to:
-  /// **'Est. 1RM'**
+  /// **'Engine 1RM'**
   String get estimated1rm;
 
   /// No description provided for @noPrsYet.
@@ -2561,7 +2561,7 @@ abstract class AppLocalizations {
   /// No description provided for @estimated1rmTracked.
   ///
   /// In en, this message translates to:
-  /// **'Estimated 1RM tracked automatically'**
+  /// **'Engine rolling 1RM tracked automatically'**
   String get estimated1rmTracked;
 
   /// No description provided for @trainingReadiness.
@@ -2735,7 +2735,7 @@ abstract class AppLocalizations {
   /// No description provided for @estimated1rmLong.
   ///
   /// In en, this message translates to:
-  /// **'Estimated 1RM'**
+  /// **'Engine Rolling 1RM'**
   String get estimated1rmLong;
 
   /// No description provided for @achievedLabel.

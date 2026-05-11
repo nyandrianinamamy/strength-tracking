@@ -22,7 +22,7 @@
   "workoutFrequency": "Fréquence d'entraînement",
   "recentPrsTitle": "Records récents",
   "viewAll": "Tout voir",
-  "estimated1rm": "1RM est.",
+  "estimated1rm": "1RM moteur",
   "noPrsYet": "Aucun record détecté",
   "prsWillAppear": "Vos meilleures performances apparaîtront après une séance.",
   "volume": "Volume",
@@ -462,7 +462,7 @@
   "reviewSession": "Revoir la session",
   "nExercisesRemaining": "{count} exercices restants",
   "@nExercisesRemaining": { "placeholders": { "count": {} } },
-  "estimated1rmTracked": "1RM estimé suivi automatiquement",
+  "estimated1rmTracked": "1RM glissant moteur suivi automatiquement",
 
   "trainingReadiness": "Préparation à l'entraînement",
   "adaptiveGuidanceUnavailable": "Les conseils adaptatifs sont temporairement indisponibles.",
@@ -494,7 +494,7 @@
 
   "bestTime": "Meilleur temps",
   "bestSet": "Meilleur set",
-  "estimated1rmLong": "1RM estimé",
+  "estimated1rmLong": "1RM glissant moteur",
   "achievedLabel": "Atteint",
   "volumeData": "Données de volume",
   "weekOf": "Semaine du {date}",

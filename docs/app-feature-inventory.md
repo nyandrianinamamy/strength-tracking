@@ -269,7 +269,8 @@ Implemented:
 - Personal-record list.
 - Top lifts.
 - Weekly volume.
-- Estimated one-rep max using the training engine composite estimator.
+- Current/rolling strength e1RM values sourced from the training engine state
+  (`TrainingEngine.currentE1rm` over `TrainingState.e1rmHistory`).
 - Timed exercise PR support based on duration.
 - Recent PR and workout snapshot data reused by the dashboard.
 - Clicking dashboard PR/progress actions routes to Progress.

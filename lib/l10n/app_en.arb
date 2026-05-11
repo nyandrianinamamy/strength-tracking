@@ -22,7 +22,7 @@
   "workoutFrequency": "Workout Frequency",
   "recentPrsTitle": "Recent PRs",
   "viewAll": "View all",
-  "estimated1rm": "Est. 1RM",
+  "estimated1rm": "Engine 1RM",
   "noPrsYet": "No PRs detected yet",
   "prsWillAppear": "Your strongest sets will surface here as soon as you complete a session.",
   "volume": "Volume",
@@ -462,7 +462,7 @@
   "reviewSession": "Review session",
   "nExercisesRemaining": "{count} exercises remaining",
   "@nExercisesRemaining": { "placeholders": { "count": {} } },
-  "estimated1rmTracked": "Estimated 1RM tracked automatically",
+  "estimated1rmTracked": "Engine rolling 1RM tracked automatically",
 
   "trainingReadiness": "Training Readiness",
   "adaptiveGuidanceUnavailable": "Adaptive guidance is temporarily unavailable.",
@@ -494,7 +494,7 @@
 
   "bestTime": "Best Time",
   "bestSet": "Best Set",
-  "estimated1rmLong": "Estimated 1RM",
+  "estimated1rmLong": "Engine Rolling 1RM",
   "achievedLabel": "Achieved",
   "volumeData": "Volume Data",
   "weekOf": "Week of {date}",

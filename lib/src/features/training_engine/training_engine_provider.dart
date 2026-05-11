@@ -191,6 +191,23 @@ final trainingEngineProvider = FutureProvider<TrainingEngine>((ref) async {
 // Derived providers
 // ---------------------------------------------------------------------------
 
+/// Returns the engine-owned current rolling e1RM for exercises with strength
+/// history. Timed exercises do not create e1RM history and are intentionally
+/// absent from this map.
+final engineCurrentE1rmsProvider = FutureProvider<Map<String, double>>((
+  ref,
+) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
+  final currentE1rms = <String, double>{};
+  for (final exerciseId in engine.state.e1rmHistory.keys) {
+    final current = engine.currentE1rm(exerciseId);
+    if (current != null) {
+      currentE1rms[exerciseId] = current;
+    }
+  }
+  return currentE1rms;
+});
+
 /// Returns the current per-muscle fatigue map.
 final fatigueMapProvider = FutureProvider<Map<String, FatigueStatus>>((
   ref,
