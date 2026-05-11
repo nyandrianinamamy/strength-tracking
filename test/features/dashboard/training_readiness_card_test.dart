@@ -65,7 +65,10 @@ Widget _buildTestApp({
   );
 }
 
-Map<String, dynamic> _savedEngineState() {
+Map<String, dynamic> _savedEngineState({
+  bool acuteSleepDeprivation = false,
+  bool risingRestingHeartRate = false,
+}) {
   final engine = TrainingEngine(
     registry: ExerciseRegistry.withDefaults(),
     profile: UserProfile(
@@ -96,6 +99,31 @@ Map<String, dynamic> _savedEngineState() {
       ],
     ),
   );
+
+  final now = DateTime.now().toUtc();
+  if (acuteSleepDeprivation) {
+    engine.ingestSleep(
+      SleepRecord(
+        date: now,
+        totalSleep: const Duration(hours: 4, minutes: 30),
+        deepSleep: const Duration(minutes: 40),
+        remSleep: const Duration(minutes: 50),
+        coreSleep: const Duration(hours: 3),
+      ),
+    );
+  }
+
+  if (risingRestingHeartRate) {
+    for (var i = 0; i < 7; i++) {
+      engine.ingestHrv(
+        HrvRecord(
+          date: now.subtract(Duration(days: 6 - i)),
+          sdnn: 60.0,
+          restingHeartRate: 55.0 + i * 1.2,
+        ),
+      );
+    }
+  }
 
   return engine.serializeState();
 }
@@ -188,4 +216,38 @@ void main() {
       expect(find.textContaining('ms'), findsNothing);
     },
   );
+
+  testWidgets('renders an acute sleep flag without medical overclaiming', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildTestApp(
+        initialState: _appStateWithDashboardSession(),
+        engineRepository: MemoryTrainingEngineStateRepository(
+          initialState: _savedEngineState(acuteSleepDeprivation: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Short sleep detected'), findsOneWidget);
+    expect(find.textContaining('diagnosis'), findsNothing);
+  });
+
+  testWidgets('renders a rising resting heart rate flag as a trend signal', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildTestApp(
+        initialState: _appStateWithDashboardSession(),
+        engineRepository: MemoryTrainingEngineStateRepository(
+          initialState: _savedEngineState(risingRestingHeartRate: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Resting heart rate trending up'), findsOneWidget);
+    expect(find.textContaining('diagnosis'), findsNothing);
+  });
 }

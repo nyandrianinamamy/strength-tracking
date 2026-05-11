@@ -393,12 +393,12 @@ class TrainingEngine {
   readiness_lib.ReadinessScore computeReadiness({double? manualSlider}) {
     final now = DateTime.now();
     final acwr = currentAcwr();
-    final sleepScore = sleep_lib.scoreSleep(_state.sleepHistory, now);
-    final hrvScore = hrv_lib.scoreHrv(_state.hrvHistory, now);
+    final sleepDetails = sleep_lib.scoreSleepDetailed(_state.sleepHistory, now);
+    final hrvDetails = hrv_lib.scoreHrvDetailed(_state.hrvHistory, now);
     return readiness_lib.computeReadiness(
       acwr: acwr,
-      sleepScore: sleepScore,
-      hrvScore: hrvScore,
+      sleepDetails: sleepDetails,
+      hrvDetails: hrvDetails,
       manualSlider: manualSlider,
     );
   }

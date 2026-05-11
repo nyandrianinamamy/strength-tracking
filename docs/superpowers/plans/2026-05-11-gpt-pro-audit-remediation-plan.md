@@ -522,7 +522,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 12: Close Heatmap Mapping and Muscle-Gating Gaps
 
 **Category:** P1 fatigue visibility and recommendation safety
-**Status:** Completed 2026-05-11. GPT-5.5 implementer left usable code and tests despite a silent-close handoff; GLM proxy review passed Task 12; local verification passed Dart format, diff check, Flutter heatmap tests (`+14`), and package muscle/engine tests (`+74`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer left usable code and tests despite a silent-close handoff; GLM proxy review passed Task 12; local verification passed Dart format, diff check, Flutter heatmap tests (`+14`), and package muscle/engine tests (`+74`). Commit: `d381042`.
 
 **Files:**
 
@@ -563,6 +563,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 13: Emit Readiness Flags for Sleep and Resting-Heart-Rate Risks
 
 **Category:** P1 readiness correctness
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 13 with API-compatibility and dashboard-copy checks; local verification passed Dart format, diff check, package readiness tests (`+33`), and dashboard widget tests (`+5`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -584,14 +585,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing pure engine readiness tests for low sleep and rising resting HR flags.
-- [ ] Add failing dashboard readiness card tests for the new flag messages.
-- [ ] Return enough structured scorer information for `computeReadiness` to emit the flags.
-- [ ] Update dashboard rendering for the new flags.
-- [ ] Run `dart format packages/training_engine/lib/src/readiness/composite_readiness.dart packages/training_engine/lib/src/readiness/sleep_scorer.dart packages/training_engine/lib/src/readiness/hrv_scorer.dart packages/training_engine/lib/src/engine.dart lib/src/features/dashboard/training_readiness_card.dart packages/training_engine/test/readiness/readiness_test.dart test/features/dashboard/training_readiness_card_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/readiness/readiness_test.dart`.
-- [ ] Run `flutter test test/features/dashboard/training_readiness_card_test.dart`.
-- [ ] Commit the readiness-flag changes.
+- [x] Add failing pure engine readiness tests for low sleep and rising resting HR flags.
+- [x] Add failing dashboard readiness card tests for the new flag messages.
+- [x] Return enough structured scorer information for `computeReadiness` to emit the flags.
+- [x] Update dashboard rendering for the new flags.
+- [x] Run `dart format packages/training_engine/lib/src/readiness/composite_readiness.dart packages/training_engine/lib/src/readiness/sleep_scorer.dart packages/training_engine/lib/src/readiness/hrv_scorer.dart packages/training_engine/lib/src/engine.dart lib/src/features/dashboard/training_readiness_card.dart packages/training_engine/test/readiness/readiness_test.dart test/features/dashboard/training_readiness_card_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/readiness/readiness_test.dart`.
+- [x] Run `flutter test test/features/dashboard/training_readiness_card_test.dart`.
+- [x] Commit the readiness-flag changes.
 
 **Acceptance Checks:**
 

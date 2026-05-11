@@ -13,6 +13,17 @@ const int _rhrTrendDays = 7;
 /// RHR rising penalty threshold (bpm increase over 7 days).
 const double _rhrRisingThreshold = 5.0;
 
+/// HRV readiness score plus notable threshold signals.
+class HrvScoreDetails {
+  final double score;
+  final bool risingRestingHeartRate;
+
+  const HrvScoreDetails({
+    required this.score,
+    required this.risingRestingHeartRate,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // scoreHrv
 // ---------------------------------------------------------------------------
@@ -32,6 +43,11 @@ const double _rhrRisingThreshold = 5.0;
 ///    subtract 10 points.
 /// 4. Clamp result to [0, 100].
 double? scoreHrv(List<HrvRecord> records, DateTime now) {
+  return scoreHrvDetailed(records, now)?.score;
+}
+
+/// Computes an HRV readiness score and threshold flags from recent HRV/RHR data.
+HrvScoreDetails? scoreHrvDetailed(List<HrvRecord> records, DateTime now) {
   if (records.length < _minRecords) return null;
 
   final today = DateTime.utc(now.year, now.month, now.day);
@@ -48,7 +64,8 @@ double? scoreHrv(List<HrvRecord> records, DateTime now) {
   // --- Mean and SD of SDNN ---
   final sdnnValues = windowRecords.map((r) => r.sdnn).toList();
   final mean = sdnnValues.reduce((a, b) => a + b) / sdnnValues.length;
-  final variance = sdnnValues.map((v) => pow(v - mean, 2)).reduce((a, b) => a + b) /
+  final variance =
+      sdnnValues.map((v) => pow(v - mean, 2)).reduce((a, b) => a + b) /
       sdnnValues.length;
   final sd = sqrt(variance);
 
@@ -82,19 +99,27 @@ double? scoreHrv(List<HrvRecord> records, DateTime now) {
   }
 
   // --- RHR trend modifier ---
-  final rhrPenalty = _rhrTrendPenalty(windowRecords, today);
-  score -= rhrPenalty;
+  final risingRestingHeartRate = _hasRisingRestingHeartRate(
+    windowRecords,
+    today,
+  );
+  if (risingRestingHeartRate) {
+    score -= 10.0;
+  }
 
-  return score.clamp(0.0, 100.0);
+  return HrvScoreDetails(
+    score: score.clamp(0.0, 100.0),
+    risingRestingHeartRate: risingRestingHeartRate,
+  );
 }
 
-/// Returns 10 if RHR has risen more than [_rhrRisingThreshold] bpm over the
-/// past [_rhrTrendDays] days, otherwise 0.
-double _rhrTrendPenalty(List<HrvRecord> records, DateTime today) {
+/// Returns true if RHR has risen more than [_rhrRisingThreshold] bpm over the
+/// past [_rhrTrendDays] days.
+bool _hasRisingRestingHeartRate(List<HrvRecord> records, DateTime today) {
   final withRhr = records.where((r) => r.restingHeartRate != null).toList()
     ..sort((a, b) => a.date.compareTo(b.date));
 
-  if (withRhr.length < 2) return 0.0;
+  if (withRhr.length < 2) return false;
 
   // Filter to records within the 7-day window only
   final cutoff = today.subtract(const Duration(days: _rhrTrendDays));
@@ -103,10 +128,10 @@ double _rhrTrendPenalty(List<HrvRecord> records, DateTime today) {
     return !d.isBefore(cutoff);
   }).toList();
 
-  if (inWindow.length < 2) return 0.0;
+  if (inWindow.length < 2) return false;
 
   final earliestRhr = inWindow.first.restingHeartRate!;
   final latestRhr = inWindow.last.restingHeartRate!;
 
-  return (latestRhr - earliestRhr) > _rhrRisingThreshold ? 10.0 : 0.0;
+  return (latestRhr - earliestRhr) > _rhrRisingThreshold;
 }

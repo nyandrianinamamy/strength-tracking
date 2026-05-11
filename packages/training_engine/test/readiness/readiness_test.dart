@@ -77,6 +77,23 @@ void main() {
       expect(withDeprivation, lessThan(withoutDeprivation - 5));
     });
 
+    test(
+      'detailed score marks acute deprivation when last night is below 5h',
+      () {
+        final records = [
+          _sleep(now, totalH: 4, deepM: 40, remM: 50),
+          ...List.generate(
+            6,
+            (i) => _sleep(now.subtract(Duration(days: i + 1)), totalH: 8),
+          ),
+        ];
+
+        final result = scoreSleepDetailed(records, now)!;
+
+        expect(result.acuteSleepDeprivation, isTrue);
+      },
+    );
+
     test('poor total sleep (5h) scores lower than good sleep', () {
       final good = List.generate(
         7,
@@ -216,6 +233,21 @@ void main() {
       expect(flatRhrScore, greaterThan(risingRhrScore));
     });
 
+    test('detailed score marks rising resting HR over 7 days', () {
+      final records = List.generate(
+        7,
+        (i) => _hrv(
+          now.subtract(Duration(days: 6 - i)),
+          60.0,
+          rhr: 55.0 + i * 1.2,
+        ),
+      );
+
+      final result = scoreHrvDetailed(records, now)!;
+
+      expect(result.risingRestingHeartRate, isTrue);
+    });
+
     test('score is clamped between 0 and 100', () {
       final records = List.generate(
         7,
@@ -291,6 +323,35 @@ void main() {
         acwr: acwrStatus(AcwrZone.danger, ratio: 1.7),
       );
       expect(result.flags, contains(ReadinessFlag.acwrDangerZone));
+    });
+
+    test(
+      'acute sleep deprivation flag is emitted from sleep scorer details',
+      () {
+        final result = computeReadiness(
+          acwr: acwrStatus(AcwrZone.optimal),
+          sleepDetails: const SleepScoreDetails(
+            score: 55.0,
+            acuteSleepDeprivation: true,
+          ),
+          hrvScore: 75.0,
+        );
+
+        expect(result.flags, contains(ReadinessFlag.acuteSleepDeprivation));
+      },
+    );
+
+    test('rising resting HR flag is emitted from HRV scorer details', () {
+      final result = computeReadiness(
+        acwr: acwrStatus(AcwrZone.optimal),
+        sleepScore: 80.0,
+        hrvDetails: const HrvScoreDetails(
+          score: 75.0,
+          risingRestingHeartRate: true,
+        ),
+      );
+
+      expect(result.flags, contains(ReadinessFlag.risingRestingHR));
     });
 
     test('no danger zone flag for optimal ACWR', () {
