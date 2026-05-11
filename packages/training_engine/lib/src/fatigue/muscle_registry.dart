@@ -41,23 +41,43 @@ MuscleDefinition _def(String id, String displayName, MuscleSize size) =>
 final Map<String, MuscleDefinition> defaultMuscles = {
   // Small muscles
   'biceps': _def('biceps', 'Biceps', MuscleSize.small),
-  'lateral_deltoid': _def('lateral_deltoid', 'Lateral Deltoid', MuscleSize.small),
+  'lateral_deltoid': _def(
+    'lateral_deltoid',
+    'Lateral Deltoid',
+    MuscleSize.small,
+  ),
   'calves': _def('calves', 'Calves', MuscleSize.small),
   'forearms': _def('forearms', 'Forearms', MuscleSize.small),
   'brachialis': _def('brachialis', 'Brachialis', MuscleSize.small),
-  'brachioradialis': _def('brachioradialis', 'Brachioradialis', MuscleSize.small),
-  'tibialis_anterior': _def('tibialis_anterior', 'Tibialis Anterior', MuscleSize.small),
+  'brachioradialis': _def(
+    'brachioradialis',
+    'Brachioradialis',
+    MuscleSize.small,
+  ),
+  'tibialis_anterior': _def(
+    'tibialis_anterior',
+    'Tibialis Anterior',
+    MuscleSize.small,
+  ),
 
   // Moderate muscles
   'triceps': _def('triceps', 'Triceps', MuscleSize.moderate),
   'rear_deltoid': _def('rear_deltoid', 'Rear Deltoid', MuscleSize.moderate),
-  'anterior_deltoid': _def('anterior_deltoid', 'Anterior Deltoid', MuscleSize.moderate),
+  'anterior_deltoid': _def(
+    'anterior_deltoid',
+    'Anterior Deltoid',
+    MuscleSize.moderate,
+  ),
   'trapezius': _def('trapezius', 'Trapezius', MuscleSize.moderate),
   'core': _def('core', 'Core', MuscleSize.moderate),
   'obliques': _def('obliques', 'Obliques', MuscleSize.moderate),
   'hamstrings': _def('hamstrings', 'Hamstrings', MuscleSize.moderate),
   'rotator_cuff': _def('rotator_cuff', 'Rotator Cuff', MuscleSize.moderate),
-  'serratus_anterior': _def('serratus_anterior', 'Serratus Anterior', MuscleSize.moderate),
+  'serratus_anterior': _def(
+    'serratus_anterior',
+    'Serratus Anterior',
+    MuscleSize.moderate,
+  ),
   'rhomboids': _def('rhomboids', 'Rhomboids', MuscleSize.moderate),
 
   // Large muscles

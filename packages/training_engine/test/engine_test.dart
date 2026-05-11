@@ -23,6 +23,46 @@ TrainingEngine _engine({UserProfile? profile}) => TrainingEngine(
   profile: profile ?? _profile(),
 );
 
+EngineExercise _customExercise({
+  required String id,
+  required List<MuscleActivation> muscleMap,
+}) {
+  return EngineExercise(
+    id: id,
+    name: id,
+    muscleMap: muscleMap,
+    equipment: EquipmentClass.barbell,
+    movement: MovementClass.isolation,
+  );
+}
+
+EngineSession _customSession({
+  required String id,
+  required String exerciseId,
+  required DateTime endedAt,
+  required double weightKg,
+  required int reps,
+  required double rpe,
+  int setCount = 1,
+}) {
+  return EngineSession(
+    id: id,
+    startedAt: endedAt.subtract(const Duration(minutes: 30)),
+    endedAt: endedAt,
+    sets: List.generate(
+      setCount,
+      (index) => LoggedSet(
+        exerciseId: exerciseId,
+        weightKg: weightKg,
+        reps: reps,
+        rpe: rpe,
+        completedAt: endedAt,
+      ),
+    ),
+    sessionRpe: rpe,
+  );
+}
+
 /// Creates a basic session with one exercise.
 EngineSession _session({
   String id = 's1',
@@ -678,6 +718,143 @@ void main() {
       // No lastTopSet, no previousWeight → null or baseline-based suggestion
       expect(rec.exerciseId, equals('barbell_back_squat'));
       expect(rec.e1rm, isNotNull);
+    });
+
+    test('gates on the most fatigued primary muscle deterministically', () {
+      final registry = ExerciseRegistry.empty()
+        ..addCustom(
+          _customExercise(
+            id: 'dual_primary_press',
+            muscleMap: [
+              MuscleActivation(
+                muscleId: 'biceps',
+                role: MuscleRole.primary,
+                coefficient: 1.0,
+              ),
+              MuscleActivation(
+                muscleId: 'triceps',
+                role: MuscleRole.primary,
+                coefficient: 1.0,
+              ),
+            ],
+          ),
+        )
+        ..addCustom(
+          _customExercise(
+            id: 'triceps_fatigue_probe',
+            muscleMap: [
+              MuscleActivation(
+                muscleId: 'triceps',
+                role: MuscleRole.primary,
+                coefficient: 1.0,
+              ),
+            ],
+          ),
+        );
+      final engine = TrainingEngine(registry: registry, profile: _profile());
+      final baseTime = DateTime.utc(2026, 4, 1, 18, 0);
+
+      engine
+        ..ingestSession(
+          _customSession(
+            id: 'dual-primary-baseline',
+            exerciseId: 'dual_primary_press',
+            endedAt: baseTime,
+            weightKg: 20,
+            reps: 5,
+            rpe: 6,
+          ),
+        )
+        ..ingestSession(
+          _customSession(
+            id: 'triceps-fatigue',
+            exerciseId: 'triceps_fatigue_probe',
+            endedAt: baseTime.add(const Duration(minutes: 1)),
+            weightKg: 100,
+            reps: 10,
+            rpe: 10,
+            setCount: 4,
+          ),
+        );
+
+      final queryTime = baseTime.add(const Duration(minutes: 2));
+      expect(engine.currentFatigue('biceps', queryTime), lessThan(60));
+      expect(engine.currentFatigue('triceps', queryTime), greaterThan(80));
+
+      final rec = engine.recommendLoad('dual_primary_press', at: queryTime);
+
+      expect(rec.gateResult.reason, GateReason.muscleFatigue);
+      expect(rec.gateResult.action, GateAction.suggestAlternative);
+    });
+
+    test('high-coefficient synergist fatigue participates in gating', () {
+      final registry = ExerciseRegistry.empty()
+        ..addCustom(
+          _customExercise(
+            id: 'synergist_limited_press',
+            muscleMap: [
+              MuscleActivation(
+                muscleId: 'biceps',
+                role: MuscleRole.primary,
+                coefficient: 1.0,
+              ),
+              MuscleActivation(
+                muscleId: 'triceps',
+                role: MuscleRole.synergist,
+                coefficient: 0.8,
+              ),
+            ],
+          ),
+        )
+        ..addCustom(
+          _customExercise(
+            id: 'triceps_fatigue_probe',
+            muscleMap: [
+              MuscleActivation(
+                muscleId: 'triceps',
+                role: MuscleRole.primary,
+                coefficient: 1.0,
+              ),
+            ],
+          ),
+        );
+      final engine = TrainingEngine(registry: registry, profile: _profile());
+      final baseTime = DateTime.utc(2026, 4, 1, 18, 0);
+
+      engine
+        ..ingestSession(
+          _customSession(
+            id: 'synergist-baseline',
+            exerciseId: 'synergist_limited_press',
+            endedAt: baseTime,
+            weightKg: 20,
+            reps: 5,
+            rpe: 6,
+          ),
+        )
+        ..ingestSession(
+          _customSession(
+            id: 'triceps-fatigue',
+            exerciseId: 'triceps_fatigue_probe',
+            endedAt: baseTime.add(const Duration(minutes: 1)),
+            weightKg: 100,
+            reps: 10,
+            rpe: 10,
+            setCount: 4,
+          ),
+        );
+
+      final queryTime = baseTime.add(const Duration(minutes: 2));
+      expect(engine.currentFatigue('biceps', queryTime), lessThan(60));
+      expect(engine.currentFatigue('triceps', queryTime), greaterThan(80));
+
+      final rec = engine.recommendLoad(
+        'synergist_limited_press',
+        at: queryTime,
+      );
+
+      expect(rec.gateResult.reason, GateReason.muscleFatigue);
+      expect(rec.gateResult.action, GateAction.suggestAlternative);
     });
   });
 

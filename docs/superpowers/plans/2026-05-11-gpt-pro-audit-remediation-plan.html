@@ -1037,7 +1037,7 @@ completed red-green code and tests; GLM proxy review passed Task 11 with
 explicit no-silent-clamp and timed-set interaction checks; local
 verification passed Dart format, diff check, Flutter RPE/adapter tests
 (<code>+12</code>), and package model tests (<code>+14</code>). Commit:
-recorded in git history after this ledger update.</p>
+<code>949ac6a</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>lib/src/data/models/completed_set.dart</code></li>
@@ -1099,7 +1099,12 @@ set.</li>
 <h2 id="task-12-close-heatmap-mapping-and-muscle-gating-gaps">Task 12:
 Close Heatmap Mapping and Muscle-Gating Gaps</h2>
 <p><strong>Category:</strong> P1 fatigue visibility and recommendation
-safety</p>
+safety <strong>Status:</strong> Completed 2026-05-11. GPT-5.5
+implementer left usable code and tests despite a silent-close handoff;
+GLM proxy review passed Task 12; local verification passed Dart format,
+diff check, Flutter heatmap tests (<code>+14</code>), and package
+muscle/engine tests (<code>+74</code>). Commit: recorded in git history
+after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -1132,25 +1137,27 @@ covered by tests.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add a failing heatmap adapter
-coverage test over every <code>defaultMuscles</code> entry.</label></li>
-<li><label><input type="checkbox" />Add failing recommendation tests for
-multiple primary muscles and high-fatigue synergists.</label></li>
-<li><label><input type="checkbox" />Update the UI adapter mapping so
-every <code>defaultMuscles</code> entry maps to at least one heatmap
-muscle.</label></li>
-<li><label><input type="checkbox" />Update
+<li><label><input type="checkbox" checked="" />Add a failing heatmap
+adapter coverage test over every <code>defaultMuscles</code>
+entry.</label></li>
+<li><label><input type="checkbox" checked="" />Add failing
+recommendation tests for multiple primary muscles and high-fatigue
+synergists.</label></li>
+<li><label><input type="checkbox" checked="" />Update the UI adapter
+mapping so every <code>defaultMuscles</code> entry maps to at least one
+heatmap muscle.</label></li>
+<li><label><input type="checkbox" checked="" />Update
 <code>TrainingEngine.recommendLoad</code> to use max or weighted fatigue
 across relevant muscle activations rather than first-primary
 only.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>dart format lib/src/features/training_engine/training_engine_ui_adapter.dart packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/fatigue/muscle_registry.dart test/features/training_engine/training_engine_ui_adapter_test.dart packages/training_engine/test/fatigue/muscle_registry_test.dart packages/training_engine/test/engine_test.dart test/features/dashboard/muscle_heatmap_card_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter test test/features/training_engine/training_engine_ui_adapter_test.dart test/features/dashboard/muscle_heatmap_card_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>cd packages/training_engine &amp;&amp; dart test test/fatigue/muscle_registry_test.dart test/engine_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Commit the heatmap and gating
-changes.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the heatmap and
+gating changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>

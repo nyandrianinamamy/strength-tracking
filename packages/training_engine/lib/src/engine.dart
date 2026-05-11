@@ -8,11 +8,13 @@ import 'fatigue/impulse_calculator.dart' as impulse_lib;
 import 'fatigue/muscle_normalizer.dart';
 import 'models/daily_load.dart';
 import 'models/e1rm_estimate.dart';
+import 'models/engine_exercise.dart';
 import 'models/engine_session.dart';
 import 'models/enums.dart';
 import 'models/fatigue_impulse.dart';
 import 'models/hrv_record.dart';
 import 'models/logged_set.dart';
+import 'models/muscle_activation.dart';
 import 'models/sleep_record.dart';
 import 'models/training_state.dart';
 import 'models/user_profile.dart';
@@ -27,6 +29,8 @@ import 'readiness/sleep_scorer.dart' as sleep_lib;
 import 'registry/exercise_registry.dart';
 
 const _e1rmTieRelativeTolerance = 0.01;
+const _recommendationSynergistCoefficientThreshold = 0.5;
+const _recommendationSynergistMaterialGap = 10.0;
 
 class _E1rmCandidate {
   final LoggedSet set;
@@ -75,6 +79,11 @@ bool _isBetterE1rmCandidate(_E1rmCandidate candidate, _E1rmCandidate best) {
     return candidate.set.reps > best.set.reps;
   }
   return false;
+}
+
+bool _isHighCoefficientSynergist(MuscleActivation activation) {
+  return activation.role == MuscleRole.synergist &&
+      activation.coefficient >= _recommendationSynergistCoefficientThreshold;
 }
 
 /// Single entry-point that wires all training subsystems together.
@@ -423,16 +432,10 @@ class TrainingEngine {
     // Current e1RM
     final e1rm = currentE1rm(exerciseId, now);
 
-    // Primary muscle fatigue
-    double primaryFatigue = 0.0;
+    // Fatigue input for safety gates.
+    double recommendationFatigue = 0.0;
     if (exercise != null) {
-      final primaryMuscle = exercise.muscleMap
-          .where((m) => m.role == MuscleRole.primary)
-          .map((m) => m.muscleId)
-          .firstOrNull;
-      if (primaryMuscle != null) {
-        primaryFatigue = currentFatigue(primaryMuscle, now);
-      }
+      recommendationFatigue = _recommendationFatigue(exercise, now);
     }
 
     // ACWR zone
@@ -454,10 +457,37 @@ class TrainingEngine {
       e1rm: e1rm,
       previousWeightKg: previousWeightKg,
       lastTopSet: lastTopSet,
-      primaryMuscleFatigue: primaryFatigue,
+      primaryMuscleFatigue: recommendationFatigue,
       acwrZone: acwrZone,
       readinessScore: readiness.score,
     );
+  }
+
+  double _recommendationFatigue(EngineExercise exercise, DateTime at) {
+    var primaryMax = 0.0;
+    for (final activation in exercise.muscleMap) {
+      if (activation.role == MuscleRole.primary) {
+        final fatigue = currentFatigue(activation.muscleId, at);
+        if (fatigue > primaryMax) {
+          primaryMax = fatigue;
+        }
+      }
+    }
+
+    var highSynergistMax = 0.0;
+    for (final activation in exercise.muscleMap) {
+      if (_isHighCoefficientSynergist(activation)) {
+        final fatigue = currentFatigue(activation.muscleId, at);
+        if (fatigue > highSynergistMax) {
+          highSynergistMax = fatigue;
+        }
+      }
+    }
+
+    if (highSynergistMax > primaryMax + _recommendationSynergistMaterialGap) {
+      return highSynergistMax;
+    }
+    return primaryMax;
   }
 
   // ---------------------------------------------------------------------------

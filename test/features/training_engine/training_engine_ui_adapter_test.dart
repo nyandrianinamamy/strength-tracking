@@ -48,6 +48,28 @@ void main() {
     expect(heatmapData.containsKey(Muscle.triceps), isFalse);
   });
 
+  test('maps every default engine muscle to at least one heatmap region', () {
+    for (final muscleId in defaultMuscles.keys) {
+      final heatmapData = adapter.toHeatmapData({
+        muscleId: FatigueStatus(level: 50, tau: 24),
+      });
+
+      expect(
+        heatmapData,
+        isNotEmpty,
+        reason: '$muscleId should map to a closest heatmap region',
+      );
+    }
+  });
+
+  test('ignores unknown engine muscles when building heatmap data', () {
+    final heatmapData = adapter.toHeatmapData({
+      'custom_unmapped_muscle': FatigueStatus(level: 75, tau: 24),
+    });
+
+    expect(heatmapData, isEmpty);
+  });
+
   test('maps engine load recommendation to app suggestion', () {
     final suggestion = adapter.toWeightSuggestion(
       const LoadRecommendation(

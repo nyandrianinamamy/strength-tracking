@@ -88,12 +88,17 @@ class TrainingEngineUiAdapter {
     'obliques': [Muscle.obliques],
     'lower_back': [Muscle.lowerBack],
     'erector_spinae': [Muscle.lowerBack],
+    'rotator_cuff': [Muscle.deltoids, Muscle.upperBack],
+    'serratus_anterior': [Muscle.chest, Muscle.obliques],
     'quadriceps': [Muscle.quadriceps],
     'hamstrings': [Muscle.hamstring],
     'glutes': [Muscle.gluteal],
+    'hip_flexors': [Muscle.quadriceps, Muscle.abs],
     'calves': [Muscle.calves],
     'adductors': [Muscle.adductors],
+    'abductors': [Muscle.gluteal],
     'tibialis_anterior': [Muscle.tibialis],
+    'neck': [Muscle.neck],
   };
 
   Map<Muscle, MuscleData> toHeatmapData(Map<String, FatigueStatus> fatigueMap) {

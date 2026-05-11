@@ -6,6 +6,8 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
+import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/dashboard/muscle_heatmap_card.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
@@ -13,6 +15,7 @@ import 'package:strength_training_tracker/src/features/training_engine/training_
 import 'package:training_engine/training_engine.dart';
 
 Map<String, dynamic> _savedEngineState() {
+  final endedAt = DateTime.now().subtract(const Duration(hours: 2));
   final engine = TrainingEngine(
     registry: ExerciseRegistry.withDefaults(),
     profile: UserProfile(
@@ -30,21 +33,47 @@ Map<String, dynamic> _savedEngineState() {
   engine.ingestSession(
     EngineSession(
       id: 'heatmap-session',
-      startedAt: DateTime.utc(2026, 4, 1, 17, 0),
-      endedAt: DateTime.utc(2026, 4, 1, 18, 0),
+      startedAt: endedAt.subtract(const Duration(hours: 1)),
+      endedAt: endedAt,
       sets: [
         LoggedSet(
           exerciseId: 'barbell_bench_press',
           weightKg: 100,
           reps: 10,
           rpe: 8.5,
-          completedAt: DateTime.now().subtract(const Duration(hours: 2)),
+          completedAt: endedAt,
         ),
       ],
     ),
   );
 
   return engine.serializeState();
+}
+
+WorkoutSession _completedWorkoutSession() {
+  final endedAt = DateTime.now().subtract(const Duration(hours: 2));
+  return WorkoutSession(
+    id: 'heatmap-session',
+    routineId: 'heatmap-routine',
+    status: WorkoutSessionStatus.completed,
+    startedAt: endedAt.subtract(const Duration(hours: 1)),
+    endedAt: endedAt,
+    lastActivityAt: endedAt,
+    currentExerciseIndex: 0,
+    completedSets: [
+      CompletedSet(
+        exerciseId: 'barbell_bench_press',
+        setNumber: 1,
+        weightKg: 100,
+        reps: 10,
+        rpe: 8.5,
+        completedAt: endedAt,
+        note: '',
+      ),
+    ],
+    sessionNote: '',
+    rpe: 8.5,
+  );
 }
 
 void main() {
@@ -55,11 +84,11 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    const initialState = AppState(
+    final initialState = AppState(
       exercises: [],
       routines: [],
       routineGroups: [],
-      sessions: [],
+      sessions: [_completedWorkoutSession()],
     );
 
     await tester.pumpWidget(

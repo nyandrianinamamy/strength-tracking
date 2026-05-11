@@ -482,7 +482,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 11: Align App RPE Range With Engine Contract
 
 **Category:** P1 app/engine scale consistency
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 11 with explicit no-silent-clamp and timed-set interaction checks; local verification passed Dart format, diff check, Flutter RPE/adapter tests (`+12`), and package model tests (`+14`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 11 with explicit no-silent-clamp and timed-set interaction checks; local verification passed Dart format, diff check, Flutter RPE/adapter tests (`+12`), and package model tests (`+14`). Commit: `949ac6a`.
 
 **Files:**
 
@@ -522,6 +522,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 12: Close Heatmap Mapping and Muscle-Gating Gaps
 
 **Category:** P1 fatigue visibility and recommendation safety
+**Status:** Completed 2026-05-11. GPT-5.5 implementer left usable code and tests despite a silent-close handoff; GLM proxy review passed Task 12; local verification passed Dart format, diff check, Flutter heatmap tests (`+14`), and package muscle/engine tests (`+74`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -543,14 +544,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add a failing heatmap adapter coverage test over every `defaultMuscles` entry.
-- [ ] Add failing recommendation tests for multiple primary muscles and high-fatigue synergists.
-- [ ] Update the UI adapter mapping so every `defaultMuscles` entry maps to at least one heatmap muscle.
-- [ ] Update `TrainingEngine.recommendLoad` to use max or weighted fatigue across relevant muscle activations rather than first-primary only.
-- [ ] Run `dart format lib/src/features/training_engine/training_engine_ui_adapter.dart packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/fatigue/muscle_registry.dart test/features/training_engine/training_engine_ui_adapter_test.dart packages/training_engine/test/fatigue/muscle_registry_test.dart packages/training_engine/test/engine_test.dart test/features/dashboard/muscle_heatmap_card_test.dart`.
-- [ ] Run `flutter test test/features/training_engine/training_engine_ui_adapter_test.dart test/features/dashboard/muscle_heatmap_card_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/fatigue/muscle_registry_test.dart test/engine_test.dart`.
-- [ ] Commit the heatmap and gating changes.
+- [x] Add a failing heatmap adapter coverage test over every `defaultMuscles` entry.
+- [x] Add failing recommendation tests for multiple primary muscles and high-fatigue synergists.
+- [x] Update the UI adapter mapping so every `defaultMuscles` entry maps to at least one heatmap muscle.
+- [x] Update `TrainingEngine.recommendLoad` to use max or weighted fatigue across relevant muscle activations rather than first-primary only.
+- [x] Run `dart format lib/src/features/training_engine/training_engine_ui_adapter.dart packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/fatigue/muscle_registry.dart test/features/training_engine/training_engine_ui_adapter_test.dart packages/training_engine/test/fatigue/muscle_registry_test.dart packages/training_engine/test/engine_test.dart test/features/dashboard/muscle_heatmap_card_test.dart`.
+- [x] Run `flutter test test/features/training_engine/training_engine_ui_adapter_test.dart test/features/dashboard/muscle_heatmap_card_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/fatigue/muscle_registry_test.dart test/engine_test.dart`.
+- [x] Commit the heatmap and gating changes.
 
 **Acceptance Checks:**
 
