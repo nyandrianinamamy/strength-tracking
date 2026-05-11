@@ -12,6 +12,28 @@ import 'package:training_engine/training_engine.dart';
 void main() {
   const adapter = TrainingEngineUiAdapter();
 
+  LoadRecommendation recommendation({
+    required double suggestedWeightKg,
+    required double previousWeightKg,
+    required PerformanceDelta delta,
+    GateResult gateResult = const GateResult.clear(),
+  }) {
+    return LoadRecommendation(
+      exerciseId: 'barbell_bench_press',
+      suggestedWeightKg: suggestedWeightKg,
+      targets: const TargetParams(
+        targetRepsLow: 8,
+        targetRepsHigh: 12,
+        targetRpe: 8.0,
+      ),
+      delta: delta,
+      gateResult: gateResult,
+      e1rm: 100,
+      previousWeightKg: previousWeightKg,
+      explanation: 'Engine explanation.',
+    );
+  }
+
   test('maps engine fatigue statuses to heatmap muscles', () {
     final heatmapData = adapter.toHeatmapData({
       'pectorals': FatigueStatus(level: 80, tau: 24),
@@ -50,30 +72,200 @@ void main() {
     expect(suggestion.reason, 'Increase load slightly.');
   });
 
-  test('engine suggestion provider returns null with no ingested sessions', () async {
-    final initialState = const AppState(
-      exercises: [],
-      routines: [],
-      routineGroups: [],
-      sessions: [],
-    );
-    final container = ProviderContainer(
-      overrides: [
-        appStateRepositoryProvider.overrideWithValue(
-          MemoryAppStateRepository(initialState: initialState),
-        ),
-        initialAppStateProvider.overrideWithValue(initialState),
-        trainingEngineStateRepositoryProvider.overrideWithValue(
-          MemoryTrainingEngineStateRepository(),
-        ),
-      ],
-    );
-    addTearDown(container.dispose);
+  group(
+    'maps recommendation direction from suggested load and safety gate',
+    () {
+      test('high fatigue reduction is down even when delta is maintenance', () {
+        final suggestion = adapter.toWeightSuggestion(
+          recommendation(
+            suggestedWeightKg: 90,
+            previousWeightKg: 100,
+            delta: PerformanceDelta.maintenance,
+            gateResult: const GateResult.blocked(
+              reason: GateReason.muscleFatigue,
+              action: GateAction.reduceLoad,
+            ),
+          ),
+        );
 
-    final suggestion = await container.read(
-      engineWeightSuggestionProvider('barbell_bench_press').future,
-    );
+        expect(suggestion!.direction, EngineSuggestionDirection.down);
+      });
 
-    expect(suggestion, isNull);
+      test(
+        'very high fatigue alternative is down even when delta is maintenance',
+        () {
+          final suggestion = adapter.toWeightSuggestion(
+            recommendation(
+              suggestedWeightKg: 80,
+              previousWeightKg: 100,
+              delta: PerformanceDelta.maintenance,
+              gateResult: const GateResult.blocked(
+                reason: GateReason.muscleFatigue,
+                action: GateAction.suggestAlternative,
+              ),
+            ),
+          );
+
+          expect(suggestion!.direction, EngineSuggestionDirection.down);
+        },
+      );
+
+      test('ACWR danger deload is down even when delta is maintenance', () {
+        final suggestion = adapter.toWeightSuggestion(
+          recommendation(
+            suggestedWeightKg: 70,
+            previousWeightKg: 100,
+            delta: PerformanceDelta.maintenance,
+            gateResult: const GateResult.blocked(
+              reason: GateReason.acwrDanger,
+              action: GateAction.deload,
+            ),
+          ),
+        );
+
+        expect(suggestion!.direction, EngineSuggestionDirection.down);
+      });
+
+      test(
+        'low readiness reduction is down even when delta is maintenance',
+        () {
+          final suggestion = adapter.toWeightSuggestion(
+            recommendation(
+              suggestedWeightKg: 90,
+              previousWeightKg: 100,
+              delta: PerformanceDelta.maintenance,
+              gateResult: const GateResult.blocked(
+                reason: GateReason.lowReadiness,
+                action: GateAction.reduceLoad,
+              ),
+            ),
+          );
+
+          expect(suggestion!.direction, EngineSuggestionDirection.down);
+        },
+      );
+
+      test('clear maintenance with unchanged load is hold', () {
+        final suggestion = adapter.toWeightSuggestion(
+          recommendation(
+            suggestedWeightKg: 100,
+            previousWeightKg: 100,
+            delta: PerformanceDelta.maintenance,
+          ),
+        );
+
+        expect(suggestion!.direction, EngineSuggestionDirection.hold);
+      });
+
+      test('clear progression with increased load is up', () {
+        final suggestion = adapter.toWeightSuggestion(
+          recommendation(
+            suggestedWeightKg: 102.5,
+            previousWeightKg: 100,
+            delta: PerformanceDelta.progression,
+          ),
+        );
+
+        expect(suggestion!.direction, EngineSuggestionDirection.up);
+      });
+    },
+  );
+
+  group('maps active workout suggestion direction labels', () {
+    EngineWeightSuggestion suggestion({
+      required EngineSuggestionDirection direction,
+      GateAction? gateAction,
+    }) {
+      return EngineWeightSuggestion(
+        suggestedWeightKg: 100,
+        direction: direction,
+        reason: 'Engine explanation.',
+        gateAction: gateAction,
+      );
+    }
+
+    test('safety gate labels never display as hold steady', () {
+      expect(
+        engineSuggestionDirectionLabel(
+          suggestion(
+            direction: EngineSuggestionDirection.down,
+            gateAction: GateAction.deload,
+          ),
+        ),
+        'deload',
+      );
+      expect(
+        engineSuggestionDirectionLabel(
+          suggestion(
+            direction: EngineSuggestionDirection.down,
+            gateAction: GateAction.reduceLoad,
+          ),
+        ),
+        'reduce load',
+      );
+      expect(
+        engineSuggestionDirectionLabel(
+          suggestion(
+            direction: EngineSuggestionDirection.down,
+            gateAction: GateAction.suggestAlternative,
+          ),
+        ),
+        'alternative suggested',
+      );
+    });
+
+    test(
+      'direction labels distinguish true hold, progression, and reduction',
+      () {
+        expect(
+          engineSuggestionDirectionLabel(
+            suggestion(direction: EngineSuggestionDirection.hold),
+          ),
+          'hold steady',
+        );
+        expect(
+          engineSuggestionDirectionLabel(
+            suggestion(direction: EngineSuggestionDirection.up),
+          ),
+          'up from last time',
+        );
+        expect(
+          engineSuggestionDirectionLabel(
+            suggestion(direction: EngineSuggestionDirection.down),
+          ),
+          'reduce from last time',
+        );
+      },
+    );
   });
+
+  test(
+    'engine suggestion provider returns null with no ingested sessions',
+    () async {
+      final initialState = const AppState(
+        exercises: [],
+        routines: [],
+        routineGroups: [],
+        sessions: [],
+      );
+      final container = ProviderContainer(
+        overrides: [
+          appStateRepositoryProvider.overrideWithValue(
+            MemoryAppStateRepository(initialState: initialState),
+          ),
+          initialAppStateProvider.overrideWithValue(initialState),
+          trainingEngineStateRepositoryProvider.overrideWithValue(
+            MemoryTrainingEngineStateRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final suggestion = await container.read(
+        engineWeightSuggestionProvider('barbell_bench_press').future,
+      );
+
+      expect(suggestion, isNull);
+    },
+  );
 }

@@ -238,7 +238,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 5: Remove Fake HealthKit Data From Empty or Denied Fetches
 
 **Category:** P0 HealthKit/readiness correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run; GLM proxy review passed Task 5; local verification passed Dart format, diff check, package tests (`+77`), and Flutter tests (`+20`). Commit: `173a649`.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run; GLM proxy review passed Task 5; local verification passed Dart format, diff check, package tests (`+77`), and Flutter tests (`+20`). Commit: `88b223d`.
 
 **Files:**
 
@@ -283,7 +283,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 6: Use Routine Targets in Visible Load Recommendations
 
 **Category:** P0 recommendation correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 6; local verification passed Dart format, diff check, Flutter tests (`+20`), and package recommendation tests (`+11`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 6; local verification passed Dart format, diff check, Flutter tests (`+20`), and package recommendation tests (`+11`). Commit: `81a210a`.
 
 **Files:**
 
@@ -326,6 +326,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 7: Fix Deload and Reduction Direction Labels
 
 **Category:** P0 user-facing recommendation safety
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review initially found a compile/import blocker and missing label-copy test, then passed after the orchestrator fixed and re-tested; local verification passed Dart format, diff check, Flutter adapter tests (`+11`), and package safety/recommendation tests (`+32`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -345,14 +346,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing UI-adapter tests for reduced suggested weights with `PerformanceDelta.maintenance`.
-- [ ] Add failing recommendation tests for fatigue over 60, fatigue over 80, ACWR danger, and readiness below 30.
-- [ ] Update `TrainingEngineUiAdapter.toWeightSuggestion` to derive direction from gate action and suggested-vs-previous weight; use `delta` only as display magnitude after direction is determined.
-- [ ] Update active-workout direction copy for the reduction, deload, alternative, maintain, and progression states.
-- [ ] Run `dart format lib/src/features/training_engine/training_engine_ui_adapter.dart lib/src/features/workout/active_workout_screen.dart test/features/training_engine/training_engine_ui_adapter_test.dart packages/training_engine/test/progression/safety_gates_test.dart packages/training_engine/test/progression/recommendation_test.dart`.
-- [ ] Run `flutter test test/features/training_engine/training_engine_ui_adapter_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/progression/safety_gates_test.dart test/progression/recommendation_test.dart`.
-- [ ] Commit the recommendation-label changes.
+- [x] Add failing UI-adapter tests for reduced suggested weights with `PerformanceDelta.maintenance`.
+- [x] Add failing recommendation tests for fatigue over 60, fatigue over 80, ACWR danger, and readiness below 30.
+- [x] Update `TrainingEngineUiAdapter.toWeightSuggestion` to derive direction from gate action and suggested-vs-previous weight; use `delta` only as display magnitude after direction is determined.
+- [x] Update active-workout direction copy for the reduction, deload, alternative, maintain, and progression states.
+- [x] Run `dart format lib/src/features/training_engine/training_engine_ui_adapter.dart lib/src/features/workout/active_workout_screen.dart test/features/training_engine/training_engine_ui_adapter_test.dart packages/training_engine/test/progression/safety_gates_test.dart packages/training_engine/test/progression/recommendation_test.dart`.
+- [x] Run `flutter test test/features/training_engine/training_engine_ui_adapter_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/progression/safety_gates_test.dart test/progression/recommendation_test.dart`.
+- [x] Commit the recommendation-label changes.
 
 **Acceptance Checks:**
 

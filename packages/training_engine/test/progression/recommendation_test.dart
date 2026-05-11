@@ -114,7 +114,32 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.muscleFatigue));
         expect(rec.gateResult.action, equals(GateAction.reduceLoad));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.suggestedWeightKg, closeTo(90.0, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(100.0));
         expect(rec.explanation, contains('fatigue'));
+      });
+
+      test('fatigue >80 -> suggestAlternative, weight reduced by 20%', () {
+        final rec = buildRecommendation(
+          exerciseId: 'squat',
+          equipment: EquipmentClass.barbell,
+          targets: _safeTargets,
+          e1rm: 150.0,
+          previousWeightKg: 100.0,
+          lastTopSet: makeSet(reps: 10, rpe: 8.0),
+          primaryMuscleFatigue: 85, // >80 -> suggestAlternative
+          acwrZone: AcwrZone.optimal,
+          readinessScore: 85,
+        );
+
+        expect(rec.gateResult.passed, isFalse);
+        expect(rec.gateResult.reason, equals(GateReason.muscleFatigue));
+        expect(rec.gateResult.action, equals(GateAction.suggestAlternative));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.suggestedWeightKg, closeTo(80.0, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(100.0));
+        expect(rec.explanation, contains('alternative exercise'));
       });
     });
 
@@ -138,9 +163,38 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.acwrDanger));
         expect(rec.gateResult.action, equals(GateAction.deload));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
         // 140 * 0.7 = 98, rounded to 97.5
         expect(rec.suggestedWeightKg, closeTo(97.5, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(140.0));
         expect(rec.explanation, contains('dangerously high'));
+      });
+    });
+
+    // -----------------------------------------------------------------------
+    // Low readiness -> reduce by 10%
+    // -----------------------------------------------------------------------
+    group('low readiness', () {
+      test('readiness below 30 -> reduceLoad, weight reduced by 10%', () {
+        final rec = buildRecommendation(
+          exerciseId: 'bench',
+          equipment: EquipmentClass.barbell,
+          targets: _safeTargets,
+          e1rm: 120.0,
+          previousWeightKg: 80.0,
+          lastTopSet: makeSet(reps: 10, rpe: 8.0),
+          primaryMuscleFatigue: 20,
+          acwrZone: AcwrZone.optimal,
+          readinessScore: 25,
+        );
+
+        expect(rec.gateResult.passed, isFalse);
+        expect(rec.gateResult.reason, equals(GateReason.lowReadiness));
+        expect(rec.gateResult.action, equals(GateAction.reduceLoad));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.suggestedWeightKg, closeTo(72.5, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(80.0));
+        expect(rec.explanation, contains('Readiness score is low'));
       });
     });
 

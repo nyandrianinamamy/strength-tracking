@@ -8,11 +8,36 @@ class EngineWeightSuggestion {
     required this.suggestedWeightKg,
     required this.direction,
     required this.reason,
+    this.gateAction,
   });
 
   final double suggestedWeightKg;
   final EngineSuggestionDirection direction;
   final String reason;
+  final GateAction? gateAction;
+}
+
+String engineSuggestionDirectionLabel(EngineWeightSuggestion suggestion) {
+  switch (suggestion.gateAction) {
+    case GateAction.deload:
+      return 'deload';
+    case GateAction.reduceLoad:
+      return 'reduce load';
+    case GateAction.suggestAlternative:
+      return 'alternative suggested';
+    case GateAction.maintain:
+    case null:
+      break;
+  }
+
+  switch (suggestion.direction) {
+    case EngineSuggestionDirection.up:
+      return 'up from last time';
+    case EngineSuggestionDirection.hold:
+      return 'hold steady';
+    case EngineSuggestionDirection.down:
+      return 'reduce from last time';
+  }
 }
 
 class TrainingEngineUiAdapter {
@@ -71,9 +96,7 @@ class TrainingEngineUiAdapter {
     'tibialis_anterior': [Muscle.tibialis],
   };
 
-  Map<Muscle, MuscleData> toHeatmapData(
-    Map<String, FatigueStatus> fatigueMap,
-  ) {
+  Map<Muscle, MuscleData> toHeatmapData(Map<String, FatigueStatus> fatigueMap) {
     final result = <Muscle, MuscleData>{};
 
     for (final entry in fatigueMap.entries) {
@@ -106,21 +129,50 @@ class TrainingEngineUiAdapter {
   EngineWeightSuggestion? toWeightSuggestion(
     LoadRecommendation? recommendation,
   ) {
-    final suggestedWeightKg = recommendation?.suggestedWeightKg;
-    if (suggestedWeightKg == null) {
+    final rec = recommendation;
+    if (rec == null || rec.suggestedWeightKg == null) {
       return null;
     }
+    final suggestedWeightKg = rec.suggestedWeightKg!;
 
-    final direction = switch (recommendation!.delta) {
-      PerformanceDelta.progression => EngineSuggestionDirection.up,
-      PerformanceDelta.maintenance => EngineSuggestionDirection.hold,
-      PerformanceDelta.regression => EngineSuggestionDirection.down,
-    };
+    final direction = _directionFor(rec);
 
     return EngineWeightSuggestion(
       suggestedWeightKg: suggestedWeightKg,
       direction: direction,
-      reason: recommendation.explanation,
+      reason: rec.explanation,
+      gateAction: rec.gateResult.action,
     );
+  }
+
+  EngineSuggestionDirection _directionFor(LoadRecommendation recommendation) {
+    switch (recommendation.gateResult.action) {
+      case GateAction.deload:
+      case GateAction.reduceLoad:
+      case GateAction.suggestAlternative:
+        return EngineSuggestionDirection.down;
+      case GateAction.maintain:
+      case null:
+        break;
+    }
+
+    final previousWeightKg = recommendation.previousWeightKg;
+    final suggestedWeightKg = recommendation.suggestedWeightKg;
+    if (previousWeightKg != null && suggestedWeightKg != null) {
+      const tolerance = 0.001;
+      if (suggestedWeightKg < previousWeightKg - tolerance) {
+        return EngineSuggestionDirection.down;
+      }
+      if (suggestedWeightKg > previousWeightKg + tolerance) {
+        return EngineSuggestionDirection.up;
+      }
+      return EngineSuggestionDirection.hold;
+    }
+
+    return switch (recommendation.delta) {
+      PerformanceDelta.progression => EngineSuggestionDirection.up,
+      PerformanceDelta.maintenance => EngineSuggestionDirection.hold,
+      PerformanceDelta.regression => EngineSuggestionDirection.down,
+    };
   }
 }

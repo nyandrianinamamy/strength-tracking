@@ -2269,7 +2269,7 @@ class _ProgressionHint extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final text = suggestion == null
         ? l10n.noSuggestionYet
-        : 'Suggested ${AppFormatters.weight(suggestion!.suggestedWeightKg, preferredUnit)} · ${_directionLabel(suggestion!)}';
+        : 'Suggested ${AppFormatters.weight(suggestion!.suggestedWeightKg, preferredUnit)} · ${engineSuggestionDirectionLabel(suggestion!)}';
 
     final colorScheme = Theme.of(context).colorScheme;
     final appColors = context.appColors;
@@ -2304,17 +2304,6 @@ class _ProgressionHint extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _directionLabel(EngineWeightSuggestion suggestion) {
-    switch (suggestion.direction) {
-      case EngineSuggestionDirection.up:
-        return 'up from last time';
-      case EngineSuggestionDirection.hold:
-        return 'hold steady';
-      case EngineSuggestionDirection.down:
-        return 'slight deload';
-    }
   }
 }
 

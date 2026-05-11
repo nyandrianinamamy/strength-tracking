@@ -18,9 +18,7 @@ void main() {
       });
 
       test('returns clear when fatigue is exactly 60', () {
-        final result = checkSafetyGates(
-          primaryMuscleFatigue: 60,
-        );
+        final result = checkSafetyGates(primaryMuscleFatigue: 60);
         expect(result.passed, isTrue);
         expect(result.modifier, equals(1.0));
       });
@@ -28,18 +26,14 @@ void main() {
 
     group('fatigue gate', () {
       test('blocked with reduceLoad when fatigue is 61-80', () {
-        final result = checkSafetyGates(
-          primaryMuscleFatigue: 70,
-        );
+        final result = checkSafetyGates(primaryMuscleFatigue: 70);
         expect(result.passed, isFalse);
         expect(result.reason, equals(GateReason.muscleFatigue));
         expect(result.action, equals(GateAction.reduceLoad));
       });
 
       test('blocked with suggestAlternative when fatigue > 80', () {
-        final result = checkSafetyGates(
-          primaryMuscleFatigue: 90,
-        );
+        final result = checkSafetyGates(primaryMuscleFatigue: 90);
         expect(result.passed, isFalse);
         expect(result.reason, equals(GateReason.muscleFatigue));
         expect(result.action, equals(GateAction.suggestAlternative));

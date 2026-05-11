@@ -604,7 +604,7 @@ id="task-5-remove-fake-healthkit-data-from-empty-or-denied-fetches">Task
 completed red-green code and tests through a non-interactive Codex run;
 GLM proxy review passed Task 5; local verification passed Dart format,
 diff check, package tests (<code>+77</code>), and Flutter tests
-(<code>+20</code>). Commit: <code>173a649</code>.</p>
+(<code>+20</code>). Commit: <code>88b223d</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -687,7 +687,7 @@ create fake sleep/HRV readiness data.</li>
 completed red-green code and tests; GLM proxy review passed Task 6;
 local verification passed Dart format, diff check, Flutter tests
 (<code>+20</code>), and package recommendation tests (<code>+11</code>).
-Commit: recorded in git history after this ledger update.</p>
+Commit: <code>81a210a</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -762,7 +762,14 @@ recommending progression.</li>
 <hr />
 <h2 id="task-7-fix-deload-and-reduction-direction-labels">Task 7: Fix
 Deload and Reduction Direction Labels</h2>
-<p><strong>Category:</strong> P0 user-facing recommendation safety</p>
+<p><strong>Category:</strong> P0 user-facing recommendation safety
+<strong>Status:</strong> Completed 2026-05-11. GPT-5.5 implementer
+completed red-green code and tests; GLM proxy review initially found a
+compile/import blocker and missing label-copy test, then passed after
+the orchestrator fixed and re-tested; local verification passed Dart
+format, diff check, Flutter adapter tests (<code>+11</code>), and
+package safety/recommendation tests (<code>+32</code>). Commit: recorded
+in git history after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -795,28 +802,28 @@ readiness, clear maintain, and clear progression cases.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add failing UI-adapter tests for
-reduced suggested weights with
+<li><label><input type="checkbox" checked="" />Add failing UI-adapter
+tests for reduced suggested weights with
 <code>PerformanceDelta.maintenance</code>.</label></li>
-<li><label><input type="checkbox" />Add failing recommendation tests for
-fatigue over 60, fatigue over 80, ACWR danger, and readiness below
-30.</label></li>
-<li><label><input type="checkbox" />Update
+<li><label><input type="checkbox" checked="" />Add failing
+recommendation tests for fatigue over 60, fatigue over 80, ACWR danger,
+and readiness below 30.</label></li>
+<li><label><input type="checkbox" checked="" />Update
 <code>TrainingEngineUiAdapter.toWeightSuggestion</code> to derive
 direction from gate action and suggested-vs-previous weight; use
 <code>delta</code> only as display magnitude after direction is
 determined.</label></li>
-<li><label><input type="checkbox" />Update active-workout direction copy
-for the reduction, deload, alternative, maintain, and progression
-states.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Update active-workout
+direction copy for the reduction, deload, alternative, maintain, and
+progression states.</label></li>
+<li><label><input type="checkbox" checked="" />Run
 <code>dart format lib/src/features/training_engine/training_engine_ui_adapter.dart lib/src/features/workout/active_workout_screen.dart test/features/training_engine/training_engine_ui_adapter_test.dart packages/training_engine/test/progression/safety_gates_test.dart packages/training_engine/test/progression/recommendation_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter test test/features/training_engine/training_engine_ui_adapter_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>cd packages/training_engine &amp;&amp; dart test test/progression/safety_gates_test.dart test/progression/recommendation_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Commit the recommendation-label
-changes.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the
+recommendation-label changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>
