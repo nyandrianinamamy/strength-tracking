@@ -61,7 +61,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 1: Correct the App Feature Inventory
 
 **Category:** Documentation truthfulness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer updated the inventory; GLM verifier passed the Task 1 functional-requirement review. Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer updated the inventory; GLM verifier passed the Task 1 functional-requirement review. Commit: `0a40e15`.
 
 **Files:**
 
@@ -109,6 +109,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 2: Correct Automated-Coverage Claims
 
 **Category:** Test coverage truthfulness
+**Status:** Completed 2026-05-11. GPT-5.5 worker left the coverage-doc edits; the orchestrator trimmed a local ignored-log reference; GLM verifier passed the Task 2 functional-requirement review. Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -126,11 +127,11 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add a "Coverage Status" section to `docs/e2e-web-flow-inventory.md`.
-- [ ] List each shortcut-backed flow with the source test name or nearby description from `integration_test/app_test.dart`.
-- [ ] Add a short "Required UI Coverage Work" list that maps directly to Task 18.
-- [ ] Run `rg -n "Smart Planner|controller|state seeding|shortcut|UI-driven|Coverage Status|Required UI Coverage Work" docs/e2e-web-flow-inventory.md docs/app-feature-inventory.md`.
-- [ ] Commit only coverage-doc changes for this task.
+- [x] Add a "Coverage Status" section to `docs/e2e-web-flow-inventory.md`.
+- [x] List each shortcut-backed flow with the source test name or nearby description from `integration_test/app_test.dart`.
+- [x] Add a short "Required UI Coverage Work" list that maps directly to Task 18.
+- [x] Run `rg -n "Smart Planner|controller|state seeding|shortcut|UI-driven|Coverage Status|Required UI Coverage Work" docs/e2e-web-flow-inventory.md docs/app-feature-inventory.md`.
+- [x] Commit only coverage-doc changes for this task.
 
 **Acceptance Checks:**
 

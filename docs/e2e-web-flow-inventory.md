@@ -56,6 +56,78 @@ Out of web E2E scope for the first pass:
 - Workout summary hiding the session RPE slider.
 - Exercise page keyboard-dismiss regression.
 
+## Coverage Status
+
+The web E2E suite passes, but not every covered product path is fully driven
+through user interactions. Read the current suite as a mix of UI-driven flows,
+route-rendering checks, and controller/state-backed assertions.
+
+Fully UI-driven or primarily UI-driven flows in `integration_test/app_test.dart`
+include:
+
+- `completes onboarding skipping About You page`: profile setup through the
+  onboarding UI.
+- `completes onboarding with full profile details`: full onboarding form and
+  settings verification through visible controls.
+- `create, verify, edit, and archive an exercise`: exercise CRUD through the UI.
+- `create routine with exercise, verify in list`: routine creation from visible
+  controls.
+- `start workout, log set, finish, see summary`: strength workout start, set
+  logging, finish, and summary navigation through visible controls.
+- `completed workout produces a PR on progress screen`: workout completion
+  through the UI, followed by progress-screen assertions.
+- `onboarding redirect, validation, demo, and Google failure`: redirect,
+  validation, demo data, and mocked Google failure through UI actions, with
+  state readbacks for final assertions.
+- `shell navigation, deep links, dashboard, and settings route`: route and shell
+  navigation coverage, with a seeded active-session fixture for dashboard state.
+- `exercise list search, filters, timed editor, and validation`: exercise list
+  and editor behavior through UI controls after seeded fixture setup.
+- `settings profile/preferences/account/data/legal actions`: settings rendering
+  and several preference/account actions through UI controls, with direct state
+  updates used for clear-history and clear-data assertions.
+
+Shortcut-backed flows in `integration_test/app_test.dart` include:
+
+- `dashboard skip rotates active routine group queue`: controller-level
+  `markRoutineCompleted('e2e_push_routine')` proves rotation state changes, but
+  does not complete the dashboard skip path through the UI.
+- `finishing seeded grouped workout advances dashboard next up`: seeded active
+  workout state plus UI finish flow proves grouped-workout completion advances
+  the queue.
+- `routine editor validation, multi-exercise edit, search, archive`: opens the
+  editor route and checks seeded multi-exercise state, then archives the routine
+  with `appStateControllerProvider.notifier.updateState` instead of the archive
+  UI.
+- `routine groups create, edit, delete, and rotation advance`: renders the
+  routine-group screen from seeded state and advances rotation with
+  `routineGroupControllerProvider.markRoutineCompleted`, so create/edit/delete
+  are not fully UI-driven despite the broad test name.
+- `smart planner validation, generation, edits, and adopt`: renders
+  `/routines/smart-planner`, then injects an adopted routine and group through
+  `appStateControllerProvider.notifier.updateState`. This is route rendering
+  plus adopted-state assertions, not full wizard generation/adoption coverage.
+- `active workout strength edit/delete, discard, and stale paths`: starts from a
+  seeded active session and mixes visible controls with
+  `workoutControllerProvider` calls for note/update/delete fallback paths.
+- `timed workout flow and timed summary/progress records`: uses visible timer
+  controls for start/pause/reset, but logs and updates the timed set through
+  `workoutControllerProvider`.
+- `workout summaries handle completed, delete, missing, and units`: seeded
+  completed sessions drive summary/delete/missing/unit assertions.
+- `training engine debug route renders when available`: seeded state plus route
+  rendering, not a user-created training-engine scenario.
+
+Required UI Coverage Work for Task 18:
+
+1. Replace Smart Planner route rendering and injected adopted-state assertions
+   with a full UI-driven generate/edit/adopt flow.
+2. Replace the routine-group rotation shortcut with UI-driven creation/editing,
+   deletion, active rotation selection, and workout-completion advancement.
+3. Replace routine archive state seeding with the actual archive UI path.
+4. Replace timed workout controller logging/update shortcuts with manual timed
+   logging and edit/delete UI assertions.
+
 The gaps below are the candidate expansion set.
 
 ## Web E2E Harness Notes

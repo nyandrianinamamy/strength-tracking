@@ -272,8 +272,7 @@ App Feature Inventory</h2>
 <p><strong>Category:</strong> Documentation truthfulness
 <strong>Status:</strong> Completed 2026-05-11. GPT-5.5 implementer
 updated the inventory; GLM verifier passed the Task 1
-functional-requirement review. Commit: recorded in git history after
-this ledger update.</p>
+functional-requirement review. Commit: <code>0a40e15</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>docs/app-feature-inventory.md</code></li>
@@ -363,7 +362,11 @@ current tree spot checks.</li>
 <hr />
 <h2 id="task-2-correct-automated-coverage-claims">Task 2: Correct
 Automated-Coverage Claims</h2>
-<p><strong>Category:</strong> Test coverage truthfulness</p>
+<p><strong>Category:</strong> Test coverage truthfulness
+<strong>Status:</strong> Completed 2026-05-11. GPT-5.5 worker left the
+coverage-doc edits; the orchestrator trimmed a local ignored-log
+reference; GLM verifier passed the Task 2 functional-requirement review.
+Commit: recorded in git history after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>docs/e2e-web-flow-inventory.md</code></li>
@@ -387,17 +390,17 @@ through user interactions.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add a “Coverage Status” section to
-<code>docs/e2e-web-flow-inventory.md</code>.</label></li>
-<li><label><input type="checkbox" />List each shortcut-backed flow with
-the source test name or nearby description from
+<li><label><input type="checkbox" checked="" />Add a “Coverage Status”
+section to <code>docs/e2e-web-flow-inventory.md</code>.</label></li>
+<li><label><input type="checkbox" checked="" />List each shortcut-backed
+flow with the source test name or nearby description from
 <code>integration_test/app_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Add a short “Required UI Coverage
-Work” list that maps directly to Task 18.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Add a short “Required UI
+Coverage Work” list that maps directly to Task 18.</label></li>
+<li><label><input type="checkbox" checked="" />Run
 <code>rg -n "Smart Planner|controller|state seeding|shortcut|UI-driven|Coverage Status|Required UI Coverage Work" docs/e2e-web-flow-inventory.md docs/app-feature-inventory.md</code>.</label></li>
-<li><label><input type="checkbox" />Commit only coverage-doc changes for
-this task.</label></li>
+<li><label><input type="checkbox" checked="" />Commit only coverage-doc
+changes for this task.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>

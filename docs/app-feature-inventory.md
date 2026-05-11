@@ -446,17 +446,26 @@ Web E2E tests now cover:
 - Onboarding redirect, validation, demo data, and mocked Google failure.
 - Shell navigation and deep links.
 - Exercise CRUD, search, filters, timed exercise creation, validation.
-- Routine CRUD and archive state.
-- Routine group rotation and completion behavior.
-- Smart Planner route and adopted-state assertions; some generation/adoption checks use controller/state seeding rather than fully UI-driving the wizard.
-- Strength workout start/log/edit/delete/discard/stale paths.
-- Timed workout logging, update, summary, and progress records.
+- Routine CRUD, with routine archive currently asserted through direct state
+  update rather than the archive UI.
+- Routine group route/rendering and rotation state changes, with some rotation
+  advancement covered through controller calls rather than fully UI-driven group
+  creation/edit/delete and completion paths.
+- Smart Planner route rendering and injected adopted-state assertions; Task 18
+  must replace this with full UI-driven generation, edit, and adoption coverage.
+- Strength workout start/log/edit/delete/discard/stale paths, with some
+  edit/delete fallbacks using workout controller calls.
+- Timed workout timer controls, controller-backed timed set logging/update,
+  summary, and progress records.
 - Workout summary delete, missing summary, and unit display.
 - Settings profile/preferences/account/data/legal surface.
 - Progress PR generation and units.
 - Dashboard progress navigation.
 - Debug route behavior when available.
-- Some web E2E flows use controller or state seeding rather than fully UI-driving every listed path, so this should be read as web-flow/state coverage rather than complete user-interaction coverage for every feature.
+- Some web E2E flows use controller or state seeding rather than fully UI-driving
+  every listed path, so this should be read as web-flow/state coverage rather
+  than complete user-interaction coverage for every feature. See
+  `docs/e2e-web-flow-inventory.md` for the flow-by-flow coverage status.
 
 Recent local verification:
 
