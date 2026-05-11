@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
@@ -49,7 +50,68 @@ Map<String, dynamic> _savedEngineState() {
 }
 
 void main() {
-  testWidgets('logging a strength set shows its per-set RPE in session history', (
+  testWidgets(
+    'logging a strength set shows its per-set RPE in session history',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final repository = MemoryAppStateRepository(
+        initialState: DemoSeedData.initialState(),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          appStateRepositoryProvider.overrideWithValue(repository),
+          initialAppStateProvider.overrideWithValue(repository.state),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(routineControllerProvider).startSession('push_day');
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const ActiveWorkoutScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      await tester.enterText(
+        find.byKey(const ValueKey('active-workout-weight-input')),
+        '100',
+      );
+      await tester.enterText(
+        find.byKey(const ValueKey('active-workout-reps-input')),
+        '6',
+      );
+      // Tap Log — RPE modal should appear
+      await tester.tap(
+        find.byKey(const ValueKey('active-workout-log-set-button')),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      // The RPE modal is shown
+      expect(find.text('Log Set RPE'), findsOneWidget);
+      expect(find.byType(Slider), findsOneWidget);
+
+      // Accept the default RPE 8.0 and log the set
+      await tester.tap(find.text('Save & Log Set'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(find.textContaining('RPE 8.0'), findsWidgets);
+    },
+  );
+
+  testWidgets('RPE modal only allows the engine-supported 5 to 10 range', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 1400);
@@ -82,74 +144,83 @@ void main() {
     );
     await tester.pump();
 
-    await tester.enterText(
-      find.byKey(const ValueKey('active-workout-weight-input')),
-      '100',
+    await tester.tap(
+      find.byKey(const ValueKey('active-workout-log-set-button')),
     );
-    await tester.enterText(
-      find.byKey(const ValueKey('active-workout-reps-input')),
-      '6',
-    );
-    // Tap Log — RPE modal should appear
-    await tester.tap(find.byKey(const ValueKey('active-workout-log-set-button')));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
-    // The RPE modal is shown
-    expect(find.text('Log Set RPE'), findsOneWidget);
-    expect(find.byType(Slider), findsOneWidget);
-
-    // Accept the default RPE 8.0 and log the set
-    await tester.tap(find.text('Save & Log Set'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
-
-    expect(find.textContaining('RPE 8.0'), findsWidgets);
+    final slider = tester.widget<Slider>(find.byType(Slider));
+    expect(slider.min, 5.0);
+    expect(slider.max, 10.0);
+    expect(slider.divisions, 10);
   });
 
-  testWidgets('shows an engine-backed load suggestion without app history', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1200, 1400);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
+  testWidgets(
+    'shows an engine-backed load suggestion from reconciled history',
+    (tester) async {
+      tester.view.physicalSize = const Size(1200, 1400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
-    final initialState = DemoSeedData.initialState().copyWith(
-      sessions: const <WorkoutSession>[],
-    );
-    final repository = MemoryAppStateRepository(
-      initialState: initialState,
-    );
-    final container = ProviderContainer(
-      overrides: [
-        appStateRepositoryProvider.overrideWithValue(repository),
-        initialAppStateProvider.overrideWithValue(repository.state),
-        trainingEngineStateRepositoryProvider.overrideWithValue(
-          MemoryTrainingEngineStateRepository(
-            initialState: _savedEngineState(),
+      final completedAt = DateTime.utc(2026, 4, 1, 18, 0);
+      final completedSession = WorkoutSession(
+        id: 'workout-suggestion-session',
+        routineId: 'push_day',
+        status: WorkoutSessionStatus.completed,
+        startedAt: DateTime.utc(2026, 4, 1, 17, 0),
+        endedAt: completedAt,
+        lastActivityAt: completedAt,
+        currentExerciseIndex: 0,
+        completedSets: [
+          CompletedSet(
+            exerciseId: 'barbell_bench_press',
+            weightKg: 80,
+            reps: 12,
+            rpe: 8.0,
+            completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+            note: '',
+            setNumber: 1,
+          ),
+        ],
+        sessionNote: '',
+        rpe: 8.0,
+      );
+      final initialState = DemoSeedData.initialState().copyWith(
+        sessions: [completedSession],
+      );
+      final repository = MemoryAppStateRepository(initialState: initialState);
+      final container = ProviderContainer(
+        overrides: [
+          appStateRepositoryProvider.overrideWithValue(repository),
+          initialAppStateProvider.overrideWithValue(repository.state),
+          trainingEngineStateRepositoryProvider.overrideWithValue(
+            MemoryTrainingEngineStateRepository(
+              initialState: _savedEngineState(),
+            ),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(routineControllerProvider).startSession('push_day');
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: const ActiveWorkoutScreen(),
           ),
         ),
-      ],
-    );
-    addTearDown(container.dispose);
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+      await tester.pump(const Duration(milliseconds: 200));
 
-    container.read(routineControllerProvider).startSession('push_day');
-
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: MaterialApp(
-          theme: AppTheme.light(),
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          home: const ActiveWorkoutScreen(),
-        ),
-      ),
-    );
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
-    await tester.pump(const Duration(milliseconds: 200));
-
-    expect(find.textContaining('Suggested'), findsAtLeastNWidgets(1));
-  });
+      expect(find.textContaining('Suggested'), findsAtLeastNWidgets(1));
+    },
+  );
 }

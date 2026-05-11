@@ -1,3 +1,5 @@
+import '../e1rm/formulas.dart';
+
 class LoggedSet {
   final String exerciseId;
   final double weightKg;
@@ -16,9 +18,7 @@ class LoggedSet {
     this.rpeEstimated = false,
     this.durationSeconds = 0,
   }) {
-    if (rpe < 5 || rpe > 10) {
-      throw ArgumentError('rpe must be between 5 and 10, got $rpe');
-    }
+    validateStrengthRpe(rpe);
     if (durationSeconds < 0) {
       throw ArgumentError(
         'durationSeconds must be non-negative, got $durationSeconds',

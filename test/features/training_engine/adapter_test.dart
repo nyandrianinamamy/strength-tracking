@@ -141,6 +141,83 @@ void main() {
   });
 
   group('TrainingEngineAdapter.toEngineSession', () {
+    test(
+      'does not clamp explicit legacy set RPE below the engine contract',
+      () {
+        final completedAt = DateTime.utc(2026, 3, 7, 17, 0);
+        final session = WorkoutSession(
+          id: 'legacy-low-rpe-session-01',
+          routineId: 'routine-strength',
+          status: WorkoutSessionStatus.completed,
+          startedAt: completedAt.subtract(const Duration(minutes: 20)),
+          endedAt: completedAt,
+          lastActivityAt: completedAt,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'barbell_bench_press',
+              setNumber: 1,
+              weightKg: 60,
+              reps: 8,
+              completedAt: completedAt,
+              note: '',
+              rpe: 4.0,
+            ),
+            CompletedSet(
+              exerciseId: 'barbell_bench_press',
+              setNumber: 2,
+              weightKg: 70,
+              reps: 6,
+              completedAt: completedAt.add(const Duration(minutes: 3)),
+              note: '',
+              rpe: 7.0,
+            ),
+          ],
+          sessionNote: '',
+          rpe: null,
+        );
+
+        final engineSession = adapter.toEngineSession(session);
+
+        expect(engineSession, isNotNull);
+        expect(engineSession!.sets, hasLength(1));
+        expect(engineSession.sets.single.weightKg, 70);
+        expect(engineSession.sets.single.rpe, 7.0);
+        expect(engineSession.sets.single.rpeEstimated, isFalse);
+      },
+    );
+
+    test(
+      'returns null when all completed strength sets have legacy RPE below 5',
+      () {
+        final completedAt = DateTime.utc(2026, 3, 7, 17, 0);
+        final session = WorkoutSession(
+          id: 'legacy-low-rpe-session-02',
+          routineId: 'routine-strength',
+          status: WorkoutSessionStatus.completed,
+          startedAt: completedAt.subtract(const Duration(minutes: 20)),
+          endedAt: completedAt,
+          lastActivityAt: completedAt,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'barbell_bench_press',
+              setNumber: 1,
+              weightKg: 60,
+              reps: 8,
+              completedAt: completedAt,
+              note: '',
+              rpe: 4.0,
+            ),
+          ],
+          sessionNote: '',
+          rpe: null,
+        );
+
+        expect(adapter.toEngineSession(session), isNull);
+      },
+    );
+
     test('maps a timed-only completed session with duration stress data', () {
       final completedAt = DateTime.utc(2026, 3, 7, 17, 0);
       final session = WorkoutSession(

@@ -13,6 +13,9 @@ import '../../data/models/workout_session.dart';
 class TrainingEngineAdapter {
   const TrainingEngineAdapter();
 
+  static const double _minStrengthRpe = 5.0;
+  static const double _maxStrengthRpe = 10.0;
+
   /// Converts host app state into a minimal training-engine user profile.
   ///
   UserProfile toUserProfile(AppState appState) {
@@ -37,18 +40,26 @@ class TrainingEngineAdapter {
   /// Converts a Kotrana [WorkoutSession] to an [EngineSession].
   ///
   /// RPE backfill strategy for each [CompletedSet]:
-  /// - If `set.rpe != null`: use it directly, `rpeEstimated = false`
-  /// - Else if `session.rpe != null`: backfill with session RPE, `rpeEstimated = true`
-  /// - Else: default to 8.0, `rpeEstimated = true`
+  /// - If `set.rpe` is 5-10: use it directly, `rpeEstimated = false`.
+  /// - If `set.rpe` is outside 5-10: treat it as legacy app history and
+  ///   exclude it from engine ingestion instead of silently changing it.
+  /// - Else if `session.rpe` is 5-10: backfill with session RPE,
+  ///   `rpeEstimated = true`.
+  /// - Else: default to 8.0, `rpeEstimated = true`.
   EngineSession? toEngineSession(WorkoutSession session) {
-    final fallbackRpe = (session.rpe ?? 8.0).clamp(5.0, 10.0);
+    final fallbackRpe = _isSupportedStrengthRpe(session.rpe)
+        ? session.rpe!
+        : 8.0;
+    final sessionRpe = _isSupportedStrengthRpe(session.rpe)
+        ? session.rpe
+        : null;
 
-    final mappedSets = session.completedSets.where(_hasEngineLoad).map((set) {
+    final mappedSets = session.completedSets.where(_shouldMapSet).map((set) {
       final double setRpe;
       final bool estimated;
 
       if (set.rpe != null) {
-        setRpe = set.rpe!.clamp(5.0, 10.0);
+        setRpe = set.rpe!;
         estimated = false;
       } else {
         setRpe = fallbackRpe;
@@ -75,7 +86,7 @@ class TrainingEngineAdapter {
       startedAt: session.startedAt,
       endedAt: session.endedAt ?? session.startedAt,
       sets: mappedSets,
-      sessionRpe: session.rpe,
+      sessionRpe: sessionRpe,
     );
   }
 
@@ -175,6 +186,15 @@ class TrainingEngineAdapter {
 
   bool _hasEngineLoad(CompletedSet set) {
     return set.reps > 0 || set.durationSeconds > 0;
+  }
+
+  bool _isSupportedStrengthRpe(double? rpe) {
+    return rpe != null && rpe >= _minStrengthRpe && rpe <= _maxStrengthRpe;
+  }
+
+  bool _shouldMapSet(CompletedSet set) {
+    if (!_hasEngineLoad(set)) return false;
+    return set.rpe == null || _isSupportedStrengthRpe(set.rpe);
   }
 
   /// Guesses the [EquipmentClass] from a list of equipment strings.

@@ -436,7 +436,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 10: Define and Implement Timed-Exercise Engine Behavior
 
 **Category:** P1 timed workout correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 10 with JSON compatibility and mixed-session checks; local verification passed Dart format, diff check, Flutter adapter/provider/integration tests (`+33`), and package engine/fatigue tests (`+65`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 10 with JSON compatibility and mixed-session checks; local verification passed Dart format, diff check, Flutter adapter/provider/integration tests (`+33`), and package engine/fatigue tests (`+65`). Commit: `3041d88`.
 
 **Files:**
 
@@ -482,6 +482,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 11: Align App RPE Range With Engine Contract
 
 **Category:** P1 app/engine scale consistency
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 11 with explicit no-silent-clamp and timed-set interaction checks; local verification passed Dart format, diff check, Flutter RPE/adapter tests (`+12`), and package model tests (`+14`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -502,14 +503,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing tests that expose the current silent clamp from app RPE 1-4 to engine RPE 5.
-- [ ] Implement the 5-10 strength RPE contract across UI, app model docs, adapter validation, engine model validation, and e1RM estimation.
-- [ ] Update model docs and validation to match the 5-10 contract.
-- [ ] Update adapter mapping so no user-provided RPE is silently mutated without a visible migration rule.
-- [ ] Run `dart format lib/src/data/models/completed_set.dart lib/src/features/workout/active_workout_screen.dart lib/src/features/training_engine/training_engine_adapter.dart packages/training_engine/lib/src/models/logged_set.dart test/features/workout/active_workout_rpe_test.dart test/features/training_engine/adapter_test.dart packages/training_engine/test/models/session_models_test.dart`.
-- [ ] Run `flutter test test/features/workout/active_workout_rpe_test.dart test/features/training_engine/adapter_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/models/session_models_test.dart`.
-- [ ] Commit the RPE contract changes.
+- [x] Add failing tests that expose the current silent clamp from app RPE 1-4 to engine RPE 5.
+- [x] Implement the 5-10 strength RPE contract across UI, app model docs, adapter validation, engine model validation, and e1RM estimation.
+- [x] Update model docs and validation to match the 5-10 contract.
+- [x] Update adapter mapping so no user-provided RPE is silently mutated without a visible migration rule.
+- [x] Run `dart format lib/src/data/models/completed_set.dart lib/src/features/workout/active_workout_screen.dart lib/src/features/training_engine/training_engine_adapter.dart packages/training_engine/lib/src/models/logged_set.dart test/features/workout/active_workout_rpe_test.dart test/features/training_engine/adapter_test.dart packages/training_engine/test/models/session_models_test.dart`.
+- [x] Run `flutter test test/features/workout/active_workout_rpe_test.dart test/features/training_engine/adapter_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/models/session_models_test.dart`.
+- [x] Commit the RPE contract changes.
 
 **Acceptance Checks:**
 

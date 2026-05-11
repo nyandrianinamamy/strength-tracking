@@ -535,7 +535,9 @@ class TrainingEngine {
       ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
 
     for (final session in sorted) {
-      final fallbackRpe = (session.sessionRpe ?? 8.0).clamp(5.0, 10.0);
+      final fallbackRpe = _isSupportedStrengthRpe(session.sessionRpe)
+          ? session.sessionRpe!
+          : 8.0;
 
       final backfilledSets = session.sets.map((set) {
         if (set.rpeEstimated) {
@@ -562,4 +564,10 @@ class TrainingEngine {
       ingestSession(patched);
     }
   }
+}
+
+bool _isSupportedStrengthRpe(double? rpe) {
+  return rpe != null &&
+      rpe >= formula_lib.minStrengthRpe &&
+      rpe <= formula_lib.maxStrengthRpe;
 }

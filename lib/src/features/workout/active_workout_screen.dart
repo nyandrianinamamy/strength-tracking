@@ -1303,6 +1303,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 }
 
+const double _minStrengthRpe = 5.0;
+const double _maxStrengthRpe = 10.0;
+const int _strengthRpeDivisions = 10;
+
 double? _parseOptionalRpe(String rawValue) {
   final trimmed = rawValue.trim();
   if (trimmed.isEmpty) {
@@ -1310,7 +1314,7 @@ double? _parseOptionalRpe(String rawValue) {
   }
 
   final parsed = double.tryParse(trimmed.replaceAll(',', '.'));
-  if (parsed == null || parsed <= 0 || parsed > 10) {
+  if (parsed == null || parsed < _minStrengthRpe || parsed > _maxStrengthRpe) {
     return null;
   }
   return parsed;
@@ -1330,19 +1334,27 @@ String _rpeDescription(double value) {
 }
 
 Color _rpeColor(double rpe) {
-  final intensity = (rpe - 1) / 9;
+  final intensity =
+      ((rpe - _minStrengthRpe) / (_maxStrengthRpe - _minStrengthRpe)).clamp(
+        0.0,
+        1.0,
+      );
   final hue = 220.0 * (1 - intensity);
   return HSLColor.fromAHSL(1.0, hue, 0.9, 0.55).toColor();
 }
 
 Future<double?> showRpeModal(BuildContext context, {double? initialRpe}) {
+  final resolvedInitialRpe = (initialRpe ?? 8.0)
+      .clamp(_minStrengthRpe, _maxStrengthRpe)
+      .toDouble();
+
   return showModalBottomSheet<double>(
     context: context,
     isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
-    builder: (_) => _RpeModalContent(initialRpe: initialRpe ?? 8.0),
+    builder: (_) => _RpeModalContent(initialRpe: resolvedInitialRpe),
   );
 }
 
@@ -1433,9 +1445,9 @@ class _RpeModalContentState extends State<_RpeModalContent> {
               ),
               child: Slider(
                 value: _rpe,
-                min: 1,
-                max: 10,
-                divisions: 18,
+                min: _minStrengthRpe,
+                max: _maxStrengthRpe,
+                divisions: _strengthRpeDivisions,
                 onChanged: (v) => setState(() => _rpe = v),
               ),
             ),
@@ -1445,7 +1457,7 @@ class _RpeModalContentState extends State<_RpeModalContent> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    '1',
+                    '5',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: Theme.of(
                         context,
@@ -1453,7 +1465,7 @@ class _RpeModalContentState extends State<_RpeModalContent> {
                     ),
                   ),
                   Text(
-                    '5',
+                    '7.5',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: Theme.of(
                         context,
@@ -2204,7 +2216,7 @@ class _ExercisePage extends ConsumerWidget {
                       ],
                       decoration: InputDecoration(
                         labelText: l10n.rpeLabel,
-                        hintText: l10n.rpeHint,
+                        hintText: 'Optional, 5-10',
                       ),
                     ),
                   ],
