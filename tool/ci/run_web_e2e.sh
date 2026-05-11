@@ -4,12 +4,40 @@ set -euo pipefail
 
 FIREBASE_LOG="${FIREBASE_LOG:-/tmp/firebase-emulators.log}"
 CHROMEDRIVER_LOG="${CHROMEDRIVER_LOG:-/tmp/chromedriver.log}"
+FLUTTER_DRIVE_TIMEOUT="${FLUTTER_DRIVE_TIMEOUT:-600}"
+
+find_chrome() {
+  if [[ -n "${CHROME_EXECUTABLE:-}" && -x "$CHROME_EXECUTABLE" ]]; then
+    printf '%s\n' "$CHROME_EXECUTABLE"
+    return
+  fi
+
+  for candidate in \
+    google-chrome \
+    google-chrome-stable \
+    chromium \
+    chromium-browser \
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      command -v "$candidate"
+      return
+    fi
+
+    if [[ -x "$candidate" ]]; then
+      printf '%s\n' "$candidate"
+      return
+    fi
+  done
+
+  return 1
+}
 
 cleanup() {
   local exit_code=$?
 
   jobs -p | xargs -r kill 2>/dev/null || true
   wait 2>/dev/null || true
+  pkill -f "cloud-firestore-emulator.*--project_id myappv4" 2>/dev/null || true
 
   if [[ $exit_code -ne 0 ]]; then
     echo
@@ -25,8 +53,15 @@ cleanup() {
 
 trap cleanup EXIT
 
+CHROME_EXECUTABLE="$(find_chrome)" || {
+  echo "Google Chrome/Chromium was not found."
+  echo "Install Chrome or set CHROME_EXECUTABLE to the browser binary path."
+  exit 1
+}
+export CHROME_EXECUTABLE
+
 echo "Chrome version:"
-google-chrome --version
+"$CHROME_EXECUTABLE" --version
 echo "ChromeDriver version:"
 chromedriver --version
 
@@ -72,8 +107,10 @@ flutter drive \
   --driver=test_driver/integration_test.dart \
   --target=integration_test/app_test.dart \
   -d web-server \
+  --timeout="$FLUTTER_DRIVE_TIMEOUT" \
   --browser-name=chrome \
   --web-browser-flag=--headless=new \
   --web-browser-flag=--disable-search-engine-choice-screen \
   --web-browser-flag=--disable-dev-shm-usage \
-  --web-browser-flag=--no-sandbox
+  --web-browser-flag=--no-sandbox \
+  "$@"

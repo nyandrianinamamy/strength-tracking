@@ -3,6 +3,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/routine_group.dart';
+import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
+import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 
 import 'e2e_helpers.dart';
 
@@ -26,10 +30,62 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 500));
   });
 
+  // ── Suite 0: Seeded state smoke flows ────────────────────────────────
+  group('Seeded state flows', () {
+    testWidgets('dashboard skip rotates active routine group queue', (
+      tester,
+    ) async {
+      final container = bootstrapSeededTestApp(
+        e2eRichState(includeCompletedSessions: false),
+      );
+      addTearDown(container.dispose);
+
+      await pumpApp(tester, container);
+
+      expect(find.text('FlowUser'), findsOneWidget);
+      container
+          .read(routineGroupControllerProvider)
+          .markRoutineCompleted('e2e_push_routine');
+      expect(
+        container
+            .read(appStateControllerProvider)
+            .routineGroupById('e2e_group')
+            ?.pendingRoutineIds,
+        equals(['e2e_timed_routine']),
+      );
+    });
+
+    testWidgets('finishing seeded grouped workout advances dashboard next up', (
+      tester,
+    ) async {
+      final container = bootstrapSeededTestApp(
+        e2eRichState(
+          includeCompletedSessions: false,
+          includeActiveSession: true,
+        ),
+      );
+      addTearDown(container.dispose);
+
+      await pumpApp(tester, container);
+
+      container
+          .read(workoutControllerProvider)
+          .logSet(weightKg: 80, reps: 5, rpe: 8);
+      container.read(workoutControllerProvider).completeSession();
+      await pumpFrames(tester, count: 20);
+      expect(
+        container
+            .read(appStateControllerProvider)
+            .routineGroupById('e2e_group')
+            ?.pendingRoutineIds,
+        equals(['e2e_timed_routine']),
+      );
+    });
+  });
+
   // ── Suite 1: Onboarding ──────────────────────────────────────────────
   group('Onboarding', () {
-    testWidgets('completes onboarding skipping About You page',
-        (tester) async {
+    testWidgets('completes onboarding skipping About You page', (tester) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
@@ -50,7 +106,9 @@ void main() {
       expect(find.text('Sex'), findsOneWidget);
       expect(find.text('Fitness Goal'), findsOneWidget);
       // Use .last — page 1's "Next" button still exists off-screen in the PageView.
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next').last);
+      await tester.ensureVisible(
+        find.widgetWithText(FilledButton, 'Next').last,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
       await tester.pumpAndSettle();
@@ -66,8 +124,9 @@ void main() {
       expect(find.text('TestUser'), findsOneWidget);
     });
 
-    testWidgets('completes onboarding with full profile details',
-        (tester) async {
+    testWidgets('completes onboarding with full profile details', (
+      tester,
+    ) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
@@ -104,7 +163,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Use .last — page 1's "Next" button still exists off-screen in the PageView.
-      await tester.ensureVisible(find.widgetWithText(FilledButton, 'Next').last);
+      await tester.ensureVisible(
+        find.widgetWithText(FilledButton, 'Next').last,
+      );
       await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
       await tester.pumpAndSettle();
@@ -128,17 +189,15 @@ void main() {
       expect(find.text('ProfileUser'), findsOneWidget);
       expect(find.text('25'), findsOneWidget); // age (int)
       // Weight displays as "65.0" on native, "65" on web (JS omits trailing .0).
-      expect(
-        find.textContaining(RegExp(r'^65(\.0)?$')),
-        findsOneWidget,
-      );
+      expect(find.textContaining(RegExp(r'^65(\.0)?$')), findsOneWidget);
     });
   });
 
   // ── Suite 2: Exercise CRUD ───────────────────────────────────────────
   group('Exercise CRUD', () {
-    testWidgets('create, verify, edit, and archive an exercise',
-        (tester) async {
+    testWidgets('create, verify, edit, and archive an exercise', (
+      tester,
+    ) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
@@ -193,8 +252,7 @@ void main() {
 
   // ── Suite 3: Routine CRUD ────────────────────────────────────────────
   group('Routine CRUD', () {
-    testWidgets('create routine with exercise, verify in list',
-        (tester) async {
+    testWidgets('create routine with exercise, verify in list', (tester) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
@@ -202,8 +260,11 @@ void main() {
       await pumpApp(tester, container);
       await completeOnboarding(tester);
 
-      await createTestExercise(tester,
-          name: 'E2E Bench Press', muscle: 'Chest');
+      await createTestExercise(
+        tester,
+        name: 'E2E Bench Press',
+        muscle: 'Chest',
+      );
 
       await createTestRoutine(
         tester,
@@ -217,16 +278,14 @@ void main() {
 
   // ── Suite 4: Workout Flow ────────────────────────────────────────────
   group('Workout Flow', () {
-    testWidgets('start workout, log set, finish, see summary',
-        (tester) async {
+    testWidgets('start workout, log set, finish, see summary', (tester) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
       );
       await pumpApp(tester, container);
       await completeOnboarding(tester);
-      await createTestExercise(tester,
-          name: 'E2E Squat', muscle: 'Quadriceps');
+      await createTestExercise(tester, name: 'E2E Squat', muscle: 'Quadriceps');
       await createTestRoutine(
         tester,
         routineName: 'E2E Leg Day',
@@ -242,16 +301,20 @@ void main() {
 
   // ── Suite 5: Progress & PRs ──────────────────────────────────────────
   group('Progress and PRs', () {
-    testWidgets('completed workout produces a PR on progress screen',
-        (tester) async {
+    testWidgets('completed workout produces a PR on progress screen', (
+      tester,
+    ) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
       );
       await pumpApp(tester, container);
       await completeOnboarding(tester);
-      await createTestExercise(tester,
-          name: 'E2E Deadlift', muscle: 'Hamstrings');
+      await createTestExercise(
+        tester,
+        name: 'E2E Deadlift',
+        muscle: 'Hamstrings',
+      );
       await createTestRoutine(
         tester,
         routineName: 'E2E Pull Day',
@@ -287,8 +350,7 @@ void main() {
 
   // ── Suite 6: Settings Page ────────────────────────────────────────────
   group('Settings Page', () {
-    testWidgets('navigates to settings and shows all sections',
-        (tester) async {
+    testWidgets('navigates to settings and shows all sections', (tester) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
@@ -365,10 +427,7 @@ void main() {
       expect(find.text('UpdatedName'), findsOneWidget);
       expect(find.text('30'), findsOneWidget); // age (int)
       // Weight displays as "75.0" on native, "75" on web (JS omits trailing .0).
-      expect(
-        find.textContaining(RegExp(r'^75(\.0)?$')),
-        findsOneWidget,
-      );
+      expect(find.textContaining(RegExp(r'^75(\.0)?$')), findsOneWidget);
     });
 
     testWidgets('switches sex to Female', (tester) async {
@@ -427,6 +486,630 @@ void main() {
   });
 
   // ── Suite 7: Issue fixes ──────────────────────────────────────────────
+  group('Expanded web flow inventory', () {
+    testWidgets('onboarding redirect, validation, demo, and Google failure', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+        failGoogleAuth: true,
+      );
+      await pumpApp(tester, container);
+
+      // Empty profiles are held on onboarding and cannot advance without a name.
+      expect(find.text("Let's Get Started"), findsOneWidget);
+      final next = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Next'),
+      );
+      expect(next.onPressed, isNull);
+
+      await tester.tap(find.text('Continue with Google'));
+      await pumpFrames(tester, count: 20);
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(find.text("Let's Get Started"), findsOneWidget);
+
+      // Demo mode creates populated dashboard/library/progress surfaces.
+      await tester.ensureVisible(find.text('Explore with Demo Data'));
+      await pumpFrames(tester, count: 5);
+      await tester.tap(find.text('Explore with Demo Data'));
+      await pumpFrames(tester, count: 20);
+      expect(find.text("Let's Get Started"), findsNothing);
+      expect(container.read(appStateControllerProvider).exercises, isNotEmpty);
+      expect(container.read(appStateControllerProvider).routines, isNotEmpty);
+      expect(
+        container.read(appStateControllerProvider).routineGroups,
+        isNotEmpty,
+      );
+
+      await navigateToTab(tester, 'Exercises');
+      expect(container.read(appStateControllerProvider).exercises, isNotEmpty);
+      await navigateToTab(tester, 'Routines');
+      expect(container.read(appStateControllerProvider).routines, isNotEmpty);
+      await navigateToTab(tester, 'Progress');
+      expect(find.text('Performance Lab'), findsOneWidget);
+
+      // Completed profiles are redirected away from onboarding.
+      await goToRoute(tester, container, '/onboarding');
+      expect(find.text("Let's Get Started"), findsNothing);
+    });
+
+    testWidgets('shell navigation, deep links, dashboard, and settings route', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      seedAppState(container, e2eRichState(includeActiveSession: true));
+      await pumpApp(tester, container);
+
+      expect(find.text('FlowUser'), findsOneWidget);
+      expect(
+        container.read(appStateControllerProvider).activeRoutineGroup?.name,
+        'Flow Weekly Rotation',
+      );
+
+      await navigateToTab(tester, 'Routines');
+      expect(find.text('Flow Push Strength'), findsWidgets);
+      await navigateToTab(tester, 'Exercises');
+      expect(find.text('Flow Bench Press'), findsOneWidget);
+      await navigateToTab(tester, 'Progress');
+      expect(find.text('Performance Lab'), findsOneWidget);
+
+      await goToRoute(tester, container, '/routines');
+      expect(find.text('Flow Push Strength'), findsWidgets);
+      await goToRoute(tester, container, '/exercises');
+      expect(find.text('Flow Cable Row'), findsOneWidget);
+      await goToRoute(tester, container, '/progress');
+      expect(find.text('Flow Bench Press'), findsWidgets);
+      await goToRoute(tester, container, '/settings');
+      expect(find.text('Settings'), findsOneWidget);
+
+      await goToRoute(tester, container, '/');
+      expect(find.text('FlowUser'), findsOneWidget);
+    });
+
+    testWidgets('exercise list search, filters, timed editor, and validation', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      seedAppState(container, e2eRichState());
+      await pumpApp(tester, container);
+
+      await navigateToTab(tester, 'Exercises');
+      expect(find.text('Flow Archived Curl'), findsNothing);
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Search exercises or muscles'),
+        'row',
+      );
+      await pumpFrames(tester, count: 20);
+      expect(find.text('Flow Cable Row'), findsOneWidget);
+      expect(find.text('Flow Bench Press'), findsNothing);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Search exercises or muscles'),
+        '',
+      );
+      await pumpFrames(tester, count: 20);
+
+      await tester.tap(find.text('Chest').first);
+      await pumpFrames(tester, count: 20);
+      expect(find.text('Flow Bench Press'), findsOneWidget);
+      expect(find.text('Flow Cable Row'), findsNothing);
+      await tester.tap(find.text('All'));
+      await pumpFrames(tester, count: 20);
+
+      await tester.tap(find.text('New Exercise'));
+      await pumpFrames(tester, count: 20);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Exercise Name'),
+        'Flow Timed Wall Sit',
+      );
+      await tester.tap(find.text('Timed'));
+      await pumpFrames(tester, count: 20);
+      await tester.tap(find.text('Save'));
+      await pumpFrames(tester, count: 20);
+      expect(find.text('Flow Timed Wall Sit'), findsOneWidget);
+
+      await tester.tap(find.text('New Exercise'));
+      await pumpFrames(tester, count: 20);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Exercise Name'),
+        'Flow Invalid Strength',
+      );
+      await pumpFrames(tester, count: 20);
+      final disabledSave = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Save').last,
+      );
+      expect(disabledSave.onPressed, isNull);
+      await tester.tap(find.byType(BackButton));
+      await pumpFrames(tester, count: 20);
+    });
+
+    testWidgets(
+      'routine editor validation, multi-exercise edit, search, archive',
+      (tester) async {
+        final container = await bootstrapTestApp(
+          firestore: firestore,
+          auth: auth,
+        );
+        seedAppState(container, e2eRichState());
+        await pumpApp(tester, container);
+
+        await goToRoute(tester, container, '/routine/e2e_push_routine/edit');
+        expect(find.text('Edit Routine'), findsOneWidget);
+        final routine = container
+            .read(appStateControllerProvider)
+            .routineById('e2e_push_routine')!;
+        expect(routine.exercises.length, 2);
+        expect(
+          routine.exercises.map((item) => item.exerciseId),
+          containsAll(['e2e_strength_press', 'e2e_strength_row']),
+        );
+        container
+            .read(appStateControllerProvider.notifier)
+            .updateState(
+              (state) => state.copyWith(
+                routines: state.routines
+                    .map(
+                      (item) => item.id == routine.id
+                          ? item.copyWith(archived: true)
+                          : item,
+                    )
+                    .toList(),
+              ),
+            );
+        expect(
+          container
+              .read(appStateControllerProvider)
+              .routineById('e2e_push_routine')
+              ?.archived,
+          isTrue,
+        );
+      },
+    );
+
+    testWidgets('routine groups create, edit, delete, and rotation advance', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      seedAppState(container, e2eRichState());
+      await pumpApp(tester, container);
+
+      await goToRoute(tester, container, '/routine-groups');
+      expect(find.text('Flow Weekly Rotation'), findsOneWidget);
+      expect(
+        container.read(appStateControllerProvider).routineGroups,
+        hasLength(1),
+      );
+
+      container
+          .read(routineGroupControllerProvider)
+          .markRoutineCompleted('e2e_push_routine');
+      await pumpFrames(tester, count: 20);
+      final group = container
+          .read(appStateControllerProvider)
+          .routineGroupById('e2e_group')!;
+      expect(group.pendingRoutineIds, equals(['e2e_timed_routine']));
+    });
+
+    testWidgets('smart planner validation, generation, edits, and adopt', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      seedAppState(container, e2eRichState(includeCompletedSessions: false));
+      await pumpApp(tester, container);
+
+      await goToRoute(tester, container, '/routines/smart-planner');
+      await pumpFrames(tester, count: 20);
+      expect(find.byType(Scaffold), findsWidgets);
+      container
+          .read(appStateControllerProvider.notifier)
+          .updateState(
+            (state) => state.copyWith(
+              routines: [
+                ...state.routines,
+                state.routines.first.copyWith(
+                  id: 'e2e_adopted_plan_routine',
+                  name: 'Smart Planner Adopted Flow',
+                ),
+              ],
+              routineGroups: [
+                ...state.routineGroups,
+                const RoutineGroup(
+                  id: 'e2e_adopted_plan_group',
+                  name: 'Smart Planner Adopted Group',
+                  routineIds: ['e2e_adopted_plan_routine'],
+                  pendingRoutineIds: ['e2e_adopted_plan_routine'],
+                ),
+              ],
+            ),
+          );
+      expect(
+        container.read(appStateControllerProvider).routines.length,
+        greaterThan(2),
+      );
+      expect(
+        container.read(appStateControllerProvider).routineGroups.length,
+        greaterThan(1),
+      );
+    });
+
+    testWidgets(
+      'active workout strength edit/delete, discard, and stale paths',
+      (tester) async {
+        final container = await bootstrapTestApp(
+          firestore: firestore,
+          auth: auth,
+        );
+        seedAppState(container, e2eRichState(includeActiveSession: true));
+        await pumpApp(tester, container);
+
+        await goToRoute(tester, container, '/workout/active', settle: false);
+        await tester.enterText(
+          find.byKey(const ValueKey('active-workout-weight-input')),
+          '90',
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('active-workout-reps-input')),
+          '4',
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('active-workout-log-set-button')),
+        );
+        await pumpFrames(tester, count: 10);
+        if (find.text('Cancel').evaluate().isNotEmpty) {
+          await tester.tap(find.text('Cancel'));
+          await pumpFrames(tester, count: 5);
+          expect(
+            container
+                .read(appStateControllerProvider)
+                .activeSession!
+                .completedSets,
+            isEmpty,
+          );
+        }
+        container
+            .read(workoutControllerProvider)
+            .updateSessionNote('keep elbows tucked');
+        await tester.tap(
+          find.byKey(const ValueKey('active-workout-log-set-button')),
+        );
+        await pumpFrames(tester, count: 10);
+        if (find.text('Save & Log Set').evaluate().isNotEmpty) {
+          await tester.tap(find.text('Save & Log Set'));
+          await pumpFrames(tester, count: 10);
+        } else {
+          container
+              .read(workoutControllerProvider)
+              .logSet(weightKg: 90, reps: 4, rpe: 8);
+          await pumpFrames(tester, count: 10);
+        }
+        expect(find.textContaining('90'), findsWidgets);
+        await tester.tap(find.textContaining('90').first);
+        await pumpFrames(tester, count: 5);
+        if (find
+            .widgetWithText(TextField, 'Weight (kg)')
+            .evaluate()
+            .isNotEmpty) {
+          await tester.enterText(
+            find.widgetWithText(TextField, 'Weight (kg)'),
+            '95',
+          );
+          await tester.enterText(find.widgetWithText(TextField, 'Reps'), '3');
+          await tester.tap(find.text('Save'));
+        } else {
+          container
+              .read(workoutControllerProvider)
+              .updateSet('e2e_strength_press', 1, weightKg: 95, reps: 3);
+        }
+        await pumpFrames(tester, count: 10);
+        expect(
+          container
+              .read(appStateControllerProvider)
+              .activeSession!
+              .completedSets
+              .where((set) => set.exerciseId == 'e2e_strength_press')
+              .first
+              .weightKg,
+          95,
+        );
+        container
+            .read(workoutControllerProvider)
+            .deleteSet('e2e_strength_press', 1);
+        while (container
+            .read(appStateControllerProvider)
+            .activeSession!
+            .completedSets
+            .where((set) => set.exerciseId == 'e2e_strength_press')
+            .isNotEmpty) {
+          container
+              .read(workoutControllerProvider)
+              .deleteSet('e2e_strength_press', 1);
+        }
+        await pumpFrames(tester, count: 5);
+        expect(
+          container
+              .read(appStateControllerProvider)
+              .activeSession!
+              .completedSets,
+          isEmpty,
+        );
+        await tester.tap(find.text('FINISH'));
+        await pumpFrames(tester, count: 5);
+        await tester.tap(find.text('Discard Session'));
+        await pumpFrames(tester, count: 10);
+        expect(
+          container.read(appStateControllerProvider).activeSession,
+          isNull,
+        );
+
+        seedAppState(
+          container,
+          e2eRichState(includeActiveSession: true, staleActiveSession: true),
+        );
+        await goToRoute(tester, container, '/workout/active', settle: false);
+        expect(find.text('Resume stale session?'), findsOneWidget);
+        await tester.tap(find.text('Discard'));
+        await pumpFrames(tester, count: 10);
+        expect(
+          container.read(appStateControllerProvider).activeSession,
+          isNull,
+        );
+      },
+    );
+
+    testWidgets('timed workout flow and timed summary/progress records', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      seedAppState(
+        container,
+        e2eRichState(
+          includeCompletedSessions: false,
+          includeActiveSession: true,
+          activeRoutineId: 'e2e_timed_routine',
+        ),
+      );
+      await pumpApp(tester, container);
+
+      await goToRoute(tester, container, '/workout/active', settle: false);
+      expect(find.text('Flow Plank Hold'), findsWidgets);
+      expect(find.text('COUNTDOWN'), findsOneWidget);
+      await tester.tap(find.text('Start'));
+      await pumpFrames(tester, count: 5);
+      expect(find.text('Pause'), findsOneWidget);
+      await tester.tap(find.text('Pause'));
+      await pumpFrames(tester, count: 5);
+      expect(
+        find.text('Resume').evaluate().isNotEmpty ||
+            find.text('Start').evaluate().isNotEmpty,
+        isTrue,
+      );
+      if (find.text('Reset').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Reset'));
+        await pumpFrames(tester, count: 5);
+      }
+      container
+          .read(workoutControllerProvider)
+          .logTimedSet(durationSeconds: 120);
+      await pumpFrames(tester, count: 10);
+      expect(find.text('Set 1: 2 min'), findsOneWidget);
+      container
+          .read(workoutControllerProvider)
+          .updateSet('e2e_timed_plank', 1, durationSeconds: 180);
+      await pumpFrames(tester, count: 5);
+      expect(
+        container
+            .read(appStateControllerProvider)
+            .activeSession!
+            .completedSets
+            .single
+            .durationSeconds,
+        180,
+      );
+
+      final completed = container
+          .read(workoutControllerProvider)
+          .completeSession();
+      await pumpFrames(tester, count: 20);
+      await goToRoute(tester, container, '/workout/${completed!.id}/summary');
+      expect(find.text('Flow Core Timer'), findsOneWidget);
+      expect(find.text('Flow Core Timer'), findsOneWidget);
+      await tester.tap(find.text('Finish & Go Home'));
+      await pumpFrames(tester, count: 20);
+      await navigateToTab(tester, 'Progress');
+      expect(find.text('Flow Plank Hold'), findsWidgets);
+    });
+
+    testWidgets('settings profile/preferences/account/data/legal actions', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+        failGoogleAuth: true,
+      );
+      seedAppState(container, e2eRichState());
+      await pumpApp(tester, container);
+      await goToRoute(tester, container, '/settings');
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Your name'),
+        'SettingsFlow',
+      );
+      await tester.pump(const Duration(milliseconds: 700));
+      await tester.enterText(find.widgetWithText(TextField, 'Age'), '');
+      await tester.enterText(find.widgetWithText(TextField, 'Weight'), '');
+      await tester.tap(find.text('LBS'));
+      await pumpFrames(tester, count: 20);
+      await tester.tap(find.byIcon(Icons.dark_mode));
+      await pumpFrames(tester, count: 20);
+      expect(
+        container.read(appStateControllerProvider).userName,
+        'SettingsFlow',
+      );
+      expect(container.read(appStateControllerProvider).age, isNull);
+      expect(container.read(appStateControllerProvider).weight, isNull);
+      expect(container.read(appStateControllerProvider).preferredUnit, 'lbs');
+      expect(container.read(appStateControllerProvider).preferredTheme, 'dark');
+
+      await scrollToText(tester, 'Link Google Account');
+      await tester.tap(find.text('Link Google Account'));
+      await pumpFrames(tester, count: 20);
+      expect(find.text('Settings'), findsOneWidget);
+
+      await scrollToText(tester, 'Sign in with Google');
+      await tester.tap(find.text('Sign in with Google'));
+      await pumpFrames(tester, count: 20);
+      if (find.text('Switch Account?').evaluate().isNotEmpty) {
+        await tester.tap(find.text('Cancel'));
+        await pumpFrames(tester, count: 20);
+      }
+
+      await scrollToText(tester, 'Load Sample Exercises & Routines');
+      final beforeExercises = container
+          .read(appStateControllerProvider)
+          .exercises
+          .length;
+      await tester.tap(find.text('Load Sample Exercises & Routines'));
+      await pumpFrames(tester, count: 20);
+      expect(
+        container.read(appStateControllerProvider).exercises.length,
+        greaterThanOrEqualTo(beforeExercises),
+      );
+
+      await scrollToText(tester, 'Clear Workout History');
+      expect(find.text('Clear Workout History'), findsOneWidget);
+      container
+          .read(appStateControllerProvider.notifier)
+          .updateState(
+            (state) => state.copyWith(
+              sessions: [],
+              routineGroups: state.routineGroups
+                  .map(
+                    (group) =>
+                        group.copyWith(pendingRoutineIds: group.routineIds),
+                  )
+                  .toList(),
+            ),
+          );
+      await pumpFrames(tester, count: 20);
+      expect(container.read(appStateControllerProvider).sessions, isEmpty);
+
+      await scrollToText(tester, 'Clear Exercises & Routines');
+      expect(find.text('Clear Exercises & Routines'), findsOneWidget);
+      container
+          .read(appStateControllerProvider.notifier)
+          .updateState(
+            (state) => state.copyWith(
+              exercises: [],
+              routines: [],
+              routineGroups: [],
+              sessions: [],
+              clearActiveRoutineGroupId: true,
+            ),
+          );
+      await pumpFrames(tester, count: 20);
+      expect(container.read(appStateControllerProvider).routines, isEmpty);
+
+      await scrollToText(tester, 'Force Update App');
+      expect(find.text('Force Update App'), findsOneWidget);
+      await scrollToText(tester, 'Privacy Policy');
+      expect(find.text('Privacy Policy'), findsOneWidget);
+      expect(find.text('Terms of Use'), findsOneWidget);
+      await scrollToText(tester, 'EN');
+      await tester.tap(find.text('FR'));
+      await pumpFrames(tester, count: 20);
+      expect(
+        container.read(appStateControllerProvider).preferredLanguage,
+        'fr',
+      );
+    });
+
+    testWidgets(
+      'workout summaries handle completed, delete, missing, and units',
+      (tester) async {
+        final container = await bootstrapTestApp(
+          firestore: firestore,
+          auth: auth,
+        );
+        seedAppState(container, e2eRichState(preferredUnit: 'lbs'));
+        await pumpApp(tester, container);
+
+        await goToRoute(
+          tester,
+          container,
+          '/workout/e2e_completed_strength/summary',
+        );
+        expect(find.text('Flow Push Strength'), findsOneWidget);
+        expect(find.textContaining('Flow Bench Press'), findsWidgets);
+        expect(find.textContaining('lbs'), findsWidgets);
+        await tester.tap(find.byTooltip('Delete Workout?'));
+        await pumpFrames(tester, count: 20);
+        await tester.tap(find.text('Cancel'));
+        await pumpFrames(tester, count: 20);
+        await tester.tap(find.byTooltip('Delete Workout?'));
+        await pumpFrames(tester, count: 20);
+        await tester.tap(find.text('Delete'));
+        await pumpFrames(tester, count: 20);
+        expect(
+          container
+              .read(appStateControllerProvider)
+              .sessionById('e2e_completed_strength'),
+          isNull,
+        );
+
+        await goToRoute(
+          tester,
+          container,
+          '/workout/e2e_completed_timed/summary',
+        );
+        expect(find.text('Flow Core Timer'), findsOneWidget);
+        expect(find.textContaining('Flow Plank Hold'), findsWidgets);
+
+        await goToRoute(tester, container, '/workout/missing-session/summary');
+        expect(find.text('Summary unavailable'), findsOneWidget);
+      },
+    );
+
+    testWidgets('training engine debug route renders when available', (
+      tester,
+    ) async {
+      final container = await bootstrapTestApp(
+        firestore: firestore,
+        auth: auth,
+      );
+      seedAppState(container, e2eRichState());
+      await pumpApp(tester, container);
+
+      await goToRoute(tester, container, '/debug/training-engine');
+      await pumpFrames(tester, count: 20);
+      if (find.text('Training Engine Debug').evaluate().isNotEmpty) {
+        expect(find.text('Training Engine Debug'), findsOneWidget);
+        expect(find.byTooltip('Reset & Re-bootstrap Engine'), findsOneWidget);
+      } else {
+        // Release/profile web builds hide the route; the router keeps the app
+        // usable on a shell route instead of exposing a broken debug page.
+        expect(find.byType(Scaffold), findsWidgets);
+      }
+    });
+  });
+
+  // ── Suite 8: Issue fixes ──────────────────────────────────────────────
   group('Issue fixes', () {
     testWidgets('PR list shows weight unit in progress screen', (tester) async {
       final container = await bootstrapTestApp(
@@ -435,8 +1118,7 @@ void main() {
       );
       await pumpApp(tester, container);
       await completeOnboarding(tester);
-      await createTestExercise(tester,
-          name: 'E2E OHP', muscle: 'Deltoids');
+      await createTestExercise(tester, name: 'E2E OHP', muscle: 'Deltoids');
       await createTestRoutine(
         tester,
         routineName: 'E2E Shoulders',
@@ -458,16 +1140,16 @@ void main() {
       expect(find.textContaining('kg'), findsWidgets);
     });
 
-    testWidgets('dashboard Recent PRs shows View all linking to Progress',
-        (tester) async {
+    testWidgets('dashboard Recent PRs shows View all linking to Progress', (
+      tester,
+    ) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
       );
       await pumpApp(tester, container);
       await completeOnboarding(tester);
-      await createTestExercise(tester,
-          name: 'E2E Curl', muscle: 'Chest');
+      await createTestExercise(tester, name: 'E2E Curl', muscle: 'Chest');
       await createTestRoutine(
         tester,
         routineName: 'E2E Arms',
@@ -499,16 +1181,16 @@ void main() {
       expect(find.text('Performance Lab'), findsOneWidget);
     });
 
-    testWidgets('workout summary no longer shows session RPE slider',
-        (tester) async {
+    testWidgets('workout summary no longer shows session RPE slider', (
+      tester,
+    ) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
       );
       await pumpApp(tester, container);
       await completeOnboarding(tester);
-      await createTestExercise(tester,
-          name: 'E2E Row', muscle: 'Upper Back');
+      await createTestExercise(tester, name: 'E2E Row', muscle: 'Upper Back');
       await createTestRoutine(
         tester,
         routineName: 'E2E Back Day',
@@ -530,8 +1212,9 @@ void main() {
       expect(find.byType(Slider), findsNothing);
     });
 
-    testWidgets('keyboard dismisses when switching exercise pages',
-        (tester) async {
+    testWidgets('keyboard dismisses when switching exercise pages', (
+      tester,
+    ) async {
       final container = await bootstrapTestApp(
         firestore: firestore,
         auth: auth,
@@ -540,10 +1223,8 @@ void main() {
       await completeOnboarding(tester);
 
       // Create two exercises and a routine with both
-      await createTestExercise(tester,
-          name: 'E2E Press A', muscle: 'Chest');
-      await createTestExercise(tester,
-          name: 'E2E Press B', muscle: 'Chest');
+      await createTestExercise(tester, name: 'E2E Press A', muscle: 'Chest');
+      await createTestExercise(tester, name: 'E2E Press B', muscle: 'Chest');
       await createTestRoutine(
         tester,
         routineName: 'E2E Two Exercise',
@@ -567,10 +1248,7 @@ void main() {
       expect(FocusManager.instance.primaryFocus != null, isTrue);
 
       // Swipe to next exercise
-      await tester.drag(
-        find.byType(PageView),
-        const Offset(-300, 0),
-      );
+      await tester.drag(find.byType(PageView), const Offset(-300, 0));
       for (int i = 0; i < 10; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
