@@ -407,13 +407,14 @@ Audit caveat:
 Implemented or scaffolded:
 
 - Training engine models and ingestion paths for sleep and HRV.
-- HealthKit data source integration point.
+- HealthKit data source integration point with explicit empty, unavailable, denied, and error fetch statuses.
 - HealthKit enabled flag in app state.
 - BLE dependency in `pubspec.yaml`.
 
 Caveat:
 
 - The current visible Flutter web app does not expose full HealthKit/BLE workflows. These should be treated as native/platform integration surfaces, not fully verified web features.
+- Empty or denied HealthKit fetches do not populate demo sleep/HRV records; demo readiness inputs are limited to explicit demo-data flows.
 
 ## Notifications and Rest Timer
 

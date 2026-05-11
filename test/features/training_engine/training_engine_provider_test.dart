@@ -7,6 +7,7 @@ import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_adapter.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
@@ -160,14 +161,44 @@ ProviderContainer _buildContainer({
   required AppState initialState,
   required AppStateRepository appRepository,
   required TrainingEngineStateRepository engineRepository,
+  HealthKitDataSource healthKit = const HealthKitDataSource(),
 }) {
   return ProviderContainer(
     overrides: [
       appStateRepositoryProvider.overrideWithValue(appRepository),
       initialAppStateProvider.overrideWithValue(initialState),
       trainingEngineStateRepositoryProvider.overrideWithValue(engineRepository),
+      healthKitDataSourceProvider.overrideWithValue(healthKit),
     ],
   );
+}
+
+class _FakeHealthKitDataSource extends HealthKitDataSource {
+  const _FakeHealthKitDataSource({
+    this.sleepRecords = const [],
+    this.hrvRecords = const [],
+    this.sleepStatus = HealthKitFetchStatus.success,
+    this.hrvStatus = HealthKitFetchStatus.success,
+  });
+
+  final List<SleepRecord> sleepRecords;
+  final List<HrvRecord> hrvRecords;
+  final HealthKitFetchStatus sleepStatus;
+  final HealthKitFetchStatus hrvStatus;
+
+  @override
+  Future<HealthKitFetchResult<SleepRecord>> fetchRecentSleepResult({
+    int days = 14,
+  }) async {
+    return HealthKitFetchResult(status: sleepStatus, records: sleepRecords);
+  }
+
+  @override
+  Future<HealthKitFetchResult<HrvRecord>> fetchRecentHrvResult({
+    int days = 14,
+  }) async {
+    return HealthKitFetchResult(status: hrvStatus, records: hrvRecords);
+  }
 }
 
 Map<String, dynamic> _savedEngineStateWithBenchAndSquatData() {
@@ -526,6 +557,114 @@ void main() {
 
         expect(engine.state.sessionsIngested, 1);
         expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit returns no samples',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.noSamples,
+            hrvStatus: HealthKitFetchStatus.noSamples,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit is unavailable',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.unavailable,
+            hrvStatus: HealthKitFetchStatus.unavailable,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit authorization is denied',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.denied,
+            hrvStatus: HealthKitFetchStatus.denied,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit fetch fails',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.error,
+            hrvStatus: HealthKitFetchStatus.error,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
       },
     );
 

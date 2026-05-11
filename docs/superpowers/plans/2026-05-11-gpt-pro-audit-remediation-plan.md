@@ -194,7 +194,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 4: Map Captured Profile Fields Into the Engine
 
 **Category:** P0 training-engine profile correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run after local subagent slots became stale; GLM proxy review passed Task 4; local verification passed Dart format, diff check, and Flutter tests (`+19`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run after local subagent slots became stale; GLM proxy review passed Task 4; local verification passed Dart format, diff check, and Flutter tests (`+19`). Commit: `93b9c2c`.
 
 **Files:**
 
@@ -238,6 +238,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 5: Remove Fake HealthKit Data From Empty or Denied Fetches
 
 **Category:** P0 HealthKit/readiness correctness
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run; GLM proxy review passed Task 5; local verification passed Dart format, diff check, package tests (`+77`), and Flutter tests (`+20`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -260,17 +261,17 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing provider tests for HealthKit enabled with empty sleep/HRV results.
-- [ ] Add failing provider tests for fake denied/unavailable/error cases.
-- [ ] Add a failing engine test for previous health data plus empty refresh.
-- [ ] Remove provider fallback to `DemoSeedData.seedSleep()` and `DemoSeedData.seedHrv()`.
-- [ ] Implement deterministic stale-refresh behavior that preserves or explicitly clears old records according to the functional requirements.
-- [ ] Update readiness card tests for no-health-data and limited-data display.
-- [ ] Update `docs/app-feature-inventory.md` to remove any "HealthKit demo fallback" language after the code fix.
-- [ ] Run `dart format lib/src/features/training_engine/training_engine_provider.dart lib/src/features/training_engine/healthkit_data_source.dart packages/training_engine/lib/src/engine.dart test/features/training_engine/training_engine_provider_test.dart packages/training_engine/test/engine_test.dart packages/training_engine/test/readiness/readiness_test.dart test/features/dashboard/training_readiness_card_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/engine_test.dart test/readiness/readiness_test.dart`.
-- [ ] Run `flutter test test/features/training_engine/training_engine_provider_test.dart test/features/dashboard/training_readiness_card_test.dart`.
-- [ ] Commit the HealthKit/readiness changes.
+- [x] Add failing provider tests for HealthKit enabled with empty sleep/HRV results.
+- [x] Add failing provider tests for fake denied/unavailable/error cases.
+- [x] Add a failing engine test for previous health data plus empty refresh.
+- [x] Remove provider fallback to `DemoSeedData.seedSleep()` and `DemoSeedData.seedHrv()`.
+- [x] Implement deterministic stale-refresh behavior that preserves or explicitly clears old records according to the functional requirements.
+- [x] Update readiness card tests for no-health-data and limited-data display.
+- [x] Update `docs/app-feature-inventory.md` to remove any "HealthKit demo fallback" language after the code fix.
+- [x] Run `dart format lib/src/features/training_engine/training_engine_provider.dart lib/src/features/training_engine/healthkit_data_source.dart packages/training_engine/lib/src/engine.dart test/features/training_engine/training_engine_provider_test.dart packages/training_engine/test/engine_test.dart packages/training_engine/test/readiness/readiness_test.dart test/features/dashboard/training_readiness_card_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/engine_test.dart test/readiness/readiness_test.dart`.
+- [x] Run `flutter test test/features/training_engine/training_engine_provider_test.dart test/features/dashboard/training_readiness_card_test.dart`.
+- [x] Commit the HealthKit/readiness changes.
 
 **Acceptance Checks:**
 

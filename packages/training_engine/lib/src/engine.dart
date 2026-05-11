@@ -199,16 +199,18 @@ class TrainingEngine {
       return; // Still fresh
     }
 
-    // Replace history with fresh data to avoid duplicates
+    // Replace non-empty fresh data to avoid duplicates. Empty fetches are
+    // treated as attempted refreshes without erasing previously fetched data.
     final sleepRecords = await fetchSleep();
-    _state = _state.copyWith(sleepHistory: sleepRecords);
+    if (sleepRecords.isNotEmpty) {
+      _state = _state.copyWith(sleepHistory: sleepRecords);
+    }
 
     final hrvRecords = await fetchHrv();
-    _state = _state.copyWith(hrvHistory: hrvRecords);
-
-    if (sleepRecords.isNotEmpty || hrvRecords.isNotEmpty) {
-      _state = _state.copyWith(lastHealthKitFetch: now);
+    if (hrvRecords.isNotEmpty) {
+      _state = _state.copyWith(hrvHistory: hrvRecords);
     }
+    _state = _state.copyWith(lastHealthKitFetch: now);
   }
 
   /// Marks the current time as the last HealthKit fetch.
