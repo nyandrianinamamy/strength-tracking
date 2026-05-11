@@ -411,7 +411,10 @@ Implemented in source:
 
 Audit caveat:
 
-- These native integrations are present and wired for non-web iOS initialization in source, but Task 16 is required to prove runtime correctness on iOS/watchOS beyond web E2E.
+- Task 16 source-level verification on 2026-05-12 passed fake-channel tests for idempotent Watch initialization, Watch snapshot payloads with and without engine suggested weights, Watch-originated quick set logging, Live Activity active-workout payload shape, Live Activity end calls, and method-channel failure tolerance.
+- Task 16 build verification on 2026-05-12 passed `flutter build ios --debug --no-codesign`; the build detected the Watch companion app.
+- Task 16 equivalent device-lab runtime smoke on 2026-05-12 passed on the paired `17 Pro + watch 26.3` simulator (`FDFE9890-3387-4E10-9BEE-1EC387EF14E5`) with `flutter drive --driver=test_driver/integration_test.dart --target=integration_test/native_runtime_wiring_test.dart -d FDFE9890-3387-4E10-9BEE-1EC387EF14E5 --debug --no-pub`. The smoke test invoked the real iOS native MethodChannel handlers for Watch `isWatchPaired`, `isWatchReachable`, `sendSessionUpdate`, and `sendSessionEnd`, plus Live Activity `syncWorkout` and `endWorkout`, using active-workout payloads with completed sets, suggested-weight and null-suggestion Watch snapshots, rest timer metadata, and session metadata.
+- Physical iPhone/Apple Watch runtime smoke verification is still blocked as of 2026-05-12. `flutter devices` found `iPhone 14 Pro Mamy` and `Apple Watch S9`, but the physical-device path cannot mount the developer disk image while the device is locked. A refresh with `xcrun devicectl device info ddiServices --device 9960CCE6-61E7-5C0B-AC41-0973BE159420` failed with `kAMDMobileImageMounterDeviceLocked`. The native integrations are runtime-verified through the paired simulator equivalent device-lab smoke, but not yet on the user's physical iPhone/Watch hardware.
 
 ## Health, Sleep, HRV, and BLE
 

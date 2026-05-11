@@ -1319,8 +1319,7 @@ rolling e1RM values; the orchestrator localized the dashboard label and
 removed analyzer noise in the touched provider test; GLM proxy review
 passed Task 15. Local verification passed Dart format on touched Dart
 files, diff check, focused Progress/provider tests (<code>+27</code>),
-focused analyzer checks, and web E2E. Commit: recorded in git history
-after this ledger update.</p>
+focused analyzer checks, and web E2E. Commit: <code>513cd4f</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -1386,7 +1385,20 @@ persisted engine state.</li>
 <hr />
 <h2 id="task-16-verify-ios-watch-and-live-activity-runtime-wiring">Task
 16: Verify iOS Watch and Live Activity Runtime Wiring</h2>
-<p><strong>Category:</strong> P2 native integration verification</p>
+<p><strong>Category:</strong> P2 native integration verification
+<strong>Status:</strong> Completed 2026-05-12. GPT-5.5 implementers
+added source-level Watch/Live Activity tests, fixed Watch snapshots to
+send <code>null</code> when no engine suggestion exists, and added an
+equivalent device-lab native runtime smoke for the paired
+<code>17 Pro + watch 26.3</code> simulator. GLM proxy review passed Task
+16 and accepted the paired-simulator smoke under the plan’s
+equivalent-device-lab requirement while preserving the physical
+iPhone/Watch blocker note. Local verification passed Dart format, diff
+check, focused Watch/Live Activity tests (<code>+16</code>), focused
+analyzer checks, <code>flutter build ios --debug --no-codesign</code>,
+and
+<code>flutter drive --driver=test_driver/integration_test.dart --target=integration_test/native_runtime_wiring_test.dart -d FDFE9890-3387-4E10-9BEE-1EC387EF14E5 --debug --no-pub</code>.
+Commit: recorded in git history after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>lib/main.dart</code></li>
@@ -1401,6 +1413,8 @@ persisted engine state.</li>
 <code>test/features/watch/watch_sync_service_test.dart</code></li>
 <li>Test:
 <code>test/features/live_activity/workout_live_activity_service_test.dart</code></li>
+<li>Test:
+<code>integration_test/native_runtime_wiring_test.dart</code></li>
 <li>Modify: <code>docs/app-feature-inventory.md</code></li>
 </ul>
 <p><strong>Functional Requirements:</strong></p>
@@ -1424,24 +1438,24 @@ and tested flows.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add or update tests proving
-initialization is idempotent.</label></li>
-<li><label><input type="checkbox" />Add or update fake-channel tests for
-watch snapshot suggested weights.</label></li>
-<li><label><input type="checkbox" />Add or update fake-channel tests for
-Live Activity payload shape during active workout and after workout
-end.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Add or update tests
+proving initialization is idempotent.</label></li>
+<li><label><input type="checkbox" checked="" />Add or update
+fake-channel tests for watch snapshot suggested weights.</label></li>
+<li><label><input type="checkbox" checked="" />Add or update
+fake-channel tests for Live Activity payload shape during active workout
+and after workout end.</label></li>
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter test test/features/watch/watch_sync_service_test.dart test/features/live_activity/workout_live_activity_service_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter build ios --debug --no-codesign</code>.</label></li>
-<li><label><input type="checkbox" />Run and record the physical
-iPhone/Apple Watch or device-lab smoke verification for Watch sync and
-Live Activity updates.</label></li>
-<li><label><input type="checkbox" />Update
+<li><label><input type="checkbox" checked="" />Run and record the
+physical iPhone/Apple Watch or device-lab smoke verification for Watch
+sync and Live Activity updates.</label></li>
+<li><label><input type="checkbox" checked="" />Update
 <code>docs/app-feature-inventory.md</code> with the passing verification
 device/run, date, and tested flows.</label></li>
-<li><label><input type="checkbox" />Commit the native wiring
+<li><label><input type="checkbox" checked="" />Commit the native wiring
 verification changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>

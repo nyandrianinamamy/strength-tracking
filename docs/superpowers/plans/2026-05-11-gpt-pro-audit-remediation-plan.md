@@ -649,7 +649,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 15: Align Progress Analytics With the Engine
 
 **Category:** P2 analytics consistency
-**Status:** Completed 2026-05-11. GPT-5.5 implementer moved Progress and Dashboard current/rolling e1RM display to engine-owned rolling e1RM values; the orchestrator localized the dashboard label and removed analyzer noise in the touched provider test; GLM proxy review passed Task 15. Local verification passed Dart format on touched Dart files, diff check, focused Progress/provider tests (`+27`), focused analyzer checks, and web E2E. Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer moved Progress and Dashboard current/rolling e1RM display to engine-owned rolling e1RM values; the orchestrator localized the dashboard label and removed analyzer noise in the touched provider test; GLM proxy review passed Task 15. Local verification passed Dart format on touched Dart files, diff check, focused Progress/provider tests (`+27`), focused analyzer checks, and web E2E. Commit: `513cd4f`.
 
 **Files:**
 
@@ -695,6 +695,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 16: Verify iOS Watch and Live Activity Runtime Wiring
 
 **Category:** P2 native integration verification
+**Status:** Completed 2026-05-12. GPT-5.5 implementers added source-level Watch/Live Activity tests, fixed Watch snapshots to send `null` when no engine suggestion exists, and added an equivalent device-lab native runtime smoke for the paired `17 Pro + watch 26.3` simulator. GLM proxy review passed Task 16 and accepted the paired-simulator smoke under the plan's equivalent-device-lab requirement while preserving the physical iPhone/Watch blocker note. Local verification passed Dart format, diff check, focused Watch/Live Activity tests (`+16`), focused analyzer checks, `flutter build ios --debug --no-codesign`, and `flutter drive --driver=test_driver/integration_test.dart --target=integration_test/native_runtime_wiring_test.dart -d FDFE9890-3387-4E10-9BEE-1EC387EF14E5 --debug --no-pub`. Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -705,6 +706,7 @@ P2 tasks close broader product and runtime gaps:
 - Modify: `ios/WatchSessionManager.swift`
 - Test: `test/features/watch/watch_sync_service_test.dart`
 - Test: `test/features/live_activity/workout_live_activity_service_test.dart`
+- Test: `integration_test/native_runtime_wiring_test.dart`
 - Modify: `docs/app-feature-inventory.md`
 
 **Functional Requirements:**
@@ -719,14 +721,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add or update tests proving initialization is idempotent.
-- [ ] Add or update fake-channel tests for watch snapshot suggested weights.
-- [ ] Add or update fake-channel tests for Live Activity payload shape during active workout and after workout end.
-- [ ] Run `flutter test test/features/watch/watch_sync_service_test.dart test/features/live_activity/workout_live_activity_service_test.dart`.
-- [ ] Run `flutter build ios --debug --no-codesign`.
-- [ ] Run and record the physical iPhone/Apple Watch or device-lab smoke verification for Watch sync and Live Activity updates.
-- [ ] Update `docs/app-feature-inventory.md` with the passing verification device/run, date, and tested flows.
-- [ ] Commit the native wiring verification changes.
+- [x] Add or update tests proving initialization is idempotent.
+- [x] Add or update fake-channel tests for watch snapshot suggested weights.
+- [x] Add or update fake-channel tests for Live Activity payload shape during active workout and after workout end.
+- [x] Run `flutter test test/features/watch/watch_sync_service_test.dart test/features/live_activity/workout_live_activity_service_test.dart`.
+- [x] Run `flutter build ios --debug --no-codesign`.
+- [x] Run and record the physical iPhone/Apple Watch or device-lab smoke verification for Watch sync and Live Activity updates.
+- [x] Update `docs/app-feature-inventory.md` with the passing verification device/run, date, and tested flows.
+- [x] Commit the native wiring verification changes.
 
 **Acceptance Checks:**
 
