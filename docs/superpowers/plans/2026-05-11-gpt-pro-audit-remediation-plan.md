@@ -399,7 +399,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 9: Make ACWR Daily
 
 **Category:** P1 load-model correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; orchestrator tightened remaining debug wording; GLM proxy review passed Task 9; local verification passed Dart format, diff check, wording scan, and package ACWR/engine tests (`+84`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; orchestrator tightened remaining debug wording; GLM proxy review passed Task 9; local verification passed Dart format, diff check, wording scan, and package ACWR/engine tests (`+84`). Commit: `8c4a66b`.
 
 **Files:**
 
@@ -436,6 +436,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 10: Define and Implement Timed-Exercise Engine Behavior
 
 **Category:** P1 timed workout correctness
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 10 with JSON compatibility and mixed-session checks; local verification passed Dart format, diff check, Flutter adapter/provider/integration tests (`+33`), and package engine/fatigue tests (`+65`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -460,16 +461,16 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing adapter tests for a timed-only completed session becoming an engine session with timed stress information.
-- [ ] Add failing engine/fatigue tests showing a plank-like timed set increases core fatigue but does not create an e1RM entry.
-- [ ] Add failing provider test for live heatmap preview with a timed active set.
-- [ ] Implement a timed-set representation in the engine boundary without breaking existing strength `LoggedSet` JSON compatibility.
-- [ ] Update fatigue impulse calculation to support duration-based stress for timed sets.
-- [ ] Update `docs/app-feature-inventory.md` with the final timed-engine behavior.
-- [ ] Run `dart format lib/src/features/training_engine/training_engine_adapter.dart lib/src/features/training_engine/training_engine_provider.dart packages/training_engine/lib/src/models/logged_set.dart packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/fatigue/impulse_calculator.dart test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart packages/training_engine/test/engine_test.dart packages/training_engine/test/fatigue/impulse_calculator_test.dart`.
-- [ ] Run `flutter test test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/engine_test.dart test/fatigue/impulse_calculator_test.dart`.
-- [ ] Commit the timed-exercise engine changes.
+- [x] Add failing adapter tests for a timed-only completed session becoming an engine session with timed stress information.
+- [x] Add failing engine/fatigue tests showing a plank-like timed set increases core fatigue but does not create an e1RM entry.
+- [x] Add failing provider test for live heatmap preview with a timed active set.
+- [x] Implement a timed-set representation in the engine boundary without breaking existing strength `LoggedSet` JSON compatibility.
+- [x] Update fatigue impulse calculation to support duration-based stress for timed sets.
+- [x] Update `docs/app-feature-inventory.md` with the final timed-engine behavior.
+- [x] Run `dart format lib/src/features/training_engine/training_engine_adapter.dart lib/src/features/training_engine/training_engine_provider.dart packages/training_engine/lib/src/models/logged_set.dart packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/fatigue/impulse_calculator.dart test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart packages/training_engine/test/engine_test.dart packages/training_engine/test/fatigue/impulse_calculator_test.dart`.
+- [x] Run `flutter test test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/engine_test.dart test/fatigue/impulse_calculator_test.dart`.
+- [x] Commit the timed-exercise engine changes.
 
 **Acceptance Checks:**
 

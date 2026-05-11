@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
+import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_adapter.dart';
 import 'package:training_engine/training_engine.dart';
 
@@ -135,6 +137,44 @@ void main() {
         ),
         isTrue,
       );
+    });
+  });
+
+  group('TrainingEngineAdapter.toEngineSession', () {
+    test('maps a timed-only completed session with duration stress data', () {
+      final completedAt = DateTime.utc(2026, 3, 7, 17, 0);
+      final session = WorkoutSession(
+        id: 'timed-only-session-01',
+        routineId: 'routine-core',
+        status: WorkoutSessionStatus.completed,
+        startedAt: completedAt.subtract(const Duration(minutes: 20)),
+        endedAt: completedAt,
+        lastActivityAt: completedAt,
+        currentExerciseIndex: 0,
+        completedSets: [
+          CompletedSet(
+            exerciseId: 'plank',
+            setNumber: 1,
+            weightKg: 0.0,
+            reps: 0,
+            durationSeconds: 75,
+            completedAt: completedAt,
+            note: '',
+          ),
+        ],
+        sessionNote: '',
+        rpe: 7.0,
+      );
+
+      final engineSession = adapter.toEngineSession(session);
+
+      expect(engineSession, isNotNull);
+      expect(engineSession!.sets, hasLength(1));
+      expect(engineSession.sets.single.exerciseId, 'plank');
+      expect(engineSession.sets.single.reps, 0);
+      expect(engineSession.sets.single.durationSeconds, 75);
+      expect(engineSession.sets.single.rpe, 7.0);
+      expect(engineSession.sets.single.rpeEstimated, isTrue);
     });
   });
 }

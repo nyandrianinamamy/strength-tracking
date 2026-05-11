@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -498,7 +499,7 @@ void main() {
       },
     );
 
-    test('ignores timed-only legacy sessions during bootstrap', () async {
+    test('ingests timed-only sessions when they contribute fatigue', () async {
       final appState = _appStateWithTimedOnlyCompletedSession();
       final appRepository = MemoryAppStateRepository(initialState: appState);
       final engineRepository = MemoryTrainingEngineStateRepository();
@@ -511,7 +512,9 @@ void main() {
 
       final engine = await container.read(trainingEngineProvider.future);
 
-      expect(engine.state.sessionsIngested, 0);
+      expect(engine.state.sessionsIngested, 1);
+      expect(engine.state.ingestedSessionIds, {'completed-timed-session-1'});
+      expect(engine.state.fatigueLog['core'], isNotEmpty);
       expect(engine.state.e1rmHistory, isEmpty);
       expect(engineRepository.state, isNotNull);
     });
@@ -909,6 +912,65 @@ void main() {
         expect(snapshot, startsWith('{\n'));
       },
     );
+
+    test('live heatmap preview includes timed active sets', () async {
+      final completedAt = DateTime.utc(2026, 4, 2, 18, 0);
+      final appState = AppState(
+        exercises: const [
+          Exercise(
+            id: 'plank',
+            name: 'Plank',
+            primaryMuscles: ['Abs'],
+            secondaryMuscles: ['Glutes'],
+            equipment: ['Bodyweight'],
+            instructions: '',
+            archived: false,
+            exerciseType: 'timed',
+          ),
+        ],
+        routines: const [],
+        sessions: [
+          WorkoutSession(
+            id: 'active-timed-session',
+            routineId: 'routine-core',
+            status: WorkoutSessionStatus.active,
+            startedAt: completedAt.subtract(const Duration(minutes: 10)),
+            endedAt: null,
+            lastActivityAt: completedAt,
+            currentExerciseIndex: 0,
+            completedSets: [
+              CompletedSet(
+                exerciseId: 'plank',
+                setNumber: 1,
+                weightKg: 0.0,
+                reps: 0,
+                durationSeconds: 60,
+                completedAt: completedAt,
+                note: '',
+              ),
+            ],
+            sessionNote: '',
+            rpe: 7.0,
+          ),
+        ],
+        sex: 'male',
+      );
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final engineRepository = MemoryTrainingEngineStateRepository();
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final heatmap = await container.read(
+        liveEngineHeatmapDataProvider.future,
+      );
+
+      expect(heatmap[Muscle.abs], isNotNull);
+      expect(heatmap[Muscle.abs]!.intensity, greaterThan(0));
+    });
   });
 
   group('SharedPreferencesTrainingEngineStateRepository', () {

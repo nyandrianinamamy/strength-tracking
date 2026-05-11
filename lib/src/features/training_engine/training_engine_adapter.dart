@@ -1,6 +1,7 @@
 import 'package:training_engine/training_engine.dart';
 
 import '../../data/models/app_state.dart';
+import '../../data/models/completed_set.dart';
 import '../../data/models/exercise.dart';
 import '../../data/models/workout_session.dart';
 
@@ -42,9 +43,7 @@ class TrainingEngineAdapter {
   EngineSession? toEngineSession(WorkoutSession session) {
     final fallbackRpe = (session.rpe ?? 8.0).clamp(5.0, 10.0);
 
-    final mappedSets = session.completedSets.where((set) => set.reps > 0).map((
-      set,
-    ) {
+    final mappedSets = session.completedSets.where(_hasEngineLoad).map((set) {
       final double setRpe;
       final bool estimated;
 
@@ -63,6 +62,7 @@ class TrainingEngineAdapter {
         rpe: setRpe,
         completedAt: set.completedAt,
         rpeEstimated: estimated,
+        durationSeconds: set.durationSeconds,
       );
     }).toList();
 
@@ -171,6 +171,10 @@ class TrainingEngineAdapter {
       default:
         return HypertrophyGoal.general;
     }
+  }
+
+  bool _hasEngineLoad(CompletedSet set) {
+    return set.reps > 0 || set.durationSeconds > 0;
   }
 
   /// Guesses the [EquipmentClass] from a list of equipment strings.

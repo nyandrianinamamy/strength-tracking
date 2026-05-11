@@ -892,8 +892,7 @@ set.</li>
 completed red-green code and tests; orchestrator tightened remaining
 debug wording; GLM proxy review passed Task 9; local verification passed
 Dart format, diff check, wording scan, and package ACWR/engine tests
-(<code>+84</code>). Commit: recorded in git history after this ledger
-update.</p>
+(<code>+84</code>). Commit: <code>8c4a66b</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -951,7 +950,13 @@ updates.</li>
 <h2
 id="task-10-define-and-implement-timed-exercise-engine-behavior">Task
 10: Define and Implement Timed-Exercise Engine Behavior</h2>
-<p><strong>Category:</strong> P1 timed workout correctness</p>
+<p><strong>Category:</strong> P1 timed workout correctness
+<strong>Status:</strong> Completed 2026-05-11. GPT-5.5 implementer
+completed red-green code and tests; GLM proxy review passed Task 10 with
+JSON compatibility and mixed-session checks; local verification passed
+Dart format, diff check, Flutter adapter/provider/integration tests
+(<code>+33</code>), and package engine/fatigue tests (<code>+65</code>).
+Commit: recorded in git history after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -991,30 +996,31 @@ affect.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add failing adapter tests for a
-timed-only completed session becoming an engine session with timed
+<li><label><input type="checkbox" checked="" />Add failing adapter tests
+for a timed-only completed session becoming an engine session with timed
 stress information.</label></li>
-<li><label><input type="checkbox" />Add failing engine/fatigue tests
-showing a plank-like timed set increases core fatigue but does not
-create an e1RM entry.</label></li>
-<li><label><input type="checkbox" />Add failing provider test for live
-heatmap preview with a timed active set.</label></li>
-<li><label><input type="checkbox" />Implement a timed-set representation
-in the engine boundary without breaking existing strength
+<li><label><input type="checkbox" checked="" />Add failing
+engine/fatigue tests showing a plank-like timed set increases core
+fatigue but does not create an e1RM entry.</label></li>
+<li><label><input type="checkbox" checked="" />Add failing provider test
+for live heatmap preview with a timed active set.</label></li>
+<li><label><input type="checkbox" checked="" />Implement a timed-set
+representation in the engine boundary without breaking existing strength
 <code>LoggedSet</code> JSON compatibility.</label></li>
-<li><label><input type="checkbox" />Update fatigue impulse calculation
-to support duration-based stress for timed sets.</label></li>
-<li><label><input type="checkbox" />Update
+<li><label><input type="checkbox" checked="" />Update fatigue impulse
+calculation to support duration-based stress for timed
+sets.</label></li>
+<li><label><input type="checkbox" checked="" />Update
 <code>docs/app-feature-inventory.md</code> with the final timed-engine
 behavior.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>dart format lib/src/features/training_engine/training_engine_adapter.dart lib/src/features/training_engine/training_engine_provider.dart packages/training_engine/lib/src/models/logged_set.dart packages/training_engine/lib/src/engine.dart packages/training_engine/lib/src/fatigue/impulse_calculator.dart test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart packages/training_engine/test/engine_test.dart packages/training_engine/test/fatigue/impulse_calculator_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter test test/features/training_engine/adapter_test.dart test/features/training_engine/training_engine_provider_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>cd packages/training_engine &amp;&amp; dart test test/engine_test.dart test/fatigue/impulse_calculator_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Commit the timed-exercise engine
-changes.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the timed-exercise
+engine changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>

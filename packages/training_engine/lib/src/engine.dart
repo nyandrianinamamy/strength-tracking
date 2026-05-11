@@ -117,46 +117,54 @@ class TrainingEngine {
     for (final entry in setsByExercise.entries) {
       final exerciseId = entry.key;
       final sets = entry.value;
+      final strengthSets = sets.where((set) => set.hasStrengthLoad).toList();
 
-      // Find the heaviest set (by weight, then reps as tiebreaker)
-      final topSet = sets.reduce((a, b) {
-        if (a.weightKg != b.weightKg) return a.weightKg > b.weightKg ? a : b;
-        return a.reps >= b.reps ? a : b;
-      });
+      _E1rmCandidate? bestE1rmCandidate;
+      if (strengthSets.isNotEmpty) {
+        // Find the heaviest strength set (by weight, then reps as tiebreaker)
+        final topSet = strengthSets.reduce((a, b) {
+          if (a.weightKg != b.weightKg) return a.weightKg > b.weightKg ? a : b;
+          return a.reps >= b.reps ? a : b;
+        });
 
-      // Update lastTopSets
-      newLastTopSets[exerciseId] = topSet;
+        // Update lastTopSets only for strength sets.
+        newLastTopSets[exerciseId] = topSet;
 
-      final bestE1rmCandidate = sets.map(_e1rmCandidateFor).reduce((
-        best,
-        candidate,
-      ) {
-        return _isBetterE1rmCandidate(candidate, best) ? candidate : best;
-      });
+        bestE1rmCandidate = strengthSets.map(_e1rmCandidateFor).reduce((
+          best,
+          candidate,
+        ) {
+          return _isBetterE1rmCandidate(candidate, best) ? candidate : best;
+        });
 
-      final estimate = E1rmEstimate(
-        exerciseId: exerciseId,
-        value: bestE1rmCandidate.value,
-        rMax: bestE1rmCandidate.rMax,
-        confidence: bestE1rmCandidate.confidence,
-        estimatedAt: session.endedAt,
-        fromEstimatedRpe: bestE1rmCandidate.set.rpeEstimated,
-      );
+        final estimate = E1rmEstimate(
+          exerciseId: exerciseId,
+          value: bestE1rmCandidate.value,
+          rMax: bestE1rmCandidate.rMax,
+          confidence: bestE1rmCandidate.confidence,
+          estimatedAt: session.endedAt,
+          fromEstimatedRpe: bestE1rmCandidate.set.rpeEstimated,
+        );
 
-      final history = List<E1rmEstimate>.from(newE1rmHistory[exerciseId] ?? [])
-        ..add(estimate);
-      // Trim to most recent 20 estimates
-      newE1rmHistory[exerciseId] = history.length > 20
-          ? history.sublist(history.length - 20)
-          : history;
+        final history = List<E1rmEstimate>.from(
+          newE1rmHistory[exerciseId] ?? [],
+        )..add(estimate);
+        // Trim to most recent 20 estimates
+        newE1rmHistory[exerciseId] = history.length > 20
+            ? history.sublist(history.length - 20)
+            : history;
+      }
 
       // Look up exercise for fatigue impulse calculation
       final exercise = registry.lookup(exerciseId);
       if (exercise != null) {
+        final e1rmForFatigue =
+            bestE1rmCandidate?.value ??
+            currentE1rm(exerciseId, session.endedAt)!;
         final impulses = impulse_lib.calculateImpulses(
           sets: sets,
           exercise: exercise,
-          e1rm: bestE1rmCandidate.value,
+          e1rm: e1rmForFatigue,
           sessionEndedAt: session.endedAt,
         );
         for (final impulse in impulses) {
@@ -180,7 +188,9 @@ class TrainingEngine {
     // Compute daily volume load (sum of weight * reps across all sets)
     double volumeLoad = 0.0;
     for (final set in session.sets) {
-      volumeLoad += set.weightKg * set.reps;
+      volumeLoad += set.hasStrengthLoad
+          ? set.weightKg * set.reps
+          : impulse_lib.trainingStressForSet(set);
     }
 
     // Aggregate and trim local-calendar-day loads (keep 35 days).
@@ -536,6 +546,7 @@ class TrainingEngine {
             rpe: fallbackRpe,
             completedAt: set.completedAt,
             rpeEstimated: true,
+            durationSeconds: set.durationSeconds,
           );
         }
         return set;

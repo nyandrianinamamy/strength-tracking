@@ -288,6 +288,8 @@ Implemented:
 - Muscle fatigue gradient and legend.
 - Info sheet explaining heatmap calculation.
 - Secondary muscles contribute at a reduced coefficient in engine mapping.
+- Timed completed sets with a duration and mapped muscles contribute to engine
+  fatigue, the dashboard heatmap, and the live active-workout heatmap preview.
 - Training readiness card backed by the training engine provider.
 - Training engine debug route, when enabled.
 
@@ -297,6 +299,9 @@ Training engine package capabilities present in source:
 - Fatigue decay and impulse calculation.
 - Muscle registry and normalization.
 - Acute-to-chronic workload ratio helpers over aggregated local-calendar-day loads.
+- Timed-set ingestion uses duration-based stress for fatigue and daily
+  load/ACWR context, and timed-only sessions count as ingested when they
+  contribute that state.
 - Readiness scoring from sleep and HRV records.
 - Load progression recommendations with safety gates and rounding.
 - Planner split selection, session generation, time bounding, substitutions, and missed-session logic.
@@ -304,6 +309,8 @@ Training engine package capabilities present in source:
 Integration caveat:
 
 - The app maps captured profile fields into the training engine: sex, age, weight, and `fitnessGoal` are translated into the engine profile, with engine defaults used only when optional app fields are absent.
+- Timed sets do not create e1RM history, last-top-set history, or visible
+  strength load recommendations; those outputs remain strength-set only.
 
 ## Settings
 

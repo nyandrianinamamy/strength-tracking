@@ -260,6 +260,38 @@ void main() {
       expect(engine.state.fatigueLog, isNotEmpty);
     });
 
+    test('ingests timed sets for fatigue and load without e1RM history', () {
+      final engine = _engine();
+      final completedAt = DateTime.utc(2026, 3, 1, 18, 0);
+
+      engine.ingestSession(
+        EngineSession(
+          id: 'timed-plank-session',
+          startedAt: completedAt.subtract(const Duration(minutes: 10)),
+          endedAt: completedAt,
+          sets: [
+            LoggedSet(
+              exerciseId: 'plank',
+              weightKg: 0.0,
+              reps: 0,
+              durationSeconds: 60,
+              rpe: 7.0,
+              completedAt: completedAt,
+            ),
+          ],
+          sessionRpe: 7.0,
+        ),
+      );
+
+      expect(engine.state.sessionsIngested, 1);
+      expect(engine.state.fatigueLog['core'], isNotEmpty);
+      expect(engine.currentFatigue('core', completedAt), greaterThan(0));
+      expect(engine.state.dailyLoads.single.volumeLoad, greaterThan(0));
+      expect(engine.state.acwrState, isNotNull);
+      expect(engine.state.e1rmHistory['plank'], isNull);
+      expect(engine.state.lastTopSets['plank'], isNull);
+    });
+
     test('updates ACWR EWMA state', () {
       final engine = _engine();
       engine.ingestSession(_session());
@@ -437,6 +469,28 @@ void main() {
       // Squat targets quadriceps
       expect(map['quadriceps'], isNotNull);
       expect(map['quadriceps']!.level, greaterThan(0.0));
+    });
+
+    test('returns fatigue for timed sets with duration', () {
+      final engine = _engine();
+      final sets = [
+        LoggedSet(
+          exerciseId: 'plank',
+          weightKg: 0.0,
+          reps: 0,
+          durationSeconds: 45,
+          rpe: 7.0,
+          completedAt: DateTime.utc(2026, 4, 1, 18, 0),
+        ),
+      ];
+
+      final map = engine.previewFatigueWithSets(
+        sets,
+        at: DateTime.utc(2026, 4, 1, 18, 0),
+      );
+
+      expect(map['core'], isNotNull);
+      expect(map['core']!.level, greaterThan(0.0));
     });
 
     test('merges preview with existing persisted fatigue', () {

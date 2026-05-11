@@ -230,7 +230,7 @@ final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
 
   // Convert app CompletedSets to engine LoggedSets
   final engineSets = activeSets
-      .where((s) => s.reps > 0)
+      .where((s) => s.reps > 0 || s.durationSeconds > 0)
       .map(
         (s) => LoggedSet(
           exerciseId: s.exerciseId,
@@ -238,6 +238,7 @@ final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
           reps: s.reps,
           rpe: s.rpe ?? 8.0,
           completedAt: s.completedAt,
+          durationSeconds: s.durationSeconds,
         ),
       )
       .toList();
@@ -531,5 +532,8 @@ final engineDebugRawSnapshotProvider = FutureProvider<String>((ref) async {
 });
 
 String _formatLoggedSet(LoggedSet set) {
+  if (set.hasTimedLoad && !set.hasStrengthLoad) {
+    return '${set.durationSeconds}s @ ${set.rpe.toStringAsFixed(1)}';
+  }
   return '${set.weightKg.toStringAsFixed(1)} kg × ${set.reps} @ ${set.rpe.toStringAsFixed(1)}';
 }

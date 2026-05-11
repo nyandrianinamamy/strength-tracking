@@ -7,6 +7,12 @@ import '../models/logged_set.dart';
 /// Derivation: 4×10×75×0.8 / (100 × 30) × 100 = 2400/3000 × 100 = 80
 const double _normalizationFactor = 30.0;
 
+/// Converts timed-set seconds into a strength-like stress unit.
+///
+/// A one-minute hard isometric set should register as meaningful local
+/// fatigue without behaving like a heavy barbell top set.
+const double _timedStressPerSecond = 1.0;
+
 /// Clamps [value] to [min..max].
 double _clamp(double value, double min, double max) {
   if (value < min) return min;
@@ -14,11 +20,22 @@ double _clamp(double value, double min, double max) {
   return value;
 }
 
+double trainingStressForSet(LoggedSet set) {
+  if (set.hasStrengthLoad) {
+    return set.weightKg * set.reps * (set.rpe / 10.0);
+  }
+  if (set.hasTimedLoad) {
+    return set.durationSeconds * _timedStressPerSecond * (set.rpe / 10.0);
+  }
+  return 0.0;
+}
+
 /// Calculates fatigue impulses for each muscle in [exercise.muscleMap] after
 /// a training session described by [sets].
 ///
 /// Steps:
-/// 1. For each set: setStress = weightKg × reps × (rpe / 10)
+/// 1. For each set: setStress = weightKg × reps × (rpe / 10), or
+///    durationSeconds × timed stress factor × (rpe / 10) for timed sets.
 /// 2. Accumulate per muscle:  accum[muscleId] += setStress × coefficient
 /// 3. Normalize: F0 = clamp((accum / (e1rm × normFactor)) × 100, 0, 100)
 /// 4. Emit one [FatigueImpulse] per muscle timestamped at [sessionEndedAt]
@@ -35,7 +52,7 @@ List<FatigueImpulse> calculateImpulses({
   }
 
   for (final set in sets) {
-    final setStress = set.weightKg * set.reps * (set.rpe / 10.0);
+    final setStress = trainingStressForSet(set);
     for (final activation in exercise.muscleMap) {
       accum[activation.muscleId] =
           accum[activation.muscleId]! + setStress * activation.coefficient;
