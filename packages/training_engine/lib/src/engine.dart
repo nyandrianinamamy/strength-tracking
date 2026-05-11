@@ -26,6 +26,57 @@ import 'readiness/hrv_scorer.dart' as hrv_lib;
 import 'readiness/sleep_scorer.dart' as sleep_lib;
 import 'registry/exercise_registry.dart';
 
+const _e1rmTieRelativeTolerance = 0.01;
+
+class _E1rmCandidate {
+  final LoggedSet set;
+  final double value;
+  final double rMax;
+  final double confidence;
+
+  const _E1rmCandidate({
+    required this.set,
+    required this.value,
+    required this.rMax,
+    required this.confidence,
+  });
+}
+
+_E1rmCandidate _e1rmCandidateFor(LoggedSet set) {
+  final rm = formula_lib.rMax(set.reps, set.rpe);
+  return _E1rmCandidate(
+    set: set,
+    value: e1rm_lib.compositeE1rm(
+      weight: set.weightKg,
+      reps: set.reps,
+      rpe: set.rpe,
+    ),
+    rMax: rm,
+    confidence: e1rm_lib.estimateConfidence(rm),
+  );
+}
+
+bool _isBetterE1rmCandidate(_E1rmCandidate candidate, _E1rmCandidate best) {
+  final maxMagnitude = candidate.value.abs() > best.value.abs()
+      ? candidate.value.abs()
+      : best.value.abs();
+  final tolerance = maxMagnitude * _e1rmTieRelativeTolerance;
+  final valueDifference = candidate.value - best.value;
+  if (valueDifference.abs() > tolerance) {
+    return valueDifference > 0;
+  }
+  if (candidate.confidence != best.confidence) {
+    return candidate.confidence > best.confidence;
+  }
+  if (candidate.set.weightKg != best.set.weightKg) {
+    return candidate.set.weightKg > best.set.weightKg;
+  }
+  if (candidate.set.reps != best.set.reps) {
+    return candidate.set.reps > best.set.reps;
+  }
+  return false;
+}
+
 /// Single entry-point that wires all training subsystems together.
 ///
 /// The engine holds a [TrainingState] which accumulates data across
@@ -76,22 +127,20 @@ class TrainingEngine {
       // Update lastTopSets
       newLastTopSets[exerciseId] = topSet;
 
-      // Compute composite e1RM for the heaviest set
-      final rm = formula_lib.rMax(topSet.reps, topSet.rpe);
-      final e1rmValue = e1rm_lib.compositeE1rm(
-        weight: topSet.weightKg,
-        reps: topSet.reps,
-        rpe: topSet.rpe,
-      );
-      final confidence = e1rm_lib.estimateConfidence(rm);
+      final bestE1rmCandidate = sets.map(_e1rmCandidateFor).reduce((
+        best,
+        candidate,
+      ) {
+        return _isBetterE1rmCandidate(candidate, best) ? candidate : best;
+      });
 
       final estimate = E1rmEstimate(
         exerciseId: exerciseId,
-        value: e1rmValue,
-        rMax: rm,
-        confidence: confidence,
+        value: bestE1rmCandidate.value,
+        rMax: bestE1rmCandidate.rMax,
+        confidence: bestE1rmCandidate.confidence,
         estimatedAt: session.endedAt,
-        fromEstimatedRpe: topSet.rpeEstimated,
+        fromEstimatedRpe: bestE1rmCandidate.set.rpeEstimated,
       );
 
       final history = List<E1rmEstimate>.from(newE1rmHistory[exerciseId] ?? [])
@@ -107,7 +156,7 @@ class TrainingEngine {
         final impulses = impulse_lib.calculateImpulses(
           sets: sets,
           exercise: exercise,
-          e1rm: e1rmValue,
+          e1rm: bestE1rmCandidate.value,
           sessionEndedAt: session.endedAt,
         );
         for (final impulse in impulses) {

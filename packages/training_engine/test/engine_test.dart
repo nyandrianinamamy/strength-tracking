@@ -86,6 +86,172 @@ void main() {
       expect(topSet!.weightKg, closeTo(120.0, 0.001));
     });
 
+    test('stores the set with the highest e1RM estimate in history', () {
+      final engine = _engine();
+      final ts = DateTime.utc(2026, 3, 1, 18, 0);
+
+      engine.ingestSession(
+        EngineSession(
+          id: 's-best-e1rm',
+          startedAt: ts.subtract(const Duration(hours: 1)),
+          endedAt: ts,
+          sets: [
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 120.0,
+              reps: 3,
+              rpe: 9.0,
+              completedAt: ts,
+            ),
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 101.0,
+              reps: 8,
+              rpe: 7.0,
+              completedAt: ts,
+            ),
+          ],
+          sessionRpe: 8.0,
+        ),
+      );
+
+      final estimate = engine.state.e1rmHistory['barbell_back_squat']!.single;
+      final expectedBest = compositeE1rm(weight: 101.0, reps: 8, rpe: 7.0);
+      final heaviestEstimate = compositeE1rm(weight: 120.0, reps: 3, rpe: 9.0);
+
+      expect(expectedBest, greaterThan(heaviestEstimate));
+      expect(estimate.value, closeTo(expectedBest, 0.001));
+      expect(engine.state.lastTopSets['barbell_back_squat']!.weightKg, 120.0);
+    });
+
+    test('breaks effectively equal e1RM ties by higher confidence', () {
+      final engine = _engine();
+      final ts = DateTime.utc(2026, 3, 1, 18, 0);
+
+      engine.ingestSession(
+        EngineSession(
+          id: 's-e1rm-tie',
+          startedAt: ts.subtract(const Duration(hours: 1)),
+          endedAt: ts,
+          sets: [
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 100.0,
+              reps: 15,
+              rpe: 10.0,
+              completedAt: ts,
+            ),
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 100.0,
+              reps: 16,
+              rpe: 10.0,
+              completedAt: ts,
+            ),
+          ],
+          sessionRpe: 8.0,
+        ),
+      );
+
+      final estimate = engine.state.e1rmHistory['barbell_back_squat']!.single;
+      final higherConfidenceEstimate = compositeE1rm(
+        weight: 100.0,
+        reps: 15,
+        rpe: 10.0,
+      );
+
+      expect(
+        (compositeE1rm(weight: 100.0, reps: 16, rpe: 10.0) -
+                higherConfidenceEstimate)
+            .abs(),
+        lessThan(1.5),
+      );
+      expect(estimate.value, closeTo(higherConfidenceEstimate, 0.001));
+      expect(estimate.confidence, 0.60);
+      expect(estimate.rMax, 15.0);
+    });
+
+    test('breaks equal-confidence e1RM ties by heavier weight', () {
+      final engine = _engine();
+      final ts = DateTime.utc(2026, 3, 1, 18, 0);
+
+      engine.ingestSession(
+        EngineSession(
+          id: 's-e1rm-tie-weight',
+          startedAt: ts.subtract(const Duration(hours: 1)),
+          endedAt: ts,
+          sets: [
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 100.0,
+              reps: 8,
+              rpe: 8.0,
+              completedAt: ts,
+            ),
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 100.5,
+              reps: 8,
+              rpe: 8.0,
+              completedAt: ts,
+            ),
+          ],
+          sessionRpe: 8.0,
+        ),
+      );
+
+      final estimate = engine.state.e1rmHistory['barbell_back_squat']!.single;
+      final heavierEstimate = compositeE1rm(weight: 100.5, reps: 8, rpe: 8.0);
+      final lighterEstimate = compositeE1rm(weight: 100.0, reps: 8, rpe: 8.0);
+
+      expect(
+        (heavierEstimate - lighterEstimate).abs(),
+        lessThan(heavierEstimate * 0.01),
+      );
+      expect(estimate.value, closeTo(heavierEstimate, 0.001));
+    });
+
+    test('breaks equal-confidence and equal-weight e1RM ties by reps', () {
+      final engine = _engine();
+      final ts = DateTime.utc(2026, 3, 1, 18, 0);
+
+      engine.ingestSession(
+        EngineSession(
+          id: 's-e1rm-tie-reps',
+          startedAt: ts.subtract(const Duration(hours: 1)),
+          endedAt: ts,
+          sets: [
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 100.0,
+              reps: 8,
+              rpe: 8.0,
+              completedAt: ts,
+              rpeEstimated: false,
+            ),
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 100.0,
+              reps: 9,
+              rpe: 9.0,
+              completedAt: ts,
+              rpeEstimated: true,
+            ),
+          ],
+          sessionRpe: 8.0,
+        ),
+      );
+
+      final estimate = engine.state.e1rmHistory['barbell_back_squat']!.single;
+
+      expect(
+        compositeE1rm(weight: 100.0, reps: 8, rpe: 8.0),
+        closeTo(compositeE1rm(weight: 100.0, reps: 9, rpe: 9.0), 0.001),
+      );
+      expect(estimate.rMax, 10.0);
+      expect(estimate.fromEstimatedRpe, isTrue);
+    });
+
     test('updates fatigue log for known exercise', () {
       final engine = _engine();
       engine.ingestSession(_session());

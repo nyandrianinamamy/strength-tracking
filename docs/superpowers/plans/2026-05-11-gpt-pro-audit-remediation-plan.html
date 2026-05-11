@@ -768,8 +768,8 @@ completed red-green code and tests; GLM proxy review initially found a
 compile/import blocker and missing label-copy test, then passed after
 the orchestrator fixed and re-tested; local verification passed Dart
 format, diff check, Flutter adapter tests (<code>+11</code>), and
-package safety/recommendation tests (<code>+32</code>). Commit: recorded
-in git history after this ledger update.</p>
+package safety/recommendation tests (<code>+32</code>). Commit:
+<code>33437c3</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -834,7 +834,13 @@ steady/hold suggestion.</li>
 <hr />
 <h2 id="task-8-select-best-estimated-e1rm-for-e1rm-history">Task 8:
 Select Best Estimated e1RM for e1RM History</h2>
-<p><strong>Category:</strong> P1 engine formula correctness</p>
+<p><strong>Category:</strong> P1 engine formula correctness
+<strong>Status:</strong> Completed 2026-05-11. GPT-5.5 implementer
+completed red-green code and tests; orchestrator added missing weight
+and reps tie-breaker coverage; GLM proxy review passed Task 8; local
+verification passed Dart format, diff check, and package engine/e1RM
+tests (<code>+68</code>). Commit: recorded in git history after this
+ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -858,19 +864,19 @@ estimate is chosen.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add a failing engine test where a
-lighter higher-rep set has higher composite e1RM than the heaviest
-set.</label></li>
-<li><label><input type="checkbox" />Add a failing tie-breaker test for
-equal e1RM values.</label></li>
-<li><label><input type="checkbox" />Update e1RM selection in
+<li><label><input type="checkbox" checked="" />Add a failing engine test
+where a lighter higher-rep set has higher composite e1RM than the
+heaviest set.</label></li>
+<li><label><input type="checkbox" checked="" />Add a failing tie-breaker
+test for equal e1RM values.</label></li>
+<li><label><input type="checkbox" checked="" />Update e1RM selection in
 <code>TrainingEngine.ingestSession</code> while preserving
 <code>lastTopSets</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>dart format packages/training_engine/lib/src/engine.dart packages/training_engine/test/engine_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>cd packages/training_engine &amp;&amp; dart test test/engine_test.dart test/e1rm/composite_estimator_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Commit the e1RM selection
+<li><label><input type="checkbox" checked="" />Commit the e1RM selection
 changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>

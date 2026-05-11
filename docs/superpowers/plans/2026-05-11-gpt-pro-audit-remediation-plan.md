@@ -326,7 +326,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 7: Fix Deload and Reduction Direction Labels
 
 **Category:** P0 user-facing recommendation safety
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review initially found a compile/import blocker and missing label-copy test, then passed after the orchestrator fixed and re-tested; local verification passed Dart format, diff check, Flutter adapter tests (`+11`), and package safety/recommendation tests (`+32`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review initially found a compile/import blocker and missing label-copy test, then passed after the orchestrator fixed and re-tested; local verification passed Dart format, diff check, Flutter adapter tests (`+11`), and package safety/recommendation tests (`+32`). Commit: `33437c3`.
 
 **Files:**
 
@@ -365,6 +365,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 8: Select Best Estimated e1RM for e1RM History
 
 **Category:** P1 engine formula correctness
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; orchestrator added missing weight and reps tie-breaker coverage; GLM proxy review passed Task 8; local verification passed Dart format, diff check, and package engine/e1RM tests (`+68`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -381,12 +382,12 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add a failing engine test where a lighter higher-rep set has higher composite e1RM than the heaviest set.
-- [ ] Add a failing tie-breaker test for equal e1RM values.
-- [ ] Update e1RM selection in `TrainingEngine.ingestSession` while preserving `lastTopSets`.
-- [ ] Run `dart format packages/training_engine/lib/src/engine.dart packages/training_engine/test/engine_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/engine_test.dart test/e1rm/composite_estimator_test.dart`.
-- [ ] Commit the e1RM selection changes.
+- [x] Add a failing engine test where a lighter higher-rep set has higher composite e1RM than the heaviest set.
+- [x] Add a failing tie-breaker test for equal e1RM values.
+- [x] Update e1RM selection in `TrainingEngine.ingestSession` while preserving `lastTopSets`.
+- [x] Run `dart format packages/training_engine/lib/src/engine.dart packages/training_engine/test/engine_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/engine_test.dart test/e1rm/composite_estimator_test.dart`.
+- [x] Commit the e1RM selection changes.
 
 **Acceptance Checks:**
 
