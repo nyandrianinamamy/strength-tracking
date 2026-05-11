@@ -395,6 +395,11 @@ Implemented:
 - Static privacy and terms pages at `web/privacy.html` and `web/terms.html`.
 - Browser notification support for rest timer completion when permissions and page visibility allow it.
 
+Verification basis:
+
+- `test/web/web_assets_test.dart` verifies the manifest identity, installable icon files, web index manifest metadata, static privacy/terms pages, and this inventory's web asset claims.
+- `test/core/legal_links_test.dart` verifies the Settings legal-link URLs resolve to the deployed web privacy and terms pages.
+
 ## iOS Native Features
 
 Implemented in source:

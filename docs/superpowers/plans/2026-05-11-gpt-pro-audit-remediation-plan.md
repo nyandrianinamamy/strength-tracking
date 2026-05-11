@@ -740,6 +740,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 17: Verify Web/PWA and Legal Asset Claims
 
 **Category:** P2 web documentation and smoke coverage
+**Status:** Completed 2026-05-12. GPT-5.5 implementer added file-backed Web/PWA/legal asset tests, removed the unsupported HealthKit workout-write claim from the privacy page, and documented the web verification basis in the app feature inventory. GLM proxy review passed Task 17 with no blocking issues. Local verification passed Dart format on touched test files, diff check, focused legal/web asset tests (`+9`), and `flutter build web`. Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -760,12 +761,12 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add tests for `legal_links.dart` that cover the web legal URLs.
-- [ ] Verify `web/manifest.json`, `web/privacy.html`, and `web/terms.html` content against current product capabilities.
-- [ ] Update docs or web static copy where claims are stale.
-- [ ] Run `flutter test test/core/legal_links_test.dart`.
-- [ ] Run `flutter build web`.
-- [ ] Commit the web/PWA verification changes.
+- [x] Add tests for `legal_links.dart` that cover the web legal URLs.
+- [x] Verify `web/manifest.json`, `web/privacy.html`, and `web/terms.html` content against current product capabilities.
+- [x] Update docs or web static copy where claims are stale.
+- [x] Run `flutter test test/core/legal_links_test.dart`.
+- [x] Run `flutter build web`.
+- [x] Commit the web/PWA verification changes.
 
 **Acceptance Checks:**
 

@@ -390,13 +390,13 @@ through user interactions.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" checked="" />Add a “Coverage Status”
+<li><label><input type="checkbox" checked="" />Add a "Coverage Status"
 section to <code>docs/e2e-web-flow-inventory.md</code>.</label></li>
 <li><label><input type="checkbox" checked="" />List each shortcut-backed
 flow with the source test name or nearby description from
 <code>integration_test/app_test.dart</code>.</label></li>
-<li><label><input type="checkbox" checked="" />Add a short “Required UI
-Coverage Work” list that maps directly to Task 18.</label></li>
+<li><label><input type="checkbox" checked="" />Add a short "Required UI
+Coverage Work" list that maps directly to Task 18.</label></li>
 <li><label><input type="checkbox" checked="" />Run
 <code>rg -n "Smart Planner|controller|state seeding|shortcut|UI-driven|Coverage Status|Required UI Coverage Work" docs/e2e-web-flow-inventory.md docs/app-feature-inventory.md</code>.</label></li>
 <li><label><input type="checkbox" checked="" />Commit only coverage-doc
@@ -631,13 +631,13 @@ empty sleep/HRV lists, the provider must not ingest
 <code>DemoSeedData.seedHrv()</code>.</li>
 <li>Demo sleep/HRV records may be used only by explicit demo-data flows,
 not by an empty HealthKit fetch.</li>
-<li>The app must distinguish “no samples”, “unavailable/unsupported
-platform”, “authorization denied”, and “fetch error” enough for provider
+<li>The app must distinguish "no samples", "unavailable/unsupported
+platform", "authorization denied", and "fetch error" enough for provider
 tests to assert behavior. This can be done with a result type or
 deterministic fake data source methods.</li>
 <li>A stale HealthKit refresh that returns empty lists must not silently
 erase previously fetched sleep/HRV history unless the product explicitly
-shows “no current health data” and tests cover that choice.</li>
+shows "no current health data" and tests cover that choice.</li>
 <li><code>lastHealthKitFetch</code> semantics must be deterministic:
 either stamp attempted fetches with a status, or avoid repeated
 tight-loop refetching after empty results.</li>
@@ -662,8 +662,8 @@ according to the functional requirements.</label></li>
 <li><label><input type="checkbox" checked="" />Update readiness card
 tests for no-health-data and limited-data display.</label></li>
 <li><label><input type="checkbox" checked="" />Update
-<code>docs/app-feature-inventory.md</code> to remove any “HealthKit demo
-fallback” language after the code fix.</label></li>
+<code>docs/app-feature-inventory.md</code> to remove any "HealthKit demo
+fallback" language after the code fix.</label></li>
 <li><label><input type="checkbox" checked="" />Run
 <code>dart format lib/src/features/training_engine/training_engine_provider.dart lib/src/features/training_engine/healthkit_data_source.dart packages/training_engine/lib/src/engine.dart test/features/training_engine/training_engine_provider_test.dart packages/training_engine/test/engine_test.dart packages/training_engine/test/readiness/readiness_test.dart test/features/dashboard/training_readiness_card_test.dart</code>.</label></li>
 <li><label><input type="checkbox" checked="" />Run
@@ -791,8 +791,8 @@ package safety/recommendation tests (<code>+32</code>). Commit:
 <code>PerformanceDelta.maintenance</code>.</li>
 <li>A safety gate with <code>GateAction.deload</code>,
 <code>GateAction.reduceLoad</code>, or
-<code>GateAction.suggestAlternative</code> must never display as “hold
-steady” in the active workout progression hint.</li>
+<code>GateAction.suggestAlternative</code> must never display as "hold
+steady" in the active workout progression hint.</li>
 <li>A true maintain recommendation with unchanged suggested weight may
 display as hold.</li>
 <li>A progression recommendation with increased suggested weight must
@@ -1197,7 +1197,7 @@ dashboard widget tests (<code>+5</code>). Commit:
 <p><strong>Functional Requirements:</strong></p>
 <ul>
 <li><code>ReadinessFlag.acuteSleepDeprivation</code> must be emitted
-when recent sleep data crosses the existing scorer’s acute sleep
+when recent sleep data crosses the existing scorer's acute sleep
 deprivation threshold.</li>
 <li><code>ReadinessFlag.risingRestingHr</code> must be emitted when
 HRV/resting-heart data indicates the existing rising resting HR
@@ -1391,7 +1391,7 @@ added source-level Watch/Live Activity tests, fixed Watch snapshots to
 send <code>null</code> when no engine suggestion exists, and added an
 equivalent device-lab native runtime smoke for the paired
 <code>17 Pro + watch 26.3</code> simulator. GLM proxy review passed Task
-16 and accepted the paired-simulator smoke under the plan’s
+16 and accepted the paired-simulator smoke under the plan's
 equivalent-device-lab requirement while preserving the physical
 iPhone/Watch blocker note. Local verification passed Dart format, diff
 check, focused Watch/Live Activity tests (<code>+16</code>), focused
@@ -1467,8 +1467,15 @@ device-lab run.</li>
 <hr />
 <h2 id="task-17-verify-webpwa-and-legal-asset-claims">Task 17: Verify
 Web/PWA and Legal Asset Claims</h2>
-<p><strong>Category:</strong> P2 web documentation and smoke
-coverage</p>
+<p><strong>Category:</strong> P2 web documentation and smoke coverage
+<strong>Status:</strong> Completed 2026-05-12. GPT-5.5 implementer added
+file-backed Web/PWA/legal asset tests, removed the unsupported HealthKit
+workout-write claim from the privacy page, and documented the web
+verification basis in the app feature inventory. GLM proxy review passed
+Task 17 with no blocking issues. Local verification passed Dart format
+on touched test files, diff check, focused legal/web asset tests
+(<code>+9</code>), and <code>flutter build web</code>. Commit: recorded
+in git history after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>web/manifest.json</code></li>
@@ -1493,21 +1500,21 @@ and must not claim unsupported HealthKit writes.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add tests for
+<li><label><input type="checkbox" checked="" />Add tests for
 <code>legal_links.dart</code> that cover the web legal
 URLs.</label></li>
-<li><label><input type="checkbox" />Verify
+<li><label><input type="checkbox" checked="" />Verify
 <code>web/manifest.json</code>, <code>web/privacy.html</code>, and
 <code>web/terms.html</code> content against current product
 capabilities.</label></li>
-<li><label><input type="checkbox" />Update docs or web static copy where
-claims are stale.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Update docs or web static
+copy where claims are stale.</label></li>
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter test test/core/legal_links_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter build web</code>.</label></li>
-<li><label><input type="checkbox" />Commit the web/PWA verification
-changes.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the web/PWA
+verification changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>
@@ -1610,7 +1617,7 @@ updates.</label></li>
 <ul>
 <li>All local verification commands pass.</li>
 <li>The repository contains a truthful feature inventory, truthful E2E
-coverage inventory, and implemented fixes for GPT Pro’s P0/P1/P2 audit
+coverage inventory, and implemented fixes for GPT Pro's P0/P1/P2 audit
 categories.</li>
 </ul>
 </body>
