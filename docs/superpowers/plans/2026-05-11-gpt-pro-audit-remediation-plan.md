@@ -238,7 +238,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 5: Remove Fake HealthKit Data From Empty or Denied Fetches
 
 **Category:** P0 HealthKit/readiness correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run; GLM proxy review passed Task 5; local verification passed Dart format, diff check, package tests (`+77`), and Flutter tests (`+20`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests through a non-interactive Codex run; GLM proxy review passed Task 5; local verification passed Dart format, diff check, package tests (`+77`), and Flutter tests (`+20`). Commit: `173a649`.
 
 **Files:**
 
@@ -283,6 +283,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 6: Use Routine Targets in Visible Load Recommendations
 
 **Category:** P0 recommendation correctness
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 6; local verification passed Dart format, diff check, Flutter tests (`+20`), and package recommendation tests (`+11`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -305,15 +306,15 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add a failing provider/widget test for routine target reps affecting recommendation direction and suggested weight.
-- [ ] Add a failing active-workout test for the prefill priority when previous app set and engine suggestion disagree.
-- [ ] Introduce a typed provider parameter such as exercise id plus target reps/target RPE, or another local pattern that passes `TargetParams` without stringly-typed parsing.
-- [ ] Update `ActiveWorkoutScreen` to call the routine-aware recommendation provider for the current prescription.
-- [ ] Keep the current exercise-id-only provider only for debug/default contexts that do not know the routine target.
-- [ ] Run `dart format lib/src/features/training_engine/training_engine_provider.dart lib/src/features/workout/active_workout_screen.dart test/features/training_engine/training_engine_provider_test.dart test/features/workout/active_workout_suggestion_test.dart packages/training_engine/test/progression/recommendation_test.dart`.
-- [ ] Run `flutter test test/features/training_engine/training_engine_provider_test.dart test/features/workout/active_workout_suggestion_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/progression/recommendation_test.dart`.
-- [ ] Commit the routine-target recommendation changes.
+- [x] Add a failing provider/widget test for routine target reps affecting recommendation direction and suggested weight.
+- [x] Add a failing active-workout test for the prefill priority when previous app set and engine suggestion disagree.
+- [x] Introduce a typed provider parameter such as exercise id plus target reps/target RPE, or another local pattern that passes `TargetParams` without stringly-typed parsing.
+- [x] Update `ActiveWorkoutScreen` to call the routine-aware recommendation provider for the current prescription.
+- [x] Keep the current exercise-id-only provider only for debug/default contexts that do not know the routine target.
+- [x] Run `dart format lib/src/features/training_engine/training_engine_provider.dart lib/src/features/workout/active_workout_screen.dart test/features/training_engine/training_engine_provider_test.dart test/features/workout/active_workout_suggestion_test.dart packages/training_engine/test/progression/recommendation_test.dart`.
+- [x] Run `flutter test test/features/training_engine/training_engine_provider_test.dart test/features/workout/active_workout_suggestion_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/progression/recommendation_test.dart`.
+- [x] Commit the routine-target recommendation changes.
 
 **Acceptance Checks:**
 

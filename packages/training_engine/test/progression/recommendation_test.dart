@@ -1,9 +1,5 @@
 import 'package:test/test.dart';
-import 'package:training_engine/src/progression/recommendation.dart';
-import 'package:training_engine/src/progression/performance_delta.dart';
-import 'package:training_engine/src/progression/safety_gates.dart';
-import 'package:training_engine/src/models/enums.dart';
-import 'package:training_engine/src/models/logged_set.dart';
+import 'package:training_engine/training_engine.dart';
 
 // Helper: build a LoggedSet for testing
 LoggedSet makeSet({
@@ -11,14 +7,13 @@ LoggedSet makeSet({
   double weightKg = 100.0,
   int reps = 10,
   double rpe = 8.0,
-}) =>
-    LoggedSet(
-      exerciseId: exerciseId,
-      weightKg: weightKg,
-      reps: reps,
-      rpe: rpe,
-      completedAt: DateTime.now(),
-    );
+}) => LoggedSet(
+  exerciseId: exerciseId,
+  weightKg: weightKg,
+  reps: reps,
+  rpe: rpe,
+  completedAt: DateTime.now(),
+);
 
 // Default safe context
 const _safeTargets = TargetParams(
@@ -272,5 +267,74 @@ void main() {
         expect(rec.explanation, contains('regress'));
       });
     });
+  });
+
+  group('routine target overrides', () {
+    test(
+      'treats seeded 5-rep strength work as progression when routine target is met',
+      () {
+        final engine = TrainingEngine(
+          registry: ExerciseRegistry.withDefaults(),
+          profile: UserProfile(
+            sex: Sex.male,
+            age: 32,
+            bodyWeightKg: 84,
+            experience: ExperienceLevel.intermediate,
+            goal: HypertrophyGoal.strength,
+            availableDays: const [1, 3, 5],
+            maxSessionDuration: const Duration(minutes: 60),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        final completedAt = DateTime.utc(2026, 5, 1, 18, 0);
+
+        engine.ingestSession(
+          EngineSession(
+            id: 'seeded-strength-routine-session',
+            startedAt: completedAt.subtract(const Duration(hours: 1)),
+            endedAt: completedAt,
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_bench_press',
+                weightKg: 100,
+                reps: 6,
+                rpe: 8.0,
+                completedAt: completedAt.subtract(const Duration(minutes: 40)),
+              ),
+            ],
+          ),
+        );
+
+        final defaultRecommendation = engine.recommendLoad(
+          'barbell_bench_press',
+          at: completedAt.add(const Duration(days: 8)),
+        );
+        final routineRecommendation = engine.recommendLoad(
+          'barbell_bench_press',
+          overrides: const TargetParams(
+            targetRepsLow: 5,
+            targetRepsHigh: 5,
+            targetRpe: 8.0,
+          ),
+          at: completedAt.add(const Duration(days: 8)),
+        );
+
+        expect(
+          defaultRecommendation.targets.targetRepsHigh,
+          12,
+          reason: 'Compound upper defaults should stay available.',
+        );
+        expect(
+          defaultRecommendation.delta,
+          PerformanceDelta.maintenance,
+          reason: 'Six reps is below the default 8-12 progression target.',
+        );
+        expect(routineRecommendation.targets.targetRepsLow, 5);
+        expect(routineRecommendation.targets.targetRepsHigh, 5);
+        expect(routineRecommendation.targets.targetRpe, 8.0);
+        expect(routineRecommendation.delta, PerformanceDelta.progression);
+        expect(routineRecommendation.suggestedWeightKg, greaterThan(100));
+      },
+    );
   });
 }

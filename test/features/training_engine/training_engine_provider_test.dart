@@ -829,6 +829,63 @@ void main() {
     });
 
     test(
+      'routine load recommendations use target reps and explicit default target RPE',
+      () async {
+        final completedAt = DateTime.utc(2026, 4, 1, 18, 0);
+        final session =
+            _completedSession(
+              id: 'bench-strength-session',
+              completedAt: completedAt,
+              exerciseId: 'barbell_bench_press',
+              weightKg: 100,
+            ).copyWith(
+              completedSets: [
+                CompletedSet(
+                  exerciseId: 'barbell_bench_press',
+                  setNumber: 1,
+                  weightKg: 100,
+                  reps: 6,
+                  completedAt: completedAt,
+                  note: '',
+                  rpe: 8.0,
+                ),
+              ],
+            );
+        final appState = _appStateWithCompletedSessions([session]);
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+        final defaultRecommendation = engine.recommendLoad(
+          'barbell_bench_press',
+          at: completedAt.add(const Duration(days: 8)),
+        );
+        final routineRecommendation = await container.read(
+          routineLoadRecommendationProvider(
+            const RoutineLoadRecommendationParams(
+              exerciseId: 'barbell_bench_press',
+              targetReps: 5,
+            ),
+          ).future,
+        );
+
+        expect(defaultRecommendation.targets.targetRepsHigh, 12);
+        expect(defaultRecommendation.delta, PerformanceDelta.maintenance);
+        expect(routineRecommendation, isNotNull);
+        expect(routineRecommendation!.targets.targetRepsLow, 5);
+        expect(routineRecommendation.targets.targetRepsHigh, 5);
+        expect(routineRecommendation.targets.targetRpe, 8.0);
+        expect(routineRecommendation.delta, PerformanceDelta.progression);
+      },
+    );
+
+    test(
       'engine debug raw snapshot provider returns formatted serialized state',
       () async {
         final appState = _appStateWithCompletedSession();

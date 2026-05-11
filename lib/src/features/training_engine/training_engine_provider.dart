@@ -279,6 +279,39 @@ Future<void> resetAndRebootstrapEngine(WidgetRef ref) async {
   ref.invalidate(trainingEngineProvider);
 }
 
+@immutable
+class RoutineLoadRecommendationParams {
+  const RoutineLoadRecommendationParams({
+    required this.exerciseId,
+    required this.targetReps,
+    this.targetRpe = 8.0,
+  });
+
+  final String exerciseId;
+  final int targetReps;
+  final double targetRpe;
+
+  TargetParams get targetParams {
+    final reps = targetReps < 1 ? 1 : targetReps;
+    return TargetParams(
+      targetRepsLow: reps,
+      targetRepsHigh: reps,
+      targetRpe: targetRpe,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is RoutineLoadRecommendationParams &&
+        other.exerciseId == exerciseId &&
+        other.targetReps == targetReps &&
+        other.targetRpe == targetRpe;
+  }
+
+  @override
+  int get hashCode => Object.hash(exerciseId, targetReps, targetRpe);
+}
+
 /// Returns a [LoadRecommendation] for the given exercise ID, or `null` when
 /// no e1RM data is available (engine falls back to baseline, so this will
 /// always return a recommendation in practice, but guards against edge cases).
@@ -291,6 +324,26 @@ final loadRecommendationProvider =
       return engine.recommendLoad(exerciseId);
     });
 
+/// Returns a routine-aware [LoadRecommendation].
+///
+/// Routine prescriptions do not currently model target RPE, so callers pass an
+/// explicit default of 8.0 through [RoutineLoadRecommendationParams].
+final routineLoadRecommendationProvider =
+    FutureProvider.family<LoadRecommendation?, RoutineLoadRecommendationParams>(
+      (ref, params) async {
+        final engine = await ref.watch(trainingEngineProvider.future);
+        if (engine.state.sessionsIngested == 0) {
+          return null;
+        }
+
+        if (engine.currentE1rm(params.exerciseId) == null) return null;
+        return engine.recommendLoad(
+          params.exerciseId,
+          overrides: params.targetParams,
+        );
+      },
+    );
+
 final engineWeightSuggestionProvider =
     FutureProvider.family<EngineWeightSuggestion?, String>((
       ref,
@@ -302,6 +355,19 @@ final engineWeightSuggestionProvider =
       }
 
       final recommendation = engine.recommendLoad(exerciseId);
+      return ref
+          .watch(trainingEngineUiAdapterProvider)
+          .toWeightSuggestion(recommendation);
+    });
+
+final routineEngineWeightSuggestionProvider =
+    FutureProvider.family<
+      EngineWeightSuggestion?,
+      RoutineLoadRecommendationParams
+    >((ref, params) async {
+      final recommendation = await ref.watch(
+        routineLoadRecommendationProvider(params).future,
+      );
       return ref
           .watch(trainingEngineUiAdapterProvider)
           .toWeightSuggestion(recommendation);

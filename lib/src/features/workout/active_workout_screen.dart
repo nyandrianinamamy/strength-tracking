@@ -194,10 +194,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       ts.running = true;
       ts.beeped = false;
     });
-    ref.read(watchSyncServiceProvider).updateTimedExerciseTimer(
-      exerciseId: _activeTimedExerciseId,
-      startedAt: ts.start,
-    );
+    ref
+        .read(watchSyncServiceProvider)
+        .updateTimedExerciseTimer(
+          exerciseId: _activeTimedExerciseId,
+          startedAt: ts.start,
+        );
   }
 
   void _pauseTimedExercise() {
@@ -208,10 +210,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       ts.start = null;
       ts.running = false;
     });
-    ref.read(watchSyncServiceProvider).updateTimedExerciseTimer(
-      exerciseId: null,
-      startedAt: null,
-    );
+    ref
+        .read(watchSyncServiceProvider)
+        .updateTimedExerciseTimer(exerciseId: null, startedAt: null);
   }
 
   void _resetTimedExercise(int durationSeconds) {
@@ -223,10 +224,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       ts.running = false;
       ts.beeped = false;
     });
-    ref.read(watchSyncServiceProvider).updateTimedExerciseTimer(
-      exerciseId: null,
-      startedAt: null,
-    );
+    ref
+        .read(watchSyncServiceProvider)
+        .updateTimedExerciseTimer(exerciseId: null, startedAt: null);
   }
 
   void _initTimedExercise(String exerciseId, int durationSeconds) {
@@ -252,8 +252,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     if (routine == null || routine.exercises.isEmpty) return;
 
     // Find the prescription that owns the timer, not _currentPage
-    final exerciseIndex = routine.exercises
-        .indexWhere((p) => p.exerciseId == exerciseId);
+    final exerciseIndex = routine.exercises.indexWhere(
+      (p) => p.exerciseId == exerciseId,
+    );
     if (exerciseIndex < 0) return;
 
     final prescription = routine.exercises[exerciseIndex];
@@ -380,10 +381,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
             final nextExercise = state.exerciseById(
               routine.exercises[nextExerciseIndex].exerciseId,
             );
-            final exerciseName =
-                nextExercise == null
-                    ? 'your workout'
-                    : ExerciseTranslations.displayName(context, nextExercise);
+            final exerciseName = nextExercise == null
+                ? 'your workout'
+                : ExerciseTranslations.displayName(context, nextExercise);
             final l10n = AppLocalizations.of(context)!;
             unawaited(_restTimerNotificationService.primePermission());
             _restTimerNotificationService.scheduleRestEnd(
@@ -519,9 +519,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
       builder: (dialogContext) {
         return AlertDialog(
           title: Text(l10n.resumeStaleSession),
-          content: Text(
-            l10n.staleSessionMessage(idleLabel),
-          ),
+          content: Text(l10n.staleSessionMessage(idleLabel)),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -540,7 +538,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 ref.read(workoutControllerProvider).discardDraft();
                 context.go('/');
               },
-              style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
               child: Text(l10n.discard),
             ),
           ],
@@ -740,7 +740,9 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                 child: Text(
                                   l10n.noMatchingExercises,
                                   style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(color: swapAppColors.subtleText),
+                                      ?.copyWith(
+                                        color: swapAppColors.subtleText,
+                                      ),
                                 ),
                               )
                             : ListView.builder(
@@ -814,7 +816,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.emoji_events_rounded, size: 64, color: colorScheme.primary),
+            Icon(
+              Icons.emoji_events_rounded,
+              size: 64,
+              color: colorScheme.primary,
+            ),
             const SizedBox(height: 20),
             Text(
               l10n.allExercisesComplete,
@@ -1007,7 +1013,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text(
-                        l10n.setNOfM(currentExerciseSets + 1, currentPrescription.targetSets),
+                        l10n.setNOfM(
+                          currentExerciseSets + 1,
+                          currentPrescription.targetSets,
+                        ),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.w800,
@@ -1070,7 +1079,11 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.stop_rounded, color: colorScheme.onError, size: 22),
+                  Icon(
+                    Icons.stop_rounded,
+                    color: colorScheme.onError,
+                    size: 22,
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     timerText,
@@ -1164,14 +1177,18 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.chevron_left_rounded,
                         size: 22,
                         color: _currentPage > 0
-                            ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.5)
                             : appColors.subtleText.withValues(alpha: 0.25),
                       ),
                     ),
@@ -1190,14 +1207,18 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.08),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.chevron_right_rounded,
                         size: 22,
                         color: _currentPage < exerciseCount - 1
-                            ? Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5)
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.5)
                             : appColors.subtleText.withValues(alpha: 0.25),
                       ),
                     ),
@@ -1297,7 +1318,8 @@ double? _parseOptionalRpe(String rawValue) {
 
 String _rpeDescription(double value) {
   if (value >= 10) return 'Max effort. 0 reps in reserve (RIR).';
-  if (value >= 9.5) return 'Could not do more reps, but could add slightly more weight.';
+  if (value >= 9.5)
+    return 'Could not do more reps, but could add slightly more weight.';
   if (value >= 9) return '1 rep in reserve (RIR).';
   if (value >= 8.5) return '1-2 reps in reserve (RIR).';
   if (value >= 8) return '2 reps in reserve (RIR).';
@@ -1368,9 +1390,9 @@ class _RpeModalContentState extends State<_RpeModalContent> {
               children: [
                 Text(
                   l10n.logSetRpe,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
                 ),
                 IconButton(
                   onPressed: () => Navigator.pop(context),
@@ -1385,9 +1407,9 @@ class _RpeModalContentState extends State<_RpeModalContent> {
               children: [
                 Text(
                   l10n.selectRpe,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(
                   _rpe % 1 == 0
@@ -1422,15 +1444,30 @@ class _RpeModalContentState extends State<_RpeModalContent> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('1', style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                  )),
-                  Text('5', style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                  )),
-                  Text('10', style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
-                  )),
+                  Text(
+                    '1',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  Text(
+                    '5',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ),
+                  Text(
+                    '10',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1438,11 +1475,11 @@ class _RpeModalContentState extends State<_RpeModalContent> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: Theme.of(context).dividerColor,
-                ),
+                border: Border.all(color: Theme.of(context).dividerColor),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1455,17 +1492,19 @@ class _RpeModalContentState extends State<_RpeModalContent> {
                       children: [
                         Text(
                           l10n.whatThisMeans,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           _rpeDescription(_rpe),
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                            height: 1.4,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
+                                height: 1.4,
+                              ),
                         ),
                       ],
                     ),
@@ -1498,10 +1537,18 @@ class _RpeModalContentState extends State<_RpeModalContent> {
   }
 }
 
-String _setTitle(CompletedSet set, String preferredUnit, AppLocalizations l10n) {
+String _setTitle(
+  CompletedSet set,
+  String preferredUnit,
+  AppLocalizations l10n,
+) {
   final baseTitle = set.durationSeconds > 0
       ? l10n.setTimedSummary(set.setNumber, (set.durationSeconds / 60).round())
-      : l10n.setWeightSummary(set.setNumber, AppFormatters.weight(set.weightKg, preferredUnit), set.reps);
+      : l10n.setWeightSummary(
+          set.setNumber,
+          AppFormatters.weight(set.weightKg, preferredUnit),
+          set.reps,
+        );
 
   if (set.rpe == null) {
     return baseTitle;
@@ -1574,7 +1621,14 @@ class _ExercisePage extends ConsumerWidget {
             .toList()
           ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
     final suggestion = ref
-        .watch(engineWeightSuggestionProvider(prescription.exerciseId))
+        .watch(
+          routineEngineWeightSuggestionProvider(
+            RoutineLoadRecommendationParams(
+              exerciseId: prescription.exerciseId,
+              targetReps: prescription.targetReps,
+            ),
+          ),
+        )
         .valueOrNull;
 
     // Pre-fill weight/reps when switching to this exercise (deferred to avoid
@@ -1607,7 +1661,10 @@ class _ExercisePage extends ConsumerWidget {
       } else {
         // Restore (or initialize) timed exercise state for this exercise
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          onInitTimed(prescription.exerciseId, prescription.targetDurationSeconds);
+          onInitTimed(
+            prescription.exerciseId,
+            prescription.targetDurationSeconds,
+          );
         });
       }
     }
@@ -2115,9 +2172,7 @@ class _ExercisePage extends ConsumerWidget {
                   controller: weightCtrl,
                   autofocus: true,
                   keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    labelText: l10n.durationMin,
-                  ),
+                  decoration: InputDecoration(labelText: l10n.durationMin),
                 )
               : Column(
                   mainAxisSize: MainAxisSize.min,
@@ -2270,7 +2325,8 @@ class _ActiveMuscleHeatmap extends ConsumerStatefulWidget {
   final AppState state;
 
   @override
-  ConsumerState<_ActiveMuscleHeatmap> createState() => _ActiveMuscleHeatmapState();
+  ConsumerState<_ActiveMuscleHeatmap> createState() =>
+      _ActiveMuscleHeatmapState();
 }
 
 class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
@@ -2302,10 +2358,12 @@ class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
     final appColors = context.appColors;
     final exercise = widget.exercise;
     final state = widget.state;
-    final fatigue = ref.watch(liveEngineHeatmapDataProvider).maybeWhen(
-      data: (data) => data,
-      orElse: () => const <Muscle, MuscleData>{},
-    );
+    final fatigue = ref
+        .watch(liveEngineHeatmapDataProvider)
+        .maybeWhen(
+          data: (data) => data,
+          orElse: () => const <Muscle, MuscleData>{},
+        );
     const adapter = TrainingEngineUiAdapter();
 
     // Build the set of active Muscle enums for this exercise
@@ -2471,9 +2529,9 @@ class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
               const SizedBox(height: 6),
               Text(
                 l10n.fatigueDecayNote,
-                style: Theme.of(
-                  sheetContext,
-                ).textTheme.bodySmall?.copyWith(color: legendAppColors.subtleText),
+                style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
+                  color: legendAppColors.subtleText,
+                ),
               ),
               const SizedBox(height: 8),
             ],
@@ -2512,7 +2570,10 @@ class _ActiveMuscleHeatmapState extends ConsumerState<_ActiveMuscleHeatmap>
               ),
               Text(
                 description,
-                style: TextStyle(fontSize: 11, color: context.appColors.subtleText),
+                style: TextStyle(
+                  fontSize: 11,
+                  color: context.appColors.subtleText,
+                ),
               ),
             ],
           ),
