@@ -6,6 +6,7 @@ import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/planner_registry_adapter.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:training_engine/training_engine.dart';
 import 'package:uuid/uuid.dart';
 
@@ -43,7 +44,7 @@ class SmartPlannerState {
   final int wizardStep;
 
   /// Keys of exercises that the user manually edited, encoded as
-  /// "<sessionIndex>:<exerciseIndex>".
+  /// `<sessionIndex>:<exerciseIndex>`.
   final Set<String> editedExerciseKeys;
 
   // ---------------------------------------------------------------------------
@@ -78,8 +79,9 @@ class SmartPlannerState {
       maxDurationMinutes: maxDurationMinutes ?? this.maxDurationMinutes,
       preferredExercises: preferredExercises ?? this.preferredExercises,
       excludedExercises: excludedExercises ?? this.excludedExercises,
-      generatedPlan:
-          clearGeneratedPlan ? null : generatedPlan ?? this.generatedPlan,
+      generatedPlan: clearGeneratedPlan
+          ? null
+          : generatedPlan ?? this.generatedPlan,
       wizardStep: wizardStep ?? this.wizardStep,
       editedExerciseKeys: editedExerciseKeys ?? this.editedExerciseKeys,
     );
@@ -137,8 +139,9 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
 
   // ── Plan generation ───────────────────────────────────────────────────────
 
-  void generatePlan(List<Exercise> appExercises) {
+  Future<void> generatePlan(List<Exercise> appExercises) async {
     final registry = PlannerRegistryAdapter.buildRegistry(appExercises);
+    final engineContext = await _readPlannerEngineContext();
 
     final config = PlannerConfig(
       availableDays: state.selectedDays.toList(),
@@ -146,6 +149,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
       goal: state.goal,
       preferredExercises: state.preferredExercises,
       excludedExercises: state.excludedExercises,
+      engineContext: engineContext,
     );
 
     final rawPlan = generateWeeklyPlan(config, registry);
@@ -161,12 +165,15 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
       sessions: boundedSessions,
       splitType: rawPlan.splitType,
       weekStart: rawPlan.weekStart,
+      engineContextApplied: rawPlan.engineContextApplied,
     );
 
-    state = state.copyWith(
-      generatedPlan: plan,
-      editedExerciseKeys: {},
-    );
+    state = state.copyWith(generatedPlan: plan, editedExerciseKeys: {});
+  }
+
+  Future<PlannerEngineContext?> _readPlannerEngineContext() async {
+    final engine = await ref.read(trainingEngineProvider.future);
+    return PlannerRegistryAdapter.buildEngineContext(engine);
   }
 
   // ── Inline editing ────────────────────────────────────────────────────────
@@ -219,10 +226,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
     );
   }
 
-  void removeExercise({
-    required int sessionIndex,
-    required int exerciseIndex,
-  }) {
+  void removeExercise({required int sessionIndex, required int exerciseIndex}) {
     final plan = state.generatedPlan;
     if (plan == null) return;
     if (sessionIndex >= plan.sessions.length) return;
@@ -311,15 +315,17 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
             .map((m) => m.muscleId)
             .toList();
 
-        newExercises.add(Exercise(
-          id: engineEx.id,
-          name: engineEx.name,
-          primaryMuscles: primaryMuscles,
-          secondaryMuscles: secondaryMuscles,
-          equipment: [engineEx.equipment.name],
-          instructions: '',
-          archived: false,
-        ));
+        newExercises.add(
+          Exercise(
+            id: engineEx.id,
+            name: engineEx.name,
+            primaryMuscles: primaryMuscles,
+            secondaryMuscles: secondaryMuscles,
+            equipment: [engineEx.equipment.name],
+            instructions: '',
+            archived: false,
+          ),
+        );
       }
     }
 
@@ -337,6 +343,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
             targetReps: session.exercises[i].targetReps,
             restSeconds: session.exercises[i].restSeconds,
             order: i,
+            plannerMetadata: _plannerMetadataFor(session.exercises[i]),
           ),
       ];
 
@@ -374,10 +381,32 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
     });
   }
 
+  Map<String, dynamic> _plannerMetadataFor(PlannedExercise exercise) {
+    return {
+      'source': 'smart_planner',
+      'engineContextApplied': exercise.engineContextApplied,
+      'fatiguedMuscles': exercise.fatiguedMuscles,
+      'adaptationReasons': exercise.adaptationReasons,
+      if (exercise.engineReadinessScore != null)
+        'readinessScore': exercise.engineReadinessScore,
+      'sessionsIngested': exercise.engineSessionsIngested,
+    };
+  }
+
   static String _monthName(int month) {
     const names = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return names[(month - 1).clamp(0, 11)];
   }

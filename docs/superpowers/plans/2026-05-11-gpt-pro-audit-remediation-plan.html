@@ -1175,8 +1175,8 @@ id="task-13-emit-readiness-flags-for-sleep-and-resting-heart-rate-risks">Task
 completed red-green code and tests; GLM proxy review passed Task 13 with
 API-compatibility and dashboard-copy checks; local verification passed
 Dart format, diff check, package readiness tests (<code>+33</code>), and
-dashboard widget tests (<code>+5</code>). Commit: recorded in git
-history after this ledger update.</p>
+dashboard widget tests (<code>+5</code>). Commit:
+<code>bc71043</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -1237,7 +1237,15 @@ their conditions occur.</li>
 <hr />
 <h2 id="task-14-make-smart-planner-adaptation-claims-true">Task 14: Make
 Smart Planner Adaptation Claims True</h2>
-<p><strong>Category:</strong> P2 planner/product consistency</p>
+<p><strong>Category:</strong> P2 planner/product consistency
+<strong>Status:</strong> Completed 2026-05-11. GPT-5.5 implementer
+completed the engine-aware planner path; the orchestrator removed the
+silent engine-context fallback, updated async Smart Planner call sites
+and adoption tests, and GLM proxy review passed Task 14. Local
+verification passed Dart format on touched Dart files, diff check,
+focused Smart Planner tests (<code>+17</code>), package planner tests
+(<code>+27</code>), and focused analyzer checks. Commit: recorded in git
+history after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -1245,8 +1253,15 @@ Smart Planner Adaptation Claims True</h2>
 <li>Modify:
 <code>lib/src/features/smart_planner/planner_registry_adapter.dart</code></li>
 <li>Modify:
+<code>lib/src/features/smart_planner/smart_planner_screen.dart</code></li>
+<li>Modify:
+<code>lib/src/features/smart_planner/widgets/plan_preview.dart</code></li>
+<li>Modify: <code>lib/src/data/models/routine_exercise.dart</code></li>
+<li>Modify:
 <code>packages/training_engine/lib/src/planner/session_generator.dart</code></li>
 <li>Modify: <code>docs/app-feature-inventory.md</code></li>
+<li>Test:
+<code>test/features/smart_planner/smart_planner_adoption_test.dart</code></li>
 <li>Test:
 <code>test/features/smart_planner/smart_planner_controller_test.dart</code></li>
 <li>Test:
@@ -1269,22 +1284,23 @@ adaptation behavior.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add failing tests for high-fatigue
-engine state affecting Smart Planner generation.</label></li>
-<li><label><input type="checkbox" />Implement engine-aware planner input
-through the controller and planner adapter.</label></li>
-<li><label><input type="checkbox" />Update docs/UI to describe the
-implemented engine-aware adaptation.</label></li>
-<li><label><input type="checkbox" />Update Smart Planner tests and
-inventory wording.</label></li>
-<li><label><input type="checkbox" />Run
-<code>dart format lib/src/features/smart_planner/smart_planner_controller.dart lib/src/features/smart_planner/planner_registry_adapter.dart packages/training_engine/lib/src/planner/session_generator.dart docs/app-feature-inventory.md test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart packages/training_engine/test/planner/session_generator_test.dart packages/training_engine/test/planner/dynamic_adjustments_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
-<code>flutter test test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Add failing tests for
+high-fatigue engine state affecting Smart Planner
+generation.</label></li>
+<li><label><input type="checkbox" checked="" />Implement engine-aware
+planner input through the controller and planner adapter.</label></li>
+<li><label><input type="checkbox" checked="" />Update docs/UI to
+describe the implemented engine-aware adaptation.</label></li>
+<li><label><input type="checkbox" checked="" />Update Smart Planner
+tests and inventory wording.</label></li>
+<li><label><input type="checkbox" checked="" />Run
+<code>dart format lib/src/data/models/routine_exercise.dart lib/src/features/smart_planner/smart_planner_controller.dart lib/src/features/smart_planner/planner_registry_adapter.dart lib/src/features/smart_planner/smart_planner_screen.dart lib/src/features/smart_planner/widgets/plan_preview.dart packages/training_engine/lib/src/planner/session_generator.dart test/features/smart_planner/smart_planner_adoption_test.dart test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart packages/training_engine/test/planner/session_generator_test.dart packages/training_engine/test/planner/dynamic_adjustments_test.dart</code>.</label></li>
+<li><label><input type="checkbox" checked="" />Run
+<code>flutter test test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart test/features/smart_planner/smart_planner_adoption_test.dart</code>.</label></li>
+<li><label><input type="checkbox" checked="" />Run
 <code>cd packages/training_engine &amp;&amp; dart test test/planner/session_generator_test.dart test/planner/dynamic_adjustments_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Commit the Smart Planner consistency
-changes.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the Smart Planner
+consistency changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>

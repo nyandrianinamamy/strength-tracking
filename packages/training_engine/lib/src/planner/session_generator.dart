@@ -9,6 +9,9 @@ import 'split_selector.dart';
 
 /// Minimal read-only interface for exercise lookup used by the planner.
 abstract class ExerciseRegistryLookup {
+  /// Returns the exercise for [id], or `null` when the registry cannot resolve it.
+  EngineExercise? lookup(String id);
+
   /// Returns exercises whose primary (or highest-coefficient) muscle is [muscleId].
   /// Optionally excludes specific exercise IDs.
   List<EngineExercise> exercisesForMuscle(
@@ -34,6 +37,7 @@ class PlannerConfig {
   final HypertrophyGoal goal;
   final List<String> preferredExercises;
   final List<String> excludedExercises;
+  final PlannerEngineContext? engineContext;
 
   const PlannerConfig({
     required this.availableDays,
@@ -41,7 +45,25 @@ class PlannerConfig {
     this.goal = HypertrophyGoal.hypertrophy,
     this.preferredExercises = const [],
     this.excludedExercises = const [],
+    this.engineContext,
   });
+}
+
+class PlannerEngineContext {
+  final Map<String, double> fatigueByMuscle;
+  final double? readinessScore;
+  final int sessionsIngested;
+
+  const PlannerEngineContext({
+    this.fatigueByMuscle = const {},
+    this.readinessScore,
+    this.sessionsIngested = 0,
+  });
+
+  bool get hasEngineData =>
+      fatigueByMuscle.isNotEmpty ||
+      readinessScore != null ||
+      sessionsIngested > 0;
 }
 
 class PlannedExercise {
@@ -51,6 +73,11 @@ class PlannedExercise {
   final double targetRpe;
   final double? suggestedWeightKg;
   final int restSeconds;
+  final bool engineContextApplied;
+  final List<String> adaptationReasons;
+  final List<String> fatiguedMuscles;
+  final double? engineReadinessScore;
+  final int engineSessionsIngested;
 
   /// Whether this exercise is marked as part of a superset pair (time-bounding).
   final bool isSupersetPair;
@@ -62,6 +89,11 @@ class PlannedExercise {
     required this.targetRpe,
     this.suggestedWeightKg,
     required this.restSeconds,
+    this.engineContextApplied = false,
+    this.adaptationReasons = const [],
+    this.fatiguedMuscles = const [],
+    this.engineReadinessScore,
+    this.engineSessionsIngested = 0,
     this.isSupersetPair = false,
   });
 
@@ -72,17 +104,27 @@ class PlannedExercise {
     double? targetRpe,
     double? suggestedWeightKg,
     int? restSeconds,
+    bool? engineContextApplied,
+    List<String>? adaptationReasons,
+    List<String>? fatiguedMuscles,
+    double? engineReadinessScore,
+    int? engineSessionsIngested,
     bool? isSupersetPair,
-  }) =>
-      PlannedExercise(
-        exerciseId: exerciseId ?? this.exerciseId,
-        targetSets: targetSets ?? this.targetSets,
-        targetReps: targetReps ?? this.targetReps,
-        targetRpe: targetRpe ?? this.targetRpe,
-        suggestedWeightKg: suggestedWeightKg ?? this.suggestedWeightKg,
-        restSeconds: restSeconds ?? this.restSeconds,
-        isSupersetPair: isSupersetPair ?? this.isSupersetPair,
-      );
+  }) => PlannedExercise(
+    exerciseId: exerciseId ?? this.exerciseId,
+    targetSets: targetSets ?? this.targetSets,
+    targetReps: targetReps ?? this.targetReps,
+    targetRpe: targetRpe ?? this.targetRpe,
+    suggestedWeightKg: suggestedWeightKg ?? this.suggestedWeightKg,
+    restSeconds: restSeconds ?? this.restSeconds,
+    engineContextApplied: engineContextApplied ?? this.engineContextApplied,
+    adaptationReasons: adaptationReasons ?? this.adaptationReasons,
+    fatiguedMuscles: fatiguedMuscles ?? this.fatiguedMuscles,
+    engineReadinessScore: engineReadinessScore ?? this.engineReadinessScore,
+    engineSessionsIngested:
+        engineSessionsIngested ?? this.engineSessionsIngested,
+    isSupersetPair: isSupersetPair ?? this.isSupersetPair,
+  );
 }
 
 class PlannedSession {
@@ -90,12 +132,14 @@ class PlannedSession {
   final SessionFocus focus;
   final List<PlannedExercise> exercises;
   final Duration estimatedDuration;
+  final bool engineContextApplied;
 
   const PlannedSession({
     required this.dayOfWeek,
     required this.focus,
     required this.exercises,
     required this.estimatedDuration,
+    this.engineContextApplied = false,
   });
 
   PlannedSession copyWith({
@@ -103,24 +147,27 @@ class PlannedSession {
     SessionFocus? focus,
     List<PlannedExercise>? exercises,
     Duration? estimatedDuration,
-  }) =>
-      PlannedSession(
-        dayOfWeek: dayOfWeek ?? this.dayOfWeek,
-        focus: focus ?? this.focus,
-        exercises: exercises ?? this.exercises,
-        estimatedDuration: estimatedDuration ?? this.estimatedDuration,
-      );
+    bool? engineContextApplied,
+  }) => PlannedSession(
+    dayOfWeek: dayOfWeek ?? this.dayOfWeek,
+    focus: focus ?? this.focus,
+    exercises: exercises ?? this.exercises,
+    estimatedDuration: estimatedDuration ?? this.estimatedDuration,
+    engineContextApplied: engineContextApplied ?? this.engineContextApplied,
+  );
 }
 
 class WeeklyPlan {
   final List<PlannedSession> sessions;
   final SplitType splitType;
   final DateTime weekStart;
+  final bool engineContextApplied;
 
   const WeeklyPlan({
     required this.sessions,
     required this.splitType,
     required this.weekStart,
+    this.engineContextApplied = false,
   });
 }
 
@@ -132,6 +179,8 @@ const int _defaultCompoundSets = 3;
 const int _defaultIsolationSets = 3;
 const int _defaultCompoundRest = 180;
 const int _defaultIsolationRest = 90;
+const double _highPrimaryFatigueThreshold = 60.0;
+const double _lowReadinessThreshold = 50.0;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -266,6 +315,59 @@ List<PlannedExercise> _exercisesForFocus(
   return result;
 }
 
+List<PlannedExercise> _applyEngineContext(
+  List<PlannedExercise> exercises,
+  ExerciseRegistryLookup registry,
+  PlannerEngineContext context,
+) {
+  if (!context.hasEngineData) return exercises;
+
+  return exercises.map((planned) {
+    final engineExercise = registry.lookup(planned.exerciseId);
+    if (engineExercise == null) {
+      return planned.copyWith(
+        engineReadinessScore: context.readinessScore,
+        engineSessionsIngested: context.sessionsIngested,
+      );
+    }
+
+    var targetSets = planned.targetSets;
+    final fatiguedMuscles = <String>[];
+    final reasons = <String>[];
+    for (final activation in engineExercise.muscleMap) {
+      if (activation.role != MuscleRole.primary) continue;
+      final fatigue = context.fatigueByMuscle[activation.muscleId] ?? 0.0;
+      if (fatigue <= _highPrimaryFatigueThreshold) continue;
+
+      fatiguedMuscles.add(activation.muscleId);
+      if (targetSets > 1) {
+        targetSets -= 1;
+      }
+      reasons.add(
+        'Reduced sets because ${activation.muscleId} fatigue is '
+        '${fatigue.round()}',
+      );
+    }
+
+    final readiness = context.readinessScore;
+    if (readiness != null && readiness < _lowReadinessThreshold) {
+      if (targetSets > 1) {
+        targetSets -= 1;
+      }
+      reasons.add('Reduced sets because readiness is ${readiness.round()}');
+    }
+
+    return planned.copyWith(
+      targetSets: targetSets,
+      engineContextApplied: reasons.isNotEmpty,
+      adaptationReasons: reasons,
+      fatiguedMuscles: fatiguedMuscles,
+      engineReadinessScore: readiness,
+      engineSessionsIngested: context.sessionsIngested,
+    );
+  }).toList();
+}
+
 // ---------------------------------------------------------------------------
 // Duration estimation
 // ---------------------------------------------------------------------------
@@ -280,14 +382,14 @@ Duration estimateSessionDuration(List<PlannedExercise> exercises) {
 
     // We don't have the EngineExercise here, so we use restSeconds as a proxy:
     // rest ≥ 120s implies compound treatment.
-    final setDuration =
-        ex.restSeconds >= 120
-            ? avgSetDurationCompound
-            : avgSetDurationIsolation;
+    final setDuration = ex.restSeconds >= 120
+        ? avgSetDurationCompound
+        : avgSetDurationIsolation;
 
     // For supersets, rest is halved between paired sets.
-    final effectiveRest =
-        ex.isSupersetPair ? ex.restSeconds ~/ 2 : ex.restSeconds;
+    final effectiveRest = ex.isSupersetPair
+        ? ex.restSeconds ~/ 2
+        : ex.restSeconds;
 
     totalSeconds += ex.targetSets * (setDuration + effectiveRest);
   }
@@ -313,7 +415,15 @@ WeeklyPlan generateWeeklyPlan(
   final sessions = <PlannedSession>[];
   for (int i = 0; i < sortedDays.length; i++) {
     final focus = focuses[i];
-    final exercises = _exercisesForFocus(focus, registry, excluded, preferred);
+    final baseExercises = _exercisesForFocus(
+      focus,
+      registry,
+      excluded,
+      preferred,
+    );
+    final exercises = config.engineContext == null
+        ? baseExercises
+        : _applyEngineContext(baseExercises, registry, config.engineContext!);
     final estimated = estimateSessionDuration(exercises);
     sessions.add(
       PlannedSession(
@@ -321,6 +431,9 @@ WeeklyPlan generateWeeklyPlan(
         focus: focus,
         exercises: exercises,
         estimatedDuration: estimated,
+        engineContextApplied: exercises.any(
+          (exercise) => exercise.engineContextApplied,
+        ),
       ),
     );
   }
@@ -329,5 +442,8 @@ WeeklyPlan generateWeeklyPlan(
     sessions: sessions,
     splitType: split,
     weekStart: weekStart ?? DateTime.now(),
+    engineContextApplied: sessions.any(
+      (session) => session.engineContextApplied,
+    ),
   );
 }

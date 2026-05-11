@@ -18,9 +18,17 @@ EngineExercise _makeExercise(
   List<String> secondaryMuscles = const [],
 }) {
   final muscleMap = [
-    MuscleActivation(muscleId: primaryMuscle, role: MuscleRole.primary, coefficient: 1.0),
+    MuscleActivation(
+      muscleId: primaryMuscle,
+      role: MuscleRole.primary,
+      coefficient: 1.0,
+    ),
     for (final m in secondaryMuscles)
-      MuscleActivation(muscleId: m, role: MuscleRole.synergist, coefficient: 0.5),
+      MuscleActivation(
+        muscleId: m,
+        role: MuscleRole.synergist,
+        coefficient: 0.5,
+      ),
   ];
   return EngineExercise(
     id: id,
@@ -42,8 +50,19 @@ class MockRegistry implements ExerciseRegistryLookup {
   MockRegistry({
     Map<String, List<EngineExercise>>? byMuscle,
     Map<SessionFocus, List<EngineExercise>>? compounds,
-  })  : _byMuscle = byMuscle ?? {},
-        _compounds = compounds ?? {};
+  }) : _byMuscle = byMuscle ?? {},
+       _compounds = compounds ?? {};
+
+  @override
+  EngineExercise? lookup(String id) {
+    for (final exercise in [
+      ..._byMuscle.values.expand((exercises) => exercises),
+      ..._compounds.values.expand((exercises) => exercises),
+    ]) {
+      if (exercise.id == id) return exercise;
+    }
+    return null;
+  }
 
   @override
   List<EngineExercise> exercisesForMuscle(
@@ -71,29 +90,97 @@ class MockRegistry implements ExerciseRegistryLookup {
 // ---------------------------------------------------------------------------
 
 MockRegistry _buildRichRegistry() {
-  final chestEx1 = _makeExercise('bench_press', 'pectorals', MovementClass.compoundUpper,
-      secondaryMuscles: ['anterior_deltoid', 'triceps']);
-  final chestEx2 = _makeExercise('incline_press', 'pectorals', MovementClass.compoundUpper);
-  final shoulderEx1 = _makeExercise('ohp', 'anterior_deltoid', MovementClass.compoundUpper,
-      secondaryMuscles: ['triceps']);
-  final shoulderEx2 = _makeExercise('lateral_raise', 'anterior_deltoid', MovementClass.isolation);
-  final tricepEx1 = _makeExercise('tricep_pushdown', 'triceps', MovementClass.isolation);
-  final tricepEx2 = _makeExercise('skull_crusher', 'triceps', MovementClass.isolation);
-  final backEx1 = _makeExercise('pullup', 'lats', MovementClass.compoundUpper,
-      secondaryMuscles: ['biceps', 'rear_deltoid']);
-  final backEx2 = _makeExercise('row', 'lats', MovementClass.compoundUpper,
-      secondaryMuscles: ['biceps']);
-  final backEx3 = _makeExercise('lat_pulldown', 'lats', MovementClass.isolation);
-  final bicepEx1 = _makeExercise('barbell_curl', 'biceps', MovementClass.isolation);
-  final bicepEx2 = _makeExercise('hammer_curl', 'biceps', MovementClass.isolation);
-  final rearDeltEx = _makeExercise('face_pull', 'rear_deltoid', MovementClass.isolation);
-  final quadEx1 = _makeExercise('squat', 'quadriceps', MovementClass.compoundLower,
-      secondaryMuscles: ['glutes', 'hamstrings']);
-  final quadEx2 = _makeExercise('leg_press', 'quadriceps', MovementClass.compoundLower);
-  final hamstringEx1 = _makeExercise('rdl', 'hamstrings', MovementClass.compoundLower,
-      secondaryMuscles: ['glutes']);
-  final hamstringEx2 = _makeExercise('leg_curl', 'hamstrings', MovementClass.isolation);
-  final gluteEx = _makeExercise('hip_thrust', 'glutes', MovementClass.isolation);
+  final chestEx1 = _makeExercise(
+    'bench_press',
+    'pectorals',
+    MovementClass.compoundUpper,
+    secondaryMuscles: ['anterior_deltoid', 'triceps'],
+  );
+  final chestEx2 = _makeExercise(
+    'incline_press',
+    'pectorals',
+    MovementClass.compoundUpper,
+  );
+  final shoulderEx1 = _makeExercise(
+    'ohp',
+    'anterior_deltoid',
+    MovementClass.compoundUpper,
+    secondaryMuscles: ['triceps'],
+  );
+  final shoulderEx2 = _makeExercise(
+    'lateral_raise',
+    'anterior_deltoid',
+    MovementClass.isolation,
+  );
+  final tricepEx1 = _makeExercise(
+    'tricep_pushdown',
+    'triceps',
+    MovementClass.isolation,
+  );
+  final tricepEx2 = _makeExercise(
+    'skull_crusher',
+    'triceps',
+    MovementClass.isolation,
+  );
+  final backEx1 = _makeExercise(
+    'pullup',
+    'lats',
+    MovementClass.compoundUpper,
+    secondaryMuscles: ['biceps', 'rear_deltoid'],
+  );
+  final backEx2 = _makeExercise(
+    'row',
+    'lats',
+    MovementClass.compoundUpper,
+    secondaryMuscles: ['biceps'],
+  );
+  final backEx3 = _makeExercise(
+    'lat_pulldown',
+    'lats',
+    MovementClass.isolation,
+  );
+  final bicepEx1 = _makeExercise(
+    'barbell_curl',
+    'biceps',
+    MovementClass.isolation,
+  );
+  final bicepEx2 = _makeExercise(
+    'hammer_curl',
+    'biceps',
+    MovementClass.isolation,
+  );
+  final rearDeltEx = _makeExercise(
+    'face_pull',
+    'rear_deltoid',
+    MovementClass.isolation,
+  );
+  final quadEx1 = _makeExercise(
+    'squat',
+    'quadriceps',
+    MovementClass.compoundLower,
+    secondaryMuscles: ['glutes', 'hamstrings'],
+  );
+  final quadEx2 = _makeExercise(
+    'leg_press',
+    'quadriceps',
+    MovementClass.compoundLower,
+  );
+  final hamstringEx1 = _makeExercise(
+    'rdl',
+    'hamstrings',
+    MovementClass.compoundLower,
+    secondaryMuscles: ['glutes'],
+  );
+  final hamstringEx2 = _makeExercise(
+    'leg_curl',
+    'hamstrings',
+    MovementClass.isolation,
+  );
+  final gluteEx = _makeExercise(
+    'hip_thrust',
+    'glutes',
+    MovementClass.isolation,
+  );
   final calfEx = _makeExercise('calf_raise', 'calves', MovementClass.isolation);
 
   return MockRegistry(
@@ -242,10 +329,16 @@ void main() {
         isTrue,
         reason: 'Legs day should include hamstring exercise',
       );
-      expect(ids.contains('hip_thrust'), isTrue,
-          reason: 'Legs day should include glute exercise');
-      expect(ids.contains('calf_raise'), isTrue,
-          reason: 'Legs day should include calf exercise');
+      expect(
+        ids.contains('hip_thrust'),
+        isTrue,
+        reason: 'Legs day should include glute exercise',
+      );
+      expect(
+        ids.contains('calf_raise'),
+        isTrue,
+        reason: 'Legs day should include calf exercise',
+      );
     });
   });
 
@@ -313,6 +406,47 @@ void main() {
         }
       }
     });
+
+    test(
+      'high primary muscle fatigue reduces generated work and records why',
+      () {
+        final registry = _buildRichRegistry();
+        final config = PlannerConfig(
+          availableDays: [1, 2, 3],
+          engineContext: const PlannerEngineContext(
+            fatigueByMuscle: {'pectorals': 82.0},
+            readinessScore: 74,
+            sessionsIngested: 5,
+          ),
+        );
+
+        final plan = generateWeeklyPlan(config, registry);
+        final pushSession = plan.sessions.firstWhere(
+          (session) => session.focus == SessionFocus.push,
+        );
+        final chestWork = pushSession.exercises
+            .where(
+              (exercise) => {
+                'bench_press',
+                'incline_press',
+              }.contains(exercise.exerciseId),
+            )
+            .toList();
+
+        expect(chestWork, isNotEmpty);
+        for (final exercise in chestWork) {
+          expect(exercise.targetSets, equals(2));
+          expect(exercise.engineContextApplied, isTrue);
+          expect(exercise.fatiguedMuscles, contains('pectorals'));
+          expect(
+            exercise.adaptationReasons,
+            contains('Reduced sets because pectorals fatigue is 82'),
+          );
+          expect(exercise.engineSessionsIngested, equals(5));
+          expect(exercise.engineReadinessScore, equals(74));
+        }
+      },
+    );
   });
 
   // ── Time Bounder ──────────────────────────────────────────────────────────
@@ -394,8 +528,9 @@ void main() {
         isTrue,
         reason: 'Pass 2 should note superset pairing',
       );
-      final supersetCount =
-          result.session.exercises.where((e) => e.isSupersetPair).length;
+      final supersetCount = result.session.exercises
+          .where((e) => e.isSupersetPair)
+          .length;
       expect(supersetCount, greaterThan(0));
     });
 
@@ -420,8 +555,9 @@ void main() {
         isTrue,
         reason: 'Pass 3 should note trimmed sets',
       );
-      final trimmedSets =
-          result.session.exercises.where((e) => e.targetSets < 3).length;
+      final trimmedSets = result.session.exercises
+          .where((e) => e.targetSets < 3)
+          .length;
       expect(trimmedSets, greaterThan(0));
     });
 

@@ -57,113 +57,112 @@ class SmartPlannerScreen extends ConsumerWidget {
           plan: plan,
           editedKeys: plannerState.editedExerciseKeys,
           exerciseNameResolver: exerciseNameResolver,
-          onExerciseUpdated: ({
-            required int sessionIndex,
-            required int exerciseIndex,
-            required int? sets,
-            required int? reps,
-          }) {
-            notifier.updateExercise(
-              sessionIndex: sessionIndex,
-              exerciseIndex: exerciseIndex,
-              targetSets: sets,
-              targetReps: reps,
-            );
-          },
-          onExerciseRemoved: ({
-            required int sessionIndex,
-            required int exerciseIndex,
-          }) {
-            notifier.removeExercise(
-              sessionIndex: sessionIndex,
-              exerciseIndex: exerciseIndex,
-            );
-          },
-          onExerciseSwapRequested: ({
-            required int sessionIndex,
-            required int exerciseIndex,
-          }) {
-            final session = plan.sessions[sessionIndex];
-            final exerciseId = session.exercises[exerciseIndex].exerciseId;
-            final alternatives = registry.substitutesFor(exerciseId);
-
-            showModalBottomSheet<void>(
-              context: context,
-              shape: const RoundedRectangleBorder(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-              ),
-              builder: (ctx) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const SizedBox(height: 12),
-                    // Drag handle
-                    Container(
-                      width: 40,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: _slate200,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          l10n.swapExerciseTitle,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                            color: _slate900,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    if (alternatives.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(l10n.noAlternatives),
-                      )
-                    else
-                      ListView(
-                        shrinkWrap: true,
-                        children: [
-                          for (final alt in alternatives)
-                            ListTile(
-                              title: Text(
-                                alt.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: _slate900,
-                                ),
-                              ),
-                              subtitle: Text(
-                                alt.equipment.name,
-                                style: const TextStyle(color: _slate500),
-                              ),
-                              onTap: () {
-                                notifier.updateExercise(
-                                  sessionIndex: sessionIndex,
-                                  exerciseIndex: exerciseIndex,
-                                  exerciseId: alt.id,
-                                );
-                                Navigator.of(ctx).pop();
-                              },
-                            ),
-                        ],
-                      ),
-                    SafeArea(child: const SizedBox(height: 8)),
-                  ],
+          onExerciseUpdated:
+              ({
+                required int sessionIndex,
+                required int exerciseIndex,
+                required int? sets,
+                required int? reps,
+              }) {
+                notifier.updateExercise(
+                  sessionIndex: sessionIndex,
+                  exerciseIndex: exerciseIndex,
+                  targetSets: sets,
+                  targetReps: reps,
                 );
               },
-            );
+          onExerciseRemoved:
+              ({required int sessionIndex, required int exerciseIndex}) {
+                notifier.removeExercise(
+                  sessionIndex: sessionIndex,
+                  exerciseIndex: exerciseIndex,
+                );
+              },
+          onExerciseSwapRequested:
+              ({required int sessionIndex, required int exerciseIndex}) {
+                final session = plan.sessions[sessionIndex];
+                final exerciseId = session.exercises[exerciseIndex].exerciseId;
+                final alternatives = registry.substitutesFor(exerciseId);
+
+                showModalBottomSheet<void>(
+                  context: context,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(24),
+                    ),
+                  ),
+                  builder: (ctx) {
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 12),
+                        // Drag handle
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: _slate200,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              l10n.swapExerciseTitle,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: _slate900,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (alternatives.isEmpty)
+                          Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(l10n.noAlternatives),
+                          )
+                        else
+                          ListView(
+                            shrinkWrap: true,
+                            children: [
+                              for (final alt in alternatives)
+                                ListTile(
+                                  title: Text(
+                                    alt.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: _slate900,
+                                    ),
+                                  ),
+                                  subtitle: Text(
+                                    alt.equipment.name,
+                                    style: const TextStyle(color: _slate500),
+                                  ),
+                                  onTap: () {
+                                    notifier.updateExercise(
+                                      sessionIndex: sessionIndex,
+                                      exerciseIndex: exerciseIndex,
+                                      exerciseId: alt.id,
+                                    );
+                                    Navigator.of(ctx).pop();
+                                  },
+                                ),
+                            ],
+                          ),
+                        SafeArea(child: const SizedBox(height: 8)),
+                      ],
+                    );
+                  },
+                );
+              },
+          onRegenerate: () async {
+            await notifier.generatePlan(exercises);
           },
-          onRegenerate: () => notifier.generatePlan(exercises),
           onAdopt: () {
             notifier.adopt(appStateController);
             notifier.reset();
@@ -179,9 +178,9 @@ class SmartPlannerScreen extends ConsumerWidget {
     final daysSelected = plannerState.selectedDays.isNotEmpty;
     final isLastStep = currentStep == 2;
 
-    void goNext() {
+    Future<void> goNext() async {
       if (isLastStep) {
-        notifier.generatePlan(exercises);
+        await notifier.generatePlan(exercises);
       } else {
         notifier.setWizardStep(currentStep + 1);
       }
@@ -205,10 +204,7 @@ class SmartPlannerScreen extends ConsumerWidget {
         elevation: 0,
         title: Text(
           l10n.smartPlannerTitle,
-          style: const TextStyle(
-            color: _slate900,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(color: _slate900, fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
@@ -249,9 +245,7 @@ class SmartPlannerScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 16),
               decoration: BoxDecoration(
                 color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: _slate200),
-                ),
+                border: Border(top: BorderSide(color: _slate200)),
               ),
               child: Row(
                 children: [
@@ -265,7 +259,9 @@ class SmartPlannerScreen extends ConsumerWidget {
                   const Spacer(),
                   if (isLastStep) ...[
                     TextButton(
-                      onPressed: () => notifier.generatePlan(exercises),
+                      onPressed: () async {
+                        await notifier.generatePlan(exercises);
+                      },
                       child: Text(
                         l10n.skip,
                         style: const TextStyle(color: _slate500),
@@ -285,9 +281,7 @@ class SmartPlannerScreen extends ConsumerWidget {
                     ),
                     child: Text(
                       isLastStep ? l10n.generate : l10n.next,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ],
@@ -308,15 +302,9 @@ class SmartPlannerScreen extends ConsumerWidget {
   ) {
     switch (currentStep) {
       case 0:
-        return _Step1Content(
-          plannerState: plannerState,
-          notifier: notifier,
-        );
+        return _Step1Content(plannerState: plannerState, notifier: notifier);
       case 1:
-        return _Step2Content(
-          plannerState: plannerState,
-          notifier: notifier,
-        );
+        return _Step2Content(plannerState: plannerState, notifier: notifier);
       case 2:
         return _Step3Content(
           exercises: exercises,
@@ -381,10 +369,7 @@ class _StepCircle extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: isFilled ? _blue600 : Colors.white,
-        border: Border.all(
-          color: isFilled ? _blue600 : _slate200,
-          width: 2,
-        ),
+        border: Border.all(color: isFilled ? _blue600 : _slate200, width: 2),
       ),
       child: Center(
         child: isCompleted
@@ -406,11 +391,12 @@ class _StepCircle extends StatelessWidget {
 // Step 1 — Training Days
 // ---------------------------------------------------------------------------
 
-String _splitTypeLabel(SplitType split, AppLocalizations l10n) => switch (split) {
-  SplitType.fullBody => l10n.fullBody,
-  SplitType.upperLower => l10n.upperLower,
-  SplitType.pushPullLegs => l10n.pushPullLegs,
-};
+String _splitTypeLabel(SplitType split, AppLocalizations l10n) =>
+    switch (split) {
+      SplitType.fullBody => l10n.fullBody,
+      SplitType.upperLower => l10n.upperLower,
+      SplitType.pushPullLegs => l10n.pushPullLegs,
+    };
 
 class _Step1Content extends StatelessWidget {
   const _Step1Content({required this.plannerState, required this.notifier});
@@ -423,7 +409,9 @@ class _Step1Content extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final selectedDays = plannerState.selectedDays;
     final rawSplit = plannerState.detectedSplit;
-    final splitLabel = rawSplit != null ? _splitTypeLabel(rawSplit, l10n) : null;
+    final splitLabel = rawSplit != null
+        ? _splitTypeLabel(rawSplit, l10n)
+        : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

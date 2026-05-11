@@ -200,6 +200,9 @@ Implemented:
 - Preferred exercise selection.
 - Excluded exercise selection.
 - Weekly plan generation through `packages/training_engine`.
+- Engine-aware adaptation: generation reads current engine fatigue, readiness,
+  and ingested-session count; high-fatigue primary muscles reduce planned sets
+  and adopted routine exercises carry Smart Planner engine-context metadata.
 - Time-bounding generated sessions.
 - Plan preview.
 - Inline editing of generated exercise targets.

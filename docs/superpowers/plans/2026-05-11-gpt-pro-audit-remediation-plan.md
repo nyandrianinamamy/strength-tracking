@@ -563,7 +563,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 13: Emit Readiness Flags for Sleep and Resting-Heart-Rate Risks
 
 **Category:** P1 readiness correctness
-**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 13 with API-compatibility and dashboard-copy checks; local verification passed Dart format, diff check, package readiness tests (`+33`), and dashboard widget tests (`+5`). Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM proxy review passed Task 13 with API-compatibility and dashboard-copy checks; local verification passed Dart format, diff check, package readiness tests (`+33`), and dashboard widget tests (`+5`). Commit: `bc71043`.
 
 **Files:**
 
@@ -604,13 +604,18 @@ P2 tasks close broader product and runtime gaps:
 ## Task 14: Make Smart Planner Adaptation Claims True
 
 **Category:** P2 planner/product consistency
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed the engine-aware planner path; the orchestrator removed the silent engine-context fallback, updated async Smart Planner call sites and adoption tests, and GLM proxy review passed Task 14. Local verification passed Dart format on touched Dart files, diff check, focused Smart Planner tests (`+17`), package planner tests (`+27`), and focused analyzer checks. Commit: recorded in git history after this ledger update.
 
 **Files:**
 
 - Modify: `lib/src/features/smart_planner/smart_planner_controller.dart`
 - Modify: `lib/src/features/smart_planner/planner_registry_adapter.dart`
+- Modify: `lib/src/features/smart_planner/smart_planner_screen.dart`
+- Modify: `lib/src/features/smart_planner/widgets/plan_preview.dart`
+- Modify: `lib/src/data/models/routine_exercise.dart`
 - Modify: `packages/training_engine/lib/src/planner/session_generator.dart`
 - Modify: `docs/app-feature-inventory.md`
+- Test: `test/features/smart_planner/smart_planner_adoption_test.dart`
 - Test: `test/features/smart_planner/smart_planner_controller_test.dart`
 - Test: `test/features/smart_planner/smart_planner_integration_test.dart`
 - Test: `packages/training_engine/test/planner/session_generator_test.dart`
@@ -625,14 +630,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing tests for high-fatigue engine state affecting Smart Planner generation.
-- [ ] Implement engine-aware planner input through the controller and planner adapter.
-- [ ] Update docs/UI to describe the implemented engine-aware adaptation.
-- [ ] Update Smart Planner tests and inventory wording.
-- [ ] Run `dart format lib/src/features/smart_planner/smart_planner_controller.dart lib/src/features/smart_planner/planner_registry_adapter.dart packages/training_engine/lib/src/planner/session_generator.dart docs/app-feature-inventory.md test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart packages/training_engine/test/planner/session_generator_test.dart packages/training_engine/test/planner/dynamic_adjustments_test.dart`.
-- [ ] Run `flutter test test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/planner/session_generator_test.dart test/planner/dynamic_adjustments_test.dart`.
-- [ ] Commit the Smart Planner consistency changes.
+- [x] Add failing tests for high-fatigue engine state affecting Smart Planner generation.
+- [x] Implement engine-aware planner input through the controller and planner adapter.
+- [x] Update docs/UI to describe the implemented engine-aware adaptation.
+- [x] Update Smart Planner tests and inventory wording.
+- [x] Run `dart format lib/src/data/models/routine_exercise.dart lib/src/features/smart_planner/smart_planner_controller.dart lib/src/features/smart_planner/planner_registry_adapter.dart lib/src/features/smart_planner/smart_planner_screen.dart lib/src/features/smart_planner/widgets/plan_preview.dart packages/training_engine/lib/src/planner/session_generator.dart test/features/smart_planner/smart_planner_adoption_test.dart test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart packages/training_engine/test/planner/session_generator_test.dart packages/training_engine/test/planner/dynamic_adjustments_test.dart`.
+- [x] Run `flutter test test/features/smart_planner/smart_planner_controller_test.dart test/features/smart_planner/smart_planner_integration_test.dart test/features/smart_planner/smart_planner_adoption_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/planner/session_generator_test.dart test/planner/dynamic_adjustments_test.dart`.
+- [x] Commit the Smart Planner consistency changes.
 
 **Acceptance Checks:**
 
