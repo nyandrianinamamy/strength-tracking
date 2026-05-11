@@ -282,10 +282,7 @@ class WorkoutController {
     }
 
     _persistSession(
-      session.copyWith(
-        lastActivityAt: DateTime.now(),
-        sessionNote: note,
-      ),
+      session.copyWith(lastActivityAt: DateTime.now(), sessionNote: note),
     );
   }
 
@@ -297,12 +294,7 @@ class WorkoutController {
       return;
     }
 
-    _persistSession(
-      session.copyWith(
-        lastActivityAt: DateTime.now(),
-        rpe: rpe,
-      ),
-    );
+    _persistSession(session.copyWith(lastActivityAt: DateTime.now(), rpe: rpe));
   }
 
   /// Swaps the exercise at [exerciseIndex] in the active session's routine
@@ -334,7 +326,10 @@ class WorkoutController {
                 .map((r) => r.id == updatedRoutine.id ? updatedRoutine : r)
                 .toList(),
             sessions: s.sessions
-                .map((item) => item.id == updatedSession.id ? updatedSession : item)
+                .map(
+                  (item) =>
+                      item.id == updatedSession.id ? updatedSession : item,
+                )
                 .toList(),
           ),
         );
@@ -371,7 +366,9 @@ class WorkoutController {
           .read(trainingEngineControllerProvider)
           .ingestSession(engineSession);
     } catch (error) {
-      debugPrint('Failed to sync completed workout into training engine: $error');
+      debugPrint(
+        'Failed to sync completed workout into training engine: $error',
+      );
     }
   }
 }

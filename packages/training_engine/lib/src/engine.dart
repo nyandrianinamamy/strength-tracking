@@ -36,7 +36,7 @@ class TrainingEngine {
   TrainingState _state;
 
   TrainingEngine({required this.registry, required UserProfile profile})
-      : _state = TrainingState.initial(profile);
+    : _state = TrainingState.initial(profile);
 
   // ---------------------------------------------------------------------------
   // Ingestion
@@ -45,16 +45,22 @@ class TrainingEngine {
   /// Ingests a completed [session], updating e1RM estimates, fatigue log,
   /// ACWR EWMA, and the lastTopSets map.
   void ingestSession(EngineSession session) {
+    if (_state.ingestedSessionIds.contains(session.id)) {
+      return;
+    }
+
     // Group sets by exerciseId
     final setsByExercise = <String, List<LoggedSet>>{};
     for (final set in session.sets) {
       setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
     }
 
-    final newE1rmHistory =
-        Map<String, List<E1rmEstimate>>.from(_state.e1rmHistory);
-    final newFatigueLog =
-        Map<String, List<FatigueImpulse>>.from(_state.fatigueLog);
+    final newE1rmHistory = Map<String, List<E1rmEstimate>>.from(
+      _state.e1rmHistory,
+    );
+    final newFatigueLog = Map<String, List<FatigueImpulse>>.from(
+      _state.fatigueLog,
+    );
     final newLastTopSets = Map<String, LoggedSet>.from(_state.lastTopSets);
 
     for (final entry in setsByExercise.entries) {
@@ -88,9 +94,8 @@ class TrainingEngine {
         fromEstimatedRpe: topSet.rpeEstimated,
       );
 
-      final history = List<E1rmEstimate>.from(
-        newE1rmHistory[exerciseId] ?? [],
-      )..add(estimate);
+      final history = List<E1rmEstimate>.from(newE1rmHistory[exerciseId] ?? [])
+        ..add(estimate);
       // Trim to most recent 20 estimates
       newE1rmHistory[exerciseId] = history.length > 20
           ? history.sublist(history.length - 20)
@@ -117,8 +122,10 @@ class TrainingEngine {
     // Prune old fatigue impulses (>7 days)
     final now = session.endedAt;
     for (final muscleId in newFatigueLog.keys.toList()) {
-      newFatigueLog[muscleId] =
-          fatigue_lib.pruneOldImpulses(newFatigueLog[muscleId]!, now);
+      newFatigueLog[muscleId] = fatigue_lib.pruneOldImpulses(
+        newFatigueLog[muscleId]!,
+        now,
+      );
     }
 
     // Compute daily volume load (sum of weight * reps across all sets)
@@ -128,11 +135,16 @@ class TrainingEngine {
     }
 
     // Trim and update daily loads (keep 35 days)
-    final newDailyLoad = DailyLoad(date: session.endedAt, volumeLoad: volumeLoad);
-    final dailyLoads = List<DailyLoad>.from(_state.dailyLoads)..add(newDailyLoad);
+    final newDailyLoad = DailyLoad(
+      date: session.endedAt,
+      volumeLoad: volumeLoad,
+    );
+    final dailyLoads = List<DailyLoad>.from(_state.dailyLoads)
+      ..add(newDailyLoad);
     final cutoff = now.subtract(const Duration(days: 35));
-    final trimmedDailyLoads =
-        dailyLoads.where((d) => !d.date.isBefore(cutoff)).toList();
+    final trimmedDailyLoads = dailyLoads
+        .where((d) => !d.date.isBefore(cutoff))
+        .toList();
 
     // Update EWMA
     final newAcwrState = ewma_lib.updateEwma(
@@ -149,6 +161,7 @@ class TrainingEngine {
       lastTopSets: newLastTopSets,
       lastUpdated: DateTime.now(),
       sessionsIngested: _state.sessionsIngested + 1,
+      ingestedSessionIds: {..._state.ingestedSessionIds, session.id},
     );
   }
 
@@ -168,10 +181,7 @@ class TrainingEngine {
     final history = List<HrvRecord>.from(_state.hrvHistory)..add(record);
     final cutoff = record.date.subtract(const Duration(days: 14));
     final trimmed = history.where((r) => !r.date.isBefore(cutoff)).toList();
-    _state = _state.copyWith(
-      hrvHistory: trimmed,
-      lastUpdated: DateTime.now(),
-    );
+    _state = _state.copyWith(hrvHistory: trimmed, lastUpdated: DateTime.now());
   }
 
   /// Re-fetches HealthKit data if the last fetch is older than [threshold].
@@ -287,9 +297,7 @@ class TrainingEngine {
         sessionEndedAt: now,
       );
       for (final impulse in impulses) {
-        previewImpulses
-            .putIfAbsent(impulse.muscleId, () => [])
-            .add(impulse);
+        previewImpulses.putIfAbsent(impulse.muscleId, () => []).add(impulse);
       }
     }
 
@@ -302,11 +310,7 @@ class TrainingEngine {
       mergedLog.putIfAbsent(entry.key, () => []).addAll(entry.value);
     }
 
-    return fatigue_lib.fullFatigueMap(
-      mergedLog,
-      now,
-      age: _state.profile.age,
-    );
+    return fatigue_lib.fullFatigueMap(mergedLog, now, age: _state.profile.age);
   }
 
   /// Returns the current ACWR status, or `null` if not enough data.
@@ -345,7 +349,8 @@ class TrainingEngine {
     final equipment = exercise?.equipment ?? EquipmentClass.barbell;
 
     // Default target params from movement class
-    final targets = overrides ??
+    final targets =
+        overrides ??
         (exercise != null
             ? TargetParams.defaultFor(exercise.movement)
             : const TargetParams(
@@ -417,7 +422,11 @@ class TrainingEngine {
     final fatigueMap = <String, double>{};
     for (final entry in _state.fatigueLog.entries) {
       fatigueMap[entry.key] = fatigue_lib.currentFatigue(
-        entry.key, entry.value, now, age: _state.profile.age);
+        entry.key,
+        entry.value,
+        now,
+        age: _state.profile.age,
+      );
     }
     return sub_lib.adjustSessionForFatigue(session, fatigueMap, registry);
   }
@@ -449,10 +458,7 @@ class TrainingEngine {
     for (final entry in log.entries) {
       final canonical = MuscleNormalizer.normalize(entry.key);
       if (canonical != entry.key) changed = true;
-      migrated[canonical] = [
-        ...migrated[canonical] ?? [],
-        ...entry.value,
-      ];
+      migrated[canonical] = [...migrated[canonical] ?? [], ...entry.value];
     }
     if (changed) {
       _state = _state.copyWith(fatigueLog: migrated);

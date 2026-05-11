@@ -109,7 +109,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 2: Correct Automated-Coverage Claims
 
 **Category:** Test coverage truthfulness
-**Status:** Completed 2026-05-11. GPT-5.5 worker left the coverage-doc edits; the orchestrator trimmed a local ignored-log reference; GLM verifier passed the Task 2 functional-requirement review. Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-11. GPT-5.5 worker left the coverage-doc edits; the orchestrator trimmed a local ignored-log reference; GLM verifier passed the Task 2 functional-requirement review. Commit: `43f0e9b`.
 
 **Files:**
 
@@ -143,6 +143,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 3: Make Completed-Session Engine Ingestion Durable
 
 **Category:** P0 training-engine data integrity
+**Status:** Completed 2026-05-11. GPT-5.5 implementer completed red-green code and tests; GLM verifier passed Task 3; local verification passed `dart format`, package tests (`+61`), and Flutter tests (`+22`). Commit: recorded in git history after this ledger update.
 
 **Files:**
 
@@ -170,18 +171,18 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing package tests for duplicate `EngineSession.id` ingestion and serialized `ingestedSessionIds` roundtrip.
-- [ ] Add failing provider tests for saved engine state with one completed session while `AppState` has two completed sessions.
-- [ ] Add a failing provider test for saved engine state containing a deleted session id that no longer appears in `AppState.completedSessions`.
-- [ ] Add a failing controller/workout test where engine save or ingest fails once and a later provider load ingests the completed session from `AppState`.
-- [ ] Implement `ingestedSessionIds` in `TrainingState`, with backward-compatible JSON parsing for older snapshots that lack the field.
-- [ ] Make engine ingestion idempotent by session id.
-- [ ] Update `loadTrainingEngine` reconciliation so restored state is accepted only when its ingested session ids exactly match current completed app session ids.
-- [ ] Keep HealthKit ingestion behavior unchanged in this task except for preserving records during rebuild; Task 5 owns HealthKit semantics.
-- [ ] Run `dart format packages/training_engine/lib/src/models/training_state.dart packages/training_engine/lib/src/engine.dart lib/src/features/training_engine/training_engine_provider.dart lib/src/features/training_engine/training_engine_controller.dart lib/src/features/workout/workout_controller.dart test/features/training_engine/training_engine_provider_test.dart test/features/training_engine/training_engine_controller_test.dart test/controllers/routine_and_workout_controller_test.dart packages/training_engine/test/models/training_state_test.dart packages/training_engine/test/engine_test.dart`.
-- [ ] Run `cd packages/training_engine && dart test test/models/training_state_test.dart test/engine_test.dart`.
-- [ ] Run `flutter test test/features/training_engine/training_engine_provider_test.dart test/features/training_engine/training_engine_controller_test.dart test/controllers/routine_and_workout_controller_test.dart`.
-- [ ] Commit the durable-ingestion changes.
+- [x] Add failing package tests for duplicate `EngineSession.id` ingestion and serialized `ingestedSessionIds` roundtrip.
+- [x] Add failing provider tests for saved engine state with one completed session while `AppState` has two completed sessions.
+- [x] Add a failing provider test for saved engine state containing a deleted session id that no longer appears in `AppState.completedSessions`.
+- [x] Add a failing controller/workout test where engine save or ingest fails once and a later provider load ingests the completed session from `AppState`.
+- [x] Implement `ingestedSessionIds` in `TrainingState`, with backward-compatible JSON parsing for older snapshots that lack the field.
+- [x] Make engine ingestion idempotent by session id.
+- [x] Update `loadTrainingEngine` reconciliation so restored state is accepted only when its ingested session ids exactly match current completed app session ids.
+- [x] Keep HealthKit ingestion behavior unchanged in this task except for preserving records during rebuild; Task 5 owns HealthKit semantics.
+- [x] Run `dart format packages/training_engine/lib/src/models/training_state.dart packages/training_engine/lib/src/engine.dart lib/src/features/training_engine/training_engine_provider.dart lib/src/features/training_engine/training_engine_controller.dart lib/src/features/workout/workout_controller.dart test/features/training_engine/training_engine_provider_test.dart test/features/training_engine/training_engine_controller_test.dart test/controllers/routine_and_workout_controller_test.dart packages/training_engine/test/models/training_state_test.dart packages/training_engine/test/engine_test.dart`.
+- [x] Run `cd packages/training_engine && dart test test/models/training_state_test.dart test/engine_test.dart`.
+- [x] Run `flutter test test/features/training_engine/training_engine_provider_test.dart test/features/training_engine/training_engine_controller_test.dart test/controllers/routine_and_workout_controller_test.dart`.
+- [x] Commit the durable-ingestion changes.
 
 **Acceptance Checks:**
 

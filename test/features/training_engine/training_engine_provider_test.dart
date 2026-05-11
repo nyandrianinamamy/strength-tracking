@@ -7,6 +7,7 @@ import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_adapter.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:training_engine/training_engine.dart';
@@ -50,6 +51,64 @@ AppState _appStateWithCompletedSession() {
         rpe: 8.0,
       ),
     ],
+    sex: 'male',
+  );
+}
+
+WorkoutSession _completedSession({
+  required String id,
+  required DateTime completedAt,
+  String exerciseId = 'barbell_back_squat',
+  double weightKg = 110.0,
+}) {
+  return WorkoutSession(
+    id: id,
+    routineId: 'routine-1',
+    status: WorkoutSessionStatus.completed,
+    startedAt: completedAt.subtract(const Duration(hours: 1)),
+    endedAt: completedAt,
+    lastActivityAt: completedAt,
+    currentExerciseIndex: 0,
+    completedSets: [
+      CompletedSet(
+        exerciseId: exerciseId,
+        setNumber: 1,
+        weightKg: weightKg,
+        reps: 8,
+        completedAt: completedAt,
+        note: '',
+        rpe: 8.0,
+      ),
+    ],
+    sessionNote: '',
+    rpe: 8.0,
+  );
+}
+
+AppState _appStateWithCompletedSessions(List<WorkoutSession> sessions) {
+  return AppState(
+    exercises: const [
+      Exercise(
+        id: 'barbell_back_squat',
+        name: 'Barbell Back Squat',
+        primaryMuscles: ['Quadriceps'],
+        secondaryMuscles: ['Glutes'],
+        equipment: ['Barbell'],
+        instructions: '',
+        archived: false,
+      ),
+      Exercise(
+        id: 'barbell_bench_press',
+        name: 'Barbell Bench Press',
+        primaryMuscles: ['Chest'],
+        secondaryMuscles: ['Triceps'],
+        equipment: ['Barbell'],
+        instructions: '',
+        archived: false,
+      ),
+    ],
+    routines: const [],
+    sessions: sessions,
     sex: 'male',
   );
 }
@@ -128,7 +187,7 @@ Map<String, dynamic> _savedEngineStateWithBenchAndSquatData() {
   );
   savedEngine.ingestSession(
     EngineSession(
-      id: 'debug-session-1',
+      id: 'completed-session-1',
       startedAt: now.subtract(const Duration(hours: 1)),
       endedAt: now,
       sets: [
@@ -167,6 +226,26 @@ class _ThrowingTrainingEngineStateRepository
 
   @override
   Future<void> save(Map<String, dynamic> state) async {}
+}
+
+Map<String, dynamic> _savedStateForSessions(List<WorkoutSession> sessions) {
+  final appState = _appStateWithCompletedSessions(sessions);
+  final adapter = const TrainingEngineAdapter();
+  final registry = ExerciseRegistry.withDefaults();
+  for (final exercise in appState.exercises) {
+    final engineExercise = adapter.toEngineExercise(exercise, registry);
+    if (engineExercise != null) {
+      registry.addCustom(engineExercise);
+    }
+  }
+  final engine = TrainingEngine(
+    registry: registry,
+    profile: adapter.toUserProfile(appState),
+  );
+  engine.bootstrapFromHistory(
+    sessions.map(adapter.toEngineSession).whereType<EngineSession>().toList(),
+  );
+  return engine.serializeState();
 }
 
 void main() {
@@ -213,7 +292,7 @@ void main() {
         );
         savedEngine.ingestSession(
           EngineSession(
-            id: 'saved-session',
+            id: 'completed-session-1',
             startedAt: DateTime.utc(2026, 2, 1, 17, 0),
             endedAt: DateTime.utc(2026, 2, 1, 18, 0),
             sets: [
@@ -243,6 +322,85 @@ void main() {
         expect(engine.state.sessionsIngested, 1);
         expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
         expect(engine.state.e1rmHistory['barbell_back_squat'], isNull);
+      },
+    );
+
+    test(
+      'rebuilds when saved state is missing a completed app session',
+      () async {
+        final first = _completedSession(
+          id: 'completed-session-1',
+          completedAt: DateTime.utc(2026, 3, 1, 18, 0),
+          exerciseId: 'barbell_back_squat',
+          weightKg: 110,
+        );
+        final second = _completedSession(
+          id: 'completed-session-2',
+          completedAt: DateTime.utc(2026, 3, 2, 18, 0),
+          exerciseId: 'barbell_bench_press',
+          weightKg: 90,
+        );
+        final appState = _appStateWithCompletedSessions([first, second]);
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: _savedStateForSessions([first]),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sessionsIngested, 2);
+        expect(
+          engine.state.ingestedSessionIds,
+          equals({'completed-session-1', 'completed-session-2'}),
+        );
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
+        expect(
+          engineRepository.state?['ingestedSessionIds'],
+          unorderedEquals(['completed-session-1', 'completed-session-2']),
+        );
+      },
+    );
+
+    test(
+      'rebuilds when saved state contains a completed session deleted from app history',
+      () async {
+        final deleted = _completedSession(
+          id: 'deleted-session',
+          completedAt: DateTime.utc(2026, 3, 1, 18, 0),
+          exerciseId: 'barbell_back_squat',
+          weightKg: 110,
+        );
+        final remaining = _completedSession(
+          id: 'remaining-session',
+          completedAt: DateTime.utc(2026, 3, 2, 18, 0),
+          exerciseId: 'barbell_bench_press',
+          weightKg: 90,
+        );
+        final appState = _appStateWithCompletedSessions([remaining]);
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: _savedStateForSessions([deleted, remaining]),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.ingestedSessionIds, equals({'remaining-session'}));
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNull);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
       },
     );
 
@@ -359,7 +517,7 @@ void main() {
         );
         savedEngine.ingestSession(
           EngineSession(
-            id: 'debug-fatigue-session',
+            id: 'completed-session-1',
             startedAt: DateTime.utc(2026, 3, 1, 17, 0),
             endedAt: DateTime.utc(2026, 3, 1, 18, 0),
             sets: [
@@ -410,7 +568,7 @@ void main() {
       );
       savedEngine.ingestSession(
         EngineSession(
-          id: 'debug-recommendation-session',
+          id: 'completed-session-1',
           startedAt: DateTime.utc(2026, 3, 1, 17, 0),
           endedAt: DateTime.utc(2026, 3, 1, 18, 0),
           sets: [

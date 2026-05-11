@@ -52,11 +52,30 @@ Future<TrainingEngine> loadTrainingEngine({
 
   final profile = adapter.toUserProfile(appState);
   final engine = TrainingEngine(registry: registry, profile: profile);
+  final completedSessions = appState.completedSessions
+      .map(adapter.toEngineSession)
+      .whereType<EngineSession>()
+      .toList();
+  final completedSessionIds = completedSessions
+      .map((session) => session.id)
+      .toSet();
   try {
     final savedState = await repository.load();
     if (savedState != null) {
       engine.restoreState(savedState);
-      return engine;
+      final savedTracksSessionIds =
+          savedState.containsKey('ingestedSessionIds') ||
+          _hasNoSessionDerivedState(engine.state);
+      if (savedTracksSessionIds &&
+          setEquals(engine.state.ingestedSessionIds, completedSessionIds)) {
+        return engine;
+      }
+
+      final rebuilt = TrainingEngine(registry: registry, profile: profile);
+      rebuilt.bootstrapFromHistory(completedSessions);
+      _preserveHealthKitState(rebuilt, engine.state);
+      await repository.save(rebuilt.serializeState());
+      return rebuilt;
     }
   } catch (error) {
     debugPrint(
@@ -71,10 +90,6 @@ Future<TrainingEngine> loadTrainingEngine({
     }
   }
 
-  final completedSessions = appState.completedSessions
-      .map(adapter.toEngineSession)
-      .whereType<EngineSession>()
-      .toList();
   if (completedSessions.isNotEmpty) {
     engine.bootstrapFromHistory(completedSessions);
   }
@@ -104,6 +119,30 @@ Future<TrainingEngine> loadTrainingEngine({
 
   await repository.save(engine.serializeState());
   return engine;
+}
+
+bool _hasNoSessionDerivedState(TrainingState state) {
+  return state.sessionsIngested == 0 &&
+      state.e1rmHistory.isEmpty &&
+      state.fatigueLog.isEmpty &&
+      state.dailyLoads.isEmpty &&
+      state.acwrState == null &&
+      state.lastTopSets.isEmpty;
+}
+
+void _preserveHealthKitState(
+  TrainingEngine rebuilt,
+  TrainingState restoredState,
+) {
+  rebuilt.restoreState(
+    rebuilt.state
+        .copyWith(
+          sleepHistory: restoredState.sleepHistory,
+          hrvHistory: restoredState.hrvHistory,
+          lastHealthKitFetch: restoredState.lastHealthKitFetch,
+        )
+        .toJson(),
+  );
 }
 
 final trainingEngineProvider = FutureProvider<TrainingEngine>((ref) async {
@@ -164,13 +203,15 @@ final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
   // Convert app CompletedSets to engine LoggedSets
   final engineSets = activeSets
       .where((s) => s.reps > 0)
-      .map((s) => LoggedSet(
-            exerciseId: s.exerciseId,
-            weightKg: s.weightKg,
-            reps: s.reps,
-            rpe: s.rpe ?? 8.0,
-            completedAt: s.completedAt,
-          ))
+      .map(
+        (s) => LoggedSet(
+          exerciseId: s.exerciseId,
+          weightKg: s.weightKg,
+          reps: s.reps,
+          rpe: s.rpe ?? 8.0,
+          completedAt: s.completedAt,
+        ),
+      )
       .toList();
 
   final fatigueMap = engine.previewFatigueWithSets(engineSets);
@@ -326,8 +367,7 @@ final engineDebugPersistedStateSummaryProvider =
               volume: dailyLoads.last.volumeLoad.toStringAsFixed(1),
             );
 
-      String resolveName(String id) =>
-          engine.registry.lookup(id)?.name ?? id;
+      String resolveName(String id) => engine.registry.lookup(id)?.name ?? id;
 
       final lastTopSetRows = state.lastTopSets.entries.toList()
         ..sort((a, b) => a.key.compareTo(b.key));
@@ -378,8 +418,7 @@ final engineDebugRecommendationRowsProvider =
     FutureProvider<List<EngineDebugRecommendationRow>>((ref) async {
       final engine = await ref.watch(trainingEngineProvider.future);
       final rows = engine.state.lastTopSets.entries.map((entry) {
-        final name =
-            engine.registry.lookup(entry.key)?.name ?? entry.key;
+        final name = engine.registry.lookup(entry.key)?.name ?? entry.key;
         return EngineDebugRecommendationRow(
           exerciseId: entry.key,
           exerciseName: name,

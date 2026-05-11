@@ -366,7 +366,7 @@ Automated-Coverage Claims</h2>
 <strong>Status:</strong> Completed 2026-05-11. GPT-5.5 worker left the
 coverage-doc edits; the orchestrator trimmed a local ignored-log
 reference; GLM verifier passed the Task 2 functional-requirement review.
-Commit: recorded in git history after this ledger update.</p>
+Commit: <code>43f0e9b</code>.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>docs/e2e-web-flow-inventory.md</code></li>
@@ -412,7 +412,12 @@ the current web verification command.</li>
 <hr />
 <h2 id="task-3-make-completed-session-engine-ingestion-durable">Task 3:
 Make Completed-Session Engine Ingestion Durable</h2>
-<p><strong>Category:</strong> P0 training-engine data integrity</p>
+<p><strong>Category:</strong> P0 training-engine data integrity
+<strong>Status:</strong> Completed 2026-05-11. GPT-5.5 implementer
+completed red-green code and tests; GLM verifier passed Task 3; local
+verification passed <code>dart format</code>, package tests
+(<code>+61</code>), and Flutter tests (<code>+22</code>). Commit:
+recorded in git history after this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify:
@@ -464,39 +469,40 @@ history.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add failing package tests for
-duplicate <code>EngineSession.id</code> ingestion and serialized
+<li><label><input type="checkbox" checked="" />Add failing package tests
+for duplicate <code>EngineSession.id</code> ingestion and serialized
 <code>ingestedSessionIds</code> roundtrip.</label></li>
-<li><label><input type="checkbox" />Add failing provider tests for saved
-engine state with one completed session while <code>AppState</code> has
-two completed sessions.</label></li>
-<li><label><input type="checkbox" />Add a failing provider test for
-saved engine state containing a deleted session id that no longer
-appears in <code>AppState.completedSessions</code>.</label></li>
-<li><label><input type="checkbox" />Add a failing controller/workout
-test where engine save or ingest fails once and a later provider load
-ingests the completed session from <code>AppState</code>.</label></li>
-<li><label><input type="checkbox" />Implement
+<li><label><input type="checkbox" checked="" />Add failing provider
+tests for saved engine state with one completed session while
+<code>AppState</code> has two completed sessions.</label></li>
+<li><label><input type="checkbox" checked="" />Add a failing provider
+test for saved engine state containing a deleted session id that no
+longer appears in <code>AppState.completedSessions</code>.</label></li>
+<li><label><input type="checkbox" checked="" />Add a failing
+controller/workout test where engine save or ingest fails once and a
+later provider load ingests the completed session from
+<code>AppState</code>.</label></li>
+<li><label><input type="checkbox" checked="" />Implement
 <code>ingestedSessionIds</code> in <code>TrainingState</code>, with
 backward-compatible JSON parsing for older snapshots that lack the
 field.</label></li>
-<li><label><input type="checkbox" />Make engine ingestion idempotent by
-session id.</label></li>
-<li><label><input type="checkbox" />Update
+<li><label><input type="checkbox" checked="" />Make engine ingestion
+idempotent by session id.</label></li>
+<li><label><input type="checkbox" checked="" />Update
 <code>loadTrainingEngine</code> reconciliation so restored state is
 accepted only when its ingested session ids exactly match current
 completed app session ids.</label></li>
-<li><label><input type="checkbox" />Keep HealthKit ingestion behavior
-unchanged in this task except for preserving records during rebuild;
-Task 5 owns HealthKit semantics.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Keep HealthKit ingestion
+behavior unchanged in this task except for preserving records during
+rebuild; Task 5 owns HealthKit semantics.</label></li>
+<li><label><input type="checkbox" checked="" />Run
 <code>dart format packages/training_engine/lib/src/models/training_state.dart packages/training_engine/lib/src/engine.dart lib/src/features/training_engine/training_engine_provider.dart lib/src/features/training_engine/training_engine_controller.dart lib/src/features/workout/workout_controller.dart test/features/training_engine/training_engine_provider_test.dart test/features/training_engine/training_engine_controller_test.dart test/controllers/routine_and_workout_controller_test.dart packages/training_engine/test/models/training_state_test.dart packages/training_engine/test/engine_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>cd packages/training_engine &amp;&amp; dart test test/models/training_state_test.dart test/engine_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter test test/features/training_engine/training_engine_provider_test.dart test/features/training_engine/training_engine_controller_test.dart test/controllers/routine_and_workout_controller_test.dart</code>.</label></li>
-<li><label><input type="checkbox" />Commit the durable-ingestion
-changes.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the
+durable-ingestion changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>
 <ul>

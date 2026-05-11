@@ -7,25 +7,25 @@ UserProfile _profile({
   int age = 28,
   double bodyWeightKg = 80.0,
   ExperienceLevel experience = ExperienceLevel.intermediate,
-}) =>
-    UserProfile(
-      sex: sex,
-      age: age,
-      bodyWeightKg: bodyWeightKg,
-      experience: experience,
-      goal: HypertrophyGoal.hypertrophy,
-      availableDays: [1, 3, 5],
-      maxSessionDuration: const Duration(hours: 60),
-      createdAt: DateTime.utc(2026, 1, 1),
-    );
+}) => UserProfile(
+  sex: sex,
+  age: age,
+  bodyWeightKg: bodyWeightKg,
+  experience: experience,
+  goal: HypertrophyGoal.hypertrophy,
+  availableDays: [1, 3, 5],
+  maxSessionDuration: const Duration(hours: 60),
+  createdAt: DateTime.utc(2026, 1, 1),
+);
 
 TrainingEngine _engine({UserProfile? profile}) => TrainingEngine(
-      registry: ExerciseRegistry.withDefaults(),
-      profile: profile ?? _profile(),
-    );
+  registry: ExerciseRegistry.withDefaults(),
+  profile: profile ?? _profile(),
+);
 
 /// Creates a basic session with one exercise.
 EngineSession _session({
+  String id = 's1',
   String exerciseId = 'barbell_back_squat',
   double weightKg = 100.0,
   int reps = 8,
@@ -34,7 +34,7 @@ EngineSession _session({
 }) {
   final ts = endedAt ?? DateTime.utc(2026, 3, 1, 18, 0);
   return EngineSession(
-    id: 's1',
+    id: id,
     startedAt: ts.subtract(const Duration(hours: 1)),
     endedAt: ts,
     sets: [
@@ -109,18 +109,50 @@ void main() {
       engine.ingestSession(_session());
       expect(engine.state.sessionsIngested, equals(1));
 
-      engine.ingestSession(_session(
-        endedAt: DateTime.utc(2026, 3, 3, 18, 0),
-      ));
+      engine.ingestSession(
+        _session(id: 's2', endedAt: DateTime.utc(2026, 3, 3, 18, 0)),
+      );
       expect(engine.state.sessionsIngested, equals(2));
+    });
+
+    test('does not ingest the same session id twice', () {
+      final engine = _engine();
+      final session = _session();
+
+      engine.ingestSession(session);
+      final afterFirst = engine.state;
+
+      engine.ingestSession(session);
+
+      expect(engine.state.sessionsIngested, equals(1));
+      expect(engine.state.ingestedSessionIds, equals({'s1'}));
+      expect(
+        engine.state.e1rmHistory['barbell_back_squat'],
+        hasLength(afterFirst.e1rmHistory['barbell_back_squat']!.length),
+      );
+      expect(engine.state.dailyLoads, hasLength(afterFirst.dailyLoads.length));
+      expect(
+        engine.state.acwrState?.acuteEwma,
+        afterFirst.acwrState?.acuteEwma,
+      );
+      expect(
+        engine.state.fatigueLog.map(
+          (muscleId, impulses) => MapEntry(muscleId, impulses.length),
+        ),
+        equals(
+          afterFirst.fatigueLog.map(
+            (muscleId, impulses) => MapEntry(muscleId, impulses.length),
+          ),
+        ),
+      );
     });
 
     test('trims e1rmHistory to 20 per exercise', () {
       final engine = _engine();
       for (int i = 0; i < 25; i++) {
-        engine.ingestSession(_session(
-          endedAt: DateTime.utc(2026, 1, i + 1, 18, 0),
-        ));
+        engine.ingestSession(
+          _session(id: 's$i', endedAt: DateTime.utc(2026, 1, i + 1, 18, 0)),
+        );
       }
       expect(
         engine.state.e1rmHistory['barbell_back_squat']!.length,
@@ -131,9 +163,9 @@ void main() {
     test('trims dailyLoads to at most 36 entries (35-day window)', () {
       final engine = _engine();
       for (int i = 0; i < 40; i++) {
-        engine.ingestSession(_session(
-          endedAt: DateTime.utc(2026, 1, i + 1, 18, 0),
-        ));
+        engine.ingestSession(
+          _session(id: 's$i', endedAt: DateTime.utc(2026, 1, i + 1, 18, 0)),
+        );
       }
       // 35-day window keeps entries from (today - 35 days) onward,
       // which is at most 36 unique days (inclusive on both ends).
@@ -273,8 +305,7 @@ void main() {
       final engine = _engine();
       engine.ingestSession(_session());
       final impulseCounts = {
-        for (final e in engine.state.fatigueLog.entries)
-          e.key: e.value.length,
+        for (final e in engine.state.fatigueLog.entries) e.key: e.value.length,
       };
 
       engine.previewFatigueWithSets([
@@ -350,55 +381,59 @@ void main() {
       final engine = _engine();
       // Use a date within 14 days of today so scoreSleep picks it up
       final recentDate = DateTime.now().subtract(const Duration(days: 1));
-      engine.ingestSession(EngineSession(
-        id: 's_recent',
-        startedAt: recentDate.subtract(const Duration(hours: 1)),
-        endedAt: recentDate,
-        sets: [
-          LoggedSet(
-            exerciseId: 'barbell_back_squat',
-            weightKg: 100.0,
-            reps: 8,
-            rpe: 8.0,
-            completedAt: recentDate,
-          ),
-        ],
-        sessionRpe: 8.0,
-      ));
-      engine.ingestSleep(SleepRecord(
-        date: recentDate,
-        totalSleep: const Duration(hours: 8),
-        deepSleep: const Duration(hours: 2),
-        remSleep: const Duration(hours: 2),
-        coreSleep: const Duration(hours: 4),
-      ));
+      engine.ingestSession(
+        EngineSession(
+          id: 's_recent',
+          startedAt: recentDate.subtract(const Duration(hours: 1)),
+          endedAt: recentDate,
+          sets: [
+            LoggedSet(
+              exerciseId: 'barbell_back_squat',
+              weightKg: 100.0,
+              reps: 8,
+              rpe: 8.0,
+              completedAt: recentDate,
+            ),
+          ],
+          sessionRpe: 8.0,
+        ),
+      );
+      engine.ingestSleep(
+        SleepRecord(
+          date: recentDate,
+          totalSleep: const Duration(hours: 8),
+          deepSleep: const Duration(hours: 2),
+          remSleep: const Duration(hours: 2),
+          coreSleep: const Duration(hours: 4),
+        ),
+      );
       final readiness = engine.computeReadiness();
       expect(readiness.tier, equals(ReadinessTier.noHrv));
     });
   });
 
   group('TrainingEngine.recommendLoad', () {
-    test('returns recommendation after ingestion (3 days later, recovered)', () {
-      final engine = _engine();
-      final sessionDate = DateTime.utc(2026, 3, 1, 18, 0);
-      engine.ingestSession(_session(
-        weightKg: 100.0,
-        reps: 10,
-        rpe: 8.0,
-        endedAt: sessionDate,
-      ));
+    test(
+      'returns recommendation after ingestion (3 days later, recovered)',
+      () {
+        final engine = _engine();
+        final sessionDate = DateTime.utc(2026, 3, 1, 18, 0);
+        engine.ingestSession(
+          _session(weightKg: 100.0, reps: 10, rpe: 8.0, endedAt: sessionDate),
+        );
 
-      // Query 3 days later (fatigue mostly recovered)
-      final queryDate = sessionDate.add(const Duration(days: 3));
-      final rec = engine.recommendLoad('barbell_back_squat', at: queryDate);
+        // Query 3 days later (fatigue mostly recovered)
+        final queryDate = sessionDate.add(const Duration(days: 3));
+        final rec = engine.recommendLoad('barbell_back_squat', at: queryDate);
 
-      expect(rec.exerciseId, equals('barbell_back_squat'));
-      expect(rec.e1rm, isNotNull);
-      expect(rec.e1rm, greaterThan(0));
-      // After performing top of rep range at target RPE → expect progression
-      expect(rec.suggestedWeightKg, isNotNull);
-      expect(rec.suggestedWeightKg, greaterThan(0));
-    });
+        expect(rec.exerciseId, equals('barbell_back_squat'));
+        expect(rec.e1rm, isNotNull);
+        expect(rec.e1rm, greaterThan(0));
+        // After performing top of rep range at target RPE → expect progression
+        expect(rec.suggestedWeightKg, isNotNull);
+        expect(rec.suggestedWeightKg, greaterThan(0));
+      },
+    );
 
     test('returns recommendation using custom TargetParams', () {
       final engine = _engine();
@@ -429,9 +464,9 @@ void main() {
   group('TrainingEngine.generatePlan', () {
     test('generates valid weekly plan for 3 days', () {
       final engine = _engine();
-      final plan = engine.generatePlan(const PlannerConfig(
-        availableDays: [1, 3, 5],
-      ));
+      final plan = engine.generatePlan(
+        const PlannerConfig(availableDays: [1, 3, 5]),
+      );
 
       expect(plan.sessions, hasLength(3));
       expect(plan.sessions.every((s) => s.exercises.isNotEmpty), isTrue);
@@ -439,9 +474,9 @@ void main() {
 
     test('split type reflects available days', () {
       final engine = _engine();
-      final plan4 = engine.generatePlan(const PlannerConfig(
-        availableDays: [1, 2, 4, 6],
-      ));
+      final plan4 = engine.generatePlan(
+        const PlannerConfig(availableDays: [1, 2, 4, 6]),
+      );
       expect(plan4.splitType, equals(SplitType.upperLower));
     });
   });
@@ -455,10 +490,7 @@ void main() {
       final engine2 = _engine();
       engine2.restoreState(json);
 
-      expect(
-        engine2.state.e1rmHistory['barbell_back_squat'],
-        isNotEmpty,
-      );
+      expect(engine2.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
       expect(
         engine2.state.lastTopSets['barbell_back_squat']?.weightKg,
         closeTo(120.0, 0.001),
@@ -470,13 +502,16 @@ void main() {
     test('sessionsIngested preserved', () {
       final engine = _engine();
       engine.ingestSession(_session());
-      engine.ingestSession(_session(endedAt: DateTime.utc(2026, 3, 4, 18)));
+      engine.ingestSession(
+        _session(id: 's2', endedAt: DateTime.utc(2026, 3, 4, 18)),
+      );
 
       final json = engine.serializeState();
       final engine2 = _engine();
       engine2.restoreState(json);
 
       expect(engine2.state.sessionsIngested, equals(2));
+      expect(engine2.state.ingestedSessionIds, equals({'s1', 's2'}));
     });
 
     test('lastHealthKitFetch survives serialization roundtrip', () {
@@ -562,10 +597,7 @@ void main() {
 
       engine.bootstrapFromHistory(sessions);
       expect(engine.state.sessionsIngested, equals(1));
-      expect(
-        engine.state.e1rmHistory['barbell_bench_press'],
-        isNotEmpty,
-      );
+      expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
     });
 
     test('defaults RPE to 8.0 when no sessionRpe and set is estimated', () {
@@ -610,6 +642,7 @@ void main() {
         fetchCount++;
         return [sleepRecord];
       }
+
       Future<List<HrvRecord>> fakeHrv() async => [];
 
       await engine.refreshHealthKitIfStale(
@@ -636,6 +669,7 @@ void main() {
         fetchCount++;
         return [sleepRecord];
       }
+
       Future<List<HrvRecord>> fakeHrv() async => [];
 
       // First call — should fetch and stamp (non-empty results)
@@ -661,6 +695,7 @@ void main() {
         fetchCount++;
         return [];
       }
+
       Future<List<HrvRecord>> fakeHrv() async => [];
 
       // First fetch
@@ -690,10 +725,7 @@ void main() {
         remSleep: const Duration(hours: 1, minutes: 30),
         coreSleep: const Duration(hours: 3, minutes: 30),
       );
-      final hrvRecord = HrvRecord(
-        date: DateTime.now(),
-        sdnn: 45.0,
-      );
+      final hrvRecord = HrvRecord(date: DateTime.now(), sdnn: 45.0);
 
       await engine.refreshHealthKitIfStale(
         fetchSleep: () async => [sleepRecord],
@@ -748,37 +780,46 @@ void main() {
         threshold: Duration.zero,
       );
       expect(engine.state.sleepHistory, hasLength(1));
-      expect(engine.state.sleepHistory.first.totalSleep,
-          equals(const Duration(hours: 8)));
+      expect(
+        engine.state.sleepHistory.first.totalSleep,
+        equals(const Duration(hours: 8)),
+      );
     });
   });
 
   group('TrainingEngine.ingestSleep and ingestHrv', () {
-    test('sleep history is populated and trimmed to at most 15 entries (14-day window)', () {
-      final engine = _engine();
-      for (int i = 0; i < 20; i++) {
-        engine.ingestSleep(SleepRecord(
-          date: DateTime.utc(2026, 3, i + 1),
-          totalSleep: const Duration(hours: 7),
-          deepSleep: const Duration(hours: 1, minutes: 30),
-          remSleep: const Duration(hours: 1, minutes: 45),
-          coreSleep: const Duration(hours: 3, minutes: 45),
-        ));
-      }
-      // 14-day window: records from (latest - 14 days) onward, inclusive on both
-      // ends → at most 15 unique calendar dates.
-      expect(engine.state.sleepHistory.length, lessThanOrEqualTo(15));
-    });
+    test(
+      'sleep history is populated and trimmed to at most 15 entries (14-day window)',
+      () {
+        final engine = _engine();
+        for (int i = 0; i < 20; i++) {
+          engine.ingestSleep(
+            SleepRecord(
+              date: DateTime.utc(2026, 3, i + 1),
+              totalSleep: const Duration(hours: 7),
+              deepSleep: const Duration(hours: 1, minutes: 30),
+              remSleep: const Duration(hours: 1, minutes: 45),
+              coreSleep: const Duration(hours: 3, minutes: 45),
+            ),
+          );
+        }
+        // 14-day window: records from (latest - 14 days) onward, inclusive on both
+        // ends → at most 15 unique calendar dates.
+        expect(engine.state.sleepHistory.length, lessThanOrEqualTo(15));
+      },
+    );
 
-    test('HRV history is populated and trimmed to at most 15 entries (14-day window)', () {
-      final engine = _engine();
-      for (int i = 0; i < 20; i++) {
-        engine.ingestHrv(HrvRecord(
-          date: DateTime.utc(2026, 3, i + 1),
-          sdnn: 65.0 + i,
-        ));
-      }
-      expect(engine.state.hrvHistory.length, lessThanOrEqualTo(15));
-    });
+    test(
+      'HRV history is populated and trimmed to at most 15 entries (14-day window)',
+      () {
+        final engine = _engine();
+        for (int i = 0; i < 20; i++) {
+          engine.ingestHrv(
+            HrvRecord(date: DateTime.utc(2026, 3, i + 1), sdnn: 65.0 + i),
+          );
+        }
+        expect(engine.state.hrvHistory.length, lessThanOrEqualTo(15));
+      },
+    );
   });
 }
