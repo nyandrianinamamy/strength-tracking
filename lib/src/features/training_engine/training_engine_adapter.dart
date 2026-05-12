@@ -202,8 +202,9 @@ class TrainingEngineAdapter {
     if (equipment.isEmpty) return EquipmentClass.barbell;
     final lower = equipment.map((e) => e.toLowerCase()).toList();
     if (lower.any((e) => e.contains('barbell'))) return EquipmentClass.barbell;
-    if (lower.any((e) => e.contains('dumbbell')))
+    if (lower.any((e) => e.contains('dumbbell'))) {
       return EquipmentClass.dumbbell;
+    }
     if (lower.any((e) => e.contains('cable'))) return EquipmentClass.cable;
     if (lower.any((e) => e.contains('machine'))) return EquipmentClass.machine;
     if (lower.any((e) => e.contains('body') || e.contains('bodyweight'))) {

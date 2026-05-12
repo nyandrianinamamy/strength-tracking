@@ -62,6 +62,11 @@ The web E2E suite passes, but not every covered product path is fully driven
 through user interactions. Read the current suite as a mix of UI-driven flows,
 route-rendering checks, and controller/state-backed assertions.
 
+Task 19 final verification on 2026-05-12 ran
+`bash tool/ci/run_web_e2e.sh` and passed with `All tests passed.` Root
+Browser visual verification passed on onboarding demo, dashboard, engine debug,
+routines, Smart Planner generation/adoption, exercises, and progress.
+
 Fully UI-driven or primarily UI-driven flows in `integration_test/app_test.dart`
 include:
 

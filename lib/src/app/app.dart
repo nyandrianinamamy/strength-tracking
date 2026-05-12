@@ -43,18 +43,23 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
 
       final ctx = _messengerKey.currentContext;
       if (ctx == null) return;
+      if (!ctx.mounted) return;
       final l10n = AppLocalizations.of(ctx)!;
 
       if (isOffline && !_wasOffline) {
-        messenger.showSnackBar(SnackBar(
-          content: Text(l10n.offlineMessage),
-          duration: const Duration(seconds: 3),
-        ));
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.offlineMessage),
+            duration: const Duration(seconds: 3),
+          ),
+        );
       } else if (!isOffline && _wasOffline) {
-        messenger.showSnackBar(SnackBar(
-          content: Text(l10n.backOnline),
-          duration: const Duration(seconds: 2),
-        ));
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(l10n.backOnline),
+            duration: const Duration(seconds: 2),
+          ),
+        );
       }
       _wasOffline = isOffline;
     });

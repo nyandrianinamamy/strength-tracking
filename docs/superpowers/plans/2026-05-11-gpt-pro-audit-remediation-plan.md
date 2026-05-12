@@ -695,7 +695,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 16: Verify iOS Watch and Live Activity Runtime Wiring
 
 **Category:** P2 native integration verification
-**Status:** Completed 2026-05-12. GPT-5.5 implementers added source-level Watch/Live Activity tests, fixed Watch snapshots to send `null` when no engine suggestion exists, and added an equivalent device-lab native runtime smoke for the paired `17 Pro + watch 26.3` simulator. GLM proxy review passed Task 16 and accepted the paired-simulator smoke under the plan's equivalent-device-lab requirement while preserving the physical iPhone/Watch blocker note. Local verification passed Dart format, diff check, focused Watch/Live Activity tests (`+16`), focused analyzer checks, `flutter build ios --debug --no-codesign`, and `flutter drive --driver=test_driver/integration_test.dart --target=integration_test/native_runtime_wiring_test.dart -d FDFE9890-3387-4E10-9BEE-1EC387EF14E5 --debug --no-pub`. Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-12. GPT-5.5 implementers added source-level Watch/Live Activity tests, fixed Watch snapshots to send `null` when no engine suggestion exists, and added an equivalent device-lab native runtime smoke for the paired `17 Pro + watch 26.3` simulator. GLM proxy review passed Task 16 and accepted the paired-simulator smoke under the plan's equivalent-device-lab requirement while preserving the physical iPhone/Watch blocker note. Local verification passed Dart format, diff check, focused Watch/Live Activity tests (`+16`), focused analyzer checks, `flutter build ios --debug --no-codesign`, and `flutter drive --driver=test_driver/integration_test.dart --target=integration_test/native_runtime_wiring_test.dart -d FDFE9890-3387-4E10-9BEE-1EC387EF14E5 --debug --no-pub`. Commit: `4432f12`.
 
 **Files:**
 
@@ -740,7 +740,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 17: Verify Web/PWA and Legal Asset Claims
 
 **Category:** P2 web documentation and smoke coverage
-**Status:** Completed 2026-05-12. GPT-5.5 implementer added file-backed Web/PWA/legal asset tests, removed the unsupported HealthKit workout-write claim from the privacy page, and documented the web verification basis in the app feature inventory. GLM proxy review passed Task 17 with no blocking issues. Local verification passed Dart format on touched test files, diff check, focused legal/web asset tests (`+9`), and `flutter build web`. Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-12. GPT-5.5 implementer added file-backed Web/PWA/legal asset tests, removed the unsupported HealthKit workout-write claim from the privacy page, and documented the web verification basis in the app feature inventory. GLM proxy review passed Task 17 with no blocking issues. Local verification passed Dart format on touched test files, diff check, focused legal/web asset tests (`+9`), and `flutter build web`. Commit: `7254f38`.
 
 **Files:**
 
@@ -778,7 +778,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 18: Strengthen Web E2E Tests for Shortcut-Backed Flows
 
 **Category:** P2 E2E coverage completeness
-**Status:** Completed 2026-05-12. GPT-5.5 implementer replaced the target shortcut-backed web E2E paths with visible UI interactions for Smart Planner adoption, routine archive, routine-group workout completion advancement, and timed-set logging/editing. The orchestrator fixed the web E2E runner so the unprefixed command resolves a ChromeDriver matching the installed Chrome and cleans up jobs correctly on macOS. GLM proxy review passed Task 18 with no blockers. Local verification passed Dart format on touched integration-test helpers, diff check, focused analyzer checks, and `bash tool/ci/run_web_e2e.sh` with `All tests passed.` Commit: recorded in git history after this ledger update.
+**Status:** Completed 2026-05-12. GPT-5.5 implementer replaced the target shortcut-backed web E2E paths with visible UI interactions for Smart Planner adoption, routine archive, routine-group workout completion advancement, and timed-set logging/editing. The orchestrator fixed the web E2E runner so the unprefixed command resolves a ChromeDriver matching the installed Chrome and cleans up jobs correctly on macOS. GLM proxy review passed Task 18 with no blockers. Local verification passed Dart format on touched integration-test helpers, diff check, focused analyzer checks, and `bash tool/ci/run_web_e2e.sh` with `All tests passed.` Commit: `0b162b0`.
 
 **Files:**
 
@@ -818,6 +818,7 @@ P2 tasks close broader product and runtime gaps:
 ## Task 19: Final Verification and Completion Ledger
 
 **Category:** Release-quality verification
+**Status:** Completed 2026-05-12. Task 19 implementer reconciled the final inventory and E2E inventory with the implemented Task 1-18 behavior, fixed final full-suite verification failures without introducing skips, cleaned analyzer issues, and ran the required final verification commands. Local verification passed package tests (`+453`), Flutter tests (`+188`), `flutter analyze` (`No issues found!`), web E2E (`All tests passed.`), and `git diff --check`. Root Browser visual verification passed on the local web app for onboarding demo, dashboard, engine debug, routines, Smart Planner generation/adoption, exercises, and progress. GLM proxy review passed Task 19 with no blockers. Commit: this Task 19 final commit.
 
 **Files:**
 
@@ -835,13 +836,13 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Run `cd packages/training_engine && dart test`.
-- [ ] Run `flutter test`.
-- [ ] Run `flutter analyze`.
-- [ ] Run `bash tool/ci/run_web_e2e.sh`.
-- [ ] Open the web app with Browser and verify the affected flows render and navigate.
-- [ ] Mark completed tasks in this plan with dates and commit hashes.
-- [ ] Commit the final ledger/doc updates.
+- [x] Run `cd packages/training_engine && dart test`.
+- [x] Run `flutter test`.
+- [x] Run `flutter analyze`.
+- [x] Run `bash tool/ci/run_web_e2e.sh`.
+- [x] Open the web app with Browser and verify the affected flows render and navigate.
+- [x] Mark completed tasks in this plan with dates and commit hashes.
+- [x] Commit the final ledger/doc updates.
 
 **Acceptance Checks:**
 

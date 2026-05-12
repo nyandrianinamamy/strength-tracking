@@ -466,17 +466,17 @@ Web E2E tests now cover:
 - Onboarding redirect, validation, demo data, and mocked Google failure.
 - Shell navigation and deep links.
 - Exercise CRUD, search, filters, timed exercise creation, validation.
-- Routine CRUD, with routine archive currently asserted through direct state
-  update rather than the archive UI.
-- Routine group route/rendering and rotation state changes, with some rotation
-  advancement covered through controller calls rather than fully UI-driven group
-  creation/edit/delete and completion paths.
-- Smart Planner route rendering and injected adopted-state assertions; Task 18
-  must replace this with full UI-driven generation, edit, and adoption coverage.
+- Routine CRUD, including routine archive through the visible archive action and
+  confirmation dialog.
+- Routine group create, edit, delete, and visible rotation-route rendering.
+- Routine-group dashboard next-up advancement through visible workout
+  completion.
+- Smart Planner validation, wizard day/goal/preference interactions,
+  generation preview, and visible adoption into routines.
 - Strength workout start/log/edit/delete/discard/stale paths, with some
   edit/delete fallbacks using workout controller calls.
-- Timed workout timer controls, controller-backed timed set logging/update,
-  summary, and progress records.
+- Timed workout timer controls, visible manual timed-set logging, visible timed
+  set duration edit, summary, and progress records.
 - Workout summary delete, missing summary, and unit display.
 - Settings profile/preferences/account/data/legal surface.
 - Progress PR generation and units.
@@ -489,8 +489,12 @@ Web E2E tests now cover:
 
 Recent local verification:
 
-- `flutter analyze integration_test/app_test.dart integration_test/e2e_helpers.dart`
-- `bash tool/ci/run_web_e2e.sh` passed with `All tests passed.`
+- Task 19 final verification on 2026-05-12 passed
+  `cd packages/training_engine && dart test` (`+453`), `flutter test`
+  (`+188`), `flutter analyze` (`No issues found!`), and
+  `bash tool/ci/run_web_e2e.sh` (`All tests passed.`). Root Browser visual
+  verification passed on onboarding demo, dashboard, engine debug, routines,
+  Smart Planner generation/adoption, exercises, and progress.
 
 ## Planned or Not Fully Implemented Features
 

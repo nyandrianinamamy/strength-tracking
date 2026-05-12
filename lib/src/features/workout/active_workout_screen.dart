@@ -1322,8 +1322,9 @@ double? _parseOptionalRpe(String rawValue) {
 
 String _rpeDescription(double value) {
   if (value >= 10) return 'Max effort. 0 reps in reserve (RIR).';
-  if (value >= 9.5)
+  if (value >= 9.5) {
     return 'Could not do more reps, but could add slightly more weight.';
+  }
   if (value >= 9) return '1 rep in reserve (RIR).';
   if (value >= 8.5) return '1-2 reps in reserve (RIR).';
   if (value >= 8) return '2 reps in reserve (RIR).';

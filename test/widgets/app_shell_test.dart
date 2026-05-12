@@ -5,6 +5,8 @@ import 'package:strength_training_tracker/src/app/app.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 
 void main() {
   Widget buildTestApp() {
@@ -16,6 +18,9 @@ void main() {
       overrides: [
         appStateRepositoryProvider.overrideWithValue(repository),
         initialAppStateProvider.overrideWithValue(repository.state),
+        trainingEngineStateRepositoryProvider.overrideWithValue(
+          MemoryTrainingEngineStateRepository(),
+        ),
       ],
       child: const StrengthTrainingApp(),
     );
@@ -35,10 +40,12 @@ void main() {
     expect(find.text('Workout Library'), findsNothing);
     expect(find.text('Alex'), findsOneWidget);
 
-    await tester.tap(find.descendant(
-      of: find.byType(NavigationRail),
-      matching: find.text('Exercises'),
-    ));
+    await tester.tap(
+      find.descendant(
+        of: find.byType(NavigationRail),
+        matching: find.text('Exercises'),
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.text('New Exercise'), findsOneWidget);
