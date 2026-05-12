@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/app/app.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
+import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_debug_screen.dart';
@@ -12,10 +14,12 @@ import 'package:strength_training_tracker/src/features/training_engine/training_
 import 'package:training_engine/training_engine.dart';
 
 Widget _buildDebugScreenApp({
+  AppState? appState,
   Map<String, dynamic>? savedEngineState,
   TrainingEngineStateRepository? trainingEngineRepository,
 }) {
-  const initialState = AppState(exercises: [], routines: [], sessions: []);
+  final initialState =
+      appState ?? const AppState(exercises: [], routines: [], sessions: []);
 
   return ProviderScope(
     overrides: [
@@ -29,6 +33,39 @@ Widget _buildDebugScreenApp({
       ),
     ],
     child: const MaterialApp(home: TrainingEngineDebugScreen()),
+  );
+}
+
+AppState _appStateWithCompletedSessionIds(List<String> sessionIds) {
+  final now = DateTime.utc(2026, 4, 1, 18, 0);
+  return AppState(
+    exercises: const [],
+    routines: const [],
+    sessions: [
+      for (final id in sessionIds)
+        WorkoutSession(
+          id: id,
+          routineId: 'debug-routine',
+          status: WorkoutSessionStatus.completed,
+          startedAt: now.subtract(const Duration(hours: 1)),
+          endedAt: now,
+          lastActivityAt: now,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'barbell_back_squat',
+              setNumber: 1,
+              weightKg: 100,
+              reps: 8,
+              completedAt: now.subtract(const Duration(minutes: 45)),
+              note: '',
+              rpe: 8.0,
+            ),
+          ],
+          sessionNote: '',
+          rpe: 8.0,
+        ),
+    ],
   );
 }
 
@@ -245,35 +282,37 @@ void main() {
     },
   );
 
-  testWidgets(
-    'debug screen remains useful with no ingested sessions',
-    (tester) async {
-      await tester.pumpWidget(_buildDebugScreenApp());
-      await tester.pumpAndSettle();
+  testWidgets('debug screen remains useful with no ingested sessions', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_buildDebugScreenApp());
+    await tester.pumpAndSettle();
 
-      expect(find.text('Engine Status'), findsOneWidget);
-      expect(
-        find.text(
-          'No fatigue rows available yet. Ingested strength sessions will populate this section.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.text(
-          'No recommendation rows available yet. Ingested strength sessions will populate this section.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Fatigue Breakdown'), findsOneWidget);
-      expect(find.text('Recommendation Breakdown'), findsOneWidget);
-    },
-  );
+    expect(find.text('Engine Status'), findsOneWidget);
+    expect(
+      find.text(
+        'No fatigue rows available yet. Ingested strength sessions will populate this section.',
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.text(
+        'No recommendation rows available yet. Ingested strength sessions will populate this section.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Fatigue Breakdown'), findsOneWidget);
+    expect(find.text('Recommendation Breakdown'), findsOneWidget);
+  });
 
   testWidgets(
     'debug screen renders status and readiness sections with engine data',
     (tester) async {
       await tester.pumpWidget(
-        _buildDebugScreenApp(savedEngineState: _savedEngineState()),
+        _buildDebugScreenApp(
+          appState: _appStateWithCompletedSessionIds(['debug-session']),
+          savedEngineState: _savedEngineState(),
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -284,7 +323,7 @@ void main() {
       _expectRowContaining('Last updated', '2026-04-01T18:00:00');
       _expectRowInSection('Engine Status', 'Sleep records', '2');
       _expectRowInSection('Engine Status', 'HRV records', '3');
-      _expectRowInSection('Engine Status', 'Daily loads', '1');
+      _expectRowInSection('Engine Status', 'Aggregated daily loads', '1');
 
       _expectRow('Readiness score', '82.8/100');
       _expectRow('confidence', 'high');
@@ -300,20 +339,13 @@ void main() {
     'debug screen renders fatigue, recommendation, and raw snapshot sections',
     (tester) async {
       final savedEngineState = _savedEngineStateWithBenchAndSquatData();
+      final appState = _appStateWithCompletedSessionIds(['debug-session-1']);
       final container = ProviderContainer(
         overrides: [
           appStateRepositoryProvider.overrideWithValue(
-            MemoryAppStateRepository(
-              initialState: const AppState(
-                exercises: [],
-                routines: [],
-                sessions: [],
-              ),
-            ),
+            MemoryAppStateRepository(initialState: appState),
           ),
-          initialAppStateProvider.overrideWithValue(
-            const AppState(exercises: [], routines: [], sessions: []),
-          ),
+          initialAppStateProvider.overrideWithValue(appState),
           trainingEngineStateRepositoryProvider.overrideWithValue(
             MemoryTrainingEngineStateRepository(initialState: savedEngineState),
           ),
@@ -335,7 +367,10 @@ void main() {
       );
 
       await tester.pumpWidget(
-        _buildDebugScreenApp(savedEngineState: savedEngineState),
+        _buildDebugScreenApp(
+          appState: appState,
+          savedEngineState: savedEngineState,
+        ),
       );
       await tester.pumpAndSettle();
 

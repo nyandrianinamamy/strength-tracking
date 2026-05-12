@@ -20,6 +20,18 @@ void main() {
       expect(set.rpeEstimated, false);
     });
 
+    test('constructs with minimum supported strength RPE', () {
+      final set = LoggedSet(
+        exerciseId: 'squat',
+        weightKg: 100.0,
+        reps: 8,
+        rpe: 5.0,
+        completedAt: now,
+      );
+
+      expect(set.rpe, 5.0);
+    });
+
     test('rpeEstimated defaults to false', () {
       final set = LoggedSet(
         exerciseId: 'squat',
@@ -74,6 +86,21 @@ void main() {
       expect(restored.rpe, set.rpe);
       expect(restored.completedAt, set.completedAt);
       expect(restored.rpeEstimated, set.rpeEstimated);
+    });
+  });
+
+  group('strength RPE formula contract', () {
+    test('accepts the supported 5 to 10 range', () {
+      expect(rirFromRpe(5.0), 5.0);
+      expect(rirFromRpe(10.0), 0.0);
+    });
+
+    test('throws ArgumentError below the supported range', () {
+      expect(() => rirFromRpe(4.9), throwsArgumentError);
+    });
+
+    test('throws ArgumentError above the supported range', () {
+      expect(() => rirFromRpe(10.1), throwsArgumentError);
     });
   });
 

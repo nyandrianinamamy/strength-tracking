@@ -21,4 +21,16 @@ class PlannerRegistryAdapter {
 
     return registry;
   }
+
+  static PlannerEngineContext buildEngineContext(TrainingEngine engine) {
+    final fatigueMap = engine.fullFatigueMap().map(
+      (muscle, status) => MapEntry(muscle, status.level),
+    );
+    final readiness = engine.computeReadiness();
+    return PlannerEngineContext(
+      fatigueByMuscle: fatigueMap,
+      readinessScore: readiness.score,
+      sessionsIngested: engine.state.sessionsIngested,
+    );
+  }
 }

@@ -20,6 +20,17 @@ const double _remSleepTargetRatio = 0.20; // 20% of total
 /// Look-back window in days.
 const int _windowDays = 14;
 
+/// Sleep readiness score plus notable threshold signals.
+class SleepScoreDetails {
+  final double score;
+  final bool acuteSleepDeprivation;
+
+  const SleepScoreDetails({
+    required this.score,
+    required this.acuteSleepDeprivation,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Exponential decay weight
 // ---------------------------------------------------------------------------
@@ -49,6 +60,11 @@ double _weight(int daysAgo) => exp(-0.1 * daysAgo);
 /// If the most recent night's total sleep is below 5 h, 20 points are
 /// subtracted from the final score before clamping.
 double? scoreSleep(List<SleepRecord> records, DateTime now) {
+  return scoreSleepDetailed(records, now)?.score;
+}
+
+/// Computes a sleep readiness score and threshold flags from recent sleep data.
+SleepScoreDetails? scoreSleepDetailed(List<SleepRecord> records, DateTime now) {
   if (records.isEmpty) return null;
 
   final today = DateTime.utc(now.year, now.month, now.day);
@@ -58,6 +74,7 @@ double? scoreSleep(List<SleepRecord> records, DateTime now) {
   double weightedDeepRatio = 0.0;
   double weightedRemRatio = 0.0;
   double totalWeight = 0.0;
+  final windowRecords = <SleepRecord>[];
 
   for (final record in records) {
     final recordDate = DateTime.utc(
@@ -68,6 +85,7 @@ double? scoreSleep(List<SleepRecord> records, DateTime now) {
     final daysAgo = today.difference(recordDate).inDays;
     if (daysAgo < 0 || daysAgo >= _windowDays) continue;
 
+    windowRecords.add(record);
     final w = _weight(daysAgo);
     totalWeight += w;
 
@@ -75,12 +93,15 @@ double? scoreSleep(List<SleepRecord> records, DateTime now) {
     final totalH = record.totalSleep.inSeconds / 3600.0;
     final minH = _minTargetSleep.inSeconds / 3600.0;
     final maxH = _maxTargetSleep.inSeconds / 3600.0;
-    final durationScore = ((totalH - minH) / (maxH - minH)).clamp(0.0, 1.0) * 100.0;
+    final durationScore =
+        ((totalH - minH) / (maxH - minH)).clamp(0.0, 1.0) * 100.0;
     weightedDurationScore += w * durationScore;
 
     // -- Deep sleep ratio --
     final totalSec = record.totalSleep.inSeconds;
-    final deepRatio = totalSec > 0 ? record.deepSleep.inSeconds / totalSec : 0.0;
+    final deepRatio = totalSec > 0
+        ? record.deepSleep.inSeconds / totalSec
+        : 0.0;
     weightedDeepRatio += w * deepRatio;
 
     // -- REM sleep ratio --
@@ -95,7 +116,8 @@ double? scoreSleep(List<SleepRecord> records, DateTime now) {
   final avgRemRatio = weightedRemRatio / totalWeight;
 
   // -- Deep sleep component (0-100) --
-  final deepScore = (avgDeepRatio / _deepSleepTargetRatio).clamp(0.0, 1.0) * 100.0;
+  final deepScore =
+      (avgDeepRatio / _deepSleepTargetRatio).clamp(0.0, 1.0) * 100.0;
 
   // -- REM sleep component (0-100) --
   final remScore = (avgRemRatio / _remSleepTargetRatio).clamp(0.0, 1.0) * 100.0;
@@ -105,12 +127,17 @@ double? scoreSleep(List<SleepRecord> records, DateTime now) {
 
   // -- Acute penalty --
   // Find the most recent record
-  final sorted = List<SleepRecord>.from(records)
+  final sorted = List<SleepRecord>.from(windowRecords)
     ..sort((a, b) => b.date.compareTo(a.date));
   final lastNight = sorted.first;
-  if (lastNight.totalSleep < _acuteDeprivationThreshold) {
+  final acuteSleepDeprivation =
+      lastNight.totalSleep < _acuteDeprivationThreshold;
+  if (acuteSleepDeprivation) {
     score -= 20.0;
   }
 
-  return score.clamp(0.0, 100.0);
+  return SleepScoreDetails(
+    score: score.clamp(0.0, 100.0),
+    acuteSleepDeprivation: acuteSleepDeprivation,
+  );
 }

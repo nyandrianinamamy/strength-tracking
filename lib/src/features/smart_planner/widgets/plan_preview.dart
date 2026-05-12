@@ -58,19 +58,16 @@ class PlanPreview extends StatelessWidget {
     required int exerciseIndex,
     required int? sets,
     required int? reps,
-  }) onExerciseUpdated;
+  })
+  onExerciseUpdated;
 
   /// Called when an exercise is removed in any session.
-  final void Function({
-    required int sessionIndex,
-    required int exerciseIndex,
-  }) onExerciseRemoved;
+  final void Function({required int sessionIndex, required int exerciseIndex})
+  onExerciseRemoved;
 
   /// Called when the user requests to swap an exercise in any session.
-  final void Function({
-    required int sessionIndex,
-    required int exerciseIndex,
-  }) onExerciseSwapRequested;
+  final void Function({required int sessionIndex, required int exerciseIndex})
+  onExerciseSwapRequested;
 
   /// Called when the user taps the Regenerate button.
   final VoidCallback onRegenerate;
@@ -109,11 +106,19 @@ class PlanPreview extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       l10n.sessionsPerWeek(sessionCount),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: _slate500,
-                      ),
+                      style: const TextStyle(fontSize: 14, color: _slate500),
                     ),
+                    if (plan.engineContextApplied) ...[
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Adjusted using current fatigue and readiness',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: _slate500,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -136,9 +141,9 @@ class PlanPreview extends StatelessWidget {
                   ),
                   onExerciseSwapRequested: (exerciseIndex) =>
                       onExerciseSwapRequested(
-                    sessionIndex: i,
-                    exerciseIndex: exerciseIndex,
-                  ),
+                        sessionIndex: i,
+                        exerciseIndex: exerciseIndex,
+                      ),
                 ),
 
               const SizedBox(height: 8),

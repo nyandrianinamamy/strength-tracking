@@ -53,7 +53,9 @@ class TrainingReadinessCard extends ConsumerWidget {
             if (readiness.tier == ReadinessTier.cold) {
               return EmptyStateCard(
                 title: AppLocalizations.of(context)!.trainingReadiness,
-                body: AppLocalizations.of(context)!.readinessEmptyColdNoHealthKit,
+                body: AppLocalizations.of(
+                  context,
+                )!.readinessEmptyColdNoHealthKit,
               );
             }
             return _ReadinessCard(readiness: readiness, engine: engine);
@@ -120,18 +122,19 @@ class _ReadinessCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         _subtitleForScore(score, l10n),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: subtleText,
-                        ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: subtleText),
                       ),
                       if (readiness.tier != ReadinessTier.full) ...[
                         const SizedBox(height: 4),
                         Text(
                           AppLocalizations.of(context)!.readinessLimitedData,
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: subtleText,
-                            fontStyle: FontStyle.italic,
-                          ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: subtleText,
+                                fontStyle: FontStyle.italic,
+                              ),
                         ),
                       ],
                     ],
@@ -164,8 +167,9 @@ class _ReadinessCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest
-                    .withValues(alpha: 0.4),
+                color: Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -215,6 +219,9 @@ class _ReadinessCard extends StatelessWidget {
             ),
 
             // Last sync footer
+            if (readiness.flags.isNotEmpty)
+              _ReadinessFlags(flags: readiness.flags, subtleText: subtleText),
+
             if (engine.state.lastHealthKitFetch != null)
               _SyncFooter(
                 lastSync: engine.state.lastHealthKitFetch!,
@@ -250,7 +257,11 @@ class _ReadinessCard extends StatelessWidget {
     final value = '${hours}h ${mins}m';
 
     final totalMins = latest.totalSleep.inMinutes;
-    final status = totalMins >= 420 ? l10n.optimalStatus : totalMins >= 360 ? l10n.fairStatus : l10n.lowStatus;
+    final status = totalMins >= 420
+        ? l10n.optimalStatus
+        : totalMins >= 360
+        ? l10n.fairStatus
+        : l10n.lowStatus;
     return _DataSummary(value: value, status: status);
   }
 
@@ -265,10 +276,10 @@ class _ReadinessCard extends StatelessWidget {
     final status = score == null
         ? l10n.measuredStatus
         : score >= 70
-            ? l10n.balancedStatus
-            : score >= 40
-                ? l10n.fairStatus
-                : l10n.lowStatus;
+        ? l10n.balancedStatus
+        : score >= 40
+        ? l10n.fairStatus
+        : l10n.lowStatus;
     return _DataSummary(value: value, status: status);
   }
 
@@ -282,14 +293,114 @@ class _ReadinessCard extends StatelessWidget {
         .map((s) => s.level)
         .reduce((a, b) => a > b ? a : b);
 
-    final value = maxFatigue < 20 ? l10n.lowStatus : maxFatigue < 50 ? l10n.moderateValue : l10n.highValue;
+    final value = maxFatigue < 20
+        ? l10n.lowStatus
+        : maxFatigue < 50
+        ? l10n.moderateValue
+        : l10n.highValue;
     final status = maxFatigue < 20
         ? l10n.recovered
         : maxFatigue < 50
-            ? l10n.recoveringStatus
-            : l10n.fatigued;
+        ? l10n.recoveringStatus
+        : l10n.fatigued;
     return _DataSummary(value: value, status: status);
   }
+}
+
+class _ReadinessFlags extends StatelessWidget {
+  const _ReadinessFlags({required this.flags, required this.subtleText});
+
+  final List<ReadinessFlag> flags;
+  final Color subtleText;
+
+  @override
+  Widget build(BuildContext context) {
+    final messages = flags.map(_messageForFlag).nonNulls.toList();
+    if (messages.isEmpty) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Column(
+        children: [
+          for (final message in messages)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colorScheme.errorContainer.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      size: 16,
+                      color: colorScheme.onErrorContainer,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            message.title,
+                            style: Theme.of(context).textTheme.labelMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            message.body,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(color: subtleText),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  _ReadinessFlagMessage? _messageForFlag(ReadinessFlag flag) {
+    switch (flag) {
+      case ReadinessFlag.acuteSleepDeprivation:
+        return const _ReadinessFlagMessage(
+          title: 'Short sleep detected',
+          body:
+              'Recent sleep was below the recovery target. Consider keeping intensity flexible today.',
+        );
+      case ReadinessFlag.risingRestingHR:
+        return const _ReadinessFlagMessage(
+          title: 'Resting heart rate trending up',
+          body:
+              'Resting heart rate is higher than earlier this week. Treat it as a recovery cue, not a health verdict.',
+        );
+      case ReadinessFlag.acwrDangerZone:
+        return const _ReadinessFlagMessage(
+          title: 'Training load is high',
+          body:
+              'Recent training load is above the usual range. Consider reducing load or volume.',
+        );
+      case ReadinessFlag.coldStart:
+        return null;
+    }
+  }
+}
+
+class _ReadinessFlagMessage {
+  const _ReadinessFlagMessage({required this.title, required this.body});
+
+  final String title;
+  final String body;
 }
 
 class _DataSummary {
@@ -332,16 +443,16 @@ class _DataColumn extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 2),
         Text(
           status,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            color: statusColor,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: statusColor),
         ),
       ],
     );
@@ -395,9 +506,9 @@ class _SyncFooterState extends State<_SyncFooter> {
           const SizedBox(width: 4),
           Text(
             _syncLabel(context),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: widget.subtleText,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: widget.subtleText),
           ),
         ],
       ),

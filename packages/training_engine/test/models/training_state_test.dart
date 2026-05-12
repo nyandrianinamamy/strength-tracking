@@ -3,15 +3,15 @@ import 'package:training_engine/training_engine.dart';
 
 /// Helper to create a [UserProfile] for tests.
 UserProfile _profile() => UserProfile(
-      sex: Sex.male,
-      age: 30,
-      bodyWeightKg: 80.0,
-      experience: ExperienceLevel.intermediate,
-      goal: HypertrophyGoal.hypertrophy,
-      availableDays: [1, 3, 5],
-      maxSessionDuration: const Duration(hours: 1),
-      createdAt: DateTime.utc(2026, 1, 1),
-    );
+  sex: Sex.male,
+  age: 30,
+  bodyWeightKg: 80.0,
+  experience: ExperienceLevel.intermediate,
+  goal: HypertrophyGoal.hypertrophy,
+  availableDays: [1, 3, 5],
+  maxSessionDuration: const Duration(hours: 1),
+  createdAt: DateTime.utc(2026, 1, 1),
+);
 
 void main() {
   group('TrainingState.initial', () {
@@ -76,6 +76,31 @@ void main() {
       expect(restored.sessionsIngested, equals(0));
     });
 
+    test('ingested session ids survive roundtrip', () {
+      final state = TrainingState.initial(_profile()).copyWith(
+        sessionsIngested: 2,
+        ingestedSessionIds: {'session-a', 'session-b'},
+      );
+
+      final restored = TrainingState.fromJson(state.toJson());
+
+      expect(restored.ingestedSessionIds, equals({'session-a', 'session-b'}));
+      expect(
+        restored.toJson()['ingestedSessionIds'],
+        unorderedEquals(['session-a', 'session-b']),
+      );
+    });
+
+    test('older snapshots without ingested session ids still restore', () {
+      final json = TrainingState.initial(_profile()).toJson()
+        ..remove('ingestedSessionIds');
+
+      final restored = TrainingState.fromJson(json);
+
+      expect(restored.ingestedSessionIds, isEmpty);
+      expect(restored.sessionsIngested, equals(0));
+    });
+
     test('populated state — e1rmHistory survives roundtrip', () {
       final state = TrainingState.initial(_profile()).copyWith(
         e1rmHistory: {
@@ -104,10 +129,7 @@ void main() {
       final restored = TrainingState.fromJson(state.toJson());
 
       expect(restored.e1rmHistory.length, equals(1));
-      expect(
-        restored.e1rmHistory['barbell_bench_press']!.length,
-        equals(2),
-      );
+      expect(restored.e1rmHistory['barbell_bench_press']!.length, equals(2));
       expect(
         restored.e1rmHistory['barbell_bench_press']!.first.value,
         closeTo(100.0, 0.001),
@@ -142,7 +164,10 @@ void main() {
       final restored = TrainingState.fromJson(state.toJson());
 
       expect(restored.fatigueLog.length, equals(2));
-      expect(restored.fatigueLog['pectorals']!.first.magnitude, closeTo(250.0, 0.001));
+      expect(
+        restored.fatigueLog['pectorals']!.first.magnitude,
+        closeTo(250.0, 0.001),
+      );
       expect(restored.fatigueLog['quads']!.first.muscleId, equals('quads'));
     });
 
@@ -154,10 +179,7 @@ void main() {
             volumeLoad: 5000.0,
             sRpeLoad: 420.0,
           ),
-          DailyLoad(
-            date: DateTime.utc(2026, 2, 3),
-            volumeLoad: 6500.0,
-          ),
+          DailyLoad(date: DateTime.utc(2026, 2, 3), volumeLoad: 6500.0),
         ],
       );
 
@@ -211,10 +233,7 @@ void main() {
             sdnn: 62.5,
             restingHeartRate: 52.0,
           ),
-          HrvRecord(
-            date: DateTime.utc(2026, 2, 2),
-            sdnn: 58.0,
-          ),
+          HrvRecord(date: DateTime.utc(2026, 2, 2), sdnn: 58.0),
         ],
       );
 
@@ -295,13 +314,22 @@ void main() {
       final restored = TrainingState.fromJson(json);
 
       // Spot-check each collection
-      expect(restored.e1rmHistory['barbell_back_squat']!.first.value, closeTo(140.0, 0.001));
-      expect(restored.fatigueLog['quad']!.first.magnitude, closeTo(400.0, 0.001));
+      expect(
+        restored.e1rmHistory['barbell_back_squat']!.first.value,
+        closeTo(140.0, 0.001),
+      );
+      expect(
+        restored.fatigueLog['quad']!.first.magnitude,
+        closeTo(400.0, 0.001),
+      );
       expect(restored.dailyLoads.first.volumeLoad, closeTo(8000.0, 0.001));
       expect(restored.acwrState!.acuteEwma, closeTo(520.0, 0.001));
       expect(restored.sleepHistory.first.totalSleep.inHours, equals(8));
       expect(restored.hrvHistory.first.sdnn, closeTo(70.0, 0.001));
-      expect(restored.lastTopSets['barbell_back_squat']!.weightKg, closeTo(130.0, 0.001));
+      expect(
+        restored.lastTopSets['barbell_back_squat']!.weightKg,
+        closeTo(130.0, 0.001),
+      );
       expect(restored.lastUpdated, equals(DateTime.utc(2026, 3, 2)));
       expect(restored.sessionsIngested, equals(10));
     });

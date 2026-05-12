@@ -9,6 +9,53 @@ import 'package:strength_training_tracker/src/features/routines/routine_group_co
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
+import 'package:training_engine/training_engine.dart';
+
+class _SaveFailsOnceTrainingEngineStateRepository
+    implements TrainingEngineStateRepository {
+  _SaveFailsOnceTrainingEngineStateRepository({
+    required Map<String, dynamic> initialState,
+  }) : _delegate = MemoryTrainingEngineStateRepository(
+         initialState: initialState,
+       );
+
+  final MemoryTrainingEngineStateRepository _delegate;
+  int saveAttempts = 0;
+
+  Map<String, dynamic>? get state => _delegate.state;
+
+  @override
+  Future<void> clear() => _delegate.clear();
+
+  @override
+  Future<Map<String, dynamic>?> load() => _delegate.load();
+
+  @override
+  Future<void> save(Map<String, dynamic> state) async {
+    saveAttempts += 1;
+    if (saveAttempts == 1) {
+      throw StateError('simulated training engine save failure');
+    }
+    await _delegate.save(state);
+  }
+}
+
+Map<String, dynamic> _emptySavedEngineState() {
+  final engine = TrainingEngine(
+    registry: ExerciseRegistry.withDefaults(),
+    profile: UserProfile(
+      sex: Sex.male,
+      age: 25,
+      bodyWeightKg: 75,
+      experience: ExperienceLevel.intermediate,
+      goal: HypertrophyGoal.hypertrophy,
+      availableDays: const [1, 3, 5],
+      maxSessionDuration: const Duration(minutes: 60),
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
+  return engine.serializeState();
+}
 
 void main() {
   ProviderContainer buildContainer({
@@ -30,43 +77,46 @@ void main() {
     );
   }
 
-  test('starting, logging, and completing a workout updates app state', () async {
-    final container = buildContainer();
-    addTearDown(container.dispose);
+  test(
+    'starting, logging, and completing a workout updates app state',
+    () async {
+      final container = buildContainer();
+      addTearDown(container.dispose);
 
-    final routines = container.read(appStateControllerProvider).routines;
-    final routine = routines.firstWhere((item) => item.id == 'push_day');
+      final routines = container.read(appStateControllerProvider).routines;
+      final routine = routines.firstWhere((item) => item.id == 'push_day');
 
-    final started = container
-        .read(routineControllerProvider)
-        .startSession(routine.id);
-    expect(started.routineId, routine.id);
-    expect(
-      container.read(appStateControllerProvider).activeSession?.id,
-      started.id,
-    );
+      final started = container
+          .read(routineControllerProvider)
+          .startSession(routine.id);
+      expect(started.routineId, routine.id);
+      expect(
+        container.read(appStateControllerProvider).activeSession?.id,
+        started.id,
+      );
 
-    final updated = container
-        .read(workoutControllerProvider)
-        .logSet(weightKg: 100, reps: 6);
-    expect(updated, isNotNull);
-    expect(updated!.completedSets, hasLength(1));
+      final updated = container
+          .read(workoutControllerProvider)
+          .logSet(weightKg: 100, reps: 6);
+      expect(updated, isNotNull);
+      expect(updated!.completedSets, hasLength(1));
 
-    final completed = container
-        .read(workoutControllerProvider)
-        .completeSession(rpe: 8.5);
-    await Future<void>.delayed(Duration.zero);
-    expect(completed, isNotNull);
-    expect(completed!.status.name, 'completed');
-    expect(container.read(appStateControllerProvider).activeSession, isNull);
-    expect(
-      container
-          .read(appStateControllerProvider)
-          .completedSessions
-          .any((session) => session.id == completed.id),
-      isTrue,
-    );
-  });
+      final completed = container
+          .read(workoutControllerProvider)
+          .completeSession(rpe: 8.5);
+      await Future<void>.delayed(Duration.zero);
+      expect(completed, isNotNull);
+      expect(completed!.status.name, 'completed');
+      expect(container.read(appStateControllerProvider).activeSession, isNull);
+      expect(
+        container
+            .read(appStateControllerProvider)
+            .completedSessions
+            .any((session) => session.id == completed.id),
+        isTrue,
+      );
+    },
+  );
 
   test('archiving a routine preserves completed workout history', () {
     final container = buildContainer();
@@ -168,22 +218,78 @@ void main() {
     );
   });
 
+  test(
+    'provider load repairs a completed workout after fire-and-forget engine save fails',
+    () async {
+      final trainingEngineRepository =
+          _SaveFailsOnceTrainingEngineStateRepository(
+            initialState: _emptySavedEngineState(),
+          );
+      final initialState = DemoSeedData.initialState().copyWith(sessions: []);
+      final container = buildContainer(
+        initialState: initialState,
+        trainingEngineRepository: trainingEngineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final previousCompletedCount = container
+          .read(appStateControllerProvider)
+          .completedSessions
+          .length;
+      final routine = container
+          .read(appStateControllerProvider)
+          .routines
+          .firstWhere((item) => item.id == 'push_day');
+
+      container.read(routineControllerProvider).startSession(routine.id);
+      container.read(workoutControllerProvider).logSet(weightKg: 100, reps: 8);
+      final completed = container
+          .read(workoutControllerProvider)
+          .completeSession(rpe: 8.0);
+
+      expect(completed, isNotNull);
+
+      for (
+        var i = 0;
+        i < 10 && trainingEngineRepository.saveAttempts == 0;
+        i++
+      ) {
+        await Future<void>.delayed(Duration.zero);
+      }
+      expect(trainingEngineRepository.saveAttempts, greaterThanOrEqualTo(1));
+
+      final repairedEngine = await container.read(
+        trainingEngineProvider.future,
+      );
+
+      expect(repairedEngine.state.sessionsIngested, previousCompletedCount + 1);
+      expect(repairedEngine.state.ingestedSessionIds, contains(completed!.id));
+      expect(
+        trainingEngineRepository.state?['sessionsIngested'],
+        previousCompletedCount + 1,
+      );
+    },
+  );
+
   test('logging a set stores per-set RPE in the active session', () {
     final container = buildContainer();
     addTearDown(container.dispose);
 
     container.read(routineControllerProvider).startSession('push_day');
 
-    final updated = container.read(workoutControllerProvider).logSet(
-      weightKg: 100,
-      reps: 6,
-      rpe: 8.5,
-    );
+    final updated = container
+        .read(workoutControllerProvider)
+        .logSet(weightKg: 100, reps: 6, rpe: 8.5);
 
     expect(updated, isNotNull);
     expect(updated!.completedSets.single.rpe, equals(8.5));
     expect(
-      container.read(appStateControllerProvider).activeSession?.completedSets.single.rpe,
+      container
+          .read(appStateControllerProvider)
+          .activeSession
+          ?.completedSets
+          .single
+          .rpe,
       equals(8.5),
     );
   });

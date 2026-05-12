@@ -44,6 +44,9 @@ class TrainingState {
   /// How many workout sessions have been ingested into this state.
   final int sessionsIngested;
 
+  /// App workout session IDs already ingested into this state.
+  final Set<String> ingestedSessionIds;
+
   /// Wall-clock time of the last HealthKit data fetch, or `null` if never fetched.
   final DateTime? lastHealthKitFetch;
 
@@ -58,6 +61,7 @@ class TrainingState {
     required this.lastTopSets,
     required this.lastUpdated,
     required this.sessionsIngested,
+    this.ingestedSessionIds = const <String>{},
     this.lastHealthKitFetch,
   });
 
@@ -67,18 +71,19 @@ class TrainingState {
 
   /// Creates an empty [TrainingState] for a new [profile].
   factory TrainingState.initial(UserProfile profile) => TrainingState(
-        profile: profile,
-        e1rmHistory: {},
-        fatigueLog: {},
-        dailyLoads: [],
-        acwrState: null,
-        sleepHistory: [],
-        hrvHistory: [],
-        lastTopSets: {},
-        lastUpdated: DateTime.now(),
-        sessionsIngested: 0,
-        lastHealthKitFetch: null,
-      );
+    profile: profile,
+    e1rmHistory: {},
+    fatigueLog: {},
+    dailyLoads: [],
+    acwrState: null,
+    sleepHistory: [],
+    hrvHistory: [],
+    lastTopSets: {},
+    lastUpdated: DateTime.now(),
+    sessionsIngested: 0,
+    ingestedSessionIds: const <String>{},
+    lastHealthKitFetch: null,
+  );
 
   // ---------------------------------------------------------------------------
   // copyWith
@@ -96,6 +101,7 @@ class TrainingState {
     Map<String, LoggedSet>? lastTopSets,
     DateTime? lastUpdated,
     int? sessionsIngested,
+    Set<String>? ingestedSessionIds,
     Object? lastHealthKitFetch = _sentinel,
   }) {
     return TrainingState(
@@ -111,6 +117,7 @@ class TrainingState {
       lastTopSets: lastTopSets ?? this.lastTopSets,
       lastUpdated: lastUpdated ?? this.lastUpdated,
       sessionsIngested: sessionsIngested ?? this.sessionsIngested,
+      ingestedSessionIds: ingestedSessionIds ?? this.ingestedSessionIds,
       lastHealthKitFetch: lastHealthKitFetch == _sentinel
           ? this.lastHealthKitFetch
           : lastHealthKitFetch as DateTime?,
@@ -122,22 +129,23 @@ class TrainingState {
   // ---------------------------------------------------------------------------
 
   Map<String, dynamic> toJson() => {
-        'profile': profile.toJson(),
-        'e1rmHistory': e1rmHistory.map(
-          (key, list) => MapEntry(key, list.map((e) => e.toJson()).toList()),
-        ),
-        'fatigueLog': fatigueLog.map(
-          (key, list) => MapEntry(key, list.map((e) => e.toJson()).toList()),
-        ),
-        'dailyLoads': dailyLoads.map((e) => e.toJson()).toList(),
-        'acwrState': acwrState?.toJson(),
-        'sleepHistory': sleepHistory.map((e) => e.toJson()).toList(),
-        'hrvHistory': hrvHistory.map((e) => e.toJson()).toList(),
-        'lastTopSets': lastTopSets.map((key, set) => MapEntry(key, set.toJson())),
-        'lastUpdated': lastUpdated.toIso8601String(),
-        'sessionsIngested': sessionsIngested,
-        'lastHealthKitFetch': lastHealthKitFetch?.toIso8601String(),
-      };
+    'profile': profile.toJson(),
+    'e1rmHistory': e1rmHistory.map(
+      (key, list) => MapEntry(key, list.map((e) => e.toJson()).toList()),
+    ),
+    'fatigueLog': fatigueLog.map(
+      (key, list) => MapEntry(key, list.map((e) => e.toJson()).toList()),
+    ),
+    'dailyLoads': dailyLoads.map((e) => e.toJson()).toList(),
+    'acwrState': acwrState?.toJson(),
+    'sleepHistory': sleepHistory.map((e) => e.toJson()).toList(),
+    'hrvHistory': hrvHistory.map((e) => e.toJson()).toList(),
+    'lastTopSets': lastTopSets.map((key, set) => MapEntry(key, set.toJson())),
+    'lastUpdated': lastUpdated.toIso8601String(),
+    'sessionsIngested': sessionsIngested,
+    'ingestedSessionIds': ingestedSessionIds.toList()..sort(),
+    'lastHealthKitFetch': lastHealthKitFetch?.toIso8601String(),
+  };
 
   factory TrainingState.fromJson(Map<String, dynamic> json) {
     // e1rmHistory
@@ -145,7 +153,9 @@ class TrainingState {
     final e1rmHistory = e1rmRaw.map(
       (key, value) => MapEntry(
         key,
-        (value as List).map((e) => E1rmEstimate.fromJson(e as Map<String, dynamic>)).toList(),
+        (value as List)
+            .map((e) => E1rmEstimate.fromJson(e as Map<String, dynamic>))
+            .toList(),
       ),
     );
 
@@ -154,7 +164,9 @@ class TrainingState {
     final fatigueLog = fatigueRaw.map(
       (key, value) => MapEntry(
         key,
-        (value as List).map((e) => FatigueImpulse.fromJson(e as Map<String, dynamic>)).toList(),
+        (value as List)
+            .map((e) => FatigueImpulse.fromJson(e as Map<String, dynamic>))
+            .toList(),
       ),
     );
 
@@ -162,8 +174,10 @@ class TrainingState {
     final lastTopSetsRaw = json['lastTopSets'] as Map<String, dynamic>?;
     final lastTopSets = lastTopSetsRaw != null
         ? lastTopSetsRaw.map(
-            (key, value) =>
-                MapEntry(key, LoggedSet.fromJson(value as Map<String, dynamic>)),
+            (key, value) => MapEntry(
+              key,
+              LoggedSet.fromJson(value as Map<String, dynamic>),
+            ),
           )
         : <String, LoggedSet>{};
 
@@ -186,6 +200,10 @@ class TrainingState {
       lastTopSets: lastTopSets,
       lastUpdated: DateTime.parse(json['lastUpdated'] as String),
       sessionsIngested: json['sessionsIngested'] as int,
+      ingestedSessionIds:
+          (json['ingestedSessionIds'] as List<dynamic>? ?? const [])
+              .map((id) => id as String)
+              .toSet(),
       lastHealthKitFetch: json['lastHealthKitFetch'] == null
           ? null
           : DateTime.parse(json['lastHealthKitFetch'] as String),

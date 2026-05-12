@@ -39,12 +39,12 @@ EngineExercise _makeExercise(
 }
 
 PlannedExercise _planned(String id, {int sets = 3}) => PlannedExercise(
-      exerciseId: id,
-      targetSets: sets,
-      targetReps: 10,
-      targetRpe: 8.0,
-      restSeconds: 180,
-    );
+  exerciseId: id,
+  targetSets: sets,
+  targetReps: 10,
+  targetRpe: 8.0,
+  restSeconds: 180,
+);
 
 // ---------------------------------------------------------------------------
 // Minimal registry for fatigue substitution tests
@@ -54,6 +54,14 @@ class MockRegistry implements ExerciseRegistryLookup {
   final Map<String, List<EngineExercise>> _byMuscle;
 
   MockRegistry(this._byMuscle);
+
+  @override
+  EngineExercise? lookup(String id) {
+    for (final exercise in _byMuscle.values.expand((exercises) => exercises)) {
+      if (exercise.id == id) return exercise;
+    }
+    return null;
+  }
 
   @override
   List<EngineExercise> exercisesForMuscle(
@@ -69,8 +77,7 @@ class MockRegistry implements ExerciseRegistryLookup {
   List<EngineExercise> compoundsForFocus(
     SessionFocus focus, {
     Set<String>? excludeIds,
-  }) =>
-      [];
+  }) => [];
 }
 
 // ---------------------------------------------------------------------------
@@ -80,24 +87,22 @@ class MockRegistry implements ExerciseRegistryLookup {
 WeeklyPlan _buildPlan({
   required List<PlannedSession> sessions,
   SplitType splitType = SplitType.pushPullLegs,
-}) =>
-    WeeklyPlan(
-      sessions: sessions,
-      splitType: splitType,
-      weekStart: DateTime(2026, 4, 6), // Monday
-    );
+}) => WeeklyPlan(
+  sessions: sessions,
+  splitType: splitType,
+  weekStart: DateTime(2026, 4, 6), // Monday
+);
 
 PlannedSession _buildSession(
   int day,
   SessionFocus focus,
   List<PlannedExercise> exercises,
-) =>
-    PlannedSession(
-      dayOfWeek: day,
-      focus: focus,
-      exercises: exercises,
-      estimatedDuration: const Duration(hours: 1),
-    );
+) => PlannedSession(
+  dayOfWeek: day,
+  focus: focus,
+  exercises: exercises,
+  estimatedDuration: const Duration(hours: 1),
+);
 
 // ---------------------------------------------------------------------------
 // Missed Session Tests
@@ -114,28 +119,37 @@ void main() {
         _planned('tricep', sets: 3),
       ]; // 10 total sets → 75% = 7.5 → 8 redistributed
 
-      final plan = _buildPlan(sessions: [
-        _buildSession(1, SessionFocus.push, mondayExercises),
-        _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
-        _buildSession(5, SessionFocus.legs, [_planned('squat', sets: 3)]),
-      ]);
+      final plan = _buildPlan(
+        sessions: [
+          _buildSession(1, SessionFocus.push, mondayExercises),
+          _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
+          _buildSession(5, SessionFocus.legs, [_planned('squat', sets: 3)]),
+        ],
+      );
 
       final updated = handleMissedSession(plan, 1, DateTime(2026, 4, 6, 8));
 
       // Total sets across remaining sessions should increase
       final originalRemainingSets = plan.sessions
           .where((s) => s.dayOfWeek > 1)
-          .fold<int>(0, (sum, s) => sum + s.exercises.fold(0, (a, e) => a + e.targetSets));
+          .fold<int>(
+            0,
+            (sum, s) => sum + s.exercises.fold(0, (a, e) => a + e.targetSets),
+          );
 
       final updatedRemainingSets = updated.sessions
           .where((s) => s.dayOfWeek > 1)
-          .fold<int>(0, (sum, s) => sum + s.exercises.fold(0, (a, e) => a + e.targetSets));
+          .fold<int>(
+            0,
+            (sum, s) => sum + s.exercises.fold(0, (a, e) => a + e.targetSets),
+          );
 
       expect(updatedRemainingSets, greaterThan(originalRemainingSets));
 
       // Missed session itself should be unchanged
-      final missedInUpdated =
-          updated.sessions.firstWhere((s) => s.dayOfWeek == 1);
+      final missedInUpdated = updated.sessions.firstWhere(
+        (s) => s.dayOfWeek == 1,
+      );
       expect(
         missedInUpdated.exercises.fold<int>(0, (a, e) => a + e.targetSets),
         equals(10),
@@ -149,10 +163,12 @@ void main() {
         _planned('ohp', sets: 4),
       ]; // 8 total → 50% = 4
 
-      final plan = _buildPlan(sessions: [
-        _buildSession(1, SessionFocus.push, mondayExercises),
-        _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
-      ]);
+      final plan = _buildPlan(
+        sessions: [
+          _buildSession(1, SessionFocus.push, mondayExercises),
+          _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
+        ],
+      );
 
       final originalWedSets = plan.sessions
           .firstWhere((s) => s.dayOfWeek == 3)
@@ -170,32 +186,45 @@ void main() {
       expect(updatedWedSets - originalWedSets, equals(4));
     });
 
-    test('no redistribution if week is over (no sessions after missed day)', () {
-      // Miss the last session of the week
-      final plan = _buildPlan(sessions: [
-        _buildSession(1, SessionFocus.push, [_planned('bench', sets: 3)]),
-        _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
-        _buildSession(5, SessionFocus.legs, [_planned('squat', sets: 3)]),
-      ]);
-
-      final updated = handleMissedSession(plan, 5, DateTime(2026, 4, 10));
-
-      // Plan should be unchanged
-      for (int i = 0; i < plan.sessions.length; i++) {
-        expect(
-          updated.sessions[i].exercises.fold<int>(0, (a, e) => a + e.targetSets),
-          equals(
-            plan.sessions[i].exercises.fold<int>(0, (a, e) => a + e.targetSets),
-          ),
+    test(
+      'no redistribution if week is over (no sessions after missed day)',
+      () {
+        // Miss the last session of the week
+        final plan = _buildPlan(
+          sessions: [
+            _buildSession(1, SessionFocus.push, [_planned('bench', sets: 3)]),
+            _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
+            _buildSession(5, SessionFocus.legs, [_planned('squat', sets: 3)]),
+          ],
         );
-      }
-    });
+
+        final updated = handleMissedSession(plan, 5, DateTime(2026, 4, 10));
+
+        // Plan should be unchanged
+        for (int i = 0; i < plan.sessions.length; i++) {
+          expect(
+            updated.sessions[i].exercises.fold<int>(
+              0,
+              (a, e) => a + e.targetSets,
+            ),
+            equals(
+              plan.sessions[i].exercises.fold<int>(
+                0,
+                (a, e) => a + e.targetSets,
+              ),
+            ),
+          );
+        }
+      },
+    );
 
     test('returns unchanged plan if missedDay is not in plan', () {
-      final plan = _buildPlan(sessions: [
-        _buildSession(1, SessionFocus.push, [_planned('bench', sets: 3)]),
-        _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
-      ]);
+      final plan = _buildPlan(
+        sessions: [
+          _buildSession(1, SessionFocus.push, [_planned('bench', sets: 3)]),
+          _buildSession(3, SessionFocus.pull, [_planned('pullup', sets: 3)]),
+        ],
+      );
 
       final updated = handleMissedSession(plan, 2, DateTime(2026, 4, 7));
 
@@ -206,12 +235,16 @@ void main() {
       // Plan: push(1), push(3), pull(5)
       // Miss push on day 1 → remaining are push(3) and pull(5)
       // Extra sets should go to push(3) preferentially
-      final plan = _buildPlan(sessions: [
-        _buildSession(
-            1, SessionFocus.push, [_planned('bench', sets: 4), _planned('ohp', sets: 4)]),
-        _buildSession(3, SessionFocus.push, [_planned('incline', sets: 3)]),
-        _buildSession(5, SessionFocus.pull, [_planned('pullup', sets: 3)]),
-      ]);
+      final plan = _buildPlan(
+        sessions: [
+          _buildSession(1, SessionFocus.push, [
+            _planned('bench', sets: 4),
+            _planned('ohp', sets: 4),
+          ]),
+          _buildSession(3, SessionFocus.push, [_planned('incline', sets: 3)]),
+          _buildSession(5, SessionFocus.pull, [_planned('pullup', sets: 3)]),
+        ],
+      );
 
       final original3Sets = plan.sessions
           .firstWhere((s) => s.dayOfWeek == 3)
@@ -283,14 +316,8 @@ void main() {
         reason: 'bench_press should be replaced by incline_press',
       );
       expect(result.substitutions, isNotEmpty);
-      expect(
-        result.substitutions[0],
-        contains('bench_press'),
-      );
-      expect(
-        result.substitutions[0],
-        contains('incline_press'),
-      );
+      expect(result.substitutions[0], contains('bench_press'));
+      expect(result.substitutions[0], contains('incline_press'));
     });
 
     test('no substitution when muscles are recovered (fatigue <= 50)', () {
@@ -324,9 +351,15 @@ void main() {
     });
 
     test('primary fatigue >60 adds warning, not substitution', () {
-      final squat = _makeExercise('squat', 'quadriceps', MovementClass.compoundLower);
+      final squat = _makeExercise(
+        'squat',
+        'quadriceps',
+        MovementClass.compoundLower,
+      );
 
-      final registry = MockRegistry({'quadriceps': [squat]});
+      final registry = MockRegistry({
+        'quadriceps': [squat],
+      });
 
       final session = PlannedSession(
         dayOfWeek: 1,
@@ -342,10 +375,7 @@ void main() {
       // Exercise should NOT be substituted
       expect(result.session.exercises[0].exerciseId, equals('squat'));
       // But a warning should be present
-      expect(
-        result.substitutions.any((s) => s.startsWith('Warning')),
-        isTrue,
-      );
+      expect(result.substitutions.any((s) => s.startsWith('Warning')), isTrue);
     });
 
     test('no changes when fatigueMap is empty', () {
@@ -355,7 +385,9 @@ void main() {
         MovementClass.compoundUpper,
         secondaryMuscles: ['triceps'],
       );
-      final registry = MockRegistry({'pectorals': [benchPress]});
+      final registry = MockRegistry({
+        'pectorals': [benchPress],
+      });
 
       final session = PlannedSession(
         dayOfWeek: 1,
@@ -370,50 +402,111 @@ void main() {
       expect(result.substitutions, isEmpty);
     });
 
-    test('multiple exercises: only fatigued-secondary exercises are replaced', () {
-      final deadlift = _makeExercise(
-        'deadlift',
-        'hamstrings',
-        MovementClass.compoundLower,
-        secondaryMuscles: ['erector_spinae'],
-      );
-      final legCurl = _makeExercise(
-        'leg_curl',
-        'hamstrings',
-        MovementClass.isolation,
-        // No erector_spinae secondary
-      );
-      final squat = _makeExercise('squat', 'quadriceps', MovementClass.compoundLower);
+    test(
+      'multiple exercises: only fatigued-secondary exercises are replaced',
+      () {
+        final deadlift = _makeExercise(
+          'deadlift',
+          'hamstrings',
+          MovementClass.compoundLower,
+          secondaryMuscles: ['erector_spinae'],
+        );
+        final legCurl = _makeExercise(
+          'leg_curl',
+          'hamstrings',
+          MovementClass.isolation,
+          // No erector_spinae secondary
+        );
+        final squat = _makeExercise(
+          'squat',
+          'quadriceps',
+          MovementClass.compoundLower,
+        );
 
+        final registry = MockRegistry({
+          'hamstrings': [deadlift, legCurl],
+          'quadriceps': [squat],
+        });
+
+        final session = PlannedSession(
+          dayOfWeek: 1,
+          focus: SessionFocus.legs,
+          exercises: [_planned('deadlift'), _planned('squat')],
+          estimatedDuration: const Duration(hours: 1),
+        );
+
+        // erector_spinae fatigued → deadlift should be replaced; squat unaffected
+        final fatigueMap = {'erector_spinae': 70.0};
+
+        final result = adjustSessionForFatigue(session, fatigueMap, registry);
+
+        expect(result.session.exercises.length, equals(2));
+        expect(
+          result.session.exercises[0].exerciseId,
+          equals('leg_curl'),
+          reason: 'deadlift replaced by leg_curl (avoids erector_spinae)',
+        );
+        expect(
+          result.session.exercises[1].exerciseId,
+          equals('squat'),
+          reason: 'squat unchanged',
+        );
+        expect(result.substitutions, hasLength(1));
+      },
+    );
+  });
+
+  group('generateWeeklyPlan with engine context', () {
+    test('applies fatigue adaptation during initial plan generation', () {
+      final benchPress = _makeExercise(
+        'bench_press',
+        'pectorals',
+        MovementClass.compoundUpper,
+        secondaryMuscles: ['triceps'],
+      );
+      final inclinePress = _makeExercise(
+        'incline_press',
+        'pectorals',
+        MovementClass.compoundUpper,
+      );
       final registry = MockRegistry({
-        'hamstrings': [deadlift, legCurl],
-        'quadriceps': [squat],
+        'pectorals': [benchPress, inclinePress],
+        'anterior_deltoid': [
+          _makeExercise('ohp', 'anterior_deltoid', MovementClass.compoundUpper),
+          _makeExercise(
+            'lateral_raise',
+            'anterior_deltoid',
+            MovementClass.isolation,
+          ),
+        ],
+        'triceps': [
+          _makeExercise('pushdown', 'triceps', MovementClass.isolation),
+          _makeExercise('skull_crusher', 'triceps', MovementClass.isolation),
+        ],
       });
 
-      final session = PlannedSession(
-        dayOfWeek: 1,
-        focus: SessionFocus.legs,
-        exercises: [_planned('deadlift'), _planned('squat')],
-        estimatedDuration: const Duration(hours: 1),
+      final plan = generateWeeklyPlan(
+        PlannerConfig(
+          availableDays: [1, 2, 3],
+          engineContext: const PlannerEngineContext(
+            fatigueByMuscle: {'pectorals': 90},
+            sessionsIngested: 3,
+          ),
+        ),
+        registry,
       );
 
-      // erector_spinae fatigued → deadlift should be replaced; squat unaffected
-      final fatigueMap = {'erector_spinae': 70.0};
+      final pushSession = plan.sessions.first;
+      final pectoralExercises = pushSession.exercises
+          .where((exercise) => exercise.fatiguedMuscles.contains('pectorals'))
+          .toList();
 
-      final result = adjustSessionForFatigue(session, fatigueMap, registry);
-
-      expect(result.session.exercises.length, equals(2));
+      expect(pectoralExercises, hasLength(2));
       expect(
-        result.session.exercises[0].exerciseId,
-        equals('leg_curl'),
-        reason: 'deadlift replaced by leg_curl (avoids erector_spinae)',
+        pectoralExercises.map((exercise) => exercise.targetSets),
+        everyElement(2),
       );
-      expect(
-        result.session.exercises[1].exerciseId,
-        equals('squat'),
-        reason: 'squat unchanged',
-      );
-      expect(result.substitutions, hasLength(1));
+      expect(plan.engineContextApplied, isTrue);
     });
   });
 }

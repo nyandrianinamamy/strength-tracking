@@ -18,8 +18,12 @@ class CompletedSet {
   final String note;
   final int durationSeconds;
 
-  /// Per-set RPE (Rate of Perceived Exertion, 1–10 scale).
-  /// Nullable for backward-compatibility with legacy data that has no per-set RPE.
+  /// Per-set strength RPE (Rate of Perceived Exertion, 5-10 scale).
+  ///
+  /// Nullable for backward-compatibility with legacy data that has no per-set
+  /// RPE. Older stored history may still contain values below 5; the app keeps
+  /// those records intact, but the training-engine adapter excludes them from
+  /// engine ingestion instead of silently changing the value.
   final double? rpe;
 
   CompletedSet copyWith({

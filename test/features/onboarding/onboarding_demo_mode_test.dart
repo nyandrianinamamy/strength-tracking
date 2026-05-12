@@ -5,24 +5,28 @@ import 'package:strength_training_tracker/src/app/app.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 
 void main() {
   Widget buildTestApp() {
-    final repository = MemoryAppStateRepository(
-      initialState: AppState.empty(),
-    );
+    final repository = MemoryAppStateRepository(initialState: AppState.empty());
 
     return ProviderScope(
       overrides: [
         appStateRepositoryProvider.overrideWithValue(repository),
         initialAppStateProvider.overrideWithValue(repository.state),
+        trainingEngineStateRepositoryProvider.overrideWithValue(
+          MemoryTrainingEngineStateRepository(),
+        ),
       ],
       child: const StrengthTrainingApp(),
     );
   }
 
-  testWidgets('onboarding shows demo button and loads demo data on tap',
-      (tester) async {
+  testWidgets('onboarding shows demo button and loads demo data on tap', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(430, 932);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -73,25 +77,19 @@ void main() {
     // Name field is empty
     final nameField = find.byType(TextField);
     expect(nameField, findsOneWidget);
-    expect(
-      tester.widget<TextField>(nameField).controller?.text,
-      isEmpty,
-    );
+    expect(tester.widget<TextField>(nameField).controller?.text, isEmpty);
 
     // "Next" button should be disabled (no name entered)
     final nextButton = find.widgetWithText(FilledButton, 'Next');
     expect(nextButton, findsOneWidget);
-    expect(
-      tester.widget<FilledButton>(nextButton).onPressed,
-      isNull,
-    );
+    expect(tester.widget<FilledButton>(nextButton).onPressed, isNull);
 
     // Demo button is always enabled regardless of name
-    final demoButton = find.widgetWithText(OutlinedButton, 'Explore with Demo Data');
-    expect(demoButton, findsOneWidget);
-    expect(
-      tester.widget<OutlinedButton>(demoButton).onPressed,
-      isNotNull,
+    final demoButton = find.widgetWithText(
+      OutlinedButton,
+      'Explore with Demo Data',
     );
+    expect(demoButton, findsOneWidget);
+    expect(tester.widget<OutlinedButton>(demoButton).onPressed, isNotNull);
   });
 }

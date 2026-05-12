@@ -1,5 +1,7 @@
 import '../models/enums.dart';
 import '../acwr/acwr_classifier.dart';
+import 'hrv_scorer.dart';
+import 'sleep_scorer.dart';
 
 // ---------------------------------------------------------------------------
 // ReadinessTier
@@ -130,12 +132,16 @@ double _manualSliderScore(double slider) {
 ReadinessScore computeReadiness({
   AcwrStatus? acwr,
   double? sleepScore,
+  SleepScoreDetails? sleepDetails,
   double? hrvScore,
+  HrvScoreDetails? hrvDetails,
   double? manualSlider,
 }) {
   final hasAcwr = acwr != null;
-  final hasSleep = sleepScore != null;
-  final hasHrv = hrvScore != null;
+  final effectiveSleepScore = sleepDetails?.score ?? sleepScore;
+  final effectiveHrvScore = hrvDetails?.score ?? hrvScore;
+  final hasSleep = effectiveSleepScore != null;
+  final hasHrv = effectiveHrvScore != null;
   final hasManual = manualSlider != null;
 
   final componentScores = <String, double>{};
@@ -158,8 +164,15 @@ ReadinessScore computeReadiness({
     componentScores['manual'] = manualScoreValue;
   }
 
-  if (hasSleep) componentScores['sleep'] = sleepScore;
-  if (hasHrv) componentScores['hrv'] = hrvScore;
+  if (hasSleep) componentScores['sleep'] = effectiveSleepScore;
+  if (hasHrv) componentScores['hrv'] = effectiveHrvScore;
+
+  if (sleepDetails?.acuteSleepDeprivation ?? false) {
+    flags.add(ReadinessFlag.acuteSleepDeprivation);
+  }
+  if (hrvDetails?.risingRestingHeartRate ?? false) {
+    flags.add(ReadinessFlag.risingRestingHR);
+  }
 
   // -- Determine tier --
   final ReadinessTier tier;
@@ -256,10 +269,10 @@ ReadinessScore computeReadiness({
       score += (weights['acwr']! / totalWeight) * acwrScoreValue!;
     }
     if (hasSleep && weights.containsKey('sleep')) {
-      score += (weights['sleep']! / totalWeight) * sleepScore;
+      score += (weights['sleep']! / totalWeight) * effectiveSleepScore;
     }
     if (hasHrv && weights.containsKey('hrv')) {
-      score += (weights['hrv']! / totalWeight) * hrvScore;
+      score += (weights['hrv']! / totalWeight) * effectiveHrvScore;
     }
     if (hasManual && weights.containsKey('manual')) {
       score += (weights['manual']! / totalWeight) * manualScoreValue!;

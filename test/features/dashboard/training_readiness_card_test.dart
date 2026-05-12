@@ -5,6 +5,8 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
+import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/dashboard/training_readiness_card.dart';
 import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
@@ -13,13 +15,25 @@ import 'package:strength_training_tracker/src/features/training_engine/training_
 import 'package:training_engine/training_engine.dart';
 
 class _FakeHealthKitDataSource extends HealthKitDataSource {
-  const _FakeHealthKitDataSource();
+  const _FakeHealthKitDataSource({
+    this.status = HealthKitFetchStatus.noSamples,
+  });
 
   @override
-  Future<List<SleepRecord>> fetchRecentSleep({int days = 14}) async => [];
+  Future<HealthKitFetchResult<SleepRecord>> fetchRecentSleepResult({
+    int days = 14,
+  }) async {
+    return HealthKitFetchResult<SleepRecord>(status: status, records: const []);
+  }
 
   @override
-  Future<List<HrvRecord>> fetchRecentHrv({int days = 14}) async => [];
+  Future<HealthKitFetchResult<HrvRecord>> fetchRecentHrvResult({
+    int days = 14,
+  }) async {
+    return HealthKitFetchResult<HrvRecord>(status: status, records: const []);
+  }
+
+  final HealthKitFetchStatus status;
 }
 
 Widget _buildTestApp({
@@ -29,6 +43,7 @@ Widget _buildTestApp({
     sessions: [],
   ),
   TrainingEngineStateRepository? engineRepository,
+  HealthKitDataSource healthKit = const _FakeHealthKitDataSource(),
 }) {
   return ProviderScope(
     overrides: [
@@ -39,22 +54,21 @@ Widget _buildTestApp({
       trainingEngineStateRepositoryProvider.overrideWithValue(
         engineRepository ?? MemoryTrainingEngineStateRepository(),
       ),
-      healthKitDataSourceProvider.overrideWithValue(
-        const _FakeHealthKitDataSource(),
-      ),
+      healthKitDataSourceProvider.overrideWithValue(healthKit),
     ],
     child: MaterialApp(
       theme: AppTheme.light(),
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
-        body: TrainingReadinessCard(),
-      ),
+      home: const Scaffold(body: TrainingReadinessCard()),
     ),
   );
 }
 
-Map<String, dynamic> _savedEngineState() {
+Map<String, dynamic> _savedEngineState({
+  bool acuteSleepDeprivation = false,
+  bool risingRestingHeartRate = false,
+}) {
   final engine = TrainingEngine(
     registry: ExerciseRegistry.withDefaults(),
     profile: UserProfile(
@@ -86,7 +100,64 @@ Map<String, dynamic> _savedEngineState() {
     ),
   );
 
+  final now = DateTime.now().toUtc();
+  if (acuteSleepDeprivation) {
+    engine.ingestSleep(
+      SleepRecord(
+        date: now,
+        totalSleep: const Duration(hours: 4, minutes: 30),
+        deepSleep: const Duration(minutes: 40),
+        remSleep: const Duration(minutes: 50),
+        coreSleep: const Duration(hours: 3),
+      ),
+    );
+  }
+
+  if (risingRestingHeartRate) {
+    for (var i = 0; i < 7; i++) {
+      engine.ingestHrv(
+        HrvRecord(
+          date: now.subtract(Duration(days: 6 - i)),
+          sdnn: 60.0,
+          restingHeartRate: 55.0 + i * 1.2,
+        ),
+      );
+    }
+  }
+
   return engine.serializeState();
+}
+
+AppState _appStateWithDashboardSession({bool healthKitEnabled = false}) {
+  return AppState(
+    exercises: const [],
+    routines: const [],
+    sessions: [
+      WorkoutSession(
+        id: 'dashboard-session',
+        routineId: 'routine-1',
+        status: WorkoutSessionStatus.completed,
+        startedAt: DateTime.utc(2026, 4, 1, 17, 0),
+        endedAt: DateTime.utc(2026, 4, 1, 18, 0),
+        lastActivityAt: DateTime.utc(2026, 4, 1, 18, 0),
+        currentExerciseIndex: 0,
+        completedSets: [
+          CompletedSet(
+            exerciseId: 'barbell_back_squat',
+            setNumber: 1,
+            weightKg: 100,
+            reps: 8,
+            rpe: 8.0,
+            completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+            note: '',
+          ),
+        ],
+        sessionNote: '',
+        rpe: 8.0,
+      ),
+    ],
+    healthKitEnabled: healthKitEnabled,
+  );
 }
 
 void main() {
@@ -110,6 +181,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _buildTestApp(
+        initialState: _appStateWithDashboardSession(),
         engineRepository: MemoryTrainingEngineStateRepository(
           initialState: _savedEngineState(),
         ),
@@ -119,5 +191,63 @@ void main() {
 
     expect(find.text('TRAINING READINESS'), findsOneWidget);
     expect(find.textContaining('FATIGUE'), findsOneWidget);
+  });
+
+  testWidgets(
+    'renders limited-data state without demo recovery values after denied HealthKit fetch',
+    (tester) async {
+      await tester.pumpWidget(
+        _buildTestApp(
+          initialState: _appStateWithDashboardSession(healthKitEnabled: true),
+          healthKit: const _FakeHealthKitDataSource(
+            status: HealthKitFetchStatus.denied,
+          ),
+          engineRepository: MemoryTrainingEngineStateRepository(
+            initialState: _savedEngineState(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('TRAINING READINESS'), findsOneWidget);
+      expect(find.text('Limited data'), findsOneWidget);
+      expect(find.text('No data'), findsNWidgets(2));
+      expect(find.textContaining('8h'), findsNothing);
+      expect(find.textContaining('ms'), findsNothing);
+    },
+  );
+
+  testWidgets('renders an acute sleep flag without medical overclaiming', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildTestApp(
+        initialState: _appStateWithDashboardSession(),
+        engineRepository: MemoryTrainingEngineStateRepository(
+          initialState: _savedEngineState(acuteSleepDeprivation: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Short sleep detected'), findsOneWidget);
+    expect(find.textContaining('diagnosis'), findsNothing);
+  });
+
+  testWidgets('renders a rising resting heart rate flag as a trend signal', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildTestApp(
+        initialState: _appStateWithDashboardSession(),
+        engineRepository: MemoryTrainingEngineStateRepository(
+          initialState: _savedEngineState(risingRestingHeartRate: true),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Resting heart rate trending up'), findsOneWidget);
+    expect(find.textContaining('diagnosis'), findsNothing);
   });
 }

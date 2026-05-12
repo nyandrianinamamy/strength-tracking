@@ -12,7 +12,9 @@ class PersistentStartSession extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appStateControllerProvider);
-    final snapshot = ref.read(progressServiceProvider).dashboardSnapshot(state);
+    final snapshot = ref
+        .read(progressServiceProvider)
+        .dashboardSnapshot(state, currentE1rmsByExercise: const {});
     final nextRoutine = snapshot.nextRoutine;
     final activeSession = snapshot.activeSession;
 
@@ -58,7 +60,9 @@ class PersistentStartSession extends ConsumerWidget {
             GestureDetector(
               onTap: () {
                 if (!isResume && nextRoutine != null) {
-                  ref.read(routineControllerProvider).startSession(nextRoutine.id);
+                  ref
+                      .read(routineControllerProvider)
+                      .startSession(nextRoutine.id);
                 }
                 context.go('/workout/active');
               },
@@ -129,7 +133,9 @@ class PersistentStartSession extends ConsumerWidget {
             GestureDetector(
               onTap: () {
                 if (!isResume && nextRoutine != null) {
-                  ref.read(routineControllerProvider).startSession(nextRoutine.id);
+                  ref
+                      .read(routineControllerProvider)
+                      .startSession(nextRoutine.id);
                 }
                 context.go('/workout/active');
               },

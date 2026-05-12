@@ -10,12 +10,43 @@ void main() {
     id: 'squat',
     name: 'Barbell Back Squat',
     muscleMap: [
-      MuscleActivation(muscleId: 'quadriceps', role: MuscleRole.primary, coefficient: 1.0),
-      MuscleActivation(muscleId: 'glutes', role: MuscleRole.synergist, coefficient: 0.6),
-      MuscleActivation(muscleId: 'hamstrings', role: MuscleRole.stabilizer, coefficient: 0.3),
+      MuscleActivation(
+        muscleId: 'quadriceps',
+        role: MuscleRole.primary,
+        coefficient: 1.0,
+      ),
+      MuscleActivation(
+        muscleId: 'glutes',
+        role: MuscleRole.synergist,
+        coefficient: 0.6,
+      ),
+      MuscleActivation(
+        muscleId: 'hamstrings',
+        role: MuscleRole.stabilizer,
+        coefficient: 0.3,
+      ),
     ],
     equipment: EquipmentClass.barbell,
     movement: MovementClass.compoundLower,
+  );
+
+  final plank = EngineExercise(
+    id: 'plank',
+    name: 'Plank',
+    muscleMap: [
+      MuscleActivation(
+        muscleId: 'core',
+        role: MuscleRole.primary,
+        coefficient: 1.0,
+      ),
+      MuscleActivation(
+        muscleId: 'glutes',
+        role: MuscleRole.stabilizer,
+        coefficient: 0.2,
+      ),
+    ],
+    equipment: EquipmentClass.bodyweight,
+    movement: MovementClass.isolation,
   );
 
   // e1RM = 100 kg
@@ -27,17 +58,16 @@ void main() {
     double weightKg = 75.0,
     int reps = 10,
     double rpe = 8.0,
-  }) =>
-      List.generate(
-        count,
-        (_) => LoggedSet(
-          exerciseId: 'squat',
-          weightKg: weightKg,
-          reps: reps,
-          rpe: rpe,
-          completedAt: sessionEnd,
-        ),
-      );
+  }) => List.generate(
+    count,
+    (_) => LoggedSet(
+      exerciseId: 'squat',
+      weightKg: weightKg,
+      reps: reps,
+      rpe: rpe,
+      completedAt: sessionEnd,
+    ),
+  );
 
   group('calculateImpulses – stress distribution', () {
     test('primary muscle receives more stress than synergist', () {
@@ -136,6 +166,55 @@ void main() {
       final quads = impulses.firstWhere((i) => i.muscleId == 'quadriceps');
       expect(quads.magnitude, greaterThanOrEqualTo(65.0));
       expect(quads.magnitude, lessThanOrEqualTo(100.0));
+    });
+  });
+
+  group('calculateImpulses – timed sets', () {
+    test('duration-based plank stress creates core fatigue', () {
+      final impulses = calculateImpulses(
+        sets: [
+          LoggedSet(
+            exerciseId: 'plank',
+            weightKg: 0.0,
+            reps: 0,
+            durationSeconds: 60,
+            rpe: 7.0,
+            completedAt: sessionEnd,
+          ),
+        ],
+        exercise: plank,
+        e1rm: e1rm,
+        sessionEndedAt: sessionEnd,
+      );
+
+      final core = impulses.firstWhere((i) => i.muscleId == 'core');
+      final glutes = impulses.firstWhere((i) => i.muscleId == 'glutes');
+
+      expect(core.magnitude, greaterThan(0.0));
+      expect(core.magnitude, greaterThan(glutes.magnitude));
+    });
+
+    test('longer timed sets produce more fatigue than shorter timed sets', () {
+      List<FatigueImpulse> impulsesFor(int seconds) => calculateImpulses(
+        sets: [
+          LoggedSet(
+            exerciseId: 'plank',
+            weightKg: 0.0,
+            reps: 0,
+            durationSeconds: seconds,
+            rpe: 7.0,
+            completedAt: sessionEnd,
+          ),
+        ],
+        exercise: plank,
+        e1rm: e1rm,
+        sessionEndedAt: sessionEnd,
+      );
+
+      final short = impulsesFor(30).firstWhere((i) => i.muscleId == 'core');
+      final long = impulsesFor(90).firstWhere((i) => i.muscleId == 'core');
+
+      expect(long.magnitude, greaterThan(short.magnitude));
     });
   });
 

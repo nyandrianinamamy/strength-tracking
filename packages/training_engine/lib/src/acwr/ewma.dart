@@ -1,9 +1,14 @@
+import '../models/daily_load.dart';
 import '../models/ewma_state.dart';
 
 // EWMA smoothing constants
 // lambda = 2 / (N + 1)
 const double _lambdaAcute = 2.0 / (7.0 + 1.0); // ≈ 0.25
 const double _lambdaChronic = 2.0 / (28.0 + 1.0); // ≈ 0.0690
+
+/// Returns the local calendar day represented by [date].
+DateTime localCalendarDay(DateTime date) =>
+    DateTime(date.year, date.month, date.day);
 
 /// Updates (or initialises) an [EwmaState] given a [todayLoad] on [today].
 ///
@@ -21,8 +26,7 @@ EwmaState updateEwma({
   required double todayLoad,
   required DateTime today,
 }) {
-  // Normalise to UTC midnight for reliable day arithmetic
-  final todayDate = DateTime.utc(today.year, today.month, today.day);
+  final todayDate = localCalendarDay(today);
 
   if (previous == null) {
     return EwmaState(
@@ -32,7 +36,7 @@ EwmaState updateEwma({
     );
   }
 
-  final lastDate = DateTime.utc(
+  final lastDate = DateTime(
     previous.lastComputedDate.year,
     previous.lastComputedDate.month,
     previous.lastComputedDate.day,
@@ -57,4 +61,50 @@ EwmaState updateEwma({
     chronicEwma: chronic,
     lastComputedDate: todayDate,
   );
+}
+
+/// Aggregates load entries by local calendar day and returns them oldest-first.
+List<DailyLoad> aggregateDailyLoads(
+  Iterable<DailyLoad> loads, {
+  DateTime? cutoff,
+}) {
+  final totals = <DateTime, ({double volumeLoad, double? sRpeLoad})>{};
+  for (final load in loads) {
+    final day = localCalendarDay(load.date);
+    final current = totals[day];
+    totals[day] = (
+      volumeLoad: (current?.volumeLoad ?? 0.0) + load.volumeLoad,
+      sRpeLoad: load.sRpeLoad == null && current?.sRpeLoad == null
+          ? null
+          : (current?.sRpeLoad ?? 0.0) + (load.sRpeLoad ?? 0.0),
+    );
+  }
+
+  final cutoffDay = cutoff == null ? null : localCalendarDay(cutoff);
+  final result =
+      totals.entries
+          .where((entry) => cutoffDay == null || !entry.key.isBefore(cutoffDay))
+          .map(
+            (entry) => DailyLoad(
+              date: entry.key,
+              volumeLoad: entry.value.volumeLoad,
+              sRpeLoad: entry.value.sRpeLoad,
+            ),
+          )
+          .toList()
+        ..sort((a, b) => a.date.compareTo(b.date));
+  return result;
+}
+
+/// Recomputes EWMA from aggregated local-calendar-day loads.
+EwmaState? recomputeEwmaFromDailyLoads(Iterable<DailyLoad> loads) {
+  EwmaState? state;
+  for (final load in aggregateDailyLoads(loads)) {
+    state = updateEwma(
+      previous: state,
+      todayLoad: load.volumeLoad,
+      today: load.date,
+    );
+  }
+  return state;
 }

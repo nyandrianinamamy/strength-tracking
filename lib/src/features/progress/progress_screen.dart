@@ -16,9 +16,7 @@ class ProgressScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final state = ref.watch(appStateControllerProvider);
-    final snapshot = ref
-        .read(progressServiceProvider)
-        .progressSnapshot(state);
+    final snapshotAsync = ref.watch(progressSnapshotProvider);
 
     return DefaultTabController(
       length: 3,
@@ -47,179 +45,200 @@ class ProgressScreen extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child: TabBarView(
-              children: [
-                ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                  children: [
-                    GridView.count(
-                          crossAxisCount: 2,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.95,
-                          children: [
-                            MetricCard(
-                              label: l10n.workoutDays,
-                              value: snapshot.averageWorkoutDaysPerWeek
-                                  .toStringAsFixed(1),
-                              detail: l10n.perWeekAverage,
-                              icon: Icons.calendar_month_rounded,
-                            ),
-                            MetricCard(
-                              label: l10n.activeStreak,
-                              value: '${snapshot.activeStreakDays} days',
-                              detail: l10n.contiguousStreak,
-                              icon: Icons.bolt_rounded,
-                            ),
-                          ],
-                        ),
-                    const SizedBox(height: 28),
-                    PageSection(
-                      title: l10n.personalRecords,
-                      child: Column(
-                        children: snapshot.personalRecords.map((
-                          record,
-                        ) {
-                          final subtitle = record.isTimed
-                              ? '${AppFormatters.duration(Duration(seconds: record.durationSeconds))} • ${AppFormatters.monthDay(record.achievedAt)}'
-                              : '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps} • ${AppFormatters.monthDay(record.achievedAt)}';
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              title: Text(
-                                record.exerciseName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              subtitle: Text(subtitle),
-                              trailing: record.isTimed
-                                  ? null
-                                  : Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      crossAxisAlignment: CrossAxisAlignment.end,
-                                      children: [
-                                        Text(
-                                          AppFormatters.weight(
-                                            record.estimatedOneRepMax,
-                                            state.preferredUnit,
-                                          ),
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.primary,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          l10n.estimated1rm,
-                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                            color: context.appColors.subtleText,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                            ),
-                          );
-                        }).toList(),
+            child: snapshotAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, stackTrace) =>
+                  Center(child: Text(error.toString())),
+              data: (snapshot) => TabBarView(
+                children: [
+                  ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                    children: [
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: 0.95,
+                        children: [
+                          MetricCard(
+                            label: l10n.workoutDays,
+                            value: snapshot.averageWorkoutDaysPerWeek
+                                .toStringAsFixed(1),
+                            detail: l10n.perWeekAverage,
+                            icon: Icons.calendar_month_rounded,
+                          ),
+                          MetricCard(
+                            label: l10n.activeStreak,
+                            value: '${snapshot.activeStreakDays} days',
+                            detail: l10n.contiguousStreak,
+                            icon: Icons.bolt_rounded,
+                          ),
+                        ],
                       ),
-                    ),
-                  ],
-                ),
-                ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                  children: snapshot.topLifts.map((lift) {
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 14),
-                      child: Padding(
-                        padding: const EdgeInsets.all(18),
+                      const SizedBox(height: 28),
+                      PageSection(
+                        title: l10n.personalRecords,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              lift.exerciseName,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w900),
-                            ),
-                            const SizedBox(height: 10),
-                            Wrap(
-                              spacing: 10,
-                              runSpacing: 10,
-                              children: [
-                                if (lift.isTimed)
-                                  _LiftChip(
-                                    label: l10n.bestTime,
-                                    value: AppFormatters.duration(Duration(seconds: lift.durationSeconds)),
-                                  )
-                                else ...[
-                                  _LiftChip(
-                                    label: l10n.bestSet,
-                                    value:
-                                        '${AppFormatters.weight(lift.bestSetWeightKg, state.preferredUnit)} x ${lift.reps}',
-                                  ),
-                                  _LiftChip(
-                                    label: l10n.estimated1rmLong,
-                                    value:
-                                        AppFormatters.weight(lift.estimatedOneRepMax, state.preferredUnit),
-                                  ),
-                                ],
-                                _LiftChip(
-                                  label: l10n.achievedLabel,
-                                  value: AppFormatters.monthDay(
-                                    lift.achievedAt,
+                          children: snapshot.personalRecords.map((record) {
+                            final subtitle = record.isTimed
+                                ? '${AppFormatters.duration(Duration(seconds: record.durationSeconds))} • ${AppFormatters.monthDay(record.achievedAt)}'
+                                : '${AppFormatters.weight(record.weightKg, state.preferredUnit)} x ${record.reps} • ${AppFormatters.monthDay(record.achievedAt)}';
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: ListTile(
+                                title: Text(
+                                  record.exerciseName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
                                   ),
                                 ),
-                              ],
-                            ),
-                          ],
+                                subtitle: Text(subtitle),
+                                trailing: record.isTimed
+                                    ? null
+                                    : Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            AppFormatters.weight(
+                                              record.estimatedOneRepMax,
+                                              state.preferredUnit,
+                                            ),
+                                            style: TextStyle(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                              fontWeight: FontWeight.w900,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            l10n.estimated1rm,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .labelSmall
+                                                ?.copyWith(
+                                                  color: context
+                                                      .appColors
+                                                      .subtleText,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                              ),
+                            );
+                          }).toList(),
                         ),
                       ),
-                    );
-                  }).toList(),
-                ),
-                ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
-                  children: [
-                    PageSection(
-                      title: l10n.weeklyVolume,
-                      child: Card(
+                    ],
+                  ),
+                  ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                    children: snapshot.topLifts.map((lift) {
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 14),
                         child: Padding(
                           padding: const EdgeInsets.all(18),
-                          child: _VolumeBars(points: snapshot.weeklyVolume),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                lift.exerciseName,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w900),
+                              ),
+                              const SizedBox(height: 10),
+                              Wrap(
+                                spacing: 10,
+                                runSpacing: 10,
+                                children: [
+                                  if (lift.isTimed)
+                                    _LiftChip(
+                                      label: l10n.bestTime,
+                                      value: AppFormatters.duration(
+                                        Duration(seconds: lift.durationSeconds),
+                                      ),
+                                    )
+                                  else ...[
+                                    _LiftChip(
+                                      label: l10n.bestSet,
+                                      value:
+                                          '${AppFormatters.weight(lift.bestSetWeightKg, state.preferredUnit)} x ${lift.reps}',
+                                    ),
+                                    _LiftChip(
+                                      label: l10n.estimated1rmLong,
+                                      value: AppFormatters.weight(
+                                        lift.estimatedOneRepMax,
+                                        state.preferredUnit,
+                                      ),
+                                    ),
+                                  ],
+                                  _LiftChip(
+                                    label: l10n.achievedLabel,
+                                    value: AppFormatters.monthDay(
+                                      lift.achievedAt,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+                    children: [
+                      PageSection(
+                        title: l10n.weeklyVolume,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(18),
+                            child: _VolumeBars(points: snapshot.weeklyVolume),
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 28),
-                    PageSection(
-                      title: l10n.volumeData,
-                      child: Column(
-                        children: snapshot.weeklyVolume.reversed.take(6).map((
-                          point,
-                        ) {
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              title: Text(
-                                l10n.weekOf(AppFormatters.monthDay(point.weekStart)),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
+                      const SizedBox(height: 28),
+                      PageSection(
+                        title: l10n.volumeData,
+                        child: Column(
+                          children: snapshot.weeklyVolume.reversed.take(6).map((
+                            point,
+                          ) {
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: ListTile(
+                                title: Text(
+                                  l10n.weekOf(
+                                    AppFormatters.monthDay(point.weekStart),
+                                  ),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                trailing: Text(
+                                  AppFormatters.weight(
+                                    point.totalVolumeKg,
+                                    state.preferredUnit,
+                                  ),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
                               ),
-                              trailing: Text(
-                                AppFormatters.weight(point.totalVolumeKg, state.preferredUnit),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -322,7 +341,10 @@ class _VolumeBars extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     AppFormatters.monthDay(point.weekStart),
-                    style: TextStyle(fontSize: 11, color: context.appColors.subtleText),
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: context.appColors.subtleText,
+                    ),
                   ),
                 ],
               ),

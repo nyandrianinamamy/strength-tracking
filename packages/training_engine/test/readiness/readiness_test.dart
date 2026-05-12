@@ -77,6 +77,23 @@ void main() {
       expect(withDeprivation, lessThan(withoutDeprivation - 5));
     });
 
+    test(
+      'detailed score marks acute deprivation when last night is below 5h',
+      () {
+        final records = [
+          _sleep(now, totalH: 4, deepM: 40, remM: 50),
+          ...List.generate(
+            6,
+            (i) => _sleep(now.subtract(Duration(days: i + 1)), totalH: 8),
+          ),
+        ];
+
+        final result = scoreSleepDetailed(records, now)!;
+
+        expect(result.acuteSleepDeprivation, isTrue);
+      },
+    );
+
     test('poor total sleep (5h) scores lower than good sleep', () {
       final good = List.generate(
         7,
@@ -120,9 +137,18 @@ void main() {
       final scoreWithExcellentRecent = scoreSleep([excellent, ...poor], now)!;
 
       // Compare against 13 poor nights + 1 old excellent night (at day 13)
-      final excellentOld = _sleep(now.subtract(const Duration(days: 13)), totalH: 9, deepM: 100, remM: 120);
+      final excellentOld = _sleep(
+        now.subtract(const Duration(days: 13)),
+        totalH: 9,
+        deepM: 100,
+        remM: 120,
+      );
       final recentPoor = _sleep(now, totalH: 4, deepM: 20, remM: 30);
-      final scoreWithPoorRecent = scoreSleep([recentPoor, ...poor.take(12), excellentOld], now)!;
+      final scoreWithPoorRecent = scoreSleep([
+        recentPoor,
+        ...poor.take(12),
+        excellentOld,
+      ], now)!;
 
       expect(scoreWithExcellentRecent, greaterThan(scoreWithPoorRecent));
     });
@@ -135,7 +161,13 @@ void main() {
     test('returns null for fewer than 3 records', () {
       expect(scoreHrv([], now), isNull);
       expect(scoreHrv([_hrv(now, 50.0)], now), isNull);
-      expect(scoreHrv([_hrv(now, 50.0), _hrv(now.subtract(const Duration(days: 1)), 50.0)], now), isNull);
+      expect(
+        scoreHrv([
+          _hrv(now, 50.0),
+          _hrv(now.subtract(const Duration(days: 1)), 50.0),
+        ], now),
+        isNull,
+      );
     });
 
     test('stable SDNN at mean scores in 70-100 range', () {
@@ -201,6 +233,21 @@ void main() {
       expect(flatRhrScore, greaterThan(risingRhrScore));
     });
 
+    test('detailed score marks rising resting HR over 7 days', () {
+      final records = List.generate(
+        7,
+        (i) => _hrv(
+          now.subtract(Duration(days: 6 - i)),
+          60.0,
+          rhr: 55.0 + i * 1.2,
+        ),
+      );
+
+      final result = scoreHrvDetailed(records, now)!;
+
+      expect(result.risingRestingHeartRate, isTrue);
+    });
+
     test('score is clamped between 0 and 100', () {
       final records = List.generate(
         7,
@@ -217,12 +264,12 @@ void main() {
   // ---------------------------------------------------------------------------
   group('computeReadiness', () {
     AcwrStatus acwrStatus(AcwrZone zone, {double ratio = 1.0}) => AcwrStatus(
-          ratio: ratio,
-          zone: zone,
-          acuteEwma: 100.0,
-          chronicEwma: 100.0,
-          recommendation: '',
-        );
+      ratio: ratio,
+      zone: zone,
+      acuteEwma: 100.0,
+      chronicEwma: 100.0,
+      recommendation: '',
+    );
 
     test('full tier when all three sources provided', () {
       final result = computeReadiness(
@@ -253,9 +300,7 @@ void main() {
     });
 
     test('acwrOnly tier when only ACWR provided', () {
-      final result = computeReadiness(
-        acwr: acwrStatus(AcwrZone.optimal),
-      );
+      final result = computeReadiness(acwr: acwrStatus(AcwrZone.optimal));
       expect(result.tier, ReadinessTier.acwrOnly);
       expect(result.confidence, ReadinessConfidence.low);
     });
@@ -280,6 +325,35 @@ void main() {
       expect(result.flags, contains(ReadinessFlag.acwrDangerZone));
     });
 
+    test(
+      'acute sleep deprivation flag is emitted from sleep scorer details',
+      () {
+        final result = computeReadiness(
+          acwr: acwrStatus(AcwrZone.optimal),
+          sleepDetails: const SleepScoreDetails(
+            score: 55.0,
+            acuteSleepDeprivation: true,
+          ),
+          hrvScore: 75.0,
+        );
+
+        expect(result.flags, contains(ReadinessFlag.acuteSleepDeprivation));
+      },
+    );
+
+    test('rising resting HR flag is emitted from HRV scorer details', () {
+      final result = computeReadiness(
+        acwr: acwrStatus(AcwrZone.optimal),
+        sleepScore: 80.0,
+        hrvDetails: const HrvScoreDetails(
+          score: 75.0,
+          risingRestingHeartRate: true,
+        ),
+      );
+
+      expect(result.flags, contains(ReadinessFlag.risingRestingHR));
+    });
+
     test('no danger zone flag for optimal ACWR', () {
       final result = computeReadiness(
         acwr: acwrStatus(AcwrZone.optimal, ratio: 1.0),
@@ -297,19 +371,22 @@ void main() {
       expect(result.score, lessThanOrEqualTo(100.0));
     });
 
-    test('danger zone ACWR produces lower score than optimal ACWR (all else equal)', () {
-      final optimal = computeReadiness(
-        acwr: acwrStatus(AcwrZone.optimal),
-        sleepScore: 80.0,
-        hrvScore: 75.0,
-      );
-      final danger = computeReadiness(
-        acwr: acwrStatus(AcwrZone.danger, ratio: 1.7),
-        sleepScore: 80.0,
-        hrvScore: 75.0,
-      );
-      expect(optimal.score, greaterThan(danger.score));
-    });
+    test(
+      'danger zone ACWR produces lower score than optimal ACWR (all else equal)',
+      () {
+        final optimal = computeReadiness(
+          acwr: acwrStatus(AcwrZone.optimal),
+          sleepScore: 80.0,
+          hrvScore: 75.0,
+        );
+        final danger = computeReadiness(
+          acwr: acwrStatus(AcwrZone.danger, ratio: 1.7),
+          sleepScore: 80.0,
+          hrvScore: 75.0,
+        );
+        expect(optimal.score, greaterThan(danger.score));
+      },
+    );
 
     test('componentScores contains acwr key when ACWR provided', () {
       final result = computeReadiness(
@@ -327,23 +404,26 @@ void main() {
       expect(result.score, closeTo(55.0, 1.0));
     });
 
-    test('manual slider reduces influence when all 3 objective sources present', () {
-      final fullWithoutManual = computeReadiness(
-        acwr: acwrStatus(AcwrZone.optimal),
-        sleepScore: 80.0,
-        hrvScore: 75.0,
-      );
-      // Add a very low manual score – should not drag down much (10% weight)
-      final fullWithManual = computeReadiness(
-        acwr: acwrStatus(AcwrZone.optimal),
-        sleepScore: 80.0,
-        hrvScore: 75.0,
-        manualSlider: 1.0, // low: maps to 10
-      );
-      // Difference should be small (manual has small weight)
-      final diff = fullWithoutManual.score - fullWithManual.score;
-      expect(diff, lessThan(20.0));
-    });
+    test(
+      'manual slider reduces influence when all 3 objective sources present',
+      () {
+        final fullWithoutManual = computeReadiness(
+          acwr: acwrStatus(AcwrZone.optimal),
+          sleepScore: 80.0,
+          hrvScore: 75.0,
+        );
+        // Add a very low manual score – should not drag down much (10% weight)
+        final fullWithManual = computeReadiness(
+          acwr: acwrStatus(AcwrZone.optimal),
+          sleepScore: 80.0,
+          hrvScore: 75.0,
+          manualSlider: 1.0, // low: maps to 10
+        );
+        // Difference should be small (manual has small weight)
+        final diff = fullWithoutManual.score - fullWithManual.score;
+        expect(diff, lessThan(20.0));
+      },
+    );
 
     test('score is clamped to 0-100', () {
       final result = computeReadiness(

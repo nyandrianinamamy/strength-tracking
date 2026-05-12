@@ -136,7 +136,7 @@ class WatchSyncService {
         'targetReps': re.targetReps,
         'targetDurationSeconds': re.targetDurationSeconds,
         'restSeconds': re.restSeconds,
-        'suggestedWeightKg': suggestion?.suggestedWeightKg ?? 0,
+        'suggestedWeightKg': suggestion?.suggestedWeightKg,
         'completedSets': completedSets
             .map(
               (s) => {
@@ -153,8 +153,9 @@ class WatchSyncService {
       // Add active timer state if this exercise has a running timer
       if (_activeTimerExerciseId == re.exerciseId &&
           _activeTimerStartedAt != null) {
-        exerciseData['activeTimerStartedAt'] =
-            _activeTimerStartedAt!.toUtc().toIso8601String();
+        exerciseData['activeTimerStartedAt'] = _activeTimerStartedAt!
+            .toUtc()
+            .toIso8601String();
       }
       exercises.add(exerciseData);
     }

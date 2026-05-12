@@ -1,7 +1,21 @@
 import 'dart:math';
 
+const double minStrengthRpe = 5.0;
+const double maxStrengthRpe = 10.0;
+
+void validateStrengthRpe(double rpe) {
+  if (rpe < minStrengthRpe || rpe > maxStrengthRpe) {
+    throw ArgumentError(
+      'rpe must be between $minStrengthRpe and $maxStrengthRpe, got $rpe',
+    );
+  }
+}
+
 /// Returns Reps In Reserve from RPE (Rate of Perceived Exertion).
-double rirFromRpe(double rpe) => 10.0 - rpe;
+double rirFromRpe(double rpe) {
+  validateStrengthRpe(rpe);
+  return 10.0 - rpe;
+}
 
 /// Returns the total reps-to-max (rMax) given performed reps and RPE.
 double rMax(int reps, double rpe) => reps + rirFromRpe(rpe);

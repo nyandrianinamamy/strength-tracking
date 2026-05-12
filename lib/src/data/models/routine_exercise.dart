@@ -6,6 +6,7 @@ class RoutineExercise {
     required this.restSeconds,
     required this.order,
     this.targetDurationSeconds = 60,
+    this.plannerMetadata = const {},
   });
 
   final String exerciseId;
@@ -14,6 +15,7 @@ class RoutineExercise {
   final int restSeconds;
   final int order;
   final int targetDurationSeconds;
+  final Map<String, dynamic> plannerMetadata;
 
   RoutineExercise copyWith({
     String? exerciseId,
@@ -22,6 +24,7 @@ class RoutineExercise {
     int? restSeconds,
     int? order,
     int? targetDurationSeconds,
+    Map<String, dynamic>? plannerMetadata,
   }) {
     return RoutineExercise(
       exerciseId: exerciseId ?? this.exerciseId,
@@ -29,7 +32,9 @@ class RoutineExercise {
       targetReps: targetReps ?? this.targetReps,
       restSeconds: restSeconds ?? this.restSeconds,
       order: order ?? this.order,
-      targetDurationSeconds: targetDurationSeconds ?? this.targetDurationSeconds,
+      targetDurationSeconds:
+          targetDurationSeconds ?? this.targetDurationSeconds,
+      plannerMetadata: plannerMetadata ?? this.plannerMetadata,
     );
   }
 
@@ -41,6 +46,9 @@ class RoutineExercise {
       restSeconds: json['restSeconds'] as int,
       order: json['order'] as int,
       targetDurationSeconds: json['targetDurationSeconds'] as int? ?? 60,
+      plannerMetadata: Map<String, dynamic>.from(
+        json['plannerMetadata'] as Map? ?? const {},
+      ),
     );
   }
 
@@ -52,6 +60,7 @@ class RoutineExercise {
       'restSeconds': restSeconds,
       'order': order,
       'targetDurationSeconds': targetDurationSeconds,
+      if (plannerMetadata.isNotEmpty) 'plannerMetadata': plannerMetadata,
     };
   }
 }

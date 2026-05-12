@@ -6,15 +6,15 @@ import 'package:training_engine/training_engine.dart';
 
 /// Standard test profile.
 UserProfile _profile() => UserProfile(
-      sex: Sex.male,
-      age: 28,
-      bodyWeightKg: 82.0,
-      experience: ExperienceLevel.intermediate,
-      goal: HypertrophyGoal.hypertrophy,
-      availableDays: [1, 3, 5],
-      maxSessionDuration: const Duration(minutes: 60),
-      createdAt: DateTime.utc(2026, 1, 1),
-    );
+  sex: Sex.male,
+  age: 28,
+  bodyWeightKg: 82.0,
+  experience: ExperienceLevel.intermediate,
+  goal: HypertrophyGoal.hypertrophy,
+  availableDays: [1, 3, 5],
+  maxSessionDuration: const Duration(minutes: 60),
+  createdAt: DateTime.utc(2026, 1, 1),
+);
 
 void main() {
   group('TrainingEngine integration smoke test', () {
@@ -90,8 +90,11 @@ void main() {
       // 3. Map via adapter
       final engineSession = adapter.toEngineSession(workoutSession)!;
       expect(engineSession.sets, hasLength(5));
-      expect(engineSession.sets.every((s) => !s.rpeEstimated), isTrue,
-          reason: 'All sets have explicit RPE — none should be estimated');
+      expect(
+        engineSession.sets.every((s) => !s.rpeEstimated),
+        isTrue,
+        reason: 'All sets have explicit RPE — none should be estimated',
+      );
 
       // 4. Ingest into engine
       engine.ingestSession(engineSession);
@@ -99,8 +102,11 @@ void main() {
       // 5. Verify e1RM
       final squatE1rm = engine.currentE1rm('barbell_back_squat');
       expect(squatE1rm, isNotNull);
-      expect(squatE1rm!, greaterThan(110.0),
-          reason: 'e1RM should be higher than the working set weight');
+      expect(
+        squatE1rm!,
+        greaterThan(110.0),
+        reason: 'e1RM should be higher than the working set weight',
+      );
 
       final benchE1rm = engine.currentE1rm('barbell_bench_press');
       expect(benchE1rm, isNotNull);
@@ -174,39 +180,42 @@ void main() {
       }
     });
 
-    test('adapter: defaults to 8.0 when neither set nor session RPE present', () {
-      final adapter = const TrainingEngineAdapter();
+    test(
+      'adapter: defaults to 8.0 when neither set nor session RPE present',
+      () {
+        final adapter = const TrainingEngineAdapter();
 
-      final sessionDate = DateTime.utc(2026, 3, 6, 17, 0);
-      final noRpeSession = WorkoutSession(
-        id: 'no-rpe-session-01',
-        routineId: 'routine-fb',
-        status: WorkoutSessionStatus.completed,
-        startedAt: sessionDate.subtract(const Duration(minutes: 45)),
-        endedAt: sessionDate,
-        lastActivityAt: sessionDate,
-        currentExerciseIndex: 0,
-        completedSets: [
-          CompletedSet(
-            exerciseId: 'cable_row',
-            setNumber: 1,
-            weightKg: 60.0,
-            reps: 12,
-            completedAt: sessionDate,
-            note: '',
-            // No rpe
-          ),
-        ],
-        sessionNote: '',
-        rpe: null, // No session RPE either
-      );
+        final sessionDate = DateTime.utc(2026, 3, 6, 17, 0);
+        final noRpeSession = WorkoutSession(
+          id: 'no-rpe-session-01',
+          routineId: 'routine-fb',
+          status: WorkoutSessionStatus.completed,
+          startedAt: sessionDate.subtract(const Duration(minutes: 45)),
+          endedAt: sessionDate,
+          lastActivityAt: sessionDate,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'cable_row',
+              setNumber: 1,
+              weightKg: 60.0,
+              reps: 12,
+              completedAt: sessionDate,
+              note: '',
+              // No rpe
+            ),
+          ],
+          sessionNote: '',
+          rpe: null, // No session RPE either
+        );
 
-      final engineSession = adapter.toEngineSession(noRpeSession)!;
-      expect(engineSession.sets.first.rpe, closeTo(8.0, 0.001));
-      expect(engineSession.sets.first.rpeEstimated, isTrue);
-    });
+        final engineSession = adapter.toEngineSession(noRpeSession)!;
+        expect(engineSession.sets.first.rpe, closeTo(8.0, 0.001));
+        expect(engineSession.sets.first.rpeEstimated, isTrue);
+      },
+    );
 
-    test('adapter: ignores timed sets and returns null for timed-only sessions', () {
+    test('adapter: maps timed-only sessions with duration data', () {
       final adapter = const TrainingEngineAdapter();
 
       final sessionDate = DateTime.utc(2026, 3, 7, 17, 0);
@@ -233,52 +242,68 @@ void main() {
         rpe: 7.0,
       );
 
-      expect(adapter.toEngineSession(timedOnlySession), isNull);
-    });
-
-    test('adapter: keeps strength sets when a session mixes timed and rep sets', () {
-      final adapter = const TrainingEngineAdapter();
-
-      final sessionDate = DateTime.utc(2026, 3, 8, 17, 0);
-      final mixedSession = WorkoutSession(
-        id: 'mixed-session-01',
-        routineId: 'routine-mixed',
-        status: WorkoutSessionStatus.completed,
-        startedAt: sessionDate.subtract(const Duration(minutes: 45)),
-        endedAt: sessionDate,
-        lastActivityAt: sessionDate,
-        currentExerciseIndex: 0,
-        completedSets: [
-          CompletedSet(
-            exerciseId: 'plank',
-            setNumber: 1,
-            weightKg: 0.0,
-            reps: 0,
-            durationSeconds: 60,
-            completedAt: sessionDate,
-            note: '',
-          ),
-          CompletedSet(
-            exerciseId: 'barbell_back_squat',
-            setNumber: 1,
-            weightKg: 100.0,
-            reps: 8,
-            completedAt: sessionDate,
-            note: '',
-            rpe: 8.0,
-          ),
-        ],
-        sessionNote: '',
-        rpe: 8.0,
-      );
-
-      final engineSession = adapter.toEngineSession(mixedSession);
+      final engineSession = adapter.toEngineSession(timedOnlySession);
 
       expect(engineSession, isNotNull);
       expect(engineSession!.sets, hasLength(1));
-      expect(engineSession.sets.single.exerciseId, 'barbell_back_squat');
-      expect(engineSession.sets.single.reps, 8);
+      expect(engineSession.sets.single.exerciseId, 'plank');
+      expect(engineSession.sets.single.reps, 0);
+      expect(engineSession.sets.single.durationSeconds, 60);
     });
+
+    test(
+      'adapter: keeps timed and strength sets when a session mixes them',
+      () {
+        final adapter = const TrainingEngineAdapter();
+
+        final sessionDate = DateTime.utc(2026, 3, 8, 17, 0);
+        final mixedSession = WorkoutSession(
+          id: 'mixed-session-01',
+          routineId: 'routine-mixed',
+          status: WorkoutSessionStatus.completed,
+          startedAt: sessionDate.subtract(const Duration(minutes: 45)),
+          endedAt: sessionDate,
+          lastActivityAt: sessionDate,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'plank',
+              setNumber: 1,
+              weightKg: 0.0,
+              reps: 0,
+              durationSeconds: 60,
+              completedAt: sessionDate,
+              note: '',
+            ),
+            CompletedSet(
+              exerciseId: 'barbell_back_squat',
+              setNumber: 1,
+              weightKg: 100.0,
+              reps: 8,
+              completedAt: sessionDate,
+              note: '',
+              rpe: 8.0,
+            ),
+          ],
+          sessionNote: '',
+          rpe: 8.0,
+        );
+
+        final engineSession = adapter.toEngineSession(mixedSession);
+
+        expect(engineSession, isNotNull);
+        expect(engineSession!.sets, hasLength(2));
+        final timedSet = engineSession.sets.firstWhere(
+          (set) => set.exerciseId == 'plank',
+        );
+        final strengthSet = engineSession.sets.firstWhere(
+          (set) => set.exerciseId == 'barbell_back_squat',
+        );
+        expect(timedSet.reps, 0);
+        expect(timedSet.durationSeconds, 60);
+        expect(strengthSet.reps, 8);
+      },
+    );
 
     test('engine state serialization roundtrip via restoreState', () {
       final adapter = const TrainingEngineAdapter();
@@ -322,10 +347,7 @@ void main() {
       engine2.restoreState(json);
 
       // Verify key data survived
-      expect(
-        engine2.state.e1rmHistory['barbell_back_squat'],
-        isNotEmpty,
-      );
+      expect(engine2.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
       expect(
         engine2.state.lastTopSets['barbell_back_squat']?.weightKg,
         closeTo(120.0, 0.001),
@@ -340,11 +362,13 @@ void main() {
         profile: _profile(),
       );
 
-      final plan = engine.generatePlan(const PlannerConfig(
-        availableDays: [1, 3, 5],
-        maxSessionDuration: Duration(minutes: 60),
-        goal: HypertrophyGoal.hypertrophy,
-      ));
+      final plan = engine.generatePlan(
+        const PlannerConfig(
+          availableDays: [1, 3, 5],
+          maxSessionDuration: Duration(minutes: 60),
+          goal: HypertrophyGoal.hypertrophy,
+        ),
+      );
 
       expect(plan.sessions, hasLength(3));
       expect(plan.sessions.every((s) => s.exercises.isNotEmpty), isTrue);

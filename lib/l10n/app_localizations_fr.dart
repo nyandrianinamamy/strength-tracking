@@ -73,7 +73,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get viewAll => 'Tout voir';
 
   @override
-  String get estimated1rm => '1RM est.';
+  String get estimated1rm => '1RM moteur';
 
   @override
   String get noPrsYet => 'Aucun record détecté';
@@ -1312,7 +1312,7 @@ class AppLocalizationsFr extends AppLocalizations {
   }
 
   @override
-  String get estimated1rmTracked => '1RM estimé suivi automatiquement';
+  String get estimated1rmTracked => '1RM glissant moteur suivi automatiquement';
 
   @override
   String get trainingReadiness => 'Préparation à l\'entraînement';
@@ -1402,7 +1402,7 @@ class AppLocalizationsFr extends AppLocalizations {
   String get bestSet => 'Meilleur set';
 
   @override
-  String get estimated1rmLong => '1RM estimé';
+  String get estimated1rmLong => '1RM glissant moteur';
 
   @override
   String get achievedLabel => 'Atteint';

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -7,6 +8,8 @@ import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
+import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_adapter.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:training_engine/training_engine.dart';
@@ -50,6 +53,64 @@ AppState _appStateWithCompletedSession() {
         rpe: 8.0,
       ),
     ],
+    sex: 'male',
+  );
+}
+
+WorkoutSession _completedSession({
+  required String id,
+  required DateTime completedAt,
+  String exerciseId = 'barbell_back_squat',
+  double weightKg = 110.0,
+}) {
+  return WorkoutSession(
+    id: id,
+    routineId: 'routine-1',
+    status: WorkoutSessionStatus.completed,
+    startedAt: completedAt.subtract(const Duration(hours: 1)),
+    endedAt: completedAt,
+    lastActivityAt: completedAt,
+    currentExerciseIndex: 0,
+    completedSets: [
+      CompletedSet(
+        exerciseId: exerciseId,
+        setNumber: 1,
+        weightKg: weightKg,
+        reps: 8,
+        completedAt: completedAt,
+        note: '',
+        rpe: 8.0,
+      ),
+    ],
+    sessionNote: '',
+    rpe: 8.0,
+  );
+}
+
+AppState _appStateWithCompletedSessions(List<WorkoutSession> sessions) {
+  return AppState(
+    exercises: const [
+      Exercise(
+        id: 'barbell_back_squat',
+        name: 'Barbell Back Squat',
+        primaryMuscles: ['Quadriceps'],
+        secondaryMuscles: ['Glutes'],
+        equipment: ['Barbell'],
+        instructions: '',
+        archived: false,
+      ),
+      Exercise(
+        id: 'barbell_bench_press',
+        name: 'Barbell Bench Press',
+        primaryMuscles: ['Chest'],
+        secondaryMuscles: ['Triceps'],
+        equipment: ['Barbell'],
+        instructions: '',
+        archived: false,
+      ),
+    ],
+    routines: const [],
+    sessions: sessions,
     sex: 'male',
   );
 }
@@ -101,14 +162,42 @@ ProviderContainer _buildContainer({
   required AppState initialState,
   required AppStateRepository appRepository,
   required TrainingEngineStateRepository engineRepository,
+  HealthKitDataSource healthKit = const HealthKitDataSource(),
 }) {
   return ProviderContainer(
     overrides: [
       appStateRepositoryProvider.overrideWithValue(appRepository),
       initialAppStateProvider.overrideWithValue(initialState),
       trainingEngineStateRepositoryProvider.overrideWithValue(engineRepository),
+      healthKitDataSourceProvider.overrideWithValue(healthKit),
     ],
   );
+}
+
+class _FakeHealthKitDataSource extends HealthKitDataSource {
+  const _FakeHealthKitDataSource({
+    this.sleepStatus = HealthKitFetchStatus.success,
+    this.hrvStatus = HealthKitFetchStatus.success,
+  });
+
+  final List<SleepRecord> sleepRecords = const [];
+  final List<HrvRecord> hrvRecords = const [];
+  final HealthKitFetchStatus sleepStatus;
+  final HealthKitFetchStatus hrvStatus;
+
+  @override
+  Future<HealthKitFetchResult<SleepRecord>> fetchRecentSleepResult({
+    int days = 14,
+  }) async {
+    return HealthKitFetchResult(status: sleepStatus, records: sleepRecords);
+  }
+
+  @override
+  Future<HealthKitFetchResult<HrvRecord>> fetchRecentHrvResult({
+    int days = 14,
+  }) async {
+    return HealthKitFetchResult(status: hrvStatus, records: hrvRecords);
+  }
 }
 
 Map<String, dynamic> _savedEngineStateWithBenchAndSquatData() {
@@ -128,7 +217,7 @@ Map<String, dynamic> _savedEngineStateWithBenchAndSquatData() {
   );
   savedEngine.ingestSession(
     EngineSession(
-      id: 'debug-session-1',
+      id: 'completed-session-1',
       startedAt: now.subtract(const Duration(hours: 1)),
       endedAt: now,
       sets: [
@@ -169,6 +258,26 @@ class _ThrowingTrainingEngineStateRepository
   Future<void> save(Map<String, dynamic> state) async {}
 }
 
+Map<String, dynamic> _savedStateForSessions(List<WorkoutSession> sessions) {
+  final appState = _appStateWithCompletedSessions(sessions);
+  final adapter = const TrainingEngineAdapter();
+  final registry = ExerciseRegistry.withDefaults();
+  for (final exercise in appState.exercises) {
+    final engineExercise = adapter.toEngineExercise(exercise, registry);
+    if (engineExercise != null) {
+      registry.addCustom(engineExercise);
+    }
+  }
+  final engine = TrainingEngine(
+    registry: registry,
+    profile: adapter.toUserProfile(appState),
+  );
+  engine.bootstrapFromHistory(
+    sessions.map(adapter.toEngineSession).whereType<EngineSession>().toList(),
+  );
+  return engine.serializeState();
+}
+
 void main() {
   group('trainingEngineProvider', () {
     test(
@@ -192,6 +301,41 @@ void main() {
       },
     );
 
+    test('exposes current rolling e1RM values from engine state', () async {
+      final completedAt = DateTime.utc(2026, 3, 3, 18, 0);
+      final appState = _appStateWithCompletedSessions([
+        _completedSession(
+          id: 'squat-1',
+          completedAt: completedAt.subtract(const Duration(days: 2)),
+          exerciseId: 'barbell_back_squat',
+          weightKg: 100,
+        ),
+        _completedSession(
+          id: 'squat-2',
+          completedAt: completedAt,
+          exerciseId: 'barbell_back_squat',
+          weightKg: 120,
+        ),
+      ]);
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final engineRepository = MemoryTrainingEngineStateRepository();
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final engine = await container.read(trainingEngineProvider.future);
+      final e1rms = await container.read(engineCurrentE1rmsProvider.future);
+
+      expect(e1rms.keys, contains('barbell_back_squat'));
+      expect(
+        e1rms['barbell_back_squat'],
+        engine.currentE1rm('barbell_back_squat'),
+      );
+    });
+
     test(
       'restores saved engine state without bootstrapping app sessions again',
       () async {
@@ -213,7 +357,7 @@ void main() {
         );
         savedEngine.ingestSession(
           EngineSession(
-            id: 'saved-session',
+            id: 'completed-session-1',
             startedAt: DateTime.utc(2026, 2, 1, 17, 0),
             endedAt: DateTime.utc(2026, 2, 1, 18, 0),
             sets: [
@@ -246,7 +390,149 @@ void main() {
       },
     );
 
-    test('ignores timed-only legacy sessions during bootstrap', () async {
+    test(
+      'refreshes restored profile demographics without dropping saved training facts',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          sex: 'female',
+          age: 44,
+          weight: 68.5,
+          fitnessGoal: 'strength',
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+
+        final savedEngine = TrainingEngine(
+          registry: ExerciseRegistry.withDefaults(),
+          profile: UserProfile(
+            sex: Sex.male,
+            age: 30,
+            bodyWeightKg: 82,
+            experience: ExperienceLevel.intermediate,
+            goal: HypertrophyGoal.hypertrophy,
+            availableDays: const [1, 3, 5],
+            maxSessionDuration: const Duration(minutes: 60),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        savedEngine.ingestSession(
+          EngineSession(
+            id: 'completed-session-1',
+            startedAt: DateTime.utc(2026, 2, 1, 17, 0),
+            endedAt: DateTime.utc(2026, 2, 1, 18, 0),
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_bench_press',
+                weightKg: 80,
+                reps: 8,
+                rpe: 8.0,
+                completedAt: DateTime.utc(2026, 2, 1, 17, 10),
+              ),
+            ],
+          ),
+        );
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: savedEngine.serializeState(),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.profile.sex, Sex.female);
+        expect(engine.state.profile.age, 44);
+        expect(engine.state.profile.bodyWeightKg, 68.5);
+        expect(engine.state.profile.goal, HypertrophyGoal.strength);
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
+        expect(engine.state.lastTopSets['barbell_bench_press'], isNotNull);
+        expect(engineRepository.state?['profile']['age'], 44);
+      },
+    );
+
+    test(
+      'rebuilds when saved state is missing a completed app session',
+      () async {
+        final first = _completedSession(
+          id: 'completed-session-1',
+          completedAt: DateTime.utc(2026, 3, 1, 18, 0),
+          exerciseId: 'barbell_back_squat',
+          weightKg: 110,
+        );
+        final second = _completedSession(
+          id: 'completed-session-2',
+          completedAt: DateTime.utc(2026, 3, 2, 18, 0),
+          exerciseId: 'barbell_bench_press',
+          weightKg: 90,
+        );
+        final appState = _appStateWithCompletedSessions([first, second]);
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: _savedStateForSessions([first]),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sessionsIngested, 2);
+        expect(
+          engine.state.ingestedSessionIds,
+          equals({'completed-session-1', 'completed-session-2'}),
+        );
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
+        expect(
+          engineRepository.state?['ingestedSessionIds'],
+          unorderedEquals(['completed-session-1', 'completed-session-2']),
+        );
+      },
+    );
+
+    test(
+      'rebuilds when saved state contains a completed session deleted from app history',
+      () async {
+        final deleted = _completedSession(
+          id: 'deleted-session',
+          completedAt: DateTime.utc(2026, 3, 1, 18, 0),
+          exerciseId: 'barbell_back_squat',
+          weightKg: 110,
+        );
+        final remaining = _completedSession(
+          id: 'remaining-session',
+          completedAt: DateTime.utc(2026, 3, 2, 18, 0),
+          exerciseId: 'barbell_bench_press',
+          weightKg: 90,
+        );
+        final appState = _appStateWithCompletedSessions([remaining]);
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: _savedStateForSessions([deleted, remaining]),
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sessionsIngested, 1);
+        expect(engine.state.ingestedSessionIds, equals({'remaining-session'}));
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNull);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
+      },
+    );
+
+    test('ingests timed-only sessions when they contribute fatigue', () async {
       final appState = _appStateWithTimedOnlyCompletedSession();
       final appRepository = MemoryAppStateRepository(initialState: appState);
       final engineRepository = MemoryTrainingEngineStateRepository();
@@ -259,7 +545,9 @@ void main() {
 
       final engine = await container.read(trainingEngineProvider.future);
 
-      expect(engine.state.sessionsIngested, 0);
+      expect(engine.state.sessionsIngested, 1);
+      expect(engine.state.ingestedSessionIds, {'completed-timed-session-1'});
+      expect(engine.state.fatigueLog['core'], isNotEmpty);
       expect(engine.state.e1rmHistory, isEmpty);
       expect(engineRepository.state, isNotNull);
     });
@@ -305,6 +593,114 @@ void main() {
 
         expect(engine.state.sessionsIngested, 1);
         expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit returns no samples',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.noSamples,
+            hrvStatus: HealthKitFetchStatus.noSamples,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit is unavailable',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.unavailable,
+            hrvStatus: HealthKitFetchStatus.unavailable,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit authorization is denied',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.denied,
+            hrvStatus: HealthKitFetchStatus.denied,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
+      },
+    );
+
+    test(
+      'does not ingest demo sleep or HRV when HealthKit fetch fails',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: const _FakeHealthKitDataSource(
+            sleepStatus: HealthKitFetchStatus.error,
+            hrvStatus: HealthKitFetchStatus.error,
+          ),
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
+        expect(engine.state.lastHealthKitFetch, isNotNull);
       },
     );
 
@@ -359,7 +755,7 @@ void main() {
         );
         savedEngine.ingestSession(
           EngineSession(
-            id: 'debug-fatigue-session',
+            id: 'completed-session-1',
             startedAt: DateTime.utc(2026, 3, 1, 17, 0),
             endedAt: DateTime.utc(2026, 3, 1, 18, 0),
             sets: [
@@ -410,7 +806,7 @@ void main() {
       );
       savedEngine.ingestSession(
         EngineSession(
-          id: 'debug-recommendation-session',
+          id: 'completed-session-1',
           startedAt: DateTime.utc(2026, 3, 1, 17, 0),
           endedAt: DateTime.utc(2026, 3, 1, 18, 0),
           sets: [
@@ -469,6 +865,63 @@ void main() {
     });
 
     test(
+      'routine load recommendations use target reps and explicit default target RPE',
+      () async {
+        final completedAt = DateTime.utc(2026, 4, 1, 18, 0);
+        final session =
+            _completedSession(
+              id: 'bench-strength-session',
+              completedAt: completedAt,
+              exerciseId: 'barbell_bench_press',
+              weightKg: 100,
+            ).copyWith(
+              completedSets: [
+                CompletedSet(
+                  exerciseId: 'barbell_bench_press',
+                  setNumber: 1,
+                  weightKg: 100,
+                  reps: 6,
+                  completedAt: completedAt,
+                  note: '',
+                  rpe: 8.0,
+                ),
+              ],
+            );
+        final appState = _appStateWithCompletedSessions([session]);
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final engine = await container.read(trainingEngineProvider.future);
+        final defaultRecommendation = engine.recommendLoad(
+          'barbell_bench_press',
+          at: completedAt.add(const Duration(days: 8)),
+        );
+        final routineRecommendation = await container.read(
+          routineLoadRecommendationProvider(
+            const RoutineLoadRecommendationParams(
+              exerciseId: 'barbell_bench_press',
+              targetReps: 5,
+            ),
+          ).future,
+        );
+
+        expect(defaultRecommendation.targets.targetRepsHigh, 12);
+        expect(defaultRecommendation.delta, PerformanceDelta.maintenance);
+        expect(routineRecommendation, isNotNull);
+        expect(routineRecommendation!.targets.targetRepsLow, 5);
+        expect(routineRecommendation.targets.targetRepsHigh, 5);
+        expect(routineRecommendation.targets.targetRpe, 8.0);
+        expect(routineRecommendation.delta, PerformanceDelta.progression);
+      },
+    );
+
+    test(
       'engine debug raw snapshot provider returns formatted serialized state',
       () async {
         final appState = _appStateWithCompletedSession();
@@ -492,6 +945,65 @@ void main() {
         expect(snapshot, startsWith('{\n'));
       },
     );
+
+    test('live heatmap preview includes timed active sets', () async {
+      final completedAt = DateTime.utc(2026, 4, 2, 18, 0);
+      final appState = AppState(
+        exercises: const [
+          Exercise(
+            id: 'plank',
+            name: 'Plank',
+            primaryMuscles: ['Abs'],
+            secondaryMuscles: ['Glutes'],
+            equipment: ['Bodyweight'],
+            instructions: '',
+            archived: false,
+            exerciseType: 'timed',
+          ),
+        ],
+        routines: const [],
+        sessions: [
+          WorkoutSession(
+            id: 'active-timed-session',
+            routineId: 'routine-core',
+            status: WorkoutSessionStatus.active,
+            startedAt: completedAt.subtract(const Duration(minutes: 10)),
+            endedAt: null,
+            lastActivityAt: completedAt,
+            currentExerciseIndex: 0,
+            completedSets: [
+              CompletedSet(
+                exerciseId: 'plank',
+                setNumber: 1,
+                weightKg: 0.0,
+                reps: 0,
+                durationSeconds: 60,
+                completedAt: completedAt,
+                note: '',
+              ),
+            ],
+            sessionNote: '',
+            rpe: 7.0,
+          ),
+        ],
+        sex: 'male',
+      );
+      final appRepository = MemoryAppStateRepository(initialState: appState);
+      final engineRepository = MemoryTrainingEngineStateRepository();
+      final container = _buildContainer(
+        initialState: appState,
+        appRepository: appRepository,
+        engineRepository: engineRepository,
+      );
+      addTearDown(container.dispose);
+
+      final heatmap = await container.read(
+        liveEngineHeatmapDataProvider.future,
+      );
+
+      expect(heatmap[Muscle.abs], isNotNull);
+      expect(heatmap[Muscle.abs]!.intensity, greaterThan(0));
+    });
   });
 
   group('SharedPreferencesTrainingEngineStateRepository', () {

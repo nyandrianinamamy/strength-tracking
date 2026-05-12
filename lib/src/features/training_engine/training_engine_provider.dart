@@ -7,7 +7,6 @@ import 'package:training_engine/training_engine.dart';
 
 import '../../core/app_state_controller.dart';
 import '../../data/models/app_state.dart';
-import '../../data/seed/demo_seed_data.dart';
 import 'training_engine_ui_adapter.dart';
 import 'healthkit_data_source.dart';
 import 'training_engine_adapter.dart';
@@ -52,11 +51,34 @@ Future<TrainingEngine> loadTrainingEngine({
 
   final profile = adapter.toUserProfile(appState);
   final engine = TrainingEngine(registry: registry, profile: profile);
+  final completedSessions = appState.completedSessions
+      .map(adapter.toEngineSession)
+      .whereType<EngineSession>()
+      .toList();
+  final completedSessionIds = completedSessions
+      .map((session) => session.id)
+      .toSet();
   try {
     final savedState = await repository.load();
     if (savedState != null) {
       engine.restoreState(savedState);
-      return engine;
+      final profileWasUpdated = _refreshRestoredProfile(engine, profile);
+      final savedTracksSessionIds =
+          savedState.containsKey('ingestedSessionIds') ||
+          _hasNoSessionDerivedState(engine.state);
+      if (savedTracksSessionIds &&
+          setEquals(engine.state.ingestedSessionIds, completedSessionIds)) {
+        if (profileWasUpdated) {
+          await repository.save(engine.serializeState());
+        }
+        return engine;
+      }
+
+      final rebuilt = TrainingEngine(registry: registry, profile: profile);
+      rebuilt.bootstrapFromHistory(completedSessions);
+      _preserveHealthKitState(rebuilt, engine.state);
+      await repository.save(rebuilt.serializeState());
+      return rebuilt;
     }
   } catch (error) {
     debugPrint(
@@ -71,23 +93,15 @@ Future<TrainingEngine> loadTrainingEngine({
     }
   }
 
-  final completedSessions = appState.completedSessions
-      .map(adapter.toEngineSession)
-      .whereType<EngineSession>()
-      .toList();
   if (completedSessions.isNotEmpty) {
     engine.bootstrapFromHistory(completedSessions);
   }
 
   if (appState.healthKitEnabled) {
-    var sleepRecords = await healthKit.fetchRecentSleep();
-    var hrvRecords = await healthKit.fetchRecentHrv();
-
-    // Fall back to demo data when HealthKit returns nothing (e.g. simulator)
-    if (sleepRecords.isEmpty && hrvRecords.isEmpty) {
-      sleepRecords = DemoSeedData.seedSleep();
-      hrvRecords = DemoSeedData.seedHrv();
-    }
+    final sleepResult = await healthKit.fetchRecentSleepResult();
+    final hrvResult = await healthKit.fetchRecentHrvResult();
+    final sleepRecords = sleepResult.records;
+    final hrvRecords = hrvResult.records;
 
     for (final record in sleepRecords) {
       engine.ingestSleep(record);
@@ -97,13 +111,66 @@ Future<TrainingEngine> loadTrainingEngine({
       engine.ingestHrv(record);
     }
 
-    if (sleepRecords.isNotEmpty || hrvRecords.isNotEmpty) {
+    if (sleepResult.shouldStampFetch || hrvResult.shouldStampFetch) {
       engine.stampHealthKitFetch();
     }
   }
 
   await repository.save(engine.serializeState());
   return engine;
+}
+
+bool _hasNoSessionDerivedState(TrainingState state) {
+  return state.sessionsIngested == 0 &&
+      state.e1rmHistory.isEmpty &&
+      state.fatigueLog.isEmpty &&
+      state.dailyLoads.isEmpty &&
+      state.acwrState == null &&
+      state.lastTopSets.isEmpty;
+}
+
+bool _refreshRestoredProfile(
+  TrainingEngine engine,
+  UserProfile currentProfile,
+) {
+  final restoredProfile = engine.state.profile;
+  final refreshedProfile = currentProfile.copyWith(
+    createdAt: restoredProfile.createdAt,
+  );
+  if (_sameProfile(restoredProfile, refreshedProfile)) {
+    return false;
+  }
+
+  engine.restoreState(
+    engine.state.copyWith(profile: refreshedProfile).toJson(),
+  );
+  return true;
+}
+
+bool _sameProfile(UserProfile left, UserProfile right) {
+  return left.sex == right.sex &&
+      left.age == right.age &&
+      left.bodyWeightKg == right.bodyWeightKg &&
+      left.experience == right.experience &&
+      left.goal == right.goal &&
+      listEquals(left.availableDays, right.availableDays) &&
+      left.maxSessionDuration == right.maxSessionDuration &&
+      left.createdAt == right.createdAt;
+}
+
+void _preserveHealthKitState(
+  TrainingEngine rebuilt,
+  TrainingState restoredState,
+) {
+  rebuilt.restoreState(
+    rebuilt.state
+        .copyWith(
+          sleepHistory: restoredState.sleepHistory,
+          hrvHistory: restoredState.hrvHistory,
+          lastHealthKitFetch: restoredState.lastHealthKitFetch,
+        )
+        .toJson(),
+  );
 }
 
 final trainingEngineProvider = FutureProvider<TrainingEngine>((ref) async {
@@ -123,6 +190,23 @@ final trainingEngineProvider = FutureProvider<TrainingEngine>((ref) async {
 // ---------------------------------------------------------------------------
 // Derived providers
 // ---------------------------------------------------------------------------
+
+/// Returns the engine-owned current rolling e1RM for exercises with strength
+/// history. Timed exercises do not create e1RM history and are intentionally
+/// absent from this map.
+final engineCurrentE1rmsProvider = FutureProvider<Map<String, double>>((
+  ref,
+) async {
+  final engine = await ref.watch(trainingEngineProvider.future);
+  final currentE1rms = <String, double>{};
+  for (final exerciseId in engine.state.e1rmHistory.keys) {
+    final current = engine.currentE1rm(exerciseId);
+    if (current != null) {
+      currentE1rms[exerciseId] = current;
+    }
+  }
+  return currentE1rms;
+});
 
 /// Returns the current per-muscle fatigue map.
 final fatigueMapProvider = FutureProvider<Map<String, FatigueStatus>>((
@@ -163,14 +247,17 @@ final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
 
   // Convert app CompletedSets to engine LoggedSets
   final engineSets = activeSets
-      .where((s) => s.reps > 0)
-      .map((s) => LoggedSet(
-            exerciseId: s.exerciseId,
-            weightKg: s.weightKg,
-            reps: s.reps,
-            rpe: s.rpe ?? 8.0,
-            completedAt: s.completedAt,
-          ))
+      .where((s) => s.reps > 0 || s.durationSeconds > 0)
+      .map(
+        (s) => LoggedSet(
+          exerciseId: s.exerciseId,
+          weightKg: s.weightKg,
+          reps: s.reps,
+          rpe: s.rpe ?? 8.0,
+          completedAt: s.completedAt,
+          durationSeconds: s.durationSeconds,
+        ),
+      )
       .toList();
 
   final fatigueMap = engine.previewFatigueWithSets(engineSets);
@@ -210,6 +297,39 @@ Future<void> resetAndRebootstrapEngine(WidgetRef ref) async {
   ref.invalidate(trainingEngineProvider);
 }
 
+@immutable
+class RoutineLoadRecommendationParams {
+  const RoutineLoadRecommendationParams({
+    required this.exerciseId,
+    required this.targetReps,
+    this.targetRpe = 8.0,
+  });
+
+  final String exerciseId;
+  final int targetReps;
+  final double targetRpe;
+
+  TargetParams get targetParams {
+    final reps = targetReps < 1 ? 1 : targetReps;
+    return TargetParams(
+      targetRepsLow: reps,
+      targetRepsHigh: reps,
+      targetRpe: targetRpe,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return other is RoutineLoadRecommendationParams &&
+        other.exerciseId == exerciseId &&
+        other.targetReps == targetReps &&
+        other.targetRpe == targetRpe;
+  }
+
+  @override
+  int get hashCode => Object.hash(exerciseId, targetReps, targetRpe);
+}
+
 /// Returns a [LoadRecommendation] for the given exercise ID, or `null` when
 /// no e1RM data is available (engine falls back to baseline, so this will
 /// always return a recommendation in practice, but guards against edge cases).
@@ -222,6 +342,26 @@ final loadRecommendationProvider =
       return engine.recommendLoad(exerciseId);
     });
 
+/// Returns a routine-aware [LoadRecommendation].
+///
+/// Routine prescriptions do not currently model target RPE, so callers pass an
+/// explicit default of 8.0 through [RoutineLoadRecommendationParams].
+final routineLoadRecommendationProvider =
+    FutureProvider.family<LoadRecommendation?, RoutineLoadRecommendationParams>(
+      (ref, params) async {
+        final engine = await ref.watch(trainingEngineProvider.future);
+        if (engine.state.sessionsIngested == 0) {
+          return null;
+        }
+
+        if (engine.currentE1rm(params.exerciseId) == null) return null;
+        return engine.recommendLoad(
+          params.exerciseId,
+          overrides: params.targetParams,
+        );
+      },
+    );
+
 final engineWeightSuggestionProvider =
     FutureProvider.family<EngineWeightSuggestion?, String>((
       ref,
@@ -233,6 +373,19 @@ final engineWeightSuggestionProvider =
       }
 
       final recommendation = engine.recommendLoad(exerciseId);
+      return ref
+          .watch(trainingEngineUiAdapterProvider)
+          .toWeightSuggestion(recommendation);
+    });
+
+final routineEngineWeightSuggestionProvider =
+    FutureProvider.family<
+      EngineWeightSuggestion?,
+      RoutineLoadRecommendationParams
+    >((ref, params) async {
+      final recommendation = await ref.watch(
+        routineLoadRecommendationProvider(params).future,
+      );
       return ref
           .watch(trainingEngineUiAdapterProvider)
           .toWeightSuggestion(recommendation);
@@ -315,7 +468,7 @@ final engineDebugPersistedStateSummaryProvider =
       final acwrState = state.acwrState;
       final acwrSummary = acwrState == null
           ? 'Unavailable'
-          : 'acute ${acwrState.acuteEwma.toStringAsFixed(1)} / '
+          : 'daily acute ${acwrState.acuteEwma.toStringAsFixed(1)} / '
                 'chronic ${acwrState.chronicEwma.toStringAsFixed(1)}';
 
       final dailyLoads = state.dailyLoads;
@@ -326,8 +479,7 @@ final engineDebugPersistedStateSummaryProvider =
               volume: dailyLoads.last.volumeLoad.toStringAsFixed(1),
             );
 
-      String resolveName(String id) =>
-          engine.registry.lookup(id)?.name ?? id;
+      String resolveName(String id) => engine.registry.lookup(id)?.name ?? id;
 
       final lastTopSetRows = state.lastTopSets.entries.toList()
         ..sort((a, b) => a.key.compareTo(b.key));
@@ -378,8 +530,7 @@ final engineDebugRecommendationRowsProvider =
     FutureProvider<List<EngineDebugRecommendationRow>>((ref) async {
       final engine = await ref.watch(trainingEngineProvider.future);
       final rows = engine.state.lastTopSets.entries.map((entry) {
-        final name =
-            engine.registry.lookup(entry.key)?.name ?? entry.key;
+        final name = engine.registry.lookup(entry.key)?.name ?? entry.key;
         return EngineDebugRecommendationRow(
           exerciseId: entry.key,
           exerciseName: name,
@@ -398,5 +549,8 @@ final engineDebugRawSnapshotProvider = FutureProvider<String>((ref) async {
 });
 
 String _formatLoggedSet(LoggedSet set) {
+  if (set.hasTimedLoad && !set.hasStrengthLoad) {
+    return '${set.durationSeconds}s @ ${set.rpe.toStringAsFixed(1)}';
+  }
   return '${set.weightKg.toStringAsFixed(1)} kg × ${set.reps} @ ${set.rpe.toStringAsFixed(1)}';
 }

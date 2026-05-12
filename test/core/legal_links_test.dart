@@ -9,6 +9,14 @@ void main() {
     expect(kotranaTermsUrl.path, endsWith('/terms.html'));
   });
 
+  test('legal links resolve to the web legal asset destinations', () {
+    expect(
+      kotranaPrivacyPolicyUrl.toString(),
+      'https://myappv4.web.app/privacy.html',
+    );
+    expect(kotranaTermsUrl.toString(), 'https://myappv4.web.app/terms.html');
+  });
+
   test('legal links are absolute URLs', () {
     expect(kotranaPrivacyPolicyUrl.hasAbsolutePath, isTrue);
     expect(kotranaTermsUrl.hasAbsolutePath, isTrue);

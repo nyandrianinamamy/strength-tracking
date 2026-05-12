@@ -2,6 +2,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
@@ -50,6 +51,31 @@ void main() {
       completedSets: const [],
       sessionNote: '',
       rpe: null,
+    );
+  }
+
+  WorkoutSession buildCompletedBenchSession() {
+    return WorkoutSession(
+      id: 'watch-session',
+      routineId: 'push_day',
+      status: WorkoutSessionStatus.completed,
+      startedAt: DateTime.utc(2026, 4, 1, 17, 0),
+      endedAt: DateTime.utc(2026, 4, 1, 18, 0),
+      lastActivityAt: DateTime.utc(2026, 4, 1, 18, 0),
+      currentExerciseIndex: 0,
+      completedSets: [
+        CompletedSet(
+          exerciseId: 'barbell_bench_press',
+          setNumber: 1,
+          weightKg: 80,
+          reps: 12,
+          completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+          note: '',
+          rpe: 8.0,
+        ),
+      ],
+      sessionNote: '',
+      rpe: 8,
     );
   }
 
@@ -171,6 +197,33 @@ void main() {
       },
     );
 
+    test('initialize listens and syncs only once', () async {
+      final seededState = DemoSeedData.initialState().copyWith(
+        sessions: [buildActiveSession('push_day')],
+      );
+      final container = buildContainer(initialState: seededState);
+      addTearDown(container.dispose);
+
+      final service = container.read(watchSyncServiceProvider);
+      service.initialize();
+      service.initialize();
+      await pumpEvents();
+
+      expect(
+        methodCalls.where((call) => call.method == 'sendSessionUpdate'),
+        hasLength(1),
+      );
+
+      methodCalls.clear();
+      watchEvents!.success(<String, Object?>{'type': 'request_sync'});
+      await pumpEvents();
+
+      expect(
+        methodCalls.where((call) => call.method == 'sendSessionUpdate'),
+        hasLength(1),
+      );
+    });
+
     test('initial sync retries when the first send fails', () async {
       final seededState = DemoSeedData.initialState().copyWith(
         sessions: [buildActiveSession('push_day')],
@@ -188,9 +241,12 @@ void main() {
       );
     });
 
-    test('watch snapshot uses engine recommendation when app history is empty', () async {
+    test('watch snapshot uses engine recommendation when available', () async {
       final seededState = DemoSeedData.initialState().copyWith(
-        sessions: [buildActiveSession('push_day')],
+        sessions: [
+          buildCompletedBenchSession(),
+          buildActiveSession('push_day'),
+        ],
       );
       final container = buildContainer(
         initialState: seededState,
@@ -212,6 +268,30 @@ void main() {
 
       expect(bench['suggestedWeightKg'], greaterThan(0));
     });
+
+    test(
+      'watch snapshot uses null when no engine recommendation exists',
+      () async {
+        final seededState = DemoSeedData.initialState().copyWith(
+          sessions: [buildActiveSession('push_day')],
+        );
+        final container = buildContainer(initialState: seededState);
+        addTearDown(container.dispose);
+
+        container.read(watchSyncServiceProvider).initialize();
+        await pumpEvents();
+
+        final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
+        final session = arguments['session'] as Map<dynamic, dynamic>;
+        final exercises = session['exercises'] as List<dynamic>;
+        final bench = exercises
+            .map((item) => item as Map<dynamic, dynamic>)
+            .firstWhere((item) => item['exerciseId'] == 'barbell_bench_press');
+
+        expect(bench, contains('suggestedWeightKg'));
+        expect(bench['suggestedWeightKg'], isNull);
+      },
+    );
 
     test('starting and completing a session sends update then end', () async {
       final container = buildContainer();

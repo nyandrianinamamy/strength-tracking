@@ -1,9 +1,5 @@
 import 'package:test/test.dart';
-import 'package:training_engine/src/progression/recommendation.dart';
-import 'package:training_engine/src/progression/performance_delta.dart';
-import 'package:training_engine/src/progression/safety_gates.dart';
-import 'package:training_engine/src/models/enums.dart';
-import 'package:training_engine/src/models/logged_set.dart';
+import 'package:training_engine/training_engine.dart';
 
 // Helper: build a LoggedSet for testing
 LoggedSet makeSet({
@@ -11,14 +7,13 @@ LoggedSet makeSet({
   double weightKg = 100.0,
   int reps = 10,
   double rpe = 8.0,
-}) =>
-    LoggedSet(
-      exerciseId: exerciseId,
-      weightKg: weightKg,
-      reps: reps,
-      rpe: rpe,
-      completedAt: DateTime.now(),
-    );
+}) => LoggedSet(
+  exerciseId: exerciseId,
+  weightKg: weightKg,
+  reps: reps,
+  rpe: rpe,
+  completedAt: DateTime.now(),
+);
 
 // Default safe context
 const _safeTargets = TargetParams(
@@ -119,7 +114,32 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.muscleFatigue));
         expect(rec.gateResult.action, equals(GateAction.reduceLoad));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.suggestedWeightKg, closeTo(90.0, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(100.0));
         expect(rec.explanation, contains('fatigue'));
+      });
+
+      test('fatigue >80 -> suggestAlternative, weight reduced by 20%', () {
+        final rec = buildRecommendation(
+          exerciseId: 'squat',
+          equipment: EquipmentClass.barbell,
+          targets: _safeTargets,
+          e1rm: 150.0,
+          previousWeightKg: 100.0,
+          lastTopSet: makeSet(reps: 10, rpe: 8.0),
+          primaryMuscleFatigue: 85, // >80 -> suggestAlternative
+          acwrZone: AcwrZone.optimal,
+          readinessScore: 85,
+        );
+
+        expect(rec.gateResult.passed, isFalse);
+        expect(rec.gateResult.reason, equals(GateReason.muscleFatigue));
+        expect(rec.gateResult.action, equals(GateAction.suggestAlternative));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.suggestedWeightKg, closeTo(80.0, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(100.0));
+        expect(rec.explanation, contains('alternative exercise'));
       });
     });
 
@@ -143,9 +163,38 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.acwrDanger));
         expect(rec.gateResult.action, equals(GateAction.deload));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
         // 140 * 0.7 = 98, rounded to 97.5
         expect(rec.suggestedWeightKg, closeTo(97.5, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(140.0));
         expect(rec.explanation, contains('dangerously high'));
+      });
+    });
+
+    // -----------------------------------------------------------------------
+    // Low readiness -> reduce by 10%
+    // -----------------------------------------------------------------------
+    group('low readiness', () {
+      test('readiness below 30 -> reduceLoad, weight reduced by 10%', () {
+        final rec = buildRecommendation(
+          exerciseId: 'bench',
+          equipment: EquipmentClass.barbell,
+          targets: _safeTargets,
+          e1rm: 120.0,
+          previousWeightKg: 80.0,
+          lastTopSet: makeSet(reps: 10, rpe: 8.0),
+          primaryMuscleFatigue: 20,
+          acwrZone: AcwrZone.optimal,
+          readinessScore: 25,
+        );
+
+        expect(rec.gateResult.passed, isFalse);
+        expect(rec.gateResult.reason, equals(GateReason.lowReadiness));
+        expect(rec.gateResult.action, equals(GateAction.reduceLoad));
+        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.suggestedWeightKg, closeTo(72.5, 0.1));
+        expect(rec.suggestedWeightKg!, lessThan(80.0));
+        expect(rec.explanation, contains('Readiness score is low'));
       });
     });
 
@@ -272,5 +321,74 @@ void main() {
         expect(rec.explanation, contains('regress'));
       });
     });
+  });
+
+  group('routine target overrides', () {
+    test(
+      'treats seeded 5-rep strength work as progression when routine target is met',
+      () {
+        final engine = TrainingEngine(
+          registry: ExerciseRegistry.withDefaults(),
+          profile: UserProfile(
+            sex: Sex.male,
+            age: 32,
+            bodyWeightKg: 84,
+            experience: ExperienceLevel.intermediate,
+            goal: HypertrophyGoal.strength,
+            availableDays: const [1, 3, 5],
+            maxSessionDuration: const Duration(minutes: 60),
+            createdAt: DateTime.utc(2026, 1, 1),
+          ),
+        );
+        final completedAt = DateTime.utc(2026, 5, 1, 18, 0);
+
+        engine.ingestSession(
+          EngineSession(
+            id: 'seeded-strength-routine-session',
+            startedAt: completedAt.subtract(const Duration(hours: 1)),
+            endedAt: completedAt,
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_bench_press',
+                weightKg: 100,
+                reps: 6,
+                rpe: 8.0,
+                completedAt: completedAt.subtract(const Duration(minutes: 40)),
+              ),
+            ],
+          ),
+        );
+
+        final defaultRecommendation = engine.recommendLoad(
+          'barbell_bench_press',
+          at: completedAt.add(const Duration(days: 8)),
+        );
+        final routineRecommendation = engine.recommendLoad(
+          'barbell_bench_press',
+          overrides: const TargetParams(
+            targetRepsLow: 5,
+            targetRepsHigh: 5,
+            targetRpe: 8.0,
+          ),
+          at: completedAt.add(const Duration(days: 8)),
+        );
+
+        expect(
+          defaultRecommendation.targets.targetRepsHigh,
+          12,
+          reason: 'Compound upper defaults should stay available.',
+        );
+        expect(
+          defaultRecommendation.delta,
+          PerformanceDelta.maintenance,
+          reason: 'Six reps is below the default 8-12 progression target.',
+        );
+        expect(routineRecommendation.targets.targetRepsLow, 5);
+        expect(routineRecommendation.targets.targetRepsHigh, 5);
+        expect(routineRecommendation.targets.targetRpe, 8.0);
+        expect(routineRecommendation.delta, PerformanceDelta.progression);
+        expect(routineRecommendation.suggestedWeightKg, greaterThan(100));
+      },
+    );
   });
 }

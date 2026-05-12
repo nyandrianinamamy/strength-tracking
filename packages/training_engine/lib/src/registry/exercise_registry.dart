@@ -12,9 +12,9 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
 
   /// Creates a registry pre-populated with the default exercise library.
   ExerciseRegistry.withDefaults()
-      : _builtIn = Map.fromEntries(
-          defaultExercises.map((e) => MapEntry(e.id, e)),
-        );
+    : _builtIn = Map.fromEntries(
+        defaultExercises.map((e) => MapEntry(e.id, e)),
+      );
 
   /// Creates an empty registry (useful for testing or custom-only usage).
   ExerciseRegistry.empty() : _builtIn = {};
@@ -25,6 +25,7 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
 
   /// Returns the [EngineExercise] for [id], checking custom exercises first.
   /// Returns `null` if not found.
+  @override
   EngineExercise? lookup(String id) => _custom[id] ?? _builtIn[id];
 
   /// Alias for [lookup] — required by the fatigue substitution subsystem.
@@ -152,7 +153,12 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
             .where(
               (ex) =>
                   isUpper(ex) &&
-                  hasPrimaryMuscle(ex, {'pectorals', 'anterior_deltoid', 'lateral_deltoid', 'triceps'}),
+                  hasPrimaryMuscle(ex, {
+                    'pectorals',
+                    'anterior_deltoid',
+                    'lateral_deltoid',
+                    'triceps',
+                  }),
             )
             .toList();
 
@@ -160,7 +166,8 @@ class ExerciseRegistry implements ExerciseRegistryLookup {
         return filtered
             .where(
               (ex) =>
-                  isUpper(ex) && hasPrimaryMuscle(ex, {'lats', 'biceps', 'rear_deltoid'}),
+                  isUpper(ex) &&
+                  hasPrimaryMuscle(ex, {'lats', 'biceps', 'rear_deltoid'}),
             )
             .toList();
 

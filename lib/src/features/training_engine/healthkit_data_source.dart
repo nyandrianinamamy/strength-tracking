@@ -2,18 +2,28 @@ import 'package:flutter/foundation.dart';
 import 'package:health/health.dart';
 import 'package:training_engine/training_engine.dart';
 
+enum HealthKitFetchStatus { success, noSamples, unavailable, denied, error }
+
+class HealthKitFetchResult<T> {
+  const HealthKitFetchResult({required this.status, required this.records});
+
+  final HealthKitFetchStatus status;
+  final List<T> records;
+
+  bool get shouldStampFetch => true;
+}
+
 /// Reads sleep and HRV data from Apple HealthKit via the `health` package.
 ///
-/// Falls back gracefully to empty results when HealthKit is unavailable
-/// (e.g. on simulators, web, or when the user denies authorization).
+/// Returns explicit fetch statuses so callers can distinguish unavailable
+/// platforms, denied authorization, empty HealthKit stores, and fetch errors.
 class HealthKitDataSource {
   const HealthKitDataSource();
 
   static final _health = Health();
 
   /// Returns `true` only on iOS — HealthKit is not available elsewhere.
-  static bool get _isAvailable =>
-      defaultTargetPlatform == TargetPlatform.iOS;
+  static bool get _isAvailable => defaultTargetPlatform == TargetPlatform.iOS;
 
   static const _readTypes = [
     HealthDataType.SLEEP_ASLEEP,
@@ -41,15 +51,43 @@ class HealthKitDataSource {
     }
   }
 
+  Future<HealthKitFetchStatus> _requestAuthorizationStatus() async {
+    if (!_isAvailable) return HealthKitFetchStatus.unavailable;
+    try {
+      final authorized = await _health.requestAuthorization(
+        _readTypes,
+        permissions: _readTypes.map((_) => HealthDataAccess.READ).toList(),
+      );
+      return authorized
+          ? HealthKitFetchStatus.success
+          : HealthKitFetchStatus.denied;
+    } catch (e) {
+      debugPrint('[HealthKit] Authorization failed: $e');
+      return HealthKitFetchStatus.error;
+    }
+  }
+
   /// Fetches recent sleep records from HealthKit, grouped by calendar night.
   ///
   /// Each returned [SleepRecord] represents one night of sleep, with
   /// total / deep / REM / core (light) breakdowns aggregated from individual
   /// HealthKit sleep samples.
   Future<List<SleepRecord>> fetchRecentSleep({int days = 14}) async {
+    final result = await fetchRecentSleepResult(days: days);
+    return result.records;
+  }
+
+  Future<HealthKitFetchResult<SleepRecord>> fetchRecentSleepResult({
+    int days = 14,
+  }) async {
     try {
-      final authorized = await requestAuthorization();
-      if (!authorized) return [];
+      final authorizationStatus = await _requestAuthorizationStatus();
+      if (authorizationStatus != HealthKitFetchStatus.success) {
+        return HealthKitFetchResult(
+          status: authorizationStatus,
+          records: const [],
+        );
+      }
 
       final now = DateTime.now();
       final start = now.subtract(Duration(days: days));
@@ -65,7 +103,12 @@ class HealthKitDataSource {
         endTime: now,
       );
 
-      if (samples.isEmpty) return [];
+      if (samples.isEmpty) {
+        return const HealthKitFetchResult(
+          status: HealthKitFetchStatus.noSamples,
+          records: [],
+        );
+      }
 
       // Group samples by the night they belong to.
       // A sleep sample's "night" is the date of the start time,
@@ -95,13 +138,11 @@ class HealthKitDataSource {
         }
       }
 
-      return byNight.entries.map((entry) {
+      final records = byNight.entries.map((entry) {
         final acc = entry.value;
         // If we have typed breakdowns, total is already summed.
         // If only generic SLEEP_ASLEEP data, use that as total.
-        final total = acc.total > Duration.zero
-            ? acc.total
-            : acc.genericAsleep;
+        final total = acc.total > Duration.zero ? acc.total : acc.genericAsleep;
         return SleepRecord(
           date: entry.key,
           totalSleep: total,
@@ -109,11 +150,19 @@ class HealthKitDataSource {
           remSleep: acc.rem,
           coreSleep: acc.core,
         );
-      }).toList()
-        ..sort((a, b) => a.date.compareTo(b.date));
+      }).toList()..sort((a, b) => a.date.compareTo(b.date));
+      return HealthKitFetchResult(
+        status: records.isEmpty
+            ? HealthKitFetchStatus.noSamples
+            : HealthKitFetchStatus.success,
+        records: records,
+      );
     } catch (e) {
       debugPrint('[HealthKit] fetchRecentSleep failed: $e');
-      return [];
+      return const HealthKitFetchResult(
+        status: HealthKitFetchStatus.error,
+        records: [],
+      );
     }
   }
 
@@ -122,9 +171,21 @@ class HealthKitDataSource {
   /// Returns one [HrvRecord] per calendar day, using the latest SDNN sample
   /// for that day and the corresponding resting heart rate (if available).
   Future<List<HrvRecord>> fetchRecentHrv({int days = 14}) async {
+    final result = await fetchRecentHrvResult(days: days);
+    return result.records;
+  }
+
+  Future<HealthKitFetchResult<HrvRecord>> fetchRecentHrvResult({
+    int days = 14,
+  }) async {
     try {
-      final authorized = await requestAuthorization();
-      if (!authorized) return [];
+      final authorizationStatus = await _requestAuthorizationStatus();
+      if (authorizationStatus != HealthKitFetchStatus.success) {
+        return HealthKitFetchResult(
+          status: authorizationStatus,
+          records: const [],
+        );
+      }
 
       final now = DateTime.now();
       final start = now.subtract(Duration(days: days));
@@ -141,7 +202,12 @@ class HealthKitDataSource {
         endTime: now,
       );
 
-      if (hrvSamples.isEmpty) return [];
+      if (hrvSamples.isEmpty) {
+        return const HealthKitFetchResult(
+          status: HealthKitFetchStatus.noSamples,
+          records: [],
+        );
+      }
 
       // Index resting HR by date for quick lookup.
       final rhrByDate = <DateTime, double>{};
@@ -158,25 +224,37 @@ class HealthKitDataSource {
       for (final sample in hrvSamples) {
         final date = _dateOnly(sample.dateFrom);
         final existing = hrvByDate[date];
-        if (existing == null ||
-            sample.dateFrom.isAfter(existing.dateFrom)) {
+        if (existing == null || sample.dateFrom.isAfter(existing.dateFrom)) {
           hrvByDate[date] = sample;
         }
       }
 
-      return hrvByDate.entries.map((entry) {
-        final sdnn = _numericValue(entry.value);
-        if (sdnn == null) return null;
-        return HrvRecord(
-          date: entry.key,
-          sdnn: sdnn,
-          restingHeartRate: rhrByDate[entry.key],
-        );
-      }).whereType<HrvRecord>().toList()
-        ..sort((a, b) => a.date.compareTo(b.date));
+      final records =
+          hrvByDate.entries
+              .map((entry) {
+                final sdnn = _numericValue(entry.value);
+                if (sdnn == null) return null;
+                return HrvRecord(
+                  date: entry.key,
+                  sdnn: sdnn,
+                  restingHeartRate: rhrByDate[entry.key],
+                );
+              })
+              .whereType<HrvRecord>()
+              .toList()
+            ..sort((a, b) => a.date.compareTo(b.date));
+      return HealthKitFetchResult(
+        status: records.isEmpty
+            ? HealthKitFetchStatus.noSamples
+            : HealthKitFetchStatus.success,
+        records: records,
+      );
     } catch (e) {
       debugPrint('[HealthKit] fetchRecentHrv failed: $e');
-      return [];
+      return const HealthKitFetchResult(
+        status: HealthKitFetchStatus.error,
+        records: [],
+      );
     }
   }
 
@@ -194,8 +272,7 @@ class HealthKitDataSource {
     return DateTime(timestamp.year, timestamp.month, timestamp.day);
   }
 
-  static DateTime _dateOnly(DateTime dt) =>
-      DateTime(dt.year, dt.month, dt.day);
+  static DateTime _dateOnly(DateTime dt) => DateTime(dt.year, dt.month, dt.day);
 
   static double? _numericValue(HealthDataPoint point) {
     final value = point.value;

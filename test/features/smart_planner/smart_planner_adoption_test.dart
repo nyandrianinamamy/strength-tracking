@@ -5,6 +5,8 @@ import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/smart_planner_controller.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:training_engine/training_engine.dart';
 
 ProviderContainer _buildContainer() {
   final emptyState = AppState.empty();
@@ -14,7 +16,26 @@ ProviderContainer _buildContainer() {
     overrides: [
       appStateRepositoryProvider.overrideWithValue(repo),
       initialAppStateProvider.overrideWithValue(emptyState),
+      trainingEngineProvider.overrideWith(
+        (ref) async => _neutralTrainingEngine(),
+      ),
     ],
+  );
+}
+
+TrainingEngine _neutralTrainingEngine() {
+  return TrainingEngine(
+    registry: ExerciseRegistry.withDefaults(),
+    profile: UserProfile(
+      sex: Sex.female,
+      age: 30,
+      bodyWeightKg: 70,
+      experience: ExperienceLevel.intermediate,
+      goal: HypertrophyGoal.hypertrophy,
+      availableDays: const [1, 3, 5],
+      maxSessionDuration: const Duration(minutes: 60),
+      createdAt: DateTime(2026, 5, 11),
+    ),
   );
 }
 
@@ -38,20 +59,20 @@ void main() {
 
     test(
       '2. adopt() with 3 days creates 3 routines, 1 group, sets activeRoutineGroupId',
-      () {
+      () async {
         final container = _buildContainer();
         addTearDown(container.dispose);
 
-        final planner =
-            container.read(smartPlannerControllerProvider.notifier);
-        final appStateCtrl =
-            container.read(appStateControllerProvider.notifier);
+        final planner = container.read(smartPlannerControllerProvider.notifier);
+        final appStateCtrl = container.read(
+          appStateControllerProvider.notifier,
+        );
 
         // Select 3 non-consecutive days → fullBody split
         planner.toggleDay(1); // Mon
         planner.toggleDay(3); // Wed
         planner.toggleDay(5); // Fri
-        planner.generatePlan([]);
+        await planner.generatePlan([]);
 
         // Verify plan was generated with 3 sessions
         final plannerState = container.read(smartPlannerControllerProvider);
@@ -97,20 +118,20 @@ void main() {
 
     test(
       '3. adopt() routines have correct category and day-based names',
-      () {
+      () async {
         final container = _buildContainer();
         addTearDown(container.dispose);
 
-        final planner =
-            container.read(smartPlannerControllerProvider.notifier);
-        final appStateCtrl =
-            container.read(appStateControllerProvider.notifier);
+        final planner = container.read(smartPlannerControllerProvider.notifier);
+        final appStateCtrl = container.read(
+          appStateControllerProvider.notifier,
+        );
 
         // 3 consecutive days → pushPullLegs split
         planner.toggleDay(1); // Mon
         planner.toggleDay(2); // Tue
         planner.toggleDay(3); // Wed
-        planner.generatePlan([]);
+        await planner.generatePlan([]);
 
         planner.adopt(appStateCtrl);
 
@@ -131,19 +152,19 @@ void main() {
 
     test(
       '4. each adopted routine maps exercises with correct fields',
-      () {
+      () async {
         final container = _buildContainer();
         addTearDown(container.dispose);
 
-        final planner =
-            container.read(smartPlannerControllerProvider.notifier);
-        final appStateCtrl =
-            container.read(appStateControllerProvider.notifier);
+        final planner = container.read(smartPlannerControllerProvider.notifier);
+        final appStateCtrl = container.read(
+          appStateControllerProvider.notifier,
+        );
 
         planner.toggleDay(1);
         planner.toggleDay(3);
         planner.toggleDay(5);
-        planner.generatePlan([]);
+        await planner.generatePlan([]);
 
         final plannerState = container.read(smartPlannerControllerProvider);
         final sessions = plannerState.generatedPlan!.sessions;
@@ -179,20 +200,20 @@ void main() {
 
     test(
       '5. adopt() appends to existing routines without overwriting',
-      () {
+      () async {
         final container = _buildContainer();
         addTearDown(container.dispose);
 
-        final planner =
-            container.read(smartPlannerControllerProvider.notifier);
-        final appStateCtrl =
-            container.read(appStateControllerProvider.notifier);
+        final planner = container.read(smartPlannerControllerProvider.notifier);
+        final appStateCtrl = container.read(
+          appStateControllerProvider.notifier,
+        );
 
         // Generate and adopt once
         planner.toggleDay(1);
         planner.toggleDay(3);
         planner.toggleDay(5);
-        planner.generatePlan([]);
+        await planner.generatePlan([]);
         planner.adopt(appStateCtrl);
 
         final firstState = container.read(appStateControllerProvider);
@@ -200,7 +221,7 @@ void main() {
         expect(firstState.routineGroups, hasLength(1));
 
         // Generate and adopt a second time
-        planner.generatePlan([]);
+        await planner.generatePlan([]);
         planner.adopt(appStateCtrl);
 
         final secondState = container.read(appStateControllerProvider);
@@ -211,18 +232,18 @@ void main() {
 
     test(
       '6. adopt() creates Exercise records for engine-default exercise IDs',
-      () {
+      () async {
         final container = _buildContainer();
         addTearDown(container.dispose);
 
-        final planner =
-            container.read(smartPlannerControllerProvider.notifier);
-        final appStateCtrl =
-            container.read(appStateControllerProvider.notifier);
+        final planner = container.read(smartPlannerControllerProvider.notifier);
+        final appStateCtrl = container.read(
+          appStateControllerProvider.notifier,
+        );
 
         // Start with empty exercises — planner will use engine defaults
         planner.toggleDay(1);
-        planner.generatePlan([]);
+        await planner.generatePlan([]);
 
         final plannerState = container.read(smartPlannerControllerProvider);
         final plannedExerciseIds = plannerState.generatedPlan!.sessions

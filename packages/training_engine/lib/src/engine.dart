@@ -8,11 +8,13 @@ import 'fatigue/impulse_calculator.dart' as impulse_lib;
 import 'fatigue/muscle_normalizer.dart';
 import 'models/daily_load.dart';
 import 'models/e1rm_estimate.dart';
+import 'models/engine_exercise.dart';
 import 'models/engine_session.dart';
 import 'models/enums.dart';
 import 'models/fatigue_impulse.dart';
 import 'models/hrv_record.dart';
 import 'models/logged_set.dart';
+import 'models/muscle_activation.dart';
 import 'models/sleep_record.dart';
 import 'models/training_state.dart';
 import 'models/user_profile.dart';
@@ -26,6 +28,64 @@ import 'readiness/hrv_scorer.dart' as hrv_lib;
 import 'readiness/sleep_scorer.dart' as sleep_lib;
 import 'registry/exercise_registry.dart';
 
+const _e1rmTieRelativeTolerance = 0.01;
+const _recommendationSynergistCoefficientThreshold = 0.5;
+const _recommendationSynergistMaterialGap = 10.0;
+
+class _E1rmCandidate {
+  final LoggedSet set;
+  final double value;
+  final double rMax;
+  final double confidence;
+
+  const _E1rmCandidate({
+    required this.set,
+    required this.value,
+    required this.rMax,
+    required this.confidence,
+  });
+}
+
+_E1rmCandidate _e1rmCandidateFor(LoggedSet set) {
+  final rm = formula_lib.rMax(set.reps, set.rpe);
+  return _E1rmCandidate(
+    set: set,
+    value: e1rm_lib.compositeE1rm(
+      weight: set.weightKg,
+      reps: set.reps,
+      rpe: set.rpe,
+    ),
+    rMax: rm,
+    confidence: e1rm_lib.estimateConfidence(rm),
+  );
+}
+
+bool _isBetterE1rmCandidate(_E1rmCandidate candidate, _E1rmCandidate best) {
+  final maxMagnitude = candidate.value.abs() > best.value.abs()
+      ? candidate.value.abs()
+      : best.value.abs();
+  final tolerance = maxMagnitude * _e1rmTieRelativeTolerance;
+  final valueDifference = candidate.value - best.value;
+  if (valueDifference.abs() > tolerance) {
+    return valueDifference > 0;
+  }
+  if (candidate.confidence != best.confidence) {
+    return candidate.confidence > best.confidence;
+  }
+  if (candidate.set.weightKg != best.set.weightKg) {
+    return candidate.set.weightKg > best.set.weightKg;
+  }
+  if (candidate.set.reps != best.set.reps) {
+    return candidate.set.reps > best.set.reps;
+  }
+  return false;
+}
+
+bool _isHighCoefficientSynergist(MuscleActivation activation) {
+  return activation.role == MuscleRole.synergist &&
+      activation.coefficient >= _recommendationSynergistCoefficientThreshold;
+}
+
 /// Single entry-point that wires all training subsystems together.
 ///
 /// The engine holds a [TrainingState] which accumulates data across
@@ -36,7 +96,7 @@ class TrainingEngine {
   TrainingState _state;
 
   TrainingEngine({required this.registry, required UserProfile profile})
-      : _state = TrainingState.initial(profile);
+    : _state = TrainingState.initial(profile);
 
   // ---------------------------------------------------------------------------
   // Ingestion
@@ -45,64 +105,75 @@ class TrainingEngine {
   /// Ingests a completed [session], updating e1RM estimates, fatigue log,
   /// ACWR EWMA, and the lastTopSets map.
   void ingestSession(EngineSession session) {
+    if (_state.ingestedSessionIds.contains(session.id)) {
+      return;
+    }
+
     // Group sets by exerciseId
     final setsByExercise = <String, List<LoggedSet>>{};
     for (final set in session.sets) {
       setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
     }
 
-    final newE1rmHistory =
-        Map<String, List<E1rmEstimate>>.from(_state.e1rmHistory);
-    final newFatigueLog =
-        Map<String, List<FatigueImpulse>>.from(_state.fatigueLog);
+    final newE1rmHistory = Map<String, List<E1rmEstimate>>.from(
+      _state.e1rmHistory,
+    );
+    final newFatigueLog = Map<String, List<FatigueImpulse>>.from(
+      _state.fatigueLog,
+    );
     final newLastTopSets = Map<String, LoggedSet>.from(_state.lastTopSets);
 
     for (final entry in setsByExercise.entries) {
       final exerciseId = entry.key;
       final sets = entry.value;
+      final strengthSets = sets.where((set) => set.hasStrengthLoad).toList();
 
-      // Find the heaviest set (by weight, then reps as tiebreaker)
-      final topSet = sets.reduce((a, b) {
-        if (a.weightKg != b.weightKg) return a.weightKg > b.weightKg ? a : b;
-        return a.reps >= b.reps ? a : b;
-      });
+      _E1rmCandidate? bestE1rmCandidate;
+      if (strengthSets.isNotEmpty) {
+        // Find the heaviest strength set (by weight, then reps as tiebreaker)
+        final topSet = strengthSets.reduce((a, b) {
+          if (a.weightKg != b.weightKg) return a.weightKg > b.weightKg ? a : b;
+          return a.reps >= b.reps ? a : b;
+        });
 
-      // Update lastTopSets
-      newLastTopSets[exerciseId] = topSet;
+        // Update lastTopSets only for strength sets.
+        newLastTopSets[exerciseId] = topSet;
 
-      // Compute composite e1RM for the heaviest set
-      final rm = formula_lib.rMax(topSet.reps, topSet.rpe);
-      final e1rmValue = e1rm_lib.compositeE1rm(
-        weight: topSet.weightKg,
-        reps: topSet.reps,
-        rpe: topSet.rpe,
-      );
-      final confidence = e1rm_lib.estimateConfidence(rm);
+        bestE1rmCandidate = strengthSets.map(_e1rmCandidateFor).reduce((
+          best,
+          candidate,
+        ) {
+          return _isBetterE1rmCandidate(candidate, best) ? candidate : best;
+        });
 
-      final estimate = E1rmEstimate(
-        exerciseId: exerciseId,
-        value: e1rmValue,
-        rMax: rm,
-        confidence: confidence,
-        estimatedAt: session.endedAt,
-        fromEstimatedRpe: topSet.rpeEstimated,
-      );
+        final estimate = E1rmEstimate(
+          exerciseId: exerciseId,
+          value: bestE1rmCandidate.value,
+          rMax: bestE1rmCandidate.rMax,
+          confidence: bestE1rmCandidate.confidence,
+          estimatedAt: session.endedAt,
+          fromEstimatedRpe: bestE1rmCandidate.set.rpeEstimated,
+        );
 
-      final history = List<E1rmEstimate>.from(
-        newE1rmHistory[exerciseId] ?? [],
-      )..add(estimate);
-      // Trim to most recent 20 estimates
-      newE1rmHistory[exerciseId] = history.length > 20
-          ? history.sublist(history.length - 20)
-          : history;
+        final history = List<E1rmEstimate>.from(
+          newE1rmHistory[exerciseId] ?? [],
+        )..add(estimate);
+        // Trim to most recent 20 estimates
+        newE1rmHistory[exerciseId] = history.length > 20
+            ? history.sublist(history.length - 20)
+            : history;
+      }
 
       // Look up exercise for fatigue impulse calculation
       final exercise = registry.lookup(exerciseId);
       if (exercise != null) {
+        final e1rmForFatigue =
+            bestE1rmCandidate?.value ??
+            currentE1rm(exerciseId, session.endedAt)!;
         final impulses = impulse_lib.calculateImpulses(
           sets: sets,
           exercise: exercise,
-          e1rm: e1rmValue,
+          e1rm: e1rmForFatigue,
           sessionEndedAt: session.endedAt,
         );
         for (final impulse in impulses) {
@@ -117,28 +188,37 @@ class TrainingEngine {
     // Prune old fatigue impulses (>7 days)
     final now = session.endedAt;
     for (final muscleId in newFatigueLog.keys.toList()) {
-      newFatigueLog[muscleId] =
-          fatigue_lib.pruneOldImpulses(newFatigueLog[muscleId]!, now);
+      newFatigueLog[muscleId] = fatigue_lib.pruneOldImpulses(
+        newFatigueLog[muscleId]!,
+        now,
+      );
     }
 
     // Compute daily volume load (sum of weight * reps across all sets)
     double volumeLoad = 0.0;
     for (final set in session.sets) {
-      volumeLoad += set.weightKg * set.reps;
+      volumeLoad += set.hasStrengthLoad
+          ? set.weightKg * set.reps
+          : impulse_lib.trainingStressForSet(set);
     }
 
-    // Trim and update daily loads (keep 35 days)
-    final newDailyLoad = DailyLoad(date: session.endedAt, volumeLoad: volumeLoad);
-    final dailyLoads = List<DailyLoad>.from(_state.dailyLoads)..add(newDailyLoad);
-    final cutoff = now.subtract(const Duration(days: 35));
-    final trimmedDailyLoads =
-        dailyLoads.where((d) => !d.date.isBefore(cutoff)).toList();
+    // Aggregate and trim local-calendar-day loads (keep 35 days).
+    final newDailyLoad = DailyLoad(
+      date: ewma_lib.localCalendarDay(session.endedAt),
+      volumeLoad: volumeLoad,
+    );
+    final cutoff = ewma_lib
+        .localCalendarDay(now)
+        .subtract(const Duration(days: 35));
+    final trimmedDailyLoads = ewma_lib.aggregateDailyLoads([
+      ..._state.dailyLoads,
+      newDailyLoad,
+    ], cutoff: cutoff);
 
-    // Update EWMA
-    final newAcwrState = ewma_lib.updateEwma(
-      previous: _state.acwrState,
-      todayLoad: volumeLoad,
-      today: session.endedAt,
+    // Recompute EWMA from sorted daily aggregates so out-of-order history and
+    // same-day multi-session ingestion produce deterministic ACWR state.
+    final newAcwrState = ewma_lib.recomputeEwmaFromDailyLoads(
+      trimmedDailyLoads,
     );
 
     _state = _state.copyWith(
@@ -149,6 +229,7 @@ class TrainingEngine {
       lastTopSets: newLastTopSets,
       lastUpdated: DateTime.now(),
       sessionsIngested: _state.sessionsIngested + 1,
+      ingestedSessionIds: {..._state.ingestedSessionIds, session.id},
     );
   }
 
@@ -168,10 +249,7 @@ class TrainingEngine {
     final history = List<HrvRecord>.from(_state.hrvHistory)..add(record);
     final cutoff = record.date.subtract(const Duration(days: 14));
     final trimmed = history.where((r) => !r.date.isBefore(cutoff)).toList();
-    _state = _state.copyWith(
-      hrvHistory: trimmed,
-      lastUpdated: DateTime.now(),
-    );
+    _state = _state.copyWith(hrvHistory: trimmed, lastUpdated: DateTime.now());
   }
 
   /// Re-fetches HealthKit data if the last fetch is older than [threshold].
@@ -189,16 +267,18 @@ class TrainingEngine {
       return; // Still fresh
     }
 
-    // Replace history with fresh data to avoid duplicates
+    // Replace non-empty fresh data to avoid duplicates. Empty fetches are
+    // treated as attempted refreshes without erasing previously fetched data.
     final sleepRecords = await fetchSleep();
-    _state = _state.copyWith(sleepHistory: sleepRecords);
+    if (sleepRecords.isNotEmpty) {
+      _state = _state.copyWith(sleepHistory: sleepRecords);
+    }
 
     final hrvRecords = await fetchHrv();
-    _state = _state.copyWith(hrvHistory: hrvRecords);
-
-    if (sleepRecords.isNotEmpty || hrvRecords.isNotEmpty) {
-      _state = _state.copyWith(lastHealthKitFetch: now);
+    if (hrvRecords.isNotEmpty) {
+      _state = _state.copyWith(hrvHistory: hrvRecords);
     }
+    _state = _state.copyWith(lastHealthKitFetch: now);
   }
 
   /// Marks the current time as the last HealthKit fetch.
@@ -287,9 +367,7 @@ class TrainingEngine {
         sessionEndedAt: now,
       );
       for (final impulse in impulses) {
-        previewImpulses
-            .putIfAbsent(impulse.muscleId, () => [])
-            .add(impulse);
+        previewImpulses.putIfAbsent(impulse.muscleId, () => []).add(impulse);
       }
     }
 
@@ -302,11 +380,7 @@ class TrainingEngine {
       mergedLog.putIfAbsent(entry.key, () => []).addAll(entry.value);
     }
 
-    return fatigue_lib.fullFatigueMap(
-      mergedLog,
-      now,
-      age: _state.profile.age,
-    );
+    return fatigue_lib.fullFatigueMap(mergedLog, now, age: _state.profile.age);
   }
 
   /// Returns the current ACWR status, or `null` if not enough data.
@@ -319,12 +393,12 @@ class TrainingEngine {
   readiness_lib.ReadinessScore computeReadiness({double? manualSlider}) {
     final now = DateTime.now();
     final acwr = currentAcwr();
-    final sleepScore = sleep_lib.scoreSleep(_state.sleepHistory, now);
-    final hrvScore = hrv_lib.scoreHrv(_state.hrvHistory, now);
+    final sleepDetails = sleep_lib.scoreSleepDetailed(_state.sleepHistory, now);
+    final hrvDetails = hrv_lib.scoreHrvDetailed(_state.hrvHistory, now);
     return readiness_lib.computeReadiness(
       acwr: acwr,
-      sleepScore: sleepScore,
-      hrvScore: hrvScore,
+      sleepDetails: sleepDetails,
+      hrvDetails: hrvDetails,
       manualSlider: manualSlider,
     );
   }
@@ -345,7 +419,8 @@ class TrainingEngine {
     final equipment = exercise?.equipment ?? EquipmentClass.barbell;
 
     // Default target params from movement class
-    final targets = overrides ??
+    final targets =
+        overrides ??
         (exercise != null
             ? TargetParams.defaultFor(exercise.movement)
             : const TargetParams(
@@ -357,16 +432,10 @@ class TrainingEngine {
     // Current e1RM
     final e1rm = currentE1rm(exerciseId, now);
 
-    // Primary muscle fatigue
-    double primaryFatigue = 0.0;
+    // Fatigue input for safety gates.
+    double recommendationFatigue = 0.0;
     if (exercise != null) {
-      final primaryMuscle = exercise.muscleMap
-          .where((m) => m.role == MuscleRole.primary)
-          .map((m) => m.muscleId)
-          .firstOrNull;
-      if (primaryMuscle != null) {
-        primaryFatigue = currentFatigue(primaryMuscle, now);
-      }
+      recommendationFatigue = _recommendationFatigue(exercise, now);
     }
 
     // ACWR zone
@@ -388,10 +457,37 @@ class TrainingEngine {
       e1rm: e1rm,
       previousWeightKg: previousWeightKg,
       lastTopSet: lastTopSet,
-      primaryMuscleFatigue: primaryFatigue,
+      primaryMuscleFatigue: recommendationFatigue,
       acwrZone: acwrZone,
       readinessScore: readiness.score,
     );
+  }
+
+  double _recommendationFatigue(EngineExercise exercise, DateTime at) {
+    var primaryMax = 0.0;
+    for (final activation in exercise.muscleMap) {
+      if (activation.role == MuscleRole.primary) {
+        final fatigue = currentFatigue(activation.muscleId, at);
+        if (fatigue > primaryMax) {
+          primaryMax = fatigue;
+        }
+      }
+    }
+
+    var highSynergistMax = 0.0;
+    for (final activation in exercise.muscleMap) {
+      if (_isHighCoefficientSynergist(activation)) {
+        final fatigue = currentFatigue(activation.muscleId, at);
+        if (fatigue > highSynergistMax) {
+          highSynergistMax = fatigue;
+        }
+      }
+    }
+
+    if (highSynergistMax > primaryMax + _recommendationSynergistMaterialGap) {
+      return highSynergistMax;
+    }
+    return primaryMax;
   }
 
   // ---------------------------------------------------------------------------
@@ -417,7 +513,11 @@ class TrainingEngine {
     final fatigueMap = <String, double>{};
     for (final entry in _state.fatigueLog.entries) {
       fatigueMap[entry.key] = fatigue_lib.currentFatigue(
-        entry.key, entry.value, now, age: _state.profile.age);
+        entry.key,
+        entry.value,
+        now,
+        age: _state.profile.age,
+      );
     }
     return sub_lib.adjustSessionForFatigue(session, fatigueMap, registry);
   }
@@ -449,10 +549,7 @@ class TrainingEngine {
     for (final entry in log.entries) {
       final canonical = MuscleNormalizer.normalize(entry.key);
       if (canonical != entry.key) changed = true;
-      migrated[canonical] = [
-        ...migrated[canonical] ?? [],
-        ...entry.value,
-      ];
+      migrated[canonical] = [...migrated[canonical] ?? [], ...entry.value];
     }
     if (changed) {
       _state = _state.copyWith(fatigueLog: migrated);
@@ -468,7 +565,9 @@ class TrainingEngine {
       ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
 
     for (final session in sorted) {
-      final fallbackRpe = (session.sessionRpe ?? 8.0).clamp(5.0, 10.0);
+      final fallbackRpe = _isSupportedStrengthRpe(session.sessionRpe)
+          ? session.sessionRpe!
+          : 8.0;
 
       final backfilledSets = session.sets.map((set) {
         if (set.rpeEstimated) {
@@ -479,6 +578,7 @@ class TrainingEngine {
             rpe: fallbackRpe,
             completedAt: set.completedAt,
             rpeEstimated: true,
+            durationSeconds: set.durationSeconds,
           );
         }
         return set;
@@ -494,4 +594,10 @@ class TrainingEngine {
       ingestSession(patched);
     }
   }
+}
+
+bool _isSupportedStrengthRpe(double? rpe) {
+  return rpe != null &&
+      rpe >= formula_lib.minStrengthRpe &&
+      rpe <= formula_lib.maxStrengthRpe;
 }

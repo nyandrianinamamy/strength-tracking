@@ -25,7 +25,9 @@ class TrainingEngineController {
     return _mutate((engine) => engine.ingestHrv(record));
   }
 
-  Future<TrainingEngine> _mutate(void Function(TrainingEngine engine) update) async {
+  Future<TrainingEngine> _mutate(
+    void Function(TrainingEngine engine) update,
+  ) async {
     final engine = await loadTrainingEngine(
       appState: _ref.read(appStateControllerProvider),
       adapter: _ref.read(trainingEngineAdapterProvider),

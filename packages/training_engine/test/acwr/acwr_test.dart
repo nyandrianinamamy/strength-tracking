@@ -1,8 +1,57 @@
 import 'package:test/test.dart';
+import 'package:training_engine/training_engine.dart'
+    show
+        EngineSession,
+        ExerciseRegistry,
+        ExperienceLevel,
+        HypertrophyGoal,
+        LoggedSet,
+        Sex,
+        TrainingEngine,
+        UserProfile;
 import 'package:training_engine/src/acwr/ewma.dart';
 import 'package:training_engine/src/acwr/acwr_classifier.dart';
 import 'package:training_engine/src/models/enums.dart';
 import 'package:training_engine/src/models/ewma_state.dart';
+
+UserProfile _profile() => UserProfile(
+  sex: Sex.male,
+  age: 28,
+  bodyWeightKg: 80.0,
+  experience: ExperienceLevel.intermediate,
+  goal: HypertrophyGoal.hypertrophy,
+  availableDays: [1, 3, 5],
+  maxSessionDuration: const Duration(hours: 1),
+  createdAt: DateTime.utc(2026, 1, 1),
+);
+
+TrainingEngine _engine() => TrainingEngine(
+  registry: ExerciseRegistry.withDefaults(),
+  profile: _profile(),
+);
+
+EngineSession _session({
+  required String id,
+  required DateTime endedAt,
+  required double weightKg,
+  int reps = 10,
+}) {
+  return EngineSession(
+    id: id,
+    startedAt: endedAt.subtract(const Duration(hours: 1)),
+    endedAt: endedAt,
+    sets: [
+      LoggedSet(
+        exerciseId: 'barbell_back_squat',
+        weightKg: weightKg,
+        reps: reps,
+        rpe: 8.0,
+        completedAt: endedAt,
+      ),
+    ],
+    sessionRpe: 8.0,
+  );
+}
 
 void main() {
   final t0 = DateTime.utc(2026, 1, 1);
@@ -16,7 +65,7 @@ void main() {
 
       expect(state.acuteEwma, closeTo(100.0, 0.001));
       expect(state.chronicEwma, closeTo(100.0, 0.001));
-      expect(state.lastComputedDate, DateTime.utc(2026, 1, 1));
+      expect(state.lastComputedDate, DateTime(2026, 1, 1));
     });
 
     test('first day with zero load initialises both to 0', () {
@@ -28,7 +77,11 @@ void main() {
 
     test('consecutive day applies EWMA formula', () {
       final day1 = updateEwma(todayLoad: 100.0, today: t0);
-      final day2 = updateEwma(previous: day1, todayLoad: 100.0, today: t0.add(const Duration(days: 1)));
+      final day2 = updateEwma(
+        previous: day1,
+        todayLoad: 100.0,
+        today: t0.add(const Duration(days: 1)),
+      );
 
       // acute:   0.25 * 100 + 0.75 * 100 = 100
       // chronic: 0.069 * 100 + 0.931 * 100 = 100
@@ -80,12 +133,12 @@ void main() {
       expect(day5Direct.chronicEwma, closeTo(manual.chronicEwma, 0.001));
     });
 
-    test('lastComputedDate is normalised to UTC midnight', () {
+    test('lastComputedDate is normalised to local-calendar midnight', () {
       // Pass in a date with time component
       final today = DateTime.utc(2026, 3, 15, 14, 30, 59);
       final state = updateEwma(todayLoad: 50.0, today: today);
 
-      expect(state.lastComputedDate, DateTime.utc(2026, 3, 15));
+      expect(state.lastComputedDate, DateTime(2026, 3, 15));
     });
 
     test('same-day update (no skipped days) applies load correctly', () {
@@ -95,7 +148,11 @@ void main() {
         lastComputedDate: t0,
       );
       // One day later with load 0 -> both should decay
-      final next = updateEwma(previous: seed, todayLoad: 0.0, today: t0.add(const Duration(days: 1)));
+      final next = updateEwma(
+        previous: seed,
+        todayLoad: 0.0,
+        today: t0.add(const Duration(days: 1)),
+      );
 
       // acute:   0.25 * 0 + 0.75 * 80 = 60
       expect(next.acuteEwma, closeTo(60.0, 0.1));
@@ -104,15 +161,65 @@ void main() {
     });
   });
 
+  group('daily ACWR aggregation', () {
+    test('same-day split sessions match one combined day load', () {
+      final day = DateTime(2026, 3, 9, 8);
+
+      final split = _engine()
+        ..ingestSession(_session(id: 'morning', endedAt: day, weightKg: 100))
+        ..ingestSession(
+          _session(
+            id: 'evening',
+            endedAt: DateTime(2026, 3, 9, 18),
+            weightKg: 80,
+          ),
+        );
+
+      final combined = _engine()
+        ..ingestSession(
+          EngineSession(
+            id: 'combined',
+            startedAt: DateTime(2026, 3, 9, 7),
+            endedAt: DateTime(2026, 3, 9, 18),
+            sets: [
+              LoggedSet(
+                exerciseId: 'barbell_back_squat',
+                weightKg: 100,
+                reps: 10,
+                rpe: 8.0,
+                completedAt: DateTime(2026, 3, 9, 8),
+              ),
+              LoggedSet(
+                exerciseId: 'barbell_back_squat',
+                weightKg: 80,
+                reps: 10,
+                rpe: 8.0,
+                completedAt: DateTime(2026, 3, 9, 18),
+              ),
+            ],
+            sessionRpe: 8.0,
+          ),
+        );
+
+      expect(split.state.dailyLoads, hasLength(1));
+      expect(split.state.dailyLoads.single.volumeLoad, closeTo(1800, 0.001));
+      expect(
+        split.state.acwrState!.acuteEwma,
+        closeTo(combined.state.acwrState!.acuteEwma, 0.001),
+      );
+      expect(
+        split.state.acwrState!.chronicEwma,
+        closeTo(combined.state.acwrState!.chronicEwma, 0.001),
+      );
+    });
+  });
+
   // ---------------------------------------------------------------------------
   // classifyAcwr
   // ---------------------------------------------------------------------------
   group('classifyAcwr', () {
-    AcwrStatus classify(double ratio) => classifyAcwr(
-          ratio,
-          acuteEwma: ratio * 100.0,
-          chronicEwma: 100.0,
-        );
+    AcwrStatus classify(double ratio) =>
+        classifyAcwr(ratio, acuteEwma: ratio * 100.0, chronicEwma: 100.0);
 
     test('ratio 1.0 -> optimal zone', () {
       final status = classify(1.0);
@@ -230,11 +337,29 @@ void main() {
   group('acwrConfidence', () {
     test('0 days -> null', () => expect(acwrConfidence(0), isNull));
     test('6 days -> null', () => expect(acwrConfidence(6), isNull));
-    test('7 days -> low', () => expect(acwrConfidence(7), AcwrConfidenceLevel.low));
-    test('14 days -> low', () => expect(acwrConfidence(14), AcwrConfidenceLevel.low));
-    test('21 days -> low', () => expect(acwrConfidence(21), AcwrConfidenceLevel.low));
-    test('22 days -> full', () => expect(acwrConfidence(22), AcwrConfidenceLevel.full));
-    test('25 days -> full', () => expect(acwrConfidence(25), AcwrConfidenceLevel.full));
-    test('90 days -> full', () => expect(acwrConfidence(90), AcwrConfidenceLevel.full));
+    test(
+      '7 days -> low',
+      () => expect(acwrConfidence(7), AcwrConfidenceLevel.low),
+    );
+    test(
+      '14 days -> low',
+      () => expect(acwrConfidence(14), AcwrConfidenceLevel.low),
+    );
+    test(
+      '21 days -> low',
+      () => expect(acwrConfidence(21), AcwrConfidenceLevel.low),
+    );
+    test(
+      '22 days -> full',
+      () => expect(acwrConfidence(22), AcwrConfidenceLevel.full),
+    );
+    test(
+      '25 days -> full',
+      () => expect(acwrConfidence(25), AcwrConfidenceLevel.full),
+    );
+    test(
+      '90 days -> full',
+      () => expect(acwrConfidence(90), AcwrConfidenceLevel.full),
+    );
   });
 }
