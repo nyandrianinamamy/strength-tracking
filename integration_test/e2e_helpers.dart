@@ -580,6 +580,43 @@ Future<void> completeQuickWorkout(
   }
 }
 
+/// Log one visible strength set on the active workout screen.
+Future<void> logVisibleStrengthSet(
+  WidgetTester tester, {
+  String weight = '100',
+  String reps = '5',
+}) async {
+  await tester.enterText(
+    find.byKey(const ValueKey('active-workout-weight-input')),
+    weight,
+  );
+  await pumpFrames(tester, count: 5);
+  await tester.enterText(
+    find.byKey(const ValueKey('active-workout-reps-input')),
+    reps,
+  );
+  await pumpFrames(tester, count: 5);
+  await tester.tap(find.byKey(const ValueKey('active-workout-log-set-button')));
+  await pumpFrames(tester, count: 15);
+  await tester.tap(find.text('Save & Log Set'));
+  await pumpFrames(tester, count: 10);
+}
+
+/// Finish the active workout through the visible confirmation sheet.
+Future<void> finishVisibleWorkout(WidgetTester tester) async {
+  await tester.tap(find.text('FINISH'));
+  await pumpFrames(tester, count: 10);
+  await tester.tap(find.text('Finish & Save'));
+  await pumpFrames(tester, count: 30);
+}
+
+/// Leave the workout summary through the visible summary action.
+Future<void> finishSummaryAndGoHome(WidgetTester tester) async {
+  await scrollToText(tester, 'Finish & Go Home');
+  await tester.tap(find.text('Finish & Go Home'));
+  await pumpFrames(tester, count: 30);
+}
+
 /// Scroll through available Scrollables until [text] is visible.
 ///
 /// The dashboard may contain multiple Scrollable widgets (ListView, etc.)
@@ -587,20 +624,21 @@ Future<void> completeQuickWorkout(
 /// Uses pump() instead of pumpAndSettle() because async providers
 /// (e.g. training readiness) can prevent settling.
 Future<void> scrollToText(WidgetTester tester, String text) async {
-  final scrollables = find.byType(Scrollable).evaluate().length;
-  for (int si = 0; si < scrollables; si++) {
-    for (int scroll = 0; scroll < 15; scroll++) {
+  for (int si = 0; si < find.byType(Scrollable).evaluate().length; si++) {
+    for (int scroll = 0; scroll < 10; scroll++) {
       if (find.text(text).evaluate().isNotEmpty) return;
-      await tester.drag(find.byType(Scrollable).at(si), const Offset(0, -400));
-      for (int i = 0; i < 10; i++) {
+      if (si >= find.byType(Scrollable).evaluate().length) return;
+      await tester.drag(find.byType(Scrollable).at(si), const Offset(0, -500));
+      for (int i = 0; i < 4; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
     }
     if (find.text(text).evaluate().isNotEmpty) return;
     // Scroll back up before trying next scrollable
-    for (int scroll = 0; scroll < 15; scroll++) {
-      await tester.drag(find.byType(Scrollable).at(si), const Offset(0, 400));
-      for (int i = 0; i < 5; i++) {
+    for (int scroll = 0; scroll < 10; scroll++) {
+      if (si >= find.byType(Scrollable).evaluate().length) return;
+      await tester.drag(find.byType(Scrollable).at(si), const Offset(0, 500));
+      for (int i = 0; i < 2; i++) {
         await tester.pump(const Duration(milliseconds: 100));
       }
     }

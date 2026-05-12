@@ -1525,12 +1525,25 @@ behavior.</li>
 <hr />
 <h2 id="task-18-strengthen-web-e2e-tests-for-shortcut-backed-flows">Task
 18: Strengthen Web E2E Tests for Shortcut-Backed Flows</h2>
-<p><strong>Category:</strong> P2 E2E coverage completeness</p>
+<p><strong>Category:</strong> P2 E2E coverage completeness
+<strong>Status:</strong> Completed 2026-05-12. GPT-5.5 implementer
+replaced the target shortcut-backed web E2E paths with visible UI
+interactions for Smart Planner adoption, routine archive, routine-group
+workout completion advancement, and timed-set logging/editing. The
+orchestrator fixed the web E2E runner so the unprefixed command resolves
+a ChromeDriver matching the installed Chrome and cleans up jobs
+correctly on macOS. GLM proxy review passed Task 18 with no blockers.
+Local verification passed Dart format on touched integration-test
+helpers, diff check, focused analyzer checks, and
+<code>bash tool/ci/run_web_e2e.sh</code> with
+<code>All tests passed.</code> Commit: recorded in git history after
+this ledger update.</p>
 <p><strong>Files:</strong></p>
 <ul>
 <li>Modify: <code>integration_test/app_test.dart</code></li>
 <li>Modify: <code>integration_test/e2e_helpers.dart</code></li>
 <li>Modify: <code>docs/e2e-web-flow-inventory.md</code></li>
+<li>Modify: <code>tool/ci/run_web_e2e.sh</code></li>
 <li>Test command: <code>bash tool/ci/run_web_e2e.sh</code></li>
 </ul>
 <p><strong>Functional Requirements:</strong></p>
@@ -1550,22 +1563,24 @@ shortcuts after this task.</li>
 </ul>
 <p><strong>Steps:</strong></p>
 <ul class="task-list">
-<li><label><input type="checkbox" />Add failing or currently-missing
-UI-driven E2E coverage for Smart Planner wizard generation and
-adoption.</label></li>
-<li><label><input type="checkbox" />Convert the highest-value
+<li><label><input type="checkbox" checked="" />Add failing or
+currently-missing UI-driven E2E coverage for Smart Planner wizard
+generation and adoption.</label></li>
+<li><label><input type="checkbox" checked="" />Convert the highest-value
 controller/state shortcut flows to visible UI flows.</label></li>
-<li><label><input type="checkbox" />Remove state/controller shortcuts
-from the target-flow assertions covered by this task.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Remove state/controller
+shortcuts from the target-flow assertions covered by this
+task.</label></li>
+<li><label><input type="checkbox" checked="" />Run
 <code>dart format integration_test/app_test.dart integration_test/e2e_helpers.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>flutter analyze integration_test/app_test.dart integration_test/e2e_helpers.dart</code>.</label></li>
-<li><label><input type="checkbox" />Run
+<li><label><input type="checkbox" checked="" />Run
 <code>bash tool/ci/run_web_e2e.sh</code>.</label></li>
-<li><label><input type="checkbox" />Use Browser against the local web
-build when a web UI failure needs visual diagnosis.</label></li>
-<li><label><input type="checkbox" />Commit the E2E coverage
+<li><label><input type="checkbox" checked="" />Use Browser against the
+local web build when a web UI failure needs visual
+diagnosis.</label></li>
+<li><label><input type="checkbox" checked="" />Commit the E2E coverage
 changes.</label></li>
 </ul>
 <p><strong>Acceptance Checks:</strong></p>

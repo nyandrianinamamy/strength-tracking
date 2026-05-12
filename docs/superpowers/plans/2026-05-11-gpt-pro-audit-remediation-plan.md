@@ -778,12 +778,14 @@ P2 tasks close broader product and runtime gaps:
 ## Task 18: Strengthen Web E2E Tests for Shortcut-Backed Flows
 
 **Category:** P2 E2E coverage completeness
+**Status:** Completed 2026-05-12. GPT-5.5 implementer replaced the target shortcut-backed web E2E paths with visible UI interactions for Smart Planner adoption, routine archive, routine-group workout completion advancement, and timed-set logging/editing. The orchestrator fixed the web E2E runner so the unprefixed command resolves a ChromeDriver matching the installed Chrome and cleans up jobs correctly on macOS. GLM proxy review passed Task 18 with no blockers. Local verification passed Dart format on touched integration-test helpers, diff check, focused analyzer checks, and `bash tool/ci/run_web_e2e.sh` with `All tests passed.` Commit: recorded in git history after this ledger update.
 
 **Files:**
 
 - Modify: `integration_test/app_test.dart`
 - Modify: `integration_test/e2e_helpers.dart`
 - Modify: `docs/e2e-web-flow-inventory.md`
+- Modify: `tool/ci/run_web_e2e.sh`
 - Test command: `bash tool/ci/run_web_e2e.sh`
 
 **Functional Requirements:**
@@ -797,14 +799,14 @@ P2 tasks close broader product and runtime gaps:
 
 **Steps:**
 
-- [ ] Add failing or currently-missing UI-driven E2E coverage for Smart Planner wizard generation and adoption.
-- [ ] Convert the highest-value controller/state shortcut flows to visible UI flows.
-- [ ] Remove state/controller shortcuts from the target-flow assertions covered by this task.
-- [ ] Run `dart format integration_test/app_test.dart integration_test/e2e_helpers.dart`.
-- [ ] Run `flutter analyze integration_test/app_test.dart integration_test/e2e_helpers.dart`.
-- [ ] Run `bash tool/ci/run_web_e2e.sh`.
-- [ ] Use Browser against the local web build when a web UI failure needs visual diagnosis.
-- [ ] Commit the E2E coverage changes.
+- [x] Add failing or currently-missing UI-driven E2E coverage for Smart Planner wizard generation and adoption.
+- [x] Convert the highest-value controller/state shortcut flows to visible UI flows.
+- [x] Remove state/controller shortcuts from the target-flow assertions covered by this task.
+- [x] Run `dart format integration_test/app_test.dart integration_test/e2e_helpers.dart`.
+- [x] Run `flutter analyze integration_test/app_test.dart integration_test/e2e_helpers.dart`.
+- [x] Run `bash tool/ci/run_web_e2e.sh`.
+- [x] Use Browser against the local web build when a web UI failure needs visual diagnosis.
+- [x] Commit the E2E coverage changes.
 
 **Acceptance Checks:**
 

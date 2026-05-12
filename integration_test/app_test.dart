@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
-import 'package:strength_training_tracker/src/data/models/routine_group.dart';
-import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 
 import 'e2e_helpers.dart';
@@ -32,7 +30,7 @@ void main() {
 
   // ── Suite 0: Seeded state smoke flows ────────────────────────────────
   group('Seeded state flows', () {
-    testWidgets('dashboard skip rotates active routine group queue', (
+    testWidgets('visible grouped workout advances dashboard next up', (
       tester,
     ) async {
       final container = bootstrapSeededTestApp(
@@ -42,37 +40,19 @@ void main() {
 
       await pumpApp(tester, container);
 
-      expect(find.text('FlowUser'), findsOneWidget);
-      container
-          .read(routineGroupControllerProvider)
-          .markRoutineCompleted('e2e_push_routine');
-      expect(
-        container
-            .read(appStateControllerProvider)
-            .routineGroupById('e2e_group')
-            ?.pendingRoutineIds,
-        equals(['e2e_timed_routine']),
-      );
-    });
+      await scrollToText(tester, 'Flow Push Strength');
+      expect(find.text('Flow Push Strength'), findsOneWidget);
+      await scrollToText(tester, 'START SESSION');
+      await tester.tap(find.text('START SESSION'));
+      await pumpFrames(tester, count: 30);
 
-    testWidgets('finishing seeded grouped workout advances dashboard next up', (
-      tester,
-    ) async {
-      final container = bootstrapSeededTestApp(
-        e2eRichState(
-          includeCompletedSessions: false,
-          includeActiveSession: true,
-        ),
-      );
-      addTearDown(container.dispose);
+      await scrollToText(tester, 'Flow Bench Press');
+      expect(find.text('Flow Bench Press'), findsWidgets);
+      await logVisibleStrengthSet(tester, weight: '80', reps: '5');
+      await finishVisibleWorkout(tester);
+      expect(find.text('Flow Push Strength'), findsOneWidget);
 
-      await pumpApp(tester, container);
-
-      container
-          .read(workoutControllerProvider)
-          .logSet(weightKg: 80, reps: 5, rpe: 8);
-      container.read(workoutControllerProvider).completeSession();
-      await pumpFrames(tester, count: 20);
+      await finishSummaryAndGoHome(tester);
       expect(
         container
             .read(appStateControllerProvider)
@@ -640,7 +620,9 @@ void main() {
         seedAppState(container, e2eRichState());
         await pumpApp(tester, container);
 
-        await goToRoute(tester, container, '/routine/e2e_push_routine/edit');
+        await goToRoute(tester, container, '/routines');
+        await tester.tap(find.text('Flow Push Strength'));
+        await pumpFrames(tester, count: 20);
         expect(find.text('Edit Routine'), findsOneWidget);
         final routine = container
             .read(appStateControllerProvider)
@@ -650,19 +632,13 @@ void main() {
           routine.exercises.map((item) => item.exerciseId),
           containsAll(['e2e_strength_press', 'e2e_strength_row']),
         );
-        container
-            .read(appStateControllerProvider.notifier)
-            .updateState(
-              (state) => state.copyWith(
-                routines: state.routines
-                    .map(
-                      (item) => item.id == routine.id
-                          ? item.copyWith(archived: true)
-                          : item,
-                    )
-                    .toList(),
-              ),
-            );
+
+        await tester.tap(find.byTooltip('Archive Routine'));
+        await pumpFrames(tester, count: 10);
+        expect(find.text('Archive this routine?'), findsOneWidget);
+        await tester.tap(find.widgetWithText(TextButton, 'Archive Routine'));
+        await pumpFrames(tester, count: 20);
+
         expect(
           container
               .read(appStateControllerProvider)
@@ -686,18 +662,59 @@ void main() {
       await goToRoute(tester, container, '/routine-groups');
       expect(find.text('Flow Weekly Rotation'), findsOneWidget);
       expect(
-        container.read(appStateControllerProvider).routineGroups,
-        hasLength(1),
+        find.text('Current cycle: Flow Push Strength → Flow Core Timer'),
+        findsOneWidget,
       );
 
-      container
-          .read(routineGroupControllerProvider)
-          .markRoutineCompleted('e2e_push_routine');
+      await tester.tap(find.text('Flow Weekly Rotation'));
       await pumpFrames(tester, count: 20);
-      final group = container
-          .read(appStateControllerProvider)
-          .routineGroupById('e2e_group')!;
-      expect(group.pendingRoutineIds, equals(['e2e_timed_routine']));
+      await tester.tap(find.text('Delete Group'));
+      await pumpFrames(tester, count: 10);
+      expect(find.text('Delete group?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await pumpFrames(tester, count: 20);
+      expect(find.text('Flow Weekly Rotation'), findsNothing);
+
+      await tester.tap(find.byTooltip('New group'));
+      await pumpFrames(tester, count: 20);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Group name'),
+        'Flow UI Rotation',
+      );
+      await pumpFrames(tester, count: 20);
+
+      await tester.tap(find.text('Add Routines'));
+      await pumpFrames(tester, count: 10);
+      await tester.tap(find.text('Flow Push Strength').last);
+      await pumpFrames(tester, count: 10);
+      await tester.tap(find.text('Add more routines'));
+      await pumpFrames(tester, count: 10);
+      await tester.tap(find.text('Flow Core Timer').last);
+      await pumpFrames(tester, count: 10);
+      await tester.tap(find.text('Create Group'));
+      await pumpFrames(tester, count: 20);
+
+      expect(find.text('Flow UI Rotation'), findsOneWidget);
+
+      await tester.tap(find.text('Flow UI Rotation'));
+      await pumpFrames(tester, count: 20);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Group name'),
+        'Flow UI Rotation Edited',
+      );
+      await tester.tap(find.text('Save Changes'));
+      await pumpFrames(tester, count: 20);
+      expect(find.text('Flow UI Rotation Edited'), findsOneWidget);
+
+      await tester.tap(find.text('Flow UI Rotation Edited'));
+      await pumpFrames(tester, count: 20);
+      await tester.tap(find.text('Delete Group'));
+      await pumpFrames(tester, count: 10);
+      expect(find.text('Delete group?'), findsOneWidget);
+      await tester.tap(find.widgetWithText(TextButton, 'Delete'));
+      await pumpFrames(tester, count: 20);
+
+      expect(find.text('Flow UI Rotation Edited'), findsNothing);
     });
 
     testWidgets('smart planner validation, generation, edits, and adopt', (
@@ -710,39 +727,54 @@ void main() {
       seedAppState(container, e2eRichState(includeCompletedSessions: false));
       await pumpApp(tester, container);
 
-      await goToRoute(tester, container, '/routines/smart-planner');
+      await navigateToTab(tester, 'Routines');
+      await tester.tap(find.text('Generate Smart Plan'));
       await pumpFrames(tester, count: 20);
-      expect(find.byType(Scaffold), findsWidgets);
-      container
-          .read(appStateControllerProvider.notifier)
-          .updateState(
-            (state) => state.copyWith(
-              routines: [
-                ...state.routines,
-                state.routines.first.copyWith(
-                  id: 'e2e_adopted_plan_routine',
-                  name: 'Smart Planner Adopted Flow',
-                ),
-              ],
-              routineGroups: [
-                ...state.routineGroups,
-                const RoutineGroup(
-                  id: 'e2e_adopted_plan_group',
-                  name: 'Smart Planner Adopted Group',
-                  routineIds: ['e2e_adopted_plan_routine'],
-                  pendingRoutineIds: ['e2e_adopted_plan_routine'],
-                ),
-              ],
+
+      final disabledNext = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, 'Next'),
+      );
+      expect(disabledNext.onPressed, isNull);
+
+      await tester.tap(find.text('Mon'));
+      await tester.tap(find.text('Wed'));
+      await tester.tap(find.text('Fri'));
+      await pumpFrames(tester, count: 10);
+      await tester.tap(find.widgetWithText(FilledButton, 'Next'));
+      await pumpFrames(tester, count: 20);
+
+      expect(find.text('Training Goal'), findsOneWidget);
+      await tester.tap(find.text('Strength'));
+      await pumpFrames(tester, count: 10);
+      await tester.tap(find.widgetWithText(FilledButton, 'Next').last);
+      await pumpFrames(tester, count: 20);
+
+      expect(find.text('Preferred Exercises'), findsOneWidget);
+      await tester.tap(
+        find.byKey(const ValueKey('preferred_e2e_strength_press')),
+      );
+      await pumpFrames(tester, count: 10);
+      await tester.tap(find.widgetWithText(FilledButton, 'Generate'));
+      await pumpFrames(tester, count: 30);
+
+      expect(find.text('Adopt Plan'), findsOneWidget);
+      expect(find.textContaining('Monday'), findsWidgets);
+      await tester.tap(find.text('Adopt Plan'));
+      await pumpFrames(tester, count: 30);
+
+      expect(find.textContaining('Week of'), findsWidgets);
+      final adoptedRoutineName = container
+          .read(appStateControllerProvider)
+          .routines
+          .lastWhere(
+            (routine) => routine.exercises.any(
+              (exercise) =>
+                  exercise.plannerMetadata['source'] == 'smart_planner',
             ),
-          );
-      expect(
-        container.read(appStateControllerProvider).routines.length,
-        greaterThan(2),
-      );
-      expect(
-        container.read(appStateControllerProvider).routineGroups.length,
-        greaterThan(1),
-      );
+          )
+          .name;
+      await scrollToText(tester, adoptedRoutineName);
+      expect(find.text(adoptedRoutineName), findsOneWidget);
     });
 
     testWidgets(
@@ -903,34 +935,36 @@ void main() {
         await tester.tap(find.text('Reset'));
         await pumpFrames(tester, count: 5);
       }
-      container
-          .read(workoutControllerProvider)
-          .logTimedSet(durationSeconds: 120);
+
+      await tester.enterText(find.byType(TextField).first, '2');
+      await pumpFrames(tester, count: 5);
+      await tester.tap(find.text('LOG'));
       await pumpFrames(tester, count: 10);
       expect(find.text('Set 1: 2 min'), findsOneWidget);
-      container
-          .read(workoutControllerProvider)
-          .updateSet('e2e_timed_plank', 1, durationSeconds: 180);
-      await pumpFrames(tester, count: 5);
-      expect(
-        container
-            .read(appStateControllerProvider)
-            .activeSession!
-            .completedSets
-            .single
-            .durationSeconds,
-        180,
-      );
 
-      final completed = container
-          .read(workoutControllerProvider)
-          .completeSession();
-      await pumpFrames(tester, count: 20);
-      await goToRoute(tester, container, '/workout/${completed!.id}/summary');
+      await tester.ensureVisible(find.text('Set 1: 2 min'));
+      await pumpFrames(tester, count: 5);
+      final timedSetTile = find
+          .ancestor(
+            of: find.text('Set 1: 2 min'),
+            matching: find.byType(ListTile),
+          )
+          .first;
+      final timedSetRect = tester.getRect(timedSetTile);
+      await tester.tapAt(timedSetRect.centerRight - const Offset(24, 0));
+      await pumpFrames(tester, count: 10);
+      expect(find.text('Edit Set 1'), findsOneWidget);
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Duration (min)'),
+        '3',
+      );
+      await tester.tap(find.text('Save'));
+      await pumpFrames(tester, count: 10);
+      expect(find.text('Set 1: 3 min'), findsOneWidget);
+
+      await finishVisibleWorkout(tester);
       expect(find.text('Flow Core Timer'), findsOneWidget);
-      expect(find.text('Flow Core Timer'), findsOneWidget);
-      await tester.tap(find.text('Finish & Go Home'));
-      await pumpFrames(tester, count: 20);
+      await finishSummaryAndGoHome(tester);
       await navigateToTab(tester, 'Progress');
       expect(find.text('Flow Plank Hold'), findsWidgets);
     });
