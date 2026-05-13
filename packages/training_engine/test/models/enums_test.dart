@@ -50,6 +50,18 @@ void main() {
     test('PerformanceDelta has 3 values', () {
       expect(PerformanceDelta.values.length, 3);
     });
+
+    test('ExerciseLoadKind has 5 values', () {
+      expect(ExerciseLoadKind.values.length, 5);
+    });
+
+    test('LocalFatigueKind has 4 values', () {
+      expect(LocalFatigueKind.values.length, 4);
+    });
+
+    test('IntensityClass has 4 values', () {
+      expect(IntensityClass.values.length, 4);
+    });
   });
 
   group('MuscleActivation', () {

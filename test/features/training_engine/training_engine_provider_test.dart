@@ -1004,6 +1004,68 @@ void main() {
       expect(heatmap[Muscle.abs], isNotNull);
       expect(heatmap[Muscle.abs]!.intensity, greaterThan(0));
     });
+
+    test(
+      'live heatmap preview keeps 10 minute treadmill below acute',
+      () async {
+        final completedAt = DateTime.utc(2026, 4, 2, 18, 0);
+        final appState = AppState(
+          exercises: const [
+            Exercise(
+              id: 'treadmill',
+              name: 'Treadmill',
+              primaryMuscles: ['Legs'],
+              secondaryMuscles: [],
+              equipment: ['Machine'],
+              instructions: '',
+              archived: false,
+              exerciseType: 'timed',
+            ),
+          ],
+          routines: const [],
+          sessions: [
+            WorkoutSession(
+              id: 'active-treadmill-session',
+              routineId: 'routine-cardio',
+              status: WorkoutSessionStatus.active,
+              startedAt: completedAt.subtract(const Duration(minutes: 10)),
+              endedAt: null,
+              lastActivityAt: completedAt,
+              currentExerciseIndex: 0,
+              completedSets: [
+                CompletedSet(
+                  exerciseId: 'treadmill',
+                  setNumber: 1,
+                  weightKg: 0.0,
+                  reps: 0,
+                  durationSeconds: 600,
+                  completedAt: completedAt,
+                  note: '',
+                ),
+              ],
+              sessionNote: '',
+              rpe: 8.0,
+            ),
+          ],
+          sex: 'male',
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final heatmap = await container.read(
+          liveEngineHeatmapDataProvider.future,
+        );
+
+        expect(heatmap[Muscle.quadriceps], isNotNull);
+        expect(heatmap[Muscle.quadriceps]!.intensity, lessThan(0.2));
+      },
+    );
   });
 
   group('SharedPreferencesTrainingEngineStateRepository', () {

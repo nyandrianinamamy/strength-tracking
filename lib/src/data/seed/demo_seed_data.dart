@@ -391,7 +391,11 @@ class DemoSeedData {
   static List<SleepRecord> seedSleep() {
     final now = DateTime.now();
     return List.generate(7, (i) {
-      final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: 7 - i));
+      final date = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: 7 - i));
       // Vary total between 6.5h and 8h
       final totalMinutes = 390 + (i * 15) % 90;
       final deep = (totalMinutes * 0.20).round();
@@ -411,7 +415,11 @@ class DemoSeedData {
   static List<HrvRecord> seedHrv() {
     final now = DateTime.now();
     return List.generate(7, (i) {
-      final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: 7 - i));
+      final date = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: 7 - i));
       // SDNN between 35–55 ms, resting HR between 55–65 bpm
       return HrvRecord(
         date: date,
@@ -1074,8 +1082,8 @@ class DemoSeedData {
         id: 'treadmill',
         name: 'Treadmill',
         translationKey: 'exercise_treadmill',
-        primaryMuscles: ['Legs'],
-        secondaryMuscles: [],
+        primaryMuscles: ['Quads', 'Glutes', 'Calves'],
+        secondaryMuscles: ['Hamstrings', 'Abs'],
         equipment: ['Machine'],
         instructions:
             'Maintain good posture, land midfoot, adjust speed and incline as needed.',
@@ -1086,8 +1094,8 @@ class DemoSeedData {
         id: 'stationary_bike',
         name: 'Stationary Bike',
         translationKey: 'exercise_stationary_bike',
-        primaryMuscles: ['Legs'],
-        secondaryMuscles: [],
+        primaryMuscles: ['Quads', 'Glutes'],
+        secondaryMuscles: ['Calves', 'Hamstrings', 'Abs'],
         equipment: ['Machine'],
         instructions:
             'Adjust seat height, pedal at a steady cadence, increase resistance as needed.',
@@ -1098,8 +1106,8 @@ class DemoSeedData {
         id: 'rowing_machine',
         name: 'Rowing Machine',
         translationKey: 'exercise_rowing_machine',
-        primaryMuscles: ['Back', 'Legs'],
-        secondaryMuscles: ['Biceps', 'Abs'],
+        primaryMuscles: ['Back', 'Quads', 'Glutes'],
+        secondaryMuscles: ['Hamstrings', 'Biceps', 'Abs'],
         equipment: ['Machine'],
         instructions:
             'Drive with legs first, then lean back and pull handle to chest.',
@@ -1110,8 +1118,8 @@ class DemoSeedData {
         id: 'stair_climber',
         name: 'Stair Climber',
         translationKey: 'exercise_stair_climber',
-        primaryMuscles: ['Legs', 'Glutes'],
-        secondaryMuscles: [],
+        primaryMuscles: ['Quads', 'Glutes', 'Calves'],
+        secondaryMuscles: ['Hamstrings', 'Abs'],
         equipment: ['Machine'],
         instructions: 'Step at a steady pace, avoid leaning on the handles.',
         archived: false,
@@ -1121,8 +1129,8 @@ class DemoSeedData {
         id: 'elliptical',
         name: 'Elliptical',
         translationKey: 'exercise_elliptical',
-        primaryMuscles: ['Legs'],
-        secondaryMuscles: [],
+        primaryMuscles: ['Quads', 'Glutes', 'Calves'],
+        secondaryMuscles: ['Hamstrings', 'Back', 'Chest', 'Biceps', 'Triceps'],
         equipment: ['Machine'],
         instructions:
             'Maintain an upright posture, push and pull with both arms and legs.',

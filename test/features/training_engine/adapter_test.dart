@@ -138,6 +138,62 @@ void main() {
         isTrue,
       );
     });
+
+    test(
+      'maps treadmill to capped steady cardio with explicit local muscles',
+      () {
+        final registry = ExerciseRegistry.withDefaults();
+        const exercise = Exercise(
+          id: 'treadmill',
+          name: 'Treadmill',
+          primaryMuscles: ['Legs'],
+          secondaryMuscles: [],
+          equipment: ['Machine'],
+          instructions: '',
+          archived: false,
+          exerciseType: 'timed',
+        );
+
+        final mapped = adapter.toEngineExercise(exercise, registry);
+
+        expect(mapped, isNotNull);
+        expect(mapped!.loadKind, ExerciseLoadKind.cardioSteady);
+        expect(mapped.localFatigueKind, LocalFatigueKind.cardioAerobicLocal);
+        expect(mapped.defaultEffortRpe, 5.0);
+        expect(mapped.localFatigueCap, 60.0);
+        final coefficients = {
+          for (final activation in mapped.muscleMap)
+            activation.muscleId: activation.coefficient,
+        };
+        expect(coefficients['quadriceps'], closeTo(0.45, 0.001));
+        expect(coefficients['glutes'], closeTo(0.35, 0.001));
+        expect(coefficients['calves'], closeTo(0.35, 0.001));
+        expect(coefficients['hamstrings'], closeTo(0.25, 0.001));
+        expect(coefficients['quadriceps'], isNot(1.0));
+      },
+    );
+
+    test('maps plank to timed isometric defaults', () {
+      final registry = ExerciseRegistry.withDefaults();
+      const exercise = Exercise(
+        id: 'plank',
+        name: 'Plank',
+        primaryMuscles: ['Abs'],
+        secondaryMuscles: [],
+        equipment: ['Bodyweight'],
+        instructions: '',
+        archived: false,
+        exerciseType: 'timed',
+      );
+
+      final mapped = adapter.toEngineExercise(exercise, registry);
+
+      expect(mapped, isNotNull);
+      expect(mapped!.loadKind, ExerciseLoadKind.timedIsometric);
+      expect(mapped.localFatigueKind, LocalFatigueKind.isometricHold);
+      expect(mapped.defaultLocalRpe, 7.0);
+      expect(mapped.localFatigueCap, 85.0);
+    });
   });
 
   group('TrainingEngineAdapter.toEngineSession', () {
@@ -218,40 +274,100 @@ void main() {
       },
     );
 
-    test('maps a timed-only completed session with duration stress data', () {
-      final completedAt = DateTime.utc(2026, 3, 7, 17, 0);
-      final session = WorkoutSession(
-        id: 'timed-only-session-01',
-        routineId: 'routine-core',
-        status: WorkoutSessionStatus.completed,
-        startedAt: completedAt.subtract(const Duration(minutes: 20)),
-        endedAt: completedAt,
-        lastActivityAt: completedAt,
-        currentExerciseIndex: 0,
-        completedSets: [
-          CompletedSet(
-            exerciseId: 'plank',
-            setNumber: 1,
-            weightKg: 0.0,
-            reps: 0,
-            durationSeconds: 75,
-            completedAt: completedAt,
-            note: '',
-          ),
-        ],
-        sessionNote: '',
-        rpe: 7.0,
-      );
+    test(
+      'maps a timed-only completed session with isometric local RPE data',
+      () {
+        final completedAt = DateTime.utc(2026, 3, 7, 17, 0);
+        final session = WorkoutSession(
+          id: 'timed-only-session-01',
+          routineId: 'routine-core',
+          status: WorkoutSessionStatus.completed,
+          startedAt: completedAt.subtract(const Duration(minutes: 20)),
+          endedAt: completedAt,
+          lastActivityAt: completedAt,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'plank',
+              setNumber: 1,
+              weightKg: 0.0,
+              reps: 0,
+              durationSeconds: 75,
+              completedAt: completedAt,
+              note: '',
+            ),
+          ],
+          sessionNote: '',
+          rpe: 7.0,
+        );
 
-      final engineSession = adapter.toEngineSession(session);
+        final engineSession = adapter.toEngineSession(session);
 
-      expect(engineSession, isNotNull);
-      expect(engineSession!.sets, hasLength(1));
-      expect(engineSession.sets.single.exerciseId, 'plank');
-      expect(engineSession.sets.single.reps, 0);
-      expect(engineSession.sets.single.durationSeconds, 75);
-      expect(engineSession.sets.single.rpe, 7.0);
-      expect(engineSession.sets.single.rpeEstimated, isTrue);
-    });
+        expect(engineSession, isNotNull);
+        expect(engineSession!.sets, hasLength(1));
+        expect(engineSession.sets.single.exerciseId, 'plank');
+        expect(engineSession.sets.single.reps, 0);
+        expect(engineSession.sets.single.durationSeconds, 75);
+        expect(engineSession.sets.single.localRpe, 7.0);
+        expect(engineSession.sets.single.strengthRpe, isNull);
+        expect(engineSession.sets.single.rpeEstimated, isTrue);
+      },
+    );
+
+    test(
+      'maps missing timed cardio RPE to estimated effort 5, not strength 8',
+      () {
+        final completedAt = DateTime.utc(2026, 3, 7, 17, 0);
+        final registry = ExerciseRegistry.withDefaults()
+          ..addCustom(
+            adapter.toEngineExercise(
+              const Exercise(
+                id: 'treadmill',
+                name: 'Treadmill',
+                primaryMuscles: ['Legs'],
+                secondaryMuscles: [],
+                equipment: ['Machine'],
+                instructions: '',
+                archived: false,
+                exerciseType: 'timed',
+              ),
+              ExerciseRegistry.withDefaults(),
+            )!,
+          );
+        final session = WorkoutSession(
+          id: 'timed-cardio-session-01',
+          routineId: 'routine-cardio',
+          status: WorkoutSessionStatus.completed,
+          startedAt: completedAt.subtract(const Duration(minutes: 12)),
+          endedAt: completedAt,
+          lastActivityAt: completedAt,
+          currentExerciseIndex: 0,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'treadmill',
+              setNumber: 1,
+              weightKg: 0.0,
+              reps: 0,
+              durationSeconds: 600,
+              completedAt: completedAt,
+              note: '',
+            ),
+          ],
+          sessionNote: '',
+          rpe: 8.0,
+        );
+
+        final engineSession = adapter.toEngineSession(
+          session,
+          registry: registry,
+        );
+
+        expect(engineSession, isNotNull);
+        expect(engineSession!.sets.single.effortRpe, 5.0);
+        expect(engineSession.sets.single.strengthRpe, isNull);
+        expect(engineSession.sets.single.localRpe, isNull);
+        expect(engineSession.sets.single.rpeEstimated, isTrue);
+      },
+    );
   });
 }
