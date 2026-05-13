@@ -194,18 +194,57 @@ class TrainingEngine {
       );
     }
 
-    // Compute daily volume load (sum of weight * reps across all sets)
+    // Compute daily load channels. Keep volumeLoad as the legacy kg-rep-ish
+    // display value, while ACWR uses overallLoadPoints.
     double volumeLoad = 0.0;
+    double strengthLoadPoints = 0.0;
+    double metabolicLoadPoints = 0.0;
+    double isometricLoadPoints = 0.0;
     for (final set in session.sets) {
-      volumeLoad += set.hasStrengthLoad
-          ? set.weightKg * set.reps
-          : impulse_lib.trainingStressForSet(set);
+      final exercise = registry.lookup(set.exerciseId);
+      if (set.hasStrengthLoad) {
+        final volume = set.weightKg * set.reps;
+        volumeLoad += volume;
+        strengthLoadPoints += volume;
+        continue;
+      }
+
+      volumeLoad += impulse_lib.trainingStressForSet(set);
+      if (exercise == null) continue;
+      switch (exercise.localFatigueKind) {
+        case LocalFatigueKind.cardioAerobicLocal:
+          metabolicLoadPoints += impulse_lib.calculateMetabolicLoad(
+            sets: [set],
+            metabolicMultiplier: exercise.metabolicMultiplier,
+            defaultEffortRpe: exercise.defaultEffortRpe,
+          );
+          break;
+        case LocalFatigueKind.isometricHold:
+          isometricLoadPoints += impulse_lib.calculateIsometricLoad(
+            sets: [set],
+            defaultLocalRpe: exercise.defaultLocalRpe,
+          );
+          break;
+        case LocalFatigueKind.strengthVolume:
+          if (set.hasTimedLoad) {
+            isometricLoadPoints += impulse_lib.calculateIsometricLoad(
+              sets: [set],
+              defaultLocalRpe: exercise.defaultLocalRpe,
+            );
+          }
+          break;
+        case LocalFatigueKind.none:
+          break;
+      }
     }
 
     // Aggregate and trim local-calendar-day loads (keep 35 days).
-    final newDailyLoad = DailyLoad(
+    final newDailyLoad = DailyLoad.fromComponents(
       date: ewma_lib.localCalendarDay(session.endedAt),
       volumeLoad: volumeLoad,
+      strengthLoadPoints: strengthLoadPoints,
+      metabolicLoadPoints: metabolicLoadPoints,
+      isometricLoadPoints: isometricLoadPoints,
     );
     final cutoff = ewma_lib
         .localCalendarDay(now)

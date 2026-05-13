@@ -87,6 +87,26 @@ void main() {
       expect(restored.completedAt, set.completedAt);
       expect(restored.rpeEstimated, set.rpeEstimated);
     });
+
+    test('cardio effort JSON roundtrip does not invent strength RPE', () {
+      final set = LoggedSet(
+        exerciseId: 'treadmill',
+        weightKg: 0.0,
+        reps: 0,
+        durationSeconds: 600,
+        effortRpe: 5.0,
+        completedAt: now,
+        rpeEstimated: true,
+      );
+
+      final json = set.toJson();
+      final restored = LoggedSet.fromJson(json);
+
+      expect(json, isNot(contains('rpe')));
+      expect(restored.strengthRpe, isNull);
+      expect(restored.effortRpe, 5.0);
+      expect(restored.rpeEstimated, isTrue);
+    });
   });
 
   group('strength RPE formula contract', () {

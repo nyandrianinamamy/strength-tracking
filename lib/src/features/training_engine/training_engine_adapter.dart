@@ -15,6 +15,9 @@ class TrainingEngineAdapter {
 
   static const double _minStrengthRpe = 5.0;
   static const double _maxStrengthRpe = 10.0;
+  static const double _defaultStrengthRpe = 8.0;
+  static const double _defaultCardioEffortRpe = 5.0;
+  static const double _defaultIsometricRpe = 7.0;
 
   /// Converts host app state into a minimal training-engine user profile.
   ///
@@ -40,42 +43,28 @@ class TrainingEngineAdapter {
   /// Converts a Kotrana [WorkoutSession] to an [EngineSession].
   ///
   /// RPE backfill strategy for each [CompletedSet]:
-  /// - If `set.rpe` is 5-10: use it directly, `rpeEstimated = false`.
-  /// - If `set.rpe` is outside 5-10: treat it as legacy app history and
-  ///   exclude it from engine ingestion instead of silently changing it.
-  /// - Else if `session.rpe` is 5-10: backfill with session RPE,
-  ///   `rpeEstimated = true`.
-  /// - Else: default to 8.0, `rpeEstimated = true`.
-  EngineSession? toEngineSession(WorkoutSession session) {
-    final fallbackRpe = _isSupportedStrengthRpe(session.rpe)
-        ? session.rpe!
-        : 8.0;
+  /// - Strength uses strength RPE, falling back to session RPE or 8.0.
+  /// - Timed isometrics use local RPE, falling back to 7.0.
+  /// - Timed cardio uses effort RPE, falling back to 5.0.
+  /// Missing timed-cardio effort deliberately ignores default session RPE 8.
+  EngineSession? toEngineSession(
+    WorkoutSession session, {
+    ExerciseRegistry? registry,
+  }) {
     final sessionRpe = _isSupportedStrengthRpe(session.rpe)
         ? session.rpe
         : null;
 
-    final mappedSets = session.completedSets.where(_shouldMapSet).map((set) {
-      final double setRpe;
-      final bool estimated;
-
-      if (set.rpe != null) {
-        setRpe = set.rpe!;
-        estimated = false;
-      } else {
-        setRpe = fallbackRpe;
-        estimated = true;
-      }
-
-      return LoggedSet(
-        exerciseId: set.exerciseId,
-        weightKg: set.weightKg,
-        reps: set.reps,
-        rpe: setRpe,
-        completedAt: set.completedAt,
-        rpeEstimated: estimated,
-        durationSeconds: set.durationSeconds,
-      );
-    }).toList();
+    final mappedSets = session.completedSets
+        .where((set) => _shouldMapSet(set, registry: registry))
+        .map(
+          (set) => toLoggedSet(
+            set,
+            sessionRpe: sessionRpe,
+            exercise: registry?.lookup(set.exerciseId),
+          ),
+        )
+        .toList();
 
     if (mappedSets.isEmpty) {
       return null;
@@ -87,6 +76,57 @@ class TrainingEngineAdapter {
       endedAt: session.endedAt ?? session.startedAt,
       sets: mappedSets,
       sessionRpe: sessionRpe,
+    );
+  }
+
+  LoggedSet toLoggedSet(
+    CompletedSet set, {
+    double? sessionRpe,
+    EngineExercise? exercise,
+  }) {
+    final kind = exercise?.localFatigueKind;
+    if (kind == LocalFatigueKind.cardioAerobicLocal) {
+      final effort = _isSupportedEffortRpe(set.rpe)
+          ? set.rpe!
+          : (exercise?.defaultEffortRpe ?? _defaultCardioEffortRpe);
+      return LoggedSet(
+        exerciseId: set.exerciseId,
+        weightKg: set.weightKg,
+        reps: set.reps,
+        effortRpe: effort,
+        completedAt: set.completedAt,
+        rpeEstimated: set.rpe == null,
+        durationSeconds: set.durationSeconds,
+      );
+    }
+
+    if (kind == LocalFatigueKind.isometricHold ||
+        (set.reps == 0 && set.durationSeconds > 0)) {
+      final localRpe = _isSupportedStrengthRpe(set.rpe)
+          ? set.rpe!
+          : (exercise?.defaultLocalRpe ?? sessionRpe ?? _defaultIsometricRpe);
+      return LoggedSet(
+        exerciseId: set.exerciseId,
+        weightKg: set.weightKg,
+        reps: set.reps,
+        localRpe: localRpe,
+        completedAt: set.completedAt,
+        rpeEstimated: set.rpe == null,
+        durationSeconds: set.durationSeconds,
+      );
+    }
+
+    final strengthRpe = _isSupportedStrengthRpe(set.rpe)
+        ? set.rpe!
+        : (sessionRpe ?? _defaultStrengthRpe);
+    return LoggedSet(
+      exerciseId: set.exerciseId,
+      weightKg: set.weightKg,
+      reps: set.reps,
+      strengthRpe: strengthRpe,
+      completedAt: set.completedAt,
+      rpeEstimated: set.rpe == null,
+      durationSeconds: set.durationSeconds,
     );
   }
 
@@ -110,12 +150,15 @@ class TrainingEngineAdapter {
     // 1. Exact ID match — re-key under the app's exercise ID
     final byId = registry.lookup(exercise.id);
     if (byId != null) {
-      return EngineExercise(
-        id: exercise.id,
-        name: byId.name,
-        muscleMap: byId.muscleMap,
-        equipment: byId.equipment,
-        movement: byId.movement,
+      return _withAppExerciseLoadKind(
+        EngineExercise(
+          id: exercise.id,
+          name: byId.name,
+          muscleMap: byId.muscleMap,
+          equipment: byId.equipment,
+          movement: byId.movement,
+        ),
+        exercise,
       );
     }
 
@@ -124,17 +167,23 @@ class TrainingEngineAdapter {
     final byName = registry.all.where((e) => e.name.toLowerCase() == lower);
     if (byName.isNotEmpty) {
       final matched = byName.first;
-      return EngineExercise(
-        id: exercise.id,
-        name: matched.name,
-        muscleMap: matched.muscleMap,
-        equipment: matched.equipment,
-        movement: matched.movement,
+      return _withAppExerciseLoadKind(
+        EngineExercise(
+          id: exercise.id,
+          name: matched.name,
+          muscleMap: matched.muscleMap,
+          equipment: matched.equipment,
+          movement: matched.movement,
+        ),
+        exercise,
       );
     }
 
     // 3. Construct synthetic exercise if we have muscle information
     if (exercise.primaryMuscles.isEmpty) return null;
+
+    final cardio = _cardioExerciseFor(exercise);
+    if (cardio != null) return cardio;
 
     final muscleMap = <MuscleActivation>[];
     for (final muscle in exercise.primaryMuscles) {
@@ -156,12 +205,15 @@ class TrainingEngineAdapter {
       );
     }
 
-    return EngineExercise(
-      id: exercise.id,
-      name: exercise.name,
-      muscleMap: muscleMap,
-      equipment: _guessEquipment(exercise.equipment),
-      movement: _guessMovement(exercise.name, exercise.primaryMuscles),
+    return _withAppExerciseLoadKind(
+      EngineExercise(
+        id: exercise.id,
+        name: exercise.name,
+        muscleMap: muscleMap,
+        equipment: _guessEquipment(exercise.equipment),
+        movement: _guessMovement(exercise.name, exercise.primaryMuscles),
+      ),
+      exercise,
     );
   }
 
@@ -192,9 +244,183 @@ class TrainingEngineAdapter {
     return rpe != null && rpe >= _minStrengthRpe && rpe <= _maxStrengthRpe;
   }
 
-  bool _shouldMapSet(CompletedSet set) {
+  bool _isSupportedEffortRpe(double? rpe) {
+    return rpe != null && rpe >= 0.0 && rpe <= 10.0;
+  }
+
+  bool _shouldMapSet(CompletedSet set, {ExerciseRegistry? registry}) {
     if (!_hasEngineLoad(set)) return false;
+    final kind = registry?.lookup(set.exerciseId)?.localFatigueKind;
+    if (kind == LocalFatigueKind.cardioAerobicLocal) {
+      return set.rpe == null || _isSupportedEffortRpe(set.rpe);
+    }
     return set.rpe == null || _isSupportedStrengthRpe(set.rpe);
+  }
+
+  EngineExercise _withAppExerciseLoadKind(
+    EngineExercise mapped,
+    Exercise source,
+  ) {
+    if (source.exerciseType != 'timed') return mapped;
+    final cardio = _cardioExerciseFor(source);
+    if (cardio != null) return cardio;
+    return EngineExercise(
+      id: mapped.id,
+      name: mapped.name,
+      muscleMap: mapped.muscleMap,
+      equipment: mapped.equipment,
+      movement: mapped.movement,
+      loadKind: ExerciseLoadKind.timedIsometric,
+      localFatigueKind: LocalFatigueKind.isometricHold,
+      defaultLocalRpe: _defaultIsometricRpe,
+      localFatigueCap: 85.0,
+    );
+  }
+
+  EngineExercise? _cardioExerciseFor(Exercise exercise) {
+    if (exercise.exerciseType != 'timed') return null;
+    final key = exercise.id.toLowerCase();
+    final name = exercise.name.toLowerCase();
+    if (key.contains('treadmill') || name.contains('treadmill')) {
+      return _cardioExercise(
+        exercise,
+        loadKind: ExerciseLoadKind.cardioSteady,
+        localFatigueCap: 60.0,
+        muscleCoefficients: const {
+          'quadriceps': 0.45,
+          'glutes': 0.35,
+          'calves': 0.35,
+          'hamstrings': 0.25,
+          'hip_flexors': 0.20,
+          'tibialis_anterior': 0.10,
+          'core': 0.10,
+        },
+      );
+    }
+    if (key.contains('bike') || name.contains('bike')) {
+      return _cardioExercise(
+        exercise,
+        loadKind: ExerciseLoadKind.cardioSteady,
+        cardioLocalMultiplier: 0.95,
+        metabolicMultiplier: 0.95,
+        localFatigueCap: 55.0,
+        muscleCoefficients: const {
+          'quadriceps': 0.55,
+          'glutes': 0.35,
+          'calves': 0.25,
+          'hamstrings': 0.20,
+          'hip_flexors': 0.20,
+          'core': 0.08,
+        },
+      );
+    }
+    if (key.contains('elliptical') || name.contains('elliptical')) {
+      return _cardioExercise(
+        exercise,
+        loadKind: ExerciseLoadKind.cardioSteady,
+        cardioLocalMultiplier: 0.90,
+        metabolicMultiplier: 0.95,
+        localFatigueCap: 55.0,
+        muscleCoefficients: const {
+          'quadriceps': 0.35,
+          'glutes': 0.35,
+          'calves': 0.25,
+          'hamstrings': 0.25,
+          'hip_flexors': 0.20,
+          'core': 0.12,
+          'upper_back': 0.10,
+          'pectorals': 0.08,
+          'biceps': 0.08,
+          'triceps': 0.08,
+        },
+      );
+    }
+    if (key.contains('rowing') || name.contains('rowing')) {
+      return _cardioExercise(
+        exercise,
+        loadKind: ExerciseLoadKind.cardioMixed,
+        metabolicMultiplier: 1.10,
+        localFatigueCap: 65.0,
+        muscleCoefficients: const {
+          'quadriceps': 0.35,
+          'glutes': 0.35,
+          'hamstrings': 0.25,
+          'lats': 0.35,
+          'upper_back': 0.30,
+          'biceps': 0.20,
+          'forearms': 0.15,
+          'core': 0.25,
+          'erector_spinae': 0.20,
+        },
+      );
+    }
+    if (key.contains('stair') || name.contains('stair')) {
+      return _cardioExercise(
+        exercise,
+        loadKind: ExerciseLoadKind.cardioMixed,
+        metabolicMultiplier: 1.15,
+        localFatigueCap: 65.0,
+        muscleCoefficients: const {
+          'quadriceps': 0.45,
+          'glutes': 0.45,
+          'calves': 0.35,
+          'hamstrings': 0.25,
+          'hip_flexors': 0.20,
+          'core': 0.12,
+        },
+      );
+    }
+    if (key.contains('jump_rope') || name.contains('jump rope')) {
+      return _cardioExercise(
+        exercise,
+        loadKind: ExerciseLoadKind.cardioMixed,
+        cardioLocalMultiplier: 1.15,
+        metabolicMultiplier: 1.25,
+        localFatigueCap: 65.0,
+        muscleCoefficients: const {
+          'calves': 0.55,
+          'tibialis_anterior': 0.20,
+          'quadriceps': 0.20,
+          'glutes': 0.15,
+          'hamstrings': 0.10,
+          'core': 0.15,
+          'forearms': 0.10,
+          'anterior_deltoid': 0.08,
+          'lateral_deltoid': 0.08,
+        },
+      );
+    }
+    return null;
+  }
+
+  EngineExercise _cardioExercise(
+    Exercise exercise, {
+    required ExerciseLoadKind loadKind,
+    required double localFatigueCap,
+    required Map<String, double> muscleCoefficients,
+    double cardioLocalMultiplier = 1.0,
+    double metabolicMultiplier = 1.0,
+  }) {
+    return EngineExercise(
+      id: exercise.id,
+      name: exercise.name,
+      muscleMap: [
+        for (final entry in muscleCoefficients.entries)
+          MuscleActivation(
+            muscleId: entry.key,
+            role: MuscleRole.synergist,
+            coefficient: entry.value,
+          ),
+      ],
+      equipment: _guessEquipment(exercise.equipment),
+      movement: MovementClass.compoundLower,
+      loadKind: loadKind,
+      localFatigueKind: LocalFatigueKind.cardioAerobicLocal,
+      defaultEffortRpe: _defaultCardioEffortRpe,
+      cardioLocalMultiplier: cardioLocalMultiplier,
+      metabolicMultiplier: metabolicMultiplier,
+      localFatigueCap: localFatigueCap,
+    );
   }
 
   /// Guesses the [EquipmentClass] from a list of equipment strings.

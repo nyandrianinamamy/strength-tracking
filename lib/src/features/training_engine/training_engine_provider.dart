@@ -52,7 +52,7 @@ Future<TrainingEngine> loadTrainingEngine({
   final profile = adapter.toUserProfile(appState);
   final engine = TrainingEngine(registry: registry, profile: profile);
   final completedSessions = appState.completedSessions
-      .map(adapter.toEngineSession)
+      .map((session) => adapter.toEngineSession(session, registry: registry))
       .whereType<EngineSession>()
       .toList();
   final completedSessionIds = completedSessions
@@ -244,18 +244,16 @@ final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
   }
 
   final engine = await ref.watch(trainingEngineProvider.future);
+  final adapter = ref.watch(trainingEngineAdapterProvider);
 
   // Convert app CompletedSets to engine LoggedSets
   final engineSets = activeSets
       .where((s) => s.reps > 0 || s.durationSeconds > 0)
       .map(
-        (s) => LoggedSet(
-          exerciseId: s.exerciseId,
-          weightKg: s.weightKg,
-          reps: s.reps,
-          rpe: s.rpe ?? 8.0,
-          completedAt: s.completedAt,
-          durationSeconds: s.durationSeconds,
+        (s) => adapter.toLoggedSet(
+          s,
+          sessionRpe: activeSession?.rpe,
+          exercise: engine.registry.lookup(s.exerciseId),
         ),
       )
       .toList();

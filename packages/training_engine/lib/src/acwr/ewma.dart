@@ -68,7 +68,18 @@ List<DailyLoad> aggregateDailyLoads(
   Iterable<DailyLoad> loads, {
   DateTime? cutoff,
 }) {
-  final totals = <DateTime, ({double volumeLoad, double? sRpeLoad})>{};
+  final totals =
+      <
+        DateTime,
+        ({
+          double volumeLoad,
+          double? sRpeLoad,
+          double strengthLoadPoints,
+          double metabolicLoadPoints,
+          double isometricLoadPoints,
+          double overallLoadPoints,
+        })
+      >{};
   for (final load in loads) {
     final day = localCalendarDay(load.date);
     final current = totals[day];
@@ -77,6 +88,13 @@ List<DailyLoad> aggregateDailyLoads(
       sRpeLoad: load.sRpeLoad == null && current?.sRpeLoad == null
           ? null
           : (current?.sRpeLoad ?? 0.0) + (load.sRpeLoad ?? 0.0),
+      strengthLoadPoints:
+          (current?.strengthLoadPoints ?? 0.0) + load.strengthLoadPoints,
+      metabolicLoadPoints:
+          (current?.metabolicLoadPoints ?? 0.0) + load.metabolicLoadPoints,
+      isometricLoadPoints:
+          (current?.isometricLoadPoints ?? 0.0) + load.isometricLoadPoints,
+      overallLoadPoints: (current?.overallLoadPoints ?? 0.0) + load.acwrLoad,
     );
   }
 
@@ -89,6 +107,10 @@ List<DailyLoad> aggregateDailyLoads(
               date: entry.key,
               volumeLoad: entry.value.volumeLoad,
               sRpeLoad: entry.value.sRpeLoad,
+              strengthLoadPoints: entry.value.strengthLoadPoints,
+              metabolicLoadPoints: entry.value.metabolicLoadPoints,
+              isometricLoadPoints: entry.value.isometricLoadPoints,
+              overallLoadPoints: entry.value.overallLoadPoints,
             ),
           )
           .toList()
@@ -102,7 +124,7 @@ EwmaState? recomputeEwmaFromDailyLoads(Iterable<DailyLoad> loads) {
   for (final load in aggregateDailyLoads(loads)) {
     state = updateEwma(
       previous: state,
-      todayLoad: load.volumeLoad,
+      todayLoad: load.acwrLoad,
       today: load.date,
     );
   }
