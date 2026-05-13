@@ -23,6 +23,9 @@ TrainingEngine _engine({UserProfile? profile}) => TrainingEngine(
   profile: profile ?? _profile(),
 );
 
+TrainingEngine _engineWithRegistry(ExerciseRegistry registry) =>
+    TrainingEngine(registry: registry, profile: _profile());
+
 EngineExercise _customExercise({
   required String id,
   required List<MuscleActivation> muscleMap,
@@ -330,6 +333,52 @@ void main() {
       expect(engine.state.acwrState, isNotNull);
       expect(engine.state.e1rmHistory['plank'], isNull);
       expect(engine.state.lastTopSets['plank'], isNull);
+    });
+
+    test('no-fatigue timed sets do not create ACWR load', () {
+      final registry = ExerciseRegistry.withDefaults()
+        ..addCustom(
+          EngineExercise(
+            id: 'mobility_flow',
+            name: 'Mobility Flow',
+            muscleMap: [
+              MuscleActivation(
+                muscleId: 'core',
+                role: MuscleRole.stabilizer,
+                coefficient: 0.1,
+              ),
+            ],
+            equipment: EquipmentClass.bodyweight,
+            movement: MovementClass.isolation,
+            loadKind: ExerciseLoadKind.mobilitySkill,
+            localFatigueKind: LocalFatigueKind.none,
+          ),
+        );
+      final engine = _engineWithRegistry(registry);
+      final completedAt = DateTime.utc(2026, 3, 1, 18, 0);
+
+      engine.ingestSession(
+        EngineSession(
+          id: 'mobility-session',
+          startedAt: completedAt.subtract(const Duration(minutes: 10)),
+          endedAt: completedAt,
+          sets: [
+            LoggedSet(
+              exerciseId: 'mobility_flow',
+              weightKg: 0.0,
+              reps: 0,
+              durationSeconds: 600,
+              completedAt: completedAt,
+            ),
+          ],
+        ),
+      );
+
+      expect(engine.state.fatigueLog, isEmpty);
+      expect(engine.state.dailyLoads.single.volumeLoad, 0.0);
+      expect(engine.state.dailyLoads.single.overallLoadPoints, 0.0);
+      expect(engine.state.acwrState!.acuteEwma, 0.0);
+      expect(engine.state.acwrState!.chronicEwma, 0.0);
     });
 
     test('updates ACWR EWMA state', () {

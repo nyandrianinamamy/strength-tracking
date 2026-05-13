@@ -179,11 +179,13 @@ class TrainingEngineAdapter {
       );
     }
 
-    // 3. Construct synthetic exercise if we have muscle information
-    if (exercise.primaryMuscles.isEmpty) return null;
-
+    // 3. Known timed cardio can be classified from its identity even when
+    // the editor has not captured explicit muscles.
     final cardio = _cardioExerciseFor(exercise);
     if (cardio != null) return cardio;
+
+    // 4. Construct synthetic exercise if we have muscle information
+    if (exercise.primaryMuscles.isEmpty) return null;
 
     final muscleMap = <MuscleActivation>[];
     for (final muscle in exercise.primaryMuscles) {

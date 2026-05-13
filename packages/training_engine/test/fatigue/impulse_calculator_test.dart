@@ -287,6 +287,34 @@ void main() {
         expect(i.magnitude, greaterThanOrEqualTo(0.0));
       }
     });
+
+    test('50/50 mixed strength and timed sets stay strength classified', () {
+      final impulses = calculateImpulses(
+        sets: [
+          LoggedSet(
+            exerciseId: 'squat',
+            weightKg: 75.0,
+            reps: 10,
+            strengthRpe: 8.0,
+            completedAt: sessionEnd,
+          ),
+          LoggedSet(
+            exerciseId: 'squat',
+            weightKg: 0.0,
+            reps: 0,
+            durationSeconds: 60,
+            localRpe: 8.0,
+            completedAt: sessionEnd,
+          ),
+        ],
+        exercise: strengthExercise,
+        e1rm: e1rm,
+        sessionEndedAt: sessionEnd,
+      );
+
+      final quads = impulses.firstWhere((i) => i.muscleId == 'quadriceps');
+      expect(quads.magnitude, closeTo(20.0, 0.001));
+    });
   });
 
   group('calculateImpulses – ISOMETRIC HOLD', () {

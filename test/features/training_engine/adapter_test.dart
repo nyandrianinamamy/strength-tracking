@@ -173,6 +173,33 @@ void main() {
       },
     );
 
+    test('maps custom timed cardio even when muscle lists are empty', () {
+      final registry = ExerciseRegistry.withDefaults();
+      const exercise = Exercise(
+        id: 'hotel_treadmill',
+        name: 'Hotel Treadmill',
+        primaryMuscles: [],
+        secondaryMuscles: [],
+        equipment: ['Machine'],
+        instructions: '',
+        archived: false,
+        exerciseType: 'timed',
+      );
+
+      final mapped = adapter.toEngineExercise(exercise, registry);
+
+      expect(mapped, isNotNull);
+      expect(mapped!.loadKind, ExerciseLoadKind.cardioSteady);
+      expect(mapped.localFatigueKind, LocalFatigueKind.cardioAerobicLocal);
+      expect(mapped.muscleMap, isNotEmpty);
+      expect(
+        mapped.muscleMap.any(
+          (activation) => activation.muscleId == 'quadriceps',
+        ),
+        isTrue,
+      );
+    });
+
     test('maps plank to timed isometric defaults', () {
       final registry = ExerciseRegistry.withDefaults();
       const exercise = Exercise(

@@ -209,10 +209,13 @@ class TrainingEngine {
         continue;
       }
 
-      volumeLoad += impulse_lib.trainingStressForSet(set);
-      if (exercise == null) continue;
+      if (exercise == null) {
+        volumeLoad += impulse_lib.trainingStressForSet(set);
+        continue;
+      }
       switch (exercise.localFatigueKind) {
         case LocalFatigueKind.cardioAerobicLocal:
+          volumeLoad += impulse_lib.trainingStressForSet(set);
           metabolicLoadPoints += impulse_lib.calculateMetabolicLoad(
             sets: [set],
             metabolicMultiplier: exercise.metabolicMultiplier,
@@ -220,6 +223,7 @@ class TrainingEngine {
           );
           break;
         case LocalFatigueKind.isometricHold:
+          volumeLoad += impulse_lib.trainingStressForSet(set);
           isometricLoadPoints += impulse_lib.calculateIsometricLoad(
             sets: [set],
             defaultLocalRpe: exercise.defaultLocalRpe,
@@ -227,6 +231,7 @@ class TrainingEngine {
           break;
         case LocalFatigueKind.strengthVolume:
           if (set.hasTimedLoad) {
+            volumeLoad += impulse_lib.trainingStressForSet(set);
             isometricLoadPoints += impulse_lib.calculateIsometricLoad(
               sets: [set],
               defaultLocalRpe: exercise.defaultLocalRpe,
