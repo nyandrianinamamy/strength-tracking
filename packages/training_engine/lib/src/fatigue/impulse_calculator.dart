@@ -233,7 +233,7 @@ bool _isTimedSet(List<LoggedSet> sets) {
   final timedCount = sets
       .where((s) => !s.hasStrengthLoad && s.hasTimedLoad)
       .length;
-  return timedCount >= sets.length / 2;
+  return timedCount > sets.length / 2;
 }
 
 /// Calculates fatigue impulses for each muscle in [exercise.muscleMap] after
