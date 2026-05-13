@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
@@ -12,7 +13,18 @@ import 'package:strength_training_tracker/src/features/routines/routine_controll
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:strength_training_tracker/src/features/workout/active_workout_screen.dart';
+import 'package:strength_training_tracker/src/features/workout/workout_summary_screen.dart';
 import 'package:training_engine/training_engine.dart';
+
+Future<void> _pumpFrames(
+  WidgetTester tester, {
+  int count = 10,
+  Duration step = const Duration(milliseconds: 100),
+}) async {
+  for (var i = 0; i < count; i++) {
+    await tester.pump(step);
+  }
+}
 
 Map<String, dynamic> _savedEngineState() {
   final engine = TrainingEngine(
@@ -50,6 +62,72 @@ Map<String, dynamic> _savedEngineState() {
 }
 
 void main() {
+  testWidgets(
+    'finishing from confirmation sheet closes the sheet before summary navigation',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 932);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final repository = MemoryAppStateRepository(
+        initialState: DemoSeedData.initialState(),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          appStateRepositoryProvider.overrideWithValue(repository),
+          initialAppStateProvider.overrideWithValue(repository.state),
+          trainingEngineStateRepositoryProvider.overrideWithValue(
+            MemoryTrainingEngineStateRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(routineControllerProvider).startSession('push_day');
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const ActiveWorkoutScreen(),
+          ),
+          GoRoute(
+            path: '/workout/:sessionId/summary',
+            builder: (context, state) => WorkoutSummaryScreen(
+              sessionId: state.pathParameters['sessionId']!,
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await _pumpFrames(tester);
+
+      await tester.tap(find.text('FINISH').last);
+      await _pumpFrames(tester);
+
+      expect(find.text('Finish & Save'), findsOneWidget);
+
+      await tester.tap(find.text('Finish & Save'));
+      await _pumpFrames(tester);
+
+      expect(find.text('Workout Complete'), findsOneWidget);
+      expect(find.text('Push Day'), findsOneWidget);
+      expect(find.text('Finish & Save'), findsNothing);
+      expect(find.byType(BottomSheet), findsNothing);
+    },
+  );
+
   testWidgets(
     'logging a strength set shows its per-set RPE in session history',
     (tester) async {

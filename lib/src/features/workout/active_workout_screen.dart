@@ -549,10 +549,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     );
   }
 
-  void _showFinishConfirmation(BuildContext context) {
+  Future<void> _showFinishConfirmation(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(workoutControllerProvider);
-    showModalBottomSheet(
+    final completedSessionId = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
@@ -597,11 +597,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 const SizedBox(height: 24),
                 FilledButton.icon(
                   onPressed: () {
-                    Navigator.of(sheetContext).pop();
                     final completed = controller.completeSession();
-                    if (completed != null) {
-                      context.go('/workout/${completed.id}/summary');
-                    }
+                    Navigator.of(sheetContext).pop(completed?.id);
                   },
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
@@ -638,6 +635,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         );
       },
     );
+
+    if (!context.mounted || completedSessionId == null) {
+      return;
+    }
+
+    context.go('/workout/$completedSessionId/summary');
   }
 
   void _showSwapPicker(
