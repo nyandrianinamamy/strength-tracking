@@ -30,6 +30,14 @@ This plan captures the decisions needed to prepare Kotrana: Musculation for its 
   4. Save the identifier.
 - After this, rerun the `v1.0.31` Build iOS workflow. The Fastlane lane should detect the existing capability, regenerate the App Store profile with `match(force: true)`, and continue to archive/upload.
 
+## Metadata Automation Status
+
+- GitHub secret `APP_REVIEW_DEMO_PASSWORD` is set.
+- Manual workflow `Sync App Store Metadata` targets the existing App Store version page `1.0`.
+- Workflow run `25964706927` verified that Fastlane can authenticate, find App Store version `1.0`, and load every metadata/review-info file from `ios/fastlane/metadata`.
+- The same run failed when uploading metadata with: `This request is forbidden for security reasons - The API key in use does not allow this request`.
+- To use metadata automation, replace/update the App Store Connect API key GitHub secrets with a key that has permission to edit App Store metadata, such as an App Manager/Admin-capable key, or fill the fields manually in App Store Connect from `docs/app-store-connect-submission-values.md`.
+
 ## Product and Access Decisions
 
 - Public App Store distribution: yes, discoverable, free, available everywhere.
@@ -449,6 +457,7 @@ Before tagging `v1.0.31`:
 - Confirm Firebase Auth email/password provider is enabled.
 - Confirm Firebase Auth Apple provider is configured.
 - Confirm Apple developer capability for Sign in with Apple is enabled for `dev.mamy-r.kotrana`.
+- Confirm App Store Connect API key can edit app metadata, or plan to fill App Store Connect manually.
 - Confirm Firestore data document path used by `FirestoreAppStateRepository`.
 - Confirm whether HealthKit background delivery is referenced anywhere beyond entitlements.
 - Confirm whether direct Bluetooth/BLE code exists; remove Bluetooth string if not.
