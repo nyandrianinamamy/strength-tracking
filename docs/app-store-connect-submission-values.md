@@ -2,7 +2,9 @@
 
 Use these values for the Kotrana public App Store submission. Keep reviewer credentials out of commits; paste the real password only in App Store Connect.
 
-The text metadata and App Review contact fields are also stored in `ios/fastlane/metadata`. To sync them without submitting the app, add the reviewer password as GitHub secret `APP_REVIEW_DEMO_PASSWORD`, then run the manual GitHub Actions workflow `Sync App Store Metadata` for App Store version `1.0`.
+The text metadata and App Review contact fields are also stored in `ios/fastlane/metadata`. To sync them without submitting the app, add the reviewer password as GitHub secret `APP_REVIEW_DEMO_PASSWORD`, then run the manual GitHub Actions workflow `Sync App Store Metadata` for App Store version `1.0`. The workflow can also upload prepared screenshots when `upload_screenshots` is enabled.
+
+Prepared App Store screenshots are stored in `ios/fastlane/screenshots/en-US`. They are `1290 x 2796` PNGs for the iPhone 6.9-inch portrait display class.
 
 ## App Information
 
@@ -133,3 +135,13 @@ Leave unclaimed unless directly verified:
 ## Build Selection
 
 - Select build: `1.0.31 (281)` after the `v1.0.31` tag upload has completed processing.
+
+## Screenshots
+
+Upload these screenshots for iPhone 6.9-inch displays:
+
+1. `ios/fastlane/screenshots/en-US/01_dashboard_6_9.png`
+2. `ios/fastlane/screenshots/en-US/02_routines_6_9.png`
+3. `ios/fastlane/screenshots/en-US/03_progress_6_9.png`
+4. `ios/fastlane/screenshots/en-US/04_exercises_6_9.png`
+5. `ios/fastlane/screenshots/en-US/05_heatmap_6_9.png`

@@ -7,6 +7,11 @@ on:
         description: "App Store version page to update"
         required: true
         default: "1.0"
+      upload_screenshots:
+        description: "Upload prepared screenshots too"
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   sync-metadata:
@@ -29,4 +34,5 @@ jobs:
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
           APP_REVIEW_DEMO_PASSWORD: ${{ secrets.APP_REVIEW_DEMO_PASSWORD }}
           APP_STORE_VERSION: ${{ inputs.build_version }}
+          UPLOAD_SCREENSHOTS: ${{ inputs.upload_screenshots }}
         run: bundle exec fastlane metadata

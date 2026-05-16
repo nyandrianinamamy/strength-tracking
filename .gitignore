@@ -58,5 +58,9 @@ packages/training_engine/build/
 ios/fastlane/report.xml
 ios/fastlane/Preview.html
 ios/fastlane/screenshots
+!ios/fastlane/screenshots/
+!ios/fastlane/screenshots/README.md
+!ios/fastlane/screenshots/en-US/
+!ios/fastlane/screenshots/en-US/*.png
 ios/fastlane/test_output
 ios/fastlane/README.md

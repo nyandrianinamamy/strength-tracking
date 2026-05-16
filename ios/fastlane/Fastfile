@@ -119,13 +119,16 @@ platform :ios do
     demo_password = ENV["APP_REVIEW_DEMO_PASSWORD"].to_s
     UI.user_error!("APP_REVIEW_DEMO_PASSWORD is required to upload reviewer sign-in details") if demo_password.empty?
 
+    upload_screenshots = ENV["UPLOAD_SCREENSHOTS"].to_s.downcase == "true"
+
     deliver(
       api_key: app_store_connect_api_key_from_env,
       app_identifier: "dev.mamy-r.kotrana",
       app_version: ENV["APP_STORE_VERSION"] || ENV["BUILD_VERSION"] || "1.0",
       metadata_path: "fastlane/metadata",
+      screenshots_path: "fastlane/screenshots",
       skip_binary_upload: true,
-      skip_screenshots: true,
+      skip_screenshots: !upload_screenshots,
       submit_for_review: false,
       automatic_release: false,
       force: true,
