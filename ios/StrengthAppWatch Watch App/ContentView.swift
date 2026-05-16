@@ -68,25 +68,7 @@ struct ContentView: View {
     private func activeWorkoutView(snapshot: SessionSnapshot) -> some View {
         ExercisePageView(
             snapshot: snapshot,
-            onLogSet: { sessionId, exerciseId, setNumber, weightKg, reps in
-                let message = LogSetMessage.strength(
-                    sessionId: sessionId,
-                    exerciseId: exerciseId,
-                    setNumber: setNumber,
-                    weightKg: weightKg,
-                    reps: reps
-                )
-                sessionManager.sendLogSet(message)
-            },
-            onLogTimedSet: { sessionId, exerciseId, setNumber, durationSeconds in
-                let message = LogSetMessage.timed(
-                    sessionId: sessionId,
-                    exerciseId: exerciseId,
-                    setNumber: setNumber,
-                    durationSeconds: durationSeconds
-                )
-                sessionManager.sendLogSet(message)
-            }
+            activeRestRemaining: sessionManager.activeRestRemaining
         )
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {

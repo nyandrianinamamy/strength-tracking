@@ -14,12 +14,15 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
     @Published var isConnected: Bool = false
     @Published var showWorkoutComplete: Bool = false
     @Published var syncFailed: Bool = false
+    @Published var activeRestRemaining: Int = 0
 
     // MARK: - Private
 
     private let cacheKey = "cached_session_snapshot"
-    private let queueKey = "queued_log_sets"
     private var wcSession: WCSession?
+    private var restHapticTimer: Timer?
+    private var activeRestKey: String?
+    private var lastRestAlertSecond: Int?
 
     // MARK: - HealthKit Workout Session
 
@@ -56,7 +59,6 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
             // Haptic on reconnection
             if !wasConnected && self.isConnected {
                 WKInterfaceDevice.current().play(.click)
-                self.flushQueue()
             }
         }
     }
@@ -103,6 +105,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
                     startedAt: decoded.startedAt,
                     currentExerciseIndex: decoded.currentExerciseIndex,
                     exercises: decoded.exercises,
+                    activeRest: decoded.activeRest,
                     locale: locale,
                     unit: unit,
                     weightIncrement: increment
@@ -111,6 +114,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
                     self.snapshot = enriched
                     self.showWorkoutComplete = false
                     self.startWorkoutSession()
+                    self.configureActiveRest(enriched.activeRest)
                 }
                 cacheSnapshot(enriched)
             } catch {
@@ -120,6 +124,7 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
         case "session_end":
             DispatchQueue.main.async {
                 self.endWorkoutSession()
+                self.resetActiveRest()
                 self.showWorkoutComplete = true
                 // Show "Workout Complete" for 3 seconds, then clear
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
@@ -135,30 +140,9 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
         }
     }
 
-    // MARK: - Send logged set to phone
-
-    func sendLogSet(_ message: LogSetMessage) {
-        let dict = message.toDictionary()
-        applyOptimisticLog(message)
-
-        guard let session = wcSession, session.isReachable else {
-            // Queue for later delivery
-            enqueue(dict)
-            return
-        }
-
-        // Try direct message first, fall back to guaranteed delivery if needed.
-        session.sendMessage(dict, replyHandler: nil) { [weak self] error in
-            print("Direct send failed, queuing: \(error)")
-            self?.enqueue(dict)
-        }
-    }
-
     // MARK: - Force sync
 
     func forceSync() {
-        flushQueue()
-
         guard let session = wcSession, session.isReachable else {
             DispatchQueue.main.async {
                 self.syncFailed = true
@@ -184,33 +168,74 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
         })
     }
 
-    // MARK: - Offline queue
+    // MARK: - Active rest
 
-    private func enqueue(_ dict: [String: Any]) {
-        var queue = loadQueue()
-        if let data = try? JSONSerialization.data(withJSONObject: dict) {
-            queue.append(data)
-            UserDefaults.standard.set(queue.map { $0.base64EncodedString() }, forKey: queueKey)
+    private func configureActiveRest(_ rest: WatchRestState?) {
+        restHapticTimer?.invalidate()
+        restHapticTimer = nil
+
+        guard let rest,
+              let endsAt = parseISO8601(rest.endsAt) else {
+            resetActiveRest()
+            return
         }
-    }
 
-    private func loadQueue() -> [Data] {
-        guard let encoded = UserDefaults.standard.array(forKey: queueKey) as? [String] else {
-            return []
+        let key = "\(rest.sourceExerciseId)|\(rest.startedAt)|\(rest.endsAt)"
+        if activeRestKey != key {
+            activeRestKey = key
+            lastRestAlertSecond = nil
         }
-        return encoded.compactMap { Data(base64Encoded: $0) }
-    }
 
-    func flushQueue() {
-        let queue = loadQueue()
-        guard let session = wcSession, session.isReachable, !queue.isEmpty else { return }
+        updateActiveRestRemaining(endsAt: endsAt)
+        guard activeRestRemaining > 0 else {
+            resetActiveRest()
+            return
+        }
 
-        for data in queue {
-            if let dict = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                session.transferUserInfo(dict)
+        restHapticTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] timer in
+            guard let self else {
+                timer.invalidate()
+                return
+            }
+            self.updateActiveRestRemaining(endsAt: endsAt)
+            self.playRestHapticIfNeeded()
+            if self.activeRestRemaining <= 0 {
+                timer.invalidate()
+                self.restHapticTimer = nil
             }
         }
-        UserDefaults.standard.removeObject(forKey: queueKey)
+    }
+
+    private func updateActiveRestRemaining(endsAt: Date) {
+        activeRestRemaining = max(0, Int(ceil(endsAt.timeIntervalSinceNow)))
+    }
+
+    private func playRestHapticIfNeeded() {
+        let remaining = activeRestRemaining
+        guard lastRestAlertSecond != remaining else { return }
+        lastRestAlertSecond = remaining
+
+        if remaining == 3 || remaining == 2 || remaining == 1 {
+            WKInterfaceDevice.current().play(.click)
+        } else if remaining == 0 {
+            WKInterfaceDevice.current().play(.success)
+        }
+    }
+
+    private func resetActiveRest() {
+        restHapticTimer?.invalidate()
+        restHapticTimer = nil
+        activeRestRemaining = 0
+        activeRestKey = nil
+        lastRestAlertSecond = nil
+    }
+
+    private func parseISO8601(_ string: String) -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let date = formatter.date(from: string) { return date }
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter.date(from: string)
     }
 
     // MARK: - HKWorkoutSession
@@ -270,72 +295,11 @@ class WorkoutSessionManager: NSObject, ObservableObject, WCSessionDelegate, HKWo
         guard let data = UserDefaults.standard.data(forKey: cacheKey) else { return }
         if let cached = try? JSONDecoder().decode(SessionSnapshot.self, from: data) {
             self.snapshot = cached
+            configureActiveRest(cached.activeRest)
         }
     }
 
     private func clearCache() {
         UserDefaults.standard.removeObject(forKey: cacheKey)
-    }
-
-    private func applyOptimisticLog(_ message: LogSetMessage) {
-        guard let snapshot = snapshot,
-              !snapshot.sessionId.isEmpty,
-              snapshot.sessionId == message.sessionId,
-              let exerciseIndex = snapshot.exercises.firstIndex(where: { $0.exerciseId == message.exerciseId }) else {
-            return
-        }
-
-        let exercise = snapshot.exercises[exerciseIndex]
-        guard !exercise.completedSets.contains(where: { $0.setNumber == message.setNumber }) else {
-            return
-        }
-
-        let optimisticSet = WatchCompletedSet(
-            setNumber: message.setNumber,
-            weightKg: message.weightKg ?? 0,
-            reps: message.reps ?? 0,
-            durationSeconds: message.durationSeconds,
-            completedAt: message.completedAt
-        )
-
-        let updatedExercise = WatchExercise(
-            exerciseId: exercise.exerciseId,
-            name: exercise.name,
-            exerciseType: exercise.exerciseType,
-            targetSets: exercise.targetSets,
-            targetReps: exercise.targetReps,
-            targetDurationSeconds: exercise.targetDurationSeconds,
-            restSeconds: exercise.restSeconds,
-            suggestedWeightKg: exercise.suggestedWeightKg,
-            completedSets: exercise.completedSets + [optimisticSet]
-        )
-
-        var updatedExercises = snapshot.exercises
-        updatedExercises[exerciseIndex] = updatedExercise
-        let nextExerciseIndex: Int
-        if exerciseIndex == snapshot.currentExerciseIndex &&
-            updatedExercise.completedSets.count >= updatedExercise.targetSets &&
-            exerciseIndex < updatedExercises.count - 1 {
-            nextExerciseIndex = exerciseIndex + 1
-        } else {
-            nextExerciseIndex = snapshot.currentExerciseIndex
-        }
-
-        let updatedSnapshot = SessionSnapshot(
-            sessionId: snapshot.sessionId,
-            routineId: snapshot.routineId,
-            routineName: snapshot.routineName,
-            startedAt: snapshot.startedAt,
-            currentExerciseIndex: nextExerciseIndex,
-            exercises: updatedExercises,
-            locale: snapshot.locale,
-            unit: snapshot.unit,
-            weightIncrement: snapshot.weightIncrement
-        )
-
-        DispatchQueue.main.async {
-            self.snapshot = updatedSnapshot
-        }
-        cacheSnapshot(updatedSnapshot)
     }
 }

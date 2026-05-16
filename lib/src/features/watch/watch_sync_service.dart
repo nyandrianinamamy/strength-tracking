@@ -11,7 +11,6 @@ import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
-import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 
 final watchSyncServiceProvider = Provider<WatchSyncService>((ref) {
   return WatchSyncService(ref);
@@ -162,19 +161,60 @@ class WatchSyncService {
       exercises.add(exerciseData);
     }
 
+    final sessionData = <String, dynamic>{
+      'sessionId': session.id,
+      'routineId': session.routineId,
+      'routineName': routine.name,
+      'startedAt': session.startedAt.toUtc().toIso8601String(),
+      'currentExerciseIndex': session.currentExerciseIndex,
+      'exercises': exercises,
+    };
+    final activeRest = _buildActiveRest(state, session, routine, locale);
+    if (activeRest != null) {
+      sessionData['activeRest'] = activeRest;
+    }
+
     return {
       'type': 'session_update',
-      'session': {
-        'sessionId': session.id,
-        'routineId': session.routineId,
-        'routineName': routine.name,
-        'startedAt': session.startedAt.toUtc().toIso8601String(),
-        'currentExerciseIndex': session.currentExerciseIndex,
-        'exercises': exercises,
-      },
+      'session': sessionData,
       'locale': locale,
       'unit': unit,
       'weightIncrement': weightIncrement,
+    };
+  }
+
+  Map<String, dynamic>? _buildActiveRest(
+    AppState state,
+    WorkoutSession session,
+    Routine routine,
+    String locale,
+  ) {
+    if (session.completedSets.isEmpty) return null;
+
+    final allSets = [...session.completedSets]
+      ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    final lastSet = allSets.first;
+
+    final prescription = routine.exercises
+        .where((item) => item.exerciseId == lastSet.exerciseId)
+        .firstOrNull;
+    final restSeconds = prescription?.restSeconds ?? 0;
+    if (restSeconds <= 0) return null;
+
+    final endsAt = lastSet.completedAt.add(Duration(seconds: restSeconds));
+    if (!endsAt.isAfter(DateTime.now())) return null;
+
+    final exercise = state.exerciseById(lastSet.exerciseId);
+    final exerciseName = exercise != null
+        ? _localizedExerciseName(exercise, locale)
+        : 'Unknown';
+
+    return {
+      'sourceExerciseId': lastSet.exerciseId,
+      'sourceExerciseName': exerciseName,
+      'startedAt': lastSet.completedAt.toUtc().toIso8601String(),
+      'endsAt': endsAt.toUtc().toIso8601String(),
+      'restSeconds': restSeconds,
     };
   }
 
@@ -312,113 +352,11 @@ class WatchSyncService {
     final type = data['type'] as String?;
 
     switch (type) {
-      case 'log_set':
-        _handleLogSet(data);
-      case 'log_timed_set':
-        _handleLogTimedSet(data);
       case 'request_sync':
         _handleSyncRequest();
       default:
         debugPrint('Unknown Watch event type: $type');
     }
-  }
-
-  void _handleLogSet(Map<String, dynamic> data) {
-    final sessionId = data['sessionId'] as String?;
-    final exerciseId = data['exerciseId'] as String?;
-    final setNumber = data['setNumber'] as int?;
-    final weightKg = (data['weightKg'] as num?)?.toDouble();
-    final reps = data['reps'] as int?;
-
-    if (sessionId == null ||
-        exerciseId == null ||
-        setNumber == null ||
-        weightKg == null ||
-        reps == null) {
-      debugPrint('Invalid log_set data from Watch: $data');
-      return;
-    }
-
-    final state = _ref.read(appStateControllerProvider);
-    final session = state.activeSession;
-    if (session == null) return;
-    if (session.id != sessionId) {
-      debugPrint('Ignoring stale Watch log_set for session $sessionId');
-      return;
-    }
-
-    // Duplicate detection
-    final existingSet = session.completedSets.any(
-      (s) => s.exerciseId == exerciseId && s.setNumber == setNumber,
-    );
-    if (existingSet) {
-      debugPrint(
-        'Duplicate set from Watch ignored: $exerciseId set $setNumber',
-      );
-      return;
-    }
-
-    // Navigate to the exercise if needed
-    final routine = state.routineById(session.routineId);
-    if (routine != null) {
-      final exerciseIndex = routine.exercises.indexWhere(
-        (e) => e.exerciseId == exerciseId,
-      );
-      if (exerciseIndex >= 0 && exerciseIndex != session.currentExerciseIndex) {
-        _ref.read(workoutControllerProvider).goToExercise(exerciseIndex);
-      }
-    }
-
-    _ref.read(workoutControllerProvider).logSet(weightKg: weightKg, reps: reps);
-  }
-
-  void _handleLogTimedSet(Map<String, dynamic> data) {
-    final sessionId = data['sessionId'] as String?;
-    final exerciseId = data['exerciseId'] as String?;
-    final setNumber = data['setNumber'] as int?;
-    final durationSeconds = data['durationSeconds'] as int?;
-
-    if (sessionId == null ||
-        exerciseId == null ||
-        setNumber == null ||
-        durationSeconds == null) {
-      debugPrint('Invalid log_timed_set data from Watch: $data');
-      return;
-    }
-
-    final state = _ref.read(appStateControllerProvider);
-    final session = state.activeSession;
-    if (session == null) return;
-    if (session.id != sessionId) {
-      debugPrint('Ignoring stale Watch log_timed_set for session $sessionId');
-      return;
-    }
-
-    // Duplicate detection
-    final existingSet = session.completedSets.any(
-      (s) => s.exerciseId == exerciseId && s.setNumber == setNumber,
-    );
-    if (existingSet) {
-      debugPrint(
-        'Duplicate timed set from Watch ignored: $exerciseId set $setNumber',
-      );
-      return;
-    }
-
-    // Navigate to the exercise if needed
-    final routine = state.routineById(session.routineId);
-    if (routine != null) {
-      final exerciseIndex = routine.exercises.indexWhere(
-        (e) => e.exerciseId == exerciseId,
-      );
-      if (exerciseIndex >= 0 && exerciseIndex != session.currentExerciseIndex) {
-        _ref.read(workoutControllerProvider).goToExercise(exerciseIndex);
-      }
-    }
-
-    _ref
-        .read(workoutControllerProvider)
-        .logTimedSet(durationSeconds: durationSeconds);
   }
 
   void _handleSyncRequest() {

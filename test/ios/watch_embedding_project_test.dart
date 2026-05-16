@@ -37,4 +37,48 @@ void main() {
     expect(manager, contains('sanitizePropertyListValue'));
     expect(manager, contains('value is NSNull'));
   });
+
+  test('Watch app is display-only and owns rest haptics globally', () {
+    final project = File(
+      'ios/Runner.xcodeproj/project.pbxproj',
+    ).readAsStringSync();
+    final contentView = File(
+      'ios/StrengthAppWatch Watch App/ContentView.swift',
+    ).readAsStringSync();
+    final exercisePage = File(
+      'ios/StrengthAppWatch Watch App/Views/ExercisePageView.swift',
+    ).readAsStringSync();
+    final strengthView = File(
+      'ios/StrengthAppWatch Watch App/Views/StrengthExerciseView.swift',
+    ).readAsStringSync();
+    final timedView = File(
+      'ios/StrengthAppWatch Watch App/Views/TimedExerciseView.swift',
+    ).readAsStringSync();
+    final sessionModel = File(
+      'ios/StrengthAppWatch Watch App/Models/SessionSnapshot.swift',
+    ).readAsStringSync();
+    final manager = File(
+      'ios/StrengthAppWatch Watch App/WorkoutSessionManager.swift',
+    ).readAsStringSync();
+    final watchInfoPlist = File(
+      'ios/StrengthAppWatch Watch App/Info.plist',
+    ).readAsStringSync();
+
+    expect(contentView, isNot(contains('LogSetMessage')));
+    expect(exercisePage, isNot(contains('onLogSet')));
+    expect(strengthView, isNot(contains('digitalCrownRotation')));
+    expect(strengthView, isNot(contains('LOG SET')));
+    expect(timedView, isNot(contains('Button(action: toggleTimer)')));
+    expect(timedView, isNot(contains('onLogTimedSet')));
+
+    expect(sessionModel, contains('WatchRestState'));
+    expect(sessionModel, contains('activeRest'));
+    expect(manager, contains('activeRestRemaining'));
+    expect(manager, contains('configureActiveRest'));
+    expect(manager, contains('restHapticTimer'));
+    expect(watchInfoPlist, contains('<key>WKBackgroundModes</key>'));
+    expect(project, contains('INFOPLIST_KEY_WKBackgroundModes'));
+    expect(project, contains('membershipExceptions'));
+    expect(project, contains('workout-processing'));
+  });
 }

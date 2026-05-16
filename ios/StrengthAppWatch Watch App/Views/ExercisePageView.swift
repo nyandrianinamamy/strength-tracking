@@ -2,8 +2,7 @@ import SwiftUI
 
 struct ExercisePageView: View {
     let snapshot: SessionSnapshot
-    let onLogSet: (String, String, Int, Double, Int) -> Void        // sessionId, exerciseId, setNumber, weightKg, reps
-    let onLogTimedSet: (String, String, Int, Int) -> Void            // sessionId, exerciseId, setNumber, durationSeconds
+    let activeRestRemaining: Int
 
     @State private var selectedPage: Int = 0
 
@@ -18,11 +17,9 @@ struct ExercisePageView: View {
                             totalExercises: snapshot.exercises.count,
                             nextExerciseName: nextName(after: index),
                             sessionStartedAt: snapshot.startedAt,
-                            locale: snapshot.locale,
-                            onLogTimedSet: { durationSeconds in
-                                let setNumber = exercise.completedSets.count + 1
-                                onLogTimedSet(snapshot.sessionId, exercise.exerciseId, setNumber, durationSeconds)
-                            }
+                            activeRest: snapshot.activeRest,
+                            activeRestRemaining: activeRestRemaining,
+                            locale: snapshot.locale
                         )
                     } else {
                         StrengthExerciseView(
@@ -31,13 +28,10 @@ struct ExercisePageView: View {
                             totalExercises: snapshot.exercises.count,
                             nextExerciseName: nextName(after: index),
                             sessionStartedAt: snapshot.startedAt,
+                            activeRest: snapshot.activeRest,
+                            activeRestRemaining: activeRestRemaining,
                             locale: snapshot.locale,
-                            unit: snapshot.unit,
-                            weightIncrement: snapshot.weightIncrement,
-                            onLogSet: { weightKg, reps in
-                                let setNumber = exercise.completedSets.count + 1
-                                onLogSet(snapshot.sessionId, exercise.exerciseId, setNumber, weightKg, reps)
-                            }
+                            unit: snapshot.unit
                         )
                     }
                 }

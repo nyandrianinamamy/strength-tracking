@@ -1,5 +1,4 @@
 import SwiftUI
-import WatchKit
 
 struct TimedExerciseView: View {
     let exercise: WatchExercise
@@ -7,256 +6,124 @@ struct TimedExerciseView: View {
     let totalExercises: Int
     let nextExerciseName: String?
     let sessionStartedAt: String
+    let activeRest: WatchRestState?
+    let activeRestRemaining: Int
     let locale: String
-    let onLogTimedSet: (Int) -> Void
-
-    @State private var isRunning: Bool = false
-    @State private var elapsed: Int = 0
-    @State private var timer: Timer? = nil
-    @State private var restTimerStart: Date? = nil
-    @State private var restRemaining: Int = 0
-    @State private var restTimer: Timer? = nil
-    @State private var lastRestAlertSecond: Int? = nil
 
     private var targetDuration: Int {
         exercise.targetDurationSeconds ?? 60
     }
 
-    private var remaining: Int {
-        max(0, targetDuration - elapsed)
-    }
-
     private var nextSetNumber: Int {
-        exercise.completedSets.count + 1
-    }
-
-    private var allSetsComplete: Bool {
-        exercise.completedSets.count >= exercise.targetSets
+        min(exercise.completedSets.count + 1, exercise.targetSets)
     }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let sessionTime = elapsedSessionTime(now: context.date)
-
             VStack(spacing: 0) {
-                Spacer().frame(height: 4)
+                header(sessionTime: elapsedSessionTime(now: context.date))
 
-                // Rest timer pill
-                if let _ = restTimerStart, restRemaining > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "timer")
-                            .font(.system(size: 10, weight: .black))
-                        Text("\(WatchL10n.string("resting", locale: locale)): \(formatTime(restRemaining))")
-                            .font(.system(size: 12, weight: .black))
-                    }
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(999)
+                if activeRestRemaining > 0 {
+                    restPill
+                        .padding(.top, 3)
                 }
 
-                Spacer().frame(height: 8)
+                Spacer().frame(height: activeRestRemaining > 0 ? 5 : 10)
 
-                // Set progress
-                Text(WatchL10n.setOf(min(nextSetNumber, exercise.targetSets), exercise.targetSets, locale: locale))
+                Text(WatchL10n.setOf(nextSetNumber, exercise.targetSets, locale: locale))
                     .font(.system(size: 10, weight: .bold))
-                    .kerning(1)
                     .textCase(.uppercase)
                     .foregroundColor(Color(white: 0.63))
 
-                // Exercise name
                 Text(exercise.name)
                     .font(.system(size: 18, weight: .black))
-                    .tracking(-0.45)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .padding(.top, 2)
 
-                Spacer().frame(height: 12)
+                Spacer().frame(height: 7)
 
-                // Countdown display
-                if !allSetsComplete {
-                    Text(formatTime(isRunning ? remaining : targetDuration))
-                        .font(.system(size: 40, weight: .black, design: .rounded))
-                        .tracking(-2)
-                        .foregroundColor(isRunning ? .blue : .primary)
+                Text(formatTime(activeTimedRemaining(now: context.date) ?? targetDuration))
+                    .font(.system(size: 36, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundColor(activeTimedRemaining(now: context.date) == nil ? .primary : .blue)
 
-                    Spacer()
-                    Spacer().frame(height: 8)
-
-                    // START / STOP button
-                    Button(action: toggleTimer) {
-                        VStack(spacing: 1) {
-                            Text(isRunning
-                                 ? WatchL10n.string("stop", locale: locale)
-                                 : WatchL10n.string("start", locale: locale))
-                                .font(.system(size: 13, weight: .black))
-                                .tracking(-0.3)
-                                .textCase(.uppercase)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(isRunning ? Color.red : Color.blue)
-                        .cornerRadius(14)
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Spacer()
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(.green)
-                    Spacer()
-                }
-
-                // Footer — next exercise + session time
-                Divider()
-                    .padding(.top, 8)
-                HStack {
-                    if let next = nextExerciseName {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(WatchL10n.string("next", locale: locale))
-                                .font(.system(size: 8, weight: .bold))
-                                .textCase(.uppercase)
-                                .foregroundColor(Color(white: 0.63))
-                            Text(next)
-                                .font(.system(size: 10, weight: .black))
-                                .lineLimit(1)
-                        }
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text(WatchL10n.string("session", locale: locale))
-                            .font(.system(size: 8, weight: .bold))
-                            .textCase(.uppercase)
-                            .foregroundColor(Color(white: 0.63))
-                        Text(sessionTime)
-                            .font(.system(size: 10, weight: .black))
-                    }
+                VStack(spacing: 6) {
+                    TimedInfoRow(label: "Target", value: "\(targetDuration)s / \(exercise.restSeconds)s rest")
+                    TimedInfoRow(label: "Last", value: lastSetText)
                 }
                 .padding(.top, 6)
-                .padding(.bottom, 8)
-                .padding(.horizontal, 4)
+
+                Spacer(minLength: 4)
+                footer
             }
             .padding(.horizontal, 4)
-        }
-        .onDisappear {
-            timer?.invalidate()
-            timer = nil
-            restTimer?.invalidate()
-            restTimer = nil
-            restTimerStart = nil
-            lastRestAlertSecond = nil
-            isRunning = false
-        }
-        .onAppear {
-            restoreRestTimer()
-            syncFromPhone()
-        }
-        .onChange(of: exercise.completedSets.count) { _ in restoreRestTimer() }
-        .onChange(of: exercise.activeTimerStartedAt) { _ in syncFromPhone() }
-    }
-
-    // MARK: - Phone sync
-
-    private func syncFromPhone() {
-        if let startStr = exercise.activeTimerStartedAt,
-           let startDate = parseISO8601(startStr) {
-            // Phone timer is running — sync Watch to it
-            let elapsedSinceStart = Int(Date().timeIntervalSince(startDate))
-            let rem = targetDuration - elapsedSinceStart
-            if rem > 0 && !isRunning {
-                elapsed = elapsedSinceStart
-                isRunning = true
-                timer?.invalidate()
-                timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                    DispatchQueue.main.async {
-                        elapsed += 1
-                        let rem = targetDuration - elapsed
-                        if rem == 3 || rem == 2 || rem == 1 {
-                            WKInterfaceDevice.current().play(.click)
-                        }
-                        if rem <= 0 {
-                            timer?.invalidate()
-                            timer = nil
-                            isRunning = false
-                            WKInterfaceDevice.current().play(.success)
-                            let duration = elapsed
-                            elapsed = 0
-                            logCompleted(duration: duration)
-                        }
-                    }
-                }
-            } else if rem <= 0 {
-                // Timer already finished
-                timer?.invalidate()
-                timer = nil
-                isRunning = false
-                elapsed = 0
-            }
-        } else if isRunning {
-            // Phone timer stopped — stop Watch timer too
-            timer?.invalidate()
-            timer = nil
-            isRunning = false
-            elapsed = 0
+            .padding(.bottom, 4)
         }
     }
 
-    // MARK: - Timer
+    private func header(sessionTime: String) -> some View {
+        HStack {
+            Text(sessionTime)
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .monospacedDigit()
+            Spacer()
+            Text("\(exerciseIndex + 1)/\(totalExercises)")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(Color(white: 0.63))
+        }
+        .padding(.top, 4)
+    }
 
-    private func toggleTimer() {
-        if isRunning {
-            // STOP tapped early — log partial duration
-            timer?.invalidate()
-            timer = nil
-            isRunning = false
-            let duration = elapsed
-            elapsed = 0
-            logCompleted(duration: duration)
-        } else {
-            // START
-            elapsed = 0
-            isRunning = true
-            timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-                DispatchQueue.main.async {
-                    elapsed += 1
-                    let rem = targetDuration - elapsed
-                    // Haptic at 3, 2, 1
-                    if rem == 3 || rem == 2 || rem == 1 {
-                        WKInterfaceDevice.current().play(.click)
-                    }
-                    if rem <= 0 {
-                        // Auto-log
-                        timer?.invalidate()
-                        timer = nil
-                        isRunning = false
-                        WKInterfaceDevice.current().play(.success)
-                        let duration = elapsed
-                        elapsed = 0
-                        logCompleted(duration: duration)
-                    }
+    private var restPill: some View {
+        HStack {
+            Spacer(minLength: 0)
+            Text("Rest \(formatTime(activeRestRemaining))")
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .monospacedDigit()
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Color.blue.opacity(0.12))
+        .cornerRadius(7)
+        .foregroundColor(.blue)
+    }
+
+    private var lastSetText: String {
+        guard let lastSet = exercise.completedSets.last,
+              let duration = lastSet.durationSeconds else { return "-" }
+        return formatTime(duration)
+    }
+
+    private var footer: some View {
+        HStack {
+            if let nextExerciseName {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(WatchL10n.string("next", locale: locale))
+                        .font(.system(size: 8, weight: .bold))
+                        .textCase(.uppercase)
+                        .foregroundColor(Color(white: 0.63))
+                    Text(nextExerciseName)
+                        .font(.system(size: 10, weight: .black))
+                        .lineLimit(1)
                 }
             }
+            Spacer()
         }
+        .padding(.top, 6)
     }
 
-    private func logCompleted(duration: Int) {
-        onLogTimedSet(duration)
-        startRestTimer(from: Date())
-    }
-
-    private func formatTime(_ seconds: Int) -> String {
-        let m = seconds / 60
-        let s = seconds % 60
-        return String(format: "%d:%02d", m, s)
+    private func activeTimedRemaining(now: Date) -> Int? {
+        guard let startRaw = exercise.activeTimerStartedAt,
+              let start = parseISO8601(startRaw) else { return nil }
+        return max(0, targetDuration - Int(now.timeIntervalSince(start)))
     }
 
     private func elapsedSessionTime(now: Date) -> String {
         guard let start = parseISO8601(sessionStartedAt) else { return "0:00" }
-        let elapsed = Int(now.timeIntervalSince(start))
-        return formatTime(elapsed)
+        return formatTime(max(0, Int(now.timeIntervalSince(start))))
     }
 
     private func parseISO8601(_ string: String) -> Date? {
@@ -267,66 +134,26 @@ struct TimedExerciseView: View {
         return formatter.date(from: string)
     }
 
-    private func restoreRestTimer() {
-        guard let lastSet = exercise.completedSets.last,
-              let completedAt = parseISO8601(lastSet.completedAt) else {
-            restTimer?.invalidate()
-            restTimer = nil
-            restTimerStart = nil
-            restRemaining = 0
-            lastRestAlertSecond = nil
-            return
-        }
-
-        let elapsedRest = Int(Date().timeIntervalSince(completedAt))
-        let remaining = max(0, exercise.restSeconds - elapsedRest)
-        guard remaining > 0 else {
-            restTimer?.invalidate()
-            restTimer = nil
-            restTimerStart = nil
-            restRemaining = 0
-            lastRestAlertSecond = nil
-            return
-        }
-
-        startRestTimer(from: completedAt)
+    private func formatTime(_ seconds: Int) -> String {
+        let m = seconds / 60
+        let s = seconds % 60
+        return String(format: "%d:%02d", m, s)
     }
+}
 
-    private func startRestTimer(from start: Date) {
-        restTimer?.invalidate()
-        restTimerStart = start
-        lastRestAlertSecond = nil
-        updateRestRemaining()
+private struct TimedInfoRow: View {
+    let label: String
+    let value: String
 
-        restTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
-            DispatchQueue.main.async {
-                updateRestRemaining()
-            }
-        }
-    }
-
-    private func updateRestRemaining() {
-        guard let start = restTimerStart else {
-            restTimer?.invalidate()
-            restTimer = nil
-            restRemaining = 0
-            return
-        }
-        let elapsedRest = Int(Date().timeIntervalSince(start))
-        let remaining = max(0, exercise.restSeconds - elapsedRest)
-        restRemaining = remaining
-
-        if (remaining == 3 || remaining == 2 || remaining == 1) && lastRestAlertSecond != remaining {
-            lastRestAlertSecond = remaining
-            WKInterfaceDevice.current().play(.click)
-        }
-
-        if remaining <= 0 {
-            WKInterfaceDevice.current().play(.success)
-            restTimer?.invalidate()
-            restTimer = nil
-            restTimerStart = nil
-            lastRestAlertSecond = nil
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(Color(white: 0.63))
+            Spacer(minLength: 6)
+            Text(value)
+                .font(.system(size: 11, weight: .black))
+                .lineLimit(1)
         }
     }
 }
