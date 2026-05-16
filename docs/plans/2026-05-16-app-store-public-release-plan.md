@@ -9,13 +9,24 @@ This plan captures the decisions needed to prepare Kotrana: Musculation for its 
 
 ## Current Known State
 
-- Local `main` was pulled and was already up to date at `cc86d8c`, tagged `v1.0.30`.
+- `main` contains the merged release-prep work and `v1.0.31` currently points at `c5fb55b`.
 - TestFlight/App Store Connect has uploaded build `1.0.30 (272)`.
-- This release-prep branch bumps `pubspec.yaml` to `1.0.31+277`; tag `v1.0.31` should upload App Store Connect build `1.0.31 (277)`.
+- The release-prep work bumps `pubspec.yaml` to `1.0.31+277`; tag `v1.0.31` should upload App Store Connect build `1.0.31 (277)`.
 - The public App Store version page was still using old build `1.0.23 (238)` and must be updated after the final release-prep build.
 - App Store Connect status was `1.0 Prepare for Submission`.
 - App Store metadata, screenshots, App Privacy, pricing/availability, age rating, regulated medical device declaration, and accessibility labels were not yet complete.
 - Existing untracked files at time of planning were GPT Pro artifacts in `docs/`; leave them untouched unless specifically needed.
+
+## Current Blocker
+
+- Build iOS workflow `25964141727` fails before archive because Apple Developer rejects enabling `APPLE_ID_AUTH` for `dev.mamy-r.kotrana` through the App Store Connect API key.
+- Error observed on rerun job `76324827607`: `This request is forbidden for security reasons - You are not allowed to perform this operation.`
+- Manual Team Admin action required before rerunning the tag workflow:
+  1. Apple Developer > Certificates, Identifiers & Profiles.
+  2. Open identifier `dev.mamy-r.kotrana`.
+  3. Enable `Sign in with Apple`.
+  4. Save the identifier.
+- After this, rerun the `v1.0.31` Build iOS workflow. The Fastlane lane should detect the existing capability, regenerate the App Store profile with `match(force: true)`, and continue to archive/upload.
 
 ## Product and Access Decisions
 
