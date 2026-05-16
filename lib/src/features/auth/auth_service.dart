@@ -23,50 +23,15 @@ class AuthService {
 
   User? get currentUser => _auth.currentUser;
 
-  bool get isAnonymous => _auth.currentUser?.isAnonymous ?? true;
-
-  Future<User> signInAnonymously() async {
-    final credential = await _auth.signInAnonymously();
+  Future<User> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    final credential = await _auth.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
     return credential.user!;
-  }
-
-  Future<User> linkWithGoogle() async {
-    if (kIsWeb) {
-      // On web, use popup directly via Firebase Auth
-      final provider = GoogleAuthProvider();
-      final result = await _auth.currentUser!.linkWithPopup(provider);
-      return result.user!;
-    }
-    // On iOS/Android, use google_sign_in package
-    final googleUser = await GoogleSignIn().signIn();
-    if (googleUser == null) {
-      throw Exception('Google sign-in cancelled');
-    }
-    final googleAuth = await googleUser.authentication;
-    final credential = GoogleAuthProvider.credential(
-      accessToken: googleAuth.accessToken,
-      idToken: googleAuth.idToken,
-    );
-    final result = await _auth.currentUser!.linkWithCredential(credential);
-    return result.user!;
-  }
-
-  Future<User> linkWithApple() async {
-    if (kIsWeb) {
-      final provider = OAuthProvider('apple.com')
-        ..addScope('email');
-      final result = await _auth.currentUser!.linkWithPopup(provider);
-      return result.user!;
-    }
-    final appleCredential = await SignInWithApple.getAppleIDCredential(
-      scopes: [AppleIDAuthorizationScopes.email],
-    );
-    final credential = OAuthProvider('apple.com').credential(
-      idToken: appleCredential.identityToken,
-      accessToken: appleCredential.authorizationCode,
-    );
-    final result = await _auth.currentUser!.linkWithCredential(credential);
-    return result.user!;
   }
 
   Future<User> signInWithGoogle() async {
@@ -90,8 +55,7 @@ class AuthService {
 
   Future<User> signInWithApple() async {
     if (kIsWeb) {
-      final provider = OAuthProvider('apple.com')
-        ..addScope('email');
+      final provider = OAuthProvider('apple.com')..addScope('email');
       final result = await _auth.signInWithPopup(provider);
       return result.user!;
     }

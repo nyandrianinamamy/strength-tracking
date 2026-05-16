@@ -446,6 +446,30 @@ abstract class AppLocalizations {
   /// **'Explore with Demo Data'**
   String get tryWithDemoData;
 
+  /// No description provided for @inviteOnlyMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Access to Kotrana is currently invite-only. If you\'ve been invited, sign in with the method linked to your account.'**
+  String get inviteOnlyMessage;
+
+  /// No description provided for @email.
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// No description provided for @signInWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in with Email'**
+  String get signInWithEmail;
+
   /// No description provided for @orSignIn.
   ///
   /// In en, this message translates to:
@@ -968,41 +992,17 @@ abstract class AppLocalizations {
   /// **'Describe setup, execution cues, and common errors to avoid.'**
   String get instructionsHint;
 
-  /// No description provided for @anonymousAccount.
-  ///
-  /// In en, this message translates to:
-  /// **'Anonymous Account'**
-  String get anonymousAccount;
-
   /// No description provided for @linkedAccount.
   ///
   /// In en, this message translates to:
   /// **'Linked Account'**
   String get linkedAccount;
 
-  /// No description provided for @linkToSync.
-  ///
-  /// In en, this message translates to:
-  /// **'Link an account to sync across devices'**
-  String get linkToSync;
-
   /// No description provided for @dataSynced.
   ///
   /// In en, this message translates to:
   /// **'Your data is synced across all your devices.'**
   String get dataSynced;
-
-  /// No description provided for @linkGoogle.
-  ///
-  /// In en, this message translates to:
-  /// **'Link Google Account'**
-  String get linkGoogle;
-
-  /// No description provided for @linkApple.
-  ///
-  /// In en, this message translates to:
-  /// **'Link Apple Account'**
-  String get linkApple;
 
   /// No description provided for @switchAccount.
   ///
@@ -1013,7 +1013,7 @@ abstract class AppLocalizations {
   /// No description provided for @switchWarning.
   ///
   /// In en, this message translates to:
-  /// **'This will discard your current data and load the linked account\'s data.'**
+  /// **'This signs out of the current account and loads the selected account\'s cloud data.'**
   String get switchWarning;
 
   /// No description provided for @signInGoogle.
@@ -1037,7 +1037,7 @@ abstract class AppLocalizations {
   /// No description provided for @switchAccountConfirm.
   ///
   /// In en, this message translates to:
-  /// **'Your current anonymous data will be discarded and replaced with the data from your linked account.'**
+  /// **'You will be signed out of the current account and the selected account\'s cloud data will be loaded.'**
   String get switchAccountConfirm;
 
   /// No description provided for @switchButton.
@@ -1069,18 +1069,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You will be signed out and returned to the onboarding screen. Your data remains saved in the cloud.'**
   String get signOutConfirm;
-
-  /// No description provided for @signOutAnonymousTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Reset Account?'**
-  String get signOutAnonymousTitle;
-
-  /// No description provided for @signOutAnonymousConfirm.
-  ///
-  /// In en, this message translates to:
-  /// **'Your current data will be permanently lost because this account is not linked to Google or Apple. This cannot be undone.'**
-  String get signOutAnonymousConfirm;
 
   /// No description provided for @deleteAccount.
   ///

@@ -8,7 +8,6 @@ void main() {
       deleteUserData: () async => events.add('delete-user-data'),
       deleteCurrentUser: () async => events.add('delete-current-user'),
       clearLocalState: () => events.add('clear-local-state'),
-      signInAnonymously: () async => events.add('sign-in-anonymously'),
     );
 
     await service.deleteAccount();
@@ -17,7 +16,6 @@ void main() {
       'delete-user-data',
       'delete-current-user',
       'clear-local-state',
-      'sign-in-anonymously',
     ]);
   });
 
@@ -30,13 +28,9 @@ void main() {
         throw StateError('requires recent login');
       },
       clearLocalState: () => events.add('clear-local-state'),
-      signInAnonymously: () async => events.add('sign-in-anonymously'),
     );
 
-    await expectLater(
-      service.deleteAccount(),
-      throwsA(isA<StateError>()),
-    );
+    await expectLater(service.deleteAccount(), throwsA(isA<StateError>()));
 
     expect(events, ['delete-user-data', 'delete-current-user']);
   });

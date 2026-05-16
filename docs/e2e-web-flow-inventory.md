@@ -257,7 +257,7 @@ intended to keep new E2E tests close to the existing `app_test.dart` style.
 - Preferences controls: unit segments `KG`/`LBS`, language `Auto`/`EN`/`FR`,
   and theme `Auto`/light icon/dark icon. Unit changes should be asserted again
   in workout inputs, summary, dashboard, or progress rather than only settings.
-- Account anonymous controls: `Link Google`, `Sign in with Google`, `Sign Out`,
+- Account controls: email/password, `Continue with Apple`, `Continue with Google`, `Sign Out`,
   and `Delete Account`. Google paths should be treated as failure/snackbar paths
   under emulator/web unless the provider is explicitly mocked.
 - Data controls: `Load Sample Exercises & Routines`,
@@ -460,7 +460,7 @@ intended to keep new E2E tests close to the existing `app_test.dart` style.
 - Unit preference affects workout inputs, summary, dashboard, and progress.
 - Language preference changes visible labels after rebuild.
 - Theme preference changes light/dark/auto rendering.
-- Account anonymous state renders link, switch, sign out/reset, and delete
+- Account signed-in state renders sign out and delete controls
   actions.
 - Link Google account failure path shows snackbar without state loss.
 - Switch account confirmation cancel and confirm paths.
@@ -494,7 +494,7 @@ enabled.
 
 - State persists across app rebuild/reload within the emulator-backed user.
 - Emulator reset gives a clean state between tests.
-- Anonymous auth session is recreated after sign out/reset.
+- Sign out returns to onboarding without recreating an anonymous auth session.
 - Firestore-backed state loads after replacing local state from cloud.
 - Connectivity snackbar does not block primary web actions.
 - Local fallback path after Firebase initialization failure, if injectable in

@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/debug_surface.dart';
+import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 import 'package:strength_training_tracker/src/features/dashboard/dashboard_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercises_screen.dart';
@@ -32,7 +34,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (context, state) {
+          final showProfileSetup =
+              kDebugMode || ref.read(authServiceProvider).currentUser != null;
+          return OnboardingScreen(showProfileSetup: showProfileSetup);
+        },
       ),
       ShellRoute(
         builder: (context, state, child) {
