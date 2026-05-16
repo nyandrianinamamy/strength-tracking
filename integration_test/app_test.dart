@@ -452,8 +452,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Account'), findsOneWidget);
-      expect(find.text('Anonymous Account'), findsOneWidget);
-      expect(find.text('Link Google Account'), findsOneWidget);
+      expect(find.text('Linked Account'), findsOneWidget);
+      expect(find.text('Sign in with Email'), findsOneWidget);
+      expect(find.text('Sign in with Apple'), findsOneWidget);
+      expect(find.text('Sign in with Google'), findsOneWidget);
 
       await tester.drag(find.byType(Scrollable).last, const Offset(0, -400));
       await tester.pumpAndSettle();
@@ -1000,11 +1002,6 @@ void main() {
       expect(container.read(appStateControllerProvider).weight, isNull);
       expect(container.read(appStateControllerProvider).preferredUnit, 'lbs');
       expect(container.read(appStateControllerProvider).preferredTheme, 'dark');
-
-      await scrollToText(tester, 'Link Google Account');
-      await tester.tap(find.text('Link Google Account'));
-      await pumpFrames(tester, count: 20);
-      expect(find.text('Settings'), findsOneWidget);
 
       await scrollToText(tester, 'Sign in with Google');
       await tester.tap(find.text('Sign in with Google'));

@@ -72,6 +72,18 @@ void main() {
   });
 
   group('static legal pages', () {
+    test('support page gives App Store users a contact path', () {
+      final supportHtml = _readText('web/support.html');
+
+      expect(supportHtml, contains('<title>Kotrana Support</title>'));
+      expect(supportHtml, contains('<h1>Kotrana Support</h1>'));
+      expect(supportHtml, contains('nyandrianinamamy@gmail.com'));
+      expect(supportHtml, contains('href="/privacy"'));
+      expect(supportHtml, contains('href="/terms"'));
+
+      _expectNoStaleProductWording(supportHtml);
+    });
+
     test('privacy page matches supported HealthKit read behavior', () {
       final privacyHtml = _readText('web/privacy.html');
 
@@ -81,6 +93,8 @@ void main() {
         privacyHtml,
         contains('may read sleep, heart rate variability, resting heart rate'),
       );
+      expect(privacyHtml, contains('invite-only'));
+      expect(privacyHtml, contains('email address'));
       expect(
         privacyHtml,
         contains(
@@ -116,7 +130,7 @@ void main() {
       expect(
         inventory,
         contains(
-          'Static privacy and terms pages at `web/privacy.html` and `web/terms.html`',
+          'Static privacy, terms, and support pages at `web/privacy.html`, `web/terms.html`, and `web/support.html`',
         ),
       );
       expect(inventory, contains('test/web/web_assets_test.dart'));

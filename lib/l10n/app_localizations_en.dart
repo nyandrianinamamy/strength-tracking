@@ -187,6 +187,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tryWithDemoData => 'Explore with Demo Data';
 
   @override
+  String get inviteOnlyMessage =>
+      'Access to Kotrana is currently invite-only. If you\'ve been invited, sign in with the method linked to your account.';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get signInWithEmail => 'Sign in with Email';
+
+  @override
   String get orSignIn => 'or sign in to restore your data';
 
   @override
@@ -457,29 +470,17 @@ class AppLocalizationsEn extends AppLocalizations {
       'Describe setup, execution cues, and common errors to avoid.';
 
   @override
-  String get anonymousAccount => 'Anonymous Account';
-
-  @override
   String get linkedAccount => 'Linked Account';
 
   @override
-  String get linkToSync => 'Link an account to sync across devices';
-
-  @override
   String get dataSynced => 'Your data is synced across all your devices.';
-
-  @override
-  String get linkGoogle => 'Link Google Account';
-
-  @override
-  String get linkApple => 'Link Apple Account';
 
   @override
   String get switchAccount => 'or switch to an existing account';
 
   @override
   String get switchWarning =>
-      'This will discard your current data and load the linked account\'s data.';
+      'This signs out of the current account and loads the selected account\'s cloud data.';
 
   @override
   String get signInGoogle => 'Sign in with Google';
@@ -492,7 +493,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get switchAccountConfirm =>
-      'Your current anonymous data will be discarded and replaced with the data from your linked account.';
+      'You will be signed out of the current account and the selected account\'s cloud data will be loaded.';
 
   @override
   String get switchButton => 'Switch';
@@ -509,13 +510,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get signOutConfirm =>
       'You will be signed out and returned to the onboarding screen. Your data remains saved in the cloud.';
-
-  @override
-  String get signOutAnonymousTitle => 'Reset Account?';
-
-  @override
-  String get signOutAnonymousConfirm =>
-      'Your current data will be permanently lost because this account is not linked to Google or Apple. This cannot be undone.';
 
   @override
   String get deleteAccount => 'Delete Account';

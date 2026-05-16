@@ -188,6 +188,19 @@ class AppLocalizationsFr extends AppLocalizations {
   String get tryWithDemoData => 'Explorer avec des données démo';
 
   @override
+  String get inviteOnlyMessage =>
+      'L\'accès à Kotrana est actuellement sur invitation. Si vous avez été invité, connectez-vous avec la méthode liée à votre compte.';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Mot de passe';
+
+  @override
+  String get signInWithEmail => 'Se connecter par email';
+
+  @override
   String get orSignIn => 'ou connectez-vous pour récupérer vos données';
 
   @override
@@ -458,30 +471,18 @@ class AppLocalizationsFr extends AppLocalizations {
       'Décrivez la mise en place, les repères d\'exécution et les erreurs courantes.';
 
   @override
-  String get anonymousAccount => 'Compte anonyme';
-
-  @override
   String get linkedAccount => 'Compte lié';
-
-  @override
-  String get linkToSync => 'Liez un compte pour synchroniser vos données';
 
   @override
   String get dataSynced =>
       'Vos données sont synchronisées sur tous vos appareils.';
 
   @override
-  String get linkGoogle => 'Lier un compte Google';
-
-  @override
-  String get linkApple => 'Lier un compte Apple';
-
-  @override
   String get switchAccount => 'ou connectez-vous à un compte existant';
 
   @override
   String get switchWarning =>
-      'Vos données actuelles seront remplacées par celles du compte lié.';
+      'Vous serez déconnecté du compte actuel et les données cloud du compte choisi seront chargées.';
 
   @override
   String get signInGoogle => 'Se connecter avec Google';
@@ -494,7 +495,7 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get switchAccountConfirm =>
-      'Vos données anonymes seront remplacées par celles de votre compte lié.';
+      'Vous serez déconnecté du compte actuel et les données cloud du compte choisi seront chargées.';
 
   @override
   String get switchButton => 'Changer';
@@ -511,13 +512,6 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get signOutConfirm =>
       'Vous serez déconnecté et redirigé vers l\'écran d\'accueil. Vos données restent sauvegardées dans le cloud.';
-
-  @override
-  String get signOutAnonymousTitle => 'Réinitialiser le compte ?';
-
-  @override
-  String get signOutAnonymousConfirm =>
-      'Vos données actuelles seront définitivement perdues car ce compte n\'est pas lié à Google ou Apple. Cette action est irréversible.';
 
   @override
   String get deleteAccount => 'Supprimer le compte';

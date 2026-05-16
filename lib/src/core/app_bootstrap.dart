@@ -9,6 +9,7 @@ import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
+import 'package:strength_training_tracker/src/features/auth/invite_access.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 
@@ -47,24 +48,35 @@ Future<AppBootstrapResult> initializeApp({
       await firebaseAuth.setPersistence(Persistence.LOCAL);
     }
 
-    // Sign in anonymously if no existing session
-    if (firebaseAuth.currentUser == null) {
-      await firebaseAuth.signInAnonymously();
+    final firestoreInstance = firestore ?? FirebaseFirestore.instance;
+    final preferences = await SharedPreferences.getInstance();
+    final currentUser = firebaseAuth.currentUser;
+    var usesCloudRepository = false;
+    if (currentUser == null) {
+      repository = MemoryAppStateRepository(initialState: AppState.empty());
+    } else {
+      try {
+        await InviteAccessService(
+          firestore: firestoreInstance,
+        ).requireAllowed(currentUser);
+        repository = FirestoreAppStateRepository(
+          auth: firebaseAuth,
+          firestore: firestoreInstance,
+        );
+        usesCloudRepository = true;
+      } on InviteAccessDeniedException catch (e) {
+        debugPrint('Invite-only access denied, signing out: $e');
+        await firebaseAuth.signOut();
+        repository = MemoryAppStateRepository(initialState: AppState.empty());
+      }
     }
 
-    final firestoreInstance = firestore ?? FirebaseFirestore.instance;
-    repository = FirestoreAppStateRepository(
-      auth: firebaseAuth,
-      firestore: firestoreInstance,
-    );
-
     // Migrate from SharedPreferences if data exists
-    final preferences = await SharedPreferences.getInstance();
     trainingEngineStateRepository =
         SharedPreferencesTrainingEngineStateRepository(preferences);
     const migrationKey = 'strength_training_tracker_state_v1';
     final localData = preferences.getString(migrationKey);
-    if (localData != null && localData.isNotEmpty) {
+    if (usesCloudRepository && localData != null && localData.isNotEmpty) {
       final localRepo = SharedPreferencesAppStateRepository(preferences);
       final localState = await localRepo.load();
       // Only migrate if Firestore is empty (don't overwrite cloud data)
@@ -113,6 +125,11 @@ Future<AppBootstrapResult> initializeApp({
       auth: injectedAuth ?? FirebaseAuth.instance,
     );
   }
+}
+
+@visibleForTesting
+AppStateRepository buildUnauthenticatedRepositoryForTest() {
+  return MemoryAppStateRepository(initialState: AppState.empty());
 }
 
 ProviderContainer buildContainer(AppBootstrapResult result) {

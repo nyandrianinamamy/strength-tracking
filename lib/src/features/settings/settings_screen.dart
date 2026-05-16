@@ -14,6 +14,7 @@ import 'package:strength_training_tracker/src/data/repository/app_state_reposito
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
+import 'package:strength_training_tracker/src/features/auth/invite_access.dart';
 import 'package:strength_training_tracker/src/features/settings/account_deletion_service.dart';
 import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
@@ -110,7 +111,65 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Future<void> _signInAndReplace(String provider) async {
+  Future<({String email, String password})?> _promptEmailCredentials() async {
+    final l10n = AppLocalizations.of(context)!;
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    try {
+      return showDialog<({String email, String password})>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text(l10n.signInWithEmail),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                decoration: InputDecoration(labelText: l10n.email),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                autofillHints: const [AutofillHints.password],
+                decoration: InputDecoration(labelText: l10n.password),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                final email = emailController.text.trim();
+                final password = passwordController.text;
+                if (email.isEmpty || password.isEmpty) return;
+                Navigator.pop(dialogContext, (
+                  email: email,
+                  password: password,
+                ));
+              },
+              child: Text(l10n.switchButton),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      emailController.dispose();
+      passwordController.dispose();
+    }
+  }
+
+  Future<void> _signInAndReplace(
+    String provider, {
+    String? email,
+    String? password,
+  }) async {
     final l10n = AppLocalizations.of(context)!;
     final confirmed = await showDialog<bool>(
       context: context,
@@ -135,9 +194,24 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     if (confirmed != true || !mounted) return;
 
+    var replacementSignedIn = false;
     try {
       final authService = ref.read(authServiceProvider);
-      await authService.signInWithGoogle();
+      if (provider == 'apple') {
+        await authService.signInWithApple();
+        replacementSignedIn = true;
+      } else if (provider == 'email') {
+        await authService.signInWithEmailAndPassword(
+          email: email!,
+          password: password!,
+        );
+        replacementSignedIn = true;
+      } else {
+        await authService.signInWithGoogle();
+        replacementSignedIn = true;
+      }
+
+      await InviteAccessService().requireAllowed(authService.currentUser);
 
       final repository = FirestoreAppStateRepository(
         auth: authService.firebaseAuth,
@@ -152,6 +226,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ).showSnackBar(SnackBar(content: Text(l10n.signedInRestored)));
       }
     } catch (e) {
+      final authService = ref.read(authServiceProvider);
+      if (replacementSignedIn && authService.currentUser != null) {
+        await authService.signOut();
+      }
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -160,16 +238,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  Future<void> _signInWithEmailAndReplace() async {
+    final credentials = await _promptEmailCredentials();
+    if (credentials == null || !mounted) return;
+    await _signInAndReplace(
+      'email',
+      email: credentials.email,
+      password: credentials.password,
+    );
+  }
+
   Future<void> _signOutAndReset() async {
     final l10n = AppLocalizations.of(context)!;
-    final isAnon = ref.read(authServiceProvider).isAnonymous;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(isAnon ? l10n.signOutAnonymousTitle : l10n.signOutTitle),
-        content: Text(
-          isAnon ? l10n.signOutAnonymousConfirm : l10n.signOutConfirm,
-        ),
+        title: Text(l10n.signOutTitle),
+        content: Text(l10n.signOutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -180,7 +265,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: Text(isAnon ? l10n.reset : l10n.signOut),
+            child: Text(l10n.signOut),
           ),
         ],
       ),
@@ -196,10 +281,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       final authService = ref.read(authServiceProvider);
       await authService.signOut();
-
-      // Create a fresh anonymous session so the Firestore-backed
-      // repository has a valid user for any post-logout saves.
-      await authService.signInAnonymously();
 
       // Navigate directly to onboarding rather than relying on the
       // router redirect (which keys off userName.isEmpty and could
@@ -250,7 +331,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         clearLocalState: ref
             .read(appStateControllerProvider.notifier)
             .clearLocal,
-        signInAnonymously: authService.signInAnonymously,
       );
 
       await deletionService.deleteAccount();
@@ -285,7 +365,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final state = ref.watch(appStateControllerProvider);
     final authService = ref.read(authServiceProvider);
     final user = authService.currentUser;
-    final isAnonymous = authService.isAnonymous;
 
     // Resync text controllers when state changes externally
     // (e.g., sign-in replaces state with cloud data).
@@ -584,109 +663,87 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       context,
                     ).colorScheme.primary.withValues(alpha: 0.1),
                     child: Icon(
-                      isAnonymous ? Icons.person_outline : Icons.person,
+                      user == null ? Icons.person_outline : Icons.person,
                       size: 32,
                       color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    isAnonymous
-                        ? l10n.anonymousAccount
-                        : user?.displayName ??
-                              user?.email ??
-                              l10n.linkedAccount,
+                    user?.displayName ?? user?.email ?? l10n.linkedAccount,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    isAnonymous ? l10n.linkToSync : user?.email ?? '',
+                    user?.email ?? l10n.inviteOnlyMessage,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: context.appColors.subtleText,
                     ),
                   ),
                   const SizedBox(height: 16),
-                  if (isAnonymous) ...[
-                    _AuthButton(
-                      icon: Icons.g_mobiledata,
-                      label: l10n.linkGoogle,
-                      onTap: () async {
-                        try {
-                          await authService.linkWithGoogle();
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(l10n.failedError('$e'))),
-                            );
-                          }
-                        }
-                      },
+                  Text(
+                    l10n.dataSynced,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: context.appColors.subtleText,
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            l10n.switchAccount,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: context.appColors.subtleText),
-                          ),
+                  ),
+                  const SizedBox(height: 12),
+                  _AuthButton(
+                    icon: Icons.logout_rounded,
+                    label: l10n.signOut,
+                    onTap: _signOutAndReset,
+                  ),
+                  const SizedBox(height: 12),
+                  _AuthButton(
+                    icon: Icons.delete_forever_rounded,
+                    label: l10n.deleteAccount,
+                    onTap: _deleteAccount,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          l10n.switchAccount,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: context.appColors.subtleText),
                         ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      l10n.switchWarning,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: context.appColors.warning,
-                        fontSize: 11,
                       ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.switchWarning,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.appColors.warning,
+                      fontSize: 11,
                     ),
-                    const SizedBox(height: 12),
-                    _AuthButton(
-                      icon: Icons.g_mobiledata,
-                      label: l10n.signInGoogle,
-                      onTap: () => _signInAndReplace('google'),
-                    ),
-                    const SizedBox(height: 12),
-                    _AuthButton(
-                      icon: Icons.logout_rounded,
-                      label: l10n.signOut,
-                      onTap: _signOutAndReset,
-                    ),
-                    const SizedBox(height: 12),
-                    _AuthButton(
-                      icon: Icons.delete_forever_rounded,
-                      label: l10n.deleteAccount,
-                      onTap: _deleteAccount,
-                    ),
-                  ] else ...[
-                    Text(
-                      l10n.dataSynced,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: context.appColors.subtleText,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _AuthButton(
-                      icon: Icons.logout_rounded,
-                      label: l10n.signOut,
-                      onTap: _signOutAndReset,
-                    ),
-                    const SizedBox(height: 12),
-                    _AuthButton(
-                      icon: Icons.delete_forever_rounded,
-                      label: l10n.deleteAccount,
-                      onTap: _deleteAccount,
-                    ),
-                  ],
+                  ),
+                  const SizedBox(height: 12),
+                  _AuthButton(
+                    icon: Icons.email_outlined,
+                    label: l10n.signInWithEmail,
+                    onTap: _signInWithEmailAndReplace,
+                  ),
+                  const SizedBox(height: 12),
+                  _AuthButton(
+                    icon: Icons.apple,
+                    label: l10n.signInApple,
+                    onTap: () => _signInAndReplace('apple'),
+                  ),
+                  const SizedBox(height: 12),
+                  _AuthButton(
+                    icon: Icons.g_mobiledata,
+                    label: l10n.signInGoogle,
+                    onTap: () => _signInAndReplace('google'),
+                  ),
                 ],
               ),
             ),
@@ -700,32 +757,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               title: l10n.data,
               child: Column(
                 children: [
-                  _AuthButton(
-                    icon: Icons.download_rounded,
-                    label: l10n.loadSampleData,
-                    onTap: () {
-                      final sample = DemoSeedData.initialState();
-                      ref
-                          .read(appStateControllerProvider.notifier)
-                          .updateState(
-                            (s) => s.copyWith(
-                              exercises: [...s.exercises, ...sample.exercises],
-                              routines: [...s.routines, ...sample.routines],
-                              routineGroups: [
-                                ...s.routineGroups,
-                                ...sample.routineGroups,
-                              ],
-                              activeRoutineGroupId:
-                                  s.activeRoutineGroupId ??
-                                  sample.activeRoutineGroupId,
-                            ),
-                          );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(l10n.sampleDataLoaded)),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 12),
+                  if (kDebugMode) ...[
+                    _AuthButton(
+                      icon: Icons.download_rounded,
+                      label: l10n.loadSampleData,
+                      onTap: () {
+                        final sample = DemoSeedData.initialState();
+                        ref
+                            .read(appStateControllerProvider.notifier)
+                            .updateState(
+                              (s) => s.copyWith(
+                                exercises: [
+                                  ...s.exercises,
+                                  ...sample.exercises,
+                                ],
+                                routines: [...s.routines, ...sample.routines],
+                                routineGroups: [
+                                  ...s.routineGroups,
+                                  ...sample.routineGroups,
+                                ],
+                                activeRoutineGroupId:
+                                    s.activeRoutineGroupId ??
+                                    sample.activeRoutineGroupId,
+                              ),
+                            );
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(l10n.sampleDataLoaded)),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                  ],
                   _AuthButton(
                     icon: Icons.delete_outline_rounded,
                     label: l10n.clearData,

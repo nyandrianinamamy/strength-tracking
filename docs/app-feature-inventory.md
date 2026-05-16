@@ -70,7 +70,7 @@ Core persisted state includes:
 Persistence behavior:
 
 - Firebase initializes with Auth and Firestore when available.
-- The app signs in anonymously if there is no Firebase user.
+- The release app requires an invite-only email, Apple, or Google sign-in before cloud state is loaded.
 - Firestore stores the app state per authenticated user.
 - SharedPreferences is used as a fallback if Firebase initialization fails.
 - Existing SharedPreferences state is migrated to Firestore when cloud data is empty.
@@ -84,25 +84,25 @@ Implemented:
 - First-launch onboarding with required name entry.
 - Optional profile step with sex, age, weight, and fitness goal.
 - Unit selection between kilograms and pounds.
-- Google sign-in from onboarding.
-- Demo-data entry from onboarding.
+- Email/password, Apple, and Google sign-in from onboarding.
+- Demo-data entry from onboarding in debug/dev builds.
 - Redirect out of onboarding once profile setup is complete.
 
 ## Authentication and Accounts
 
 Implemented:
 
-- Anonymous Firebase Auth session as the default account mode.
-- Google sign-in and link-account flows.
-- Apple auth/link service helpers and localization strings exist, but the visible onboarding/settings UI exposes Google sign-in/link controls.
+- Invite-only Firebase Auth account access.
+- Email/password, Google, and Apple sign-in flows.
+- Firestore-backed email allowlist for approved accounts.
 - Sign out.
 - Delete current user through Firebase Auth.
 - Account data deletion through the app state repository.
 
 Platform notes:
 
-- On web, Google auth uses Firebase popup providers; Apple helper code also exists at the service layer.
-- On native platforms, Google uses `google_sign_in`, and Apple helper code uses `sign_in_with_apple`.
+- On web, Google and Apple auth use Firebase popup providers.
+- On native platforms, Google uses `google_sign_in`, and Apple uses `sign_in_with_apple`.
 - Web E2E treats third-party auth as a mocked failure path rather than opening real provider popups.
 
 Required implementation work:
@@ -392,7 +392,7 @@ Implemented:
 - PWA manifest at `web/manifest.json`.
 - Web splash/icon generation.
 - Force-update app action using a web-specific implementation.
-- Static privacy and terms pages at `web/privacy.html` and `web/terms.html`.
+- Static privacy, terms, and support pages at `web/privacy.html`, `web/terms.html`, and `web/support.html`.
 - Browser notification support for rest timer completion when permissions and page visibility allow it.
 
 Verification basis:

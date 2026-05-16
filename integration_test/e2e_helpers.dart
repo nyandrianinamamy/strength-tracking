@@ -68,10 +68,8 @@ Future<ProviderContainer> bootstrapTestApp({
   required FirebaseAuth auth,
   bool failGoogleAuth = false,
 }) async {
-  // Always sign out to clear cached credentials — the emulator reset deletes
-  // accounts but the SDK caches the old token. Without sign-out, initializeApp
-  // may reuse a stale anonymous user whose Firestore doc still has data from
-  // the previous test (race between emulator reset and Firestore reads).
+  // Always sign out to clear cached credentials. The emulator reset deletes
+  // accounts, but the SDK can keep a stale token between integration tests.
   try {
     await auth.signOut();
   } catch (_) {
@@ -97,11 +95,6 @@ Future<ProviderContainer> bootstrapTestApp({
 
 class _FailingGoogleAuthService extends AuthService {
   _FailingGoogleAuthService(super.auth);
-
-  @override
-  Future<User> linkWithGoogle() async {
-    throw Exception('Google sign-in cancelled in E2E');
-  }
 
   @override
   Future<User> signInWithGoogle() async {

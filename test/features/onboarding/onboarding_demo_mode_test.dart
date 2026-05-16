@@ -75,7 +75,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Name field is empty
-    final nameField = find.byType(TextField);
+    final nameField = find.widgetWithText(TextField, 'Your name');
     expect(nameField, findsOneWidget);
     expect(tester.widget<TextField>(nameField).controller?.text, isEmpty);
 
