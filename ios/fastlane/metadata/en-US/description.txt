@@ -1,0 +1,7 @@
+Kotrana: Musculation is an invite-only strength training tracker for lifters who want structured routines, focused workout logging, and clearer progress feedback.
+
+Build and follow routines, log sets with weight and reps, review workout history, and track progress over time. Kotrana includes a scientific training engine that helps organize training load, readiness, fatigue, and progression signals so your plan can stay practical from session to session.
+
+Apple Watch support lets you follow active workout state from your wrist, while Live Activities keep the current session visible on iPhone. Optional Apple Health integration can use sleep, heart rate variability, and resting heart rate to improve readiness context when you grant permission.
+
+Kotrana is designed to be private and focused: access is invite-only, account sync is available for approved users, and Apple Health data is not used for advertising, marketing, or data mining.

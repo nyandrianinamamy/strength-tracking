@@ -1,5 +1,14 @@
 default_platform(:ios)
 
+def app_store_connect_api_key_from_env
+  app_store_connect_api_key(
+    key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
+    issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+    key_content: ENV["APP_STORE_CONNECT_API_KEY"],
+    is_key_content_base64: true,
+  )
+end
+
 def ensure_bundle_capability(app_identifier, capability_type)
   bundle_id = Spaceship::ConnectAPI::BundleId.find(app_identifier)
   UI.user_error!("Bundle ID #{app_identifier} was not found") unless bundle_id
@@ -26,12 +35,7 @@ platform :ios do
     setup_ci
 
     # Authenticate with App Store Connect API
-    api_key = app_store_connect_api_key(
-      key_id: ENV["APP_STORE_CONNECT_API_KEY_ID"],
-      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
-      key_content: ENV["APP_STORE_CONNECT_API_KEY"],
-      is_key_content_base64: true,
-    )
+    api_key = app_store_connect_api_key_from_env
 
     ensure_bundle_capability(
       "dev.mamy-r.kotrana",
@@ -105,6 +109,29 @@ platform :ios do
       api_key: api_key,
       skip_waiting_for_build_processing: true,
       ipa: "../build/ios/ipa/Kotrana.ipa",
+    )
+  end
+
+  desc "Sync App Store Connect metadata without uploading a build or submitting"
+  lane :metadata do
+    setup_ci if ENV["CI"]
+
+    demo_password = ENV["APP_REVIEW_DEMO_PASSWORD"].to_s
+    UI.user_error!("APP_REVIEW_DEMO_PASSWORD is required to upload reviewer sign-in details") if demo_password.empty?
+
+    deliver(
+      api_key: app_store_connect_api_key_from_env,
+      app_identifier: "dev.mamy-r.kotrana",
+      app_version: ENV["BUILD_VERSION"] || "1.0.31",
+      metadata_path: "fastlane/metadata",
+      skip_binary_upload: true,
+      skip_screenshots: true,
+      submit_for_review: false,
+      automatic_release: false,
+      force: true,
+      app_review_information: {
+        demo_password: demo_password,
+      },
     )
   end
 end

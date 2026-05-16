@@ -1,0 +1,19 @@
+Kotrana is invite-only. Please use the reviewer account below to access all app features.
+
+Email: app-review@mamy-r.dev
+Password: provided in the App Review sign-in fields
+
+The reviewer account includes demo workout, routine, and history data.
+
+Suggested review flow:
+1. Open the dashboard to view progress, readiness, and muscle heatmap summaries.
+2. Start a workout from an existing routine and log sets, reps, weight, and RPE.
+3. Finish the workout and view the workout summary/history.
+4. Open routines/planning to review routine structure and training recommendations.
+5. Open Settings to review account sync, account deletion, legal links, and optional Apple Health access.
+6. If reviewing with an Apple Watch paired, start a workout on iPhone and view active workout state on the Watch.
+7. During an active workout, view the iPhone Live Activity if available.
+
+Apple Health access is optional. The reviewer account includes demo workout/routine/history data. Readiness features can also incorporate sleep, HRV, and resting heart rate if Apple Health permission is granted on the review device.
+
+Kotrana is free and has no in-app purchases or subscriptions.
