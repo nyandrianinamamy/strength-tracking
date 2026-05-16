@@ -2,7 +2,7 @@
 
 Date: 2026-05-16
 Target candidate: `v1.0.31`
-Build number: `275`
+Build number: `276`
 Release mode: manual release after App Review approval
 
 This plan captures the decisions needed to prepare Kotrana: Musculation for its first public App Store release. It is intended to survive context loss and let a future Codex session continue without re-interviewing the user.
@@ -11,7 +11,7 @@ This plan captures the decisions needed to prepare Kotrana: Musculation for its 
 
 - Local `main` was pulled and was already up to date at `cc86d8c`, tagged `v1.0.30`.
 - TestFlight/App Store Connect has uploaded build `1.0.30 (272)`.
-- This release-prep branch bumps `pubspec.yaml` to `1.0.31+275`; tag `v1.0.31` should upload App Store Connect build `1.0.31 (275)`.
+- This release-prep branch bumps `pubspec.yaml` to `1.0.31+276`; tag `v1.0.31` should upload App Store Connect build `1.0.31 (276)`.
 - The public App Store version page was still using old build `1.0.23 (238)` and must be updated after the final release-prep build.
 - App Store Connect status was `1.0 Prepare for Submission`.
 - App Store metadata, screenshots, App Privacy, pricing/availability, age rating, regulated medical device declaration, and accessibility labels were not yet complete.
@@ -423,7 +423,7 @@ Before tagging `v1.0.31`:
 4. Wait for PR checks and merge.
 5. Tag merged `main` as `v1.0.31`.
 6. Confirm GitHub Actions iOS/TestFlight upload succeeds.
-7. Confirm App Store Connect receives build `1.0.31 (275)`.
+7. Confirm App Store Connect receives build `1.0.31 (276)`.
 8. Select latest build for iOS App Version `1.0`.
 9. Fill App Store metadata, App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and App Review information.
 10. Upload screenshots.
