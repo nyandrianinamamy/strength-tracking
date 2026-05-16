@@ -118,6 +118,16 @@
 		F9AEFFC52329A8A6DC44C890 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		3005122A2F6C900000606BF1 /* Exceptions for "StrengthAppWatch Watch App" folder in "StrengthAppWatch Watch App" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 3005120B2F6C871200606BF1 /* StrengthAppWatch Watch App */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		2A6F2DA83B5E4C2900A10001 /* StrengthAppLiveActivity */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
@@ -133,6 +143,7 @@
 		3005120D2F6C871200606BF1 /* StrengthAppWatch Watch App */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				3005122A2F6C900000606BF1 /* Exceptions for "StrengthAppWatch Watch App" folder in "StrengthAppWatch Watch App" target */,
 			);
 			explicitFileTypes = {
 			};
@@ -828,12 +839,16 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "StrengthAppWatch Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Kotrana Watch";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Kotrana uses HealthKit to track your strength training workouts and keep the app active during exercise.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Kotrana saves your workout sessions to Apple Health so your training data stays in sync across apps.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "dev.mamy-r.kotrana";
+				INFOPLIST_KEY_WKBackgroundModes = (
+					"workout-processing",
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -879,12 +894,16 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "StrengthAppWatch Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Kotrana Watch";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Kotrana uses HealthKit to track your strength training workouts and keep the app active during exercise.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Kotrana saves your workout sessions to Apple Health so your training data stays in sync across apps.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "dev.mamy-r.kotrana";
+				INFOPLIST_KEY_WKBackgroundModes = (
+					"workout-processing",
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -927,12 +946,16 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = "StrengthAppWatch Watch App/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "Kotrana Watch";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Kotrana uses HealthKit to track your strength training workouts and keep the app active during exercise.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Kotrana saves your workout sessions to Apple Health so your training data stays in sync across apps.";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = "dev.mamy-r.kotrana";
+				INFOPLIST_KEY_WKBackgroundModes = (
+					"workout-processing",
+				);
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

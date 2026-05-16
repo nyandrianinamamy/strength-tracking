@@ -304,6 +304,45 @@ void main() {
       expect(bench, isNot(contains('suggestedWeightKg')));
     });
 
+    test('watch snapshot includes active rest from the latest set', () async {
+      final completedAt = DateTime.now().subtract(const Duration(seconds: 15));
+      final activeSession = buildActiveSession('push_day').copyWith(
+        currentExerciseIndex: 1,
+        completedSets: [
+          CompletedSet(
+            exerciseId: 'barbell_bench_press',
+            setNumber: 1,
+            weightKg: 80,
+            reps: 8,
+            completedAt: completedAt,
+            note: '',
+            rpe: 8,
+          ),
+        ],
+      );
+      final seededState = DemoSeedData.initialState().copyWith(
+        sessions: [activeSession],
+      );
+      final container = buildContainer(initialState: seededState);
+      addTearDown(container.dispose);
+
+      container.read(watchSyncServiceProvider).initialize();
+      await pumpEvents();
+
+      final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
+      final session = arguments['session'] as Map<dynamic, dynamic>;
+      final activeRest = session['activeRest'] as Map<dynamic, dynamic>;
+
+      expect(activeRest['sourceExerciseId'], 'barbell_bench_press');
+      expect(activeRest['sourceExerciseName'], isNotEmpty);
+      expect(activeRest['startedAt'], completedAt.toUtc().toIso8601String());
+      expect(
+        activeRest['endsAt'],
+        completedAt.add(const Duration(seconds: 120)).toUtc().toIso8601String(),
+      );
+      expect(activeRest['restSeconds'], 120);
+    });
+
     test('starting and completing a session sends update then end', () async {
       final container = buildContainer();
       addTearDown(container.dispose);
@@ -350,7 +389,7 @@ void main() {
     });
 
     test(
-      'log_set event navigates to the exercise and records the set',
+      'watch-originated log events are ignored in display-only mode',
       () async {
         final seededState = DemoSeedData.initialState().copyWith(
           sessions: [buildActiveSession('push_day')],
@@ -372,75 +411,12 @@ void main() {
         });
         await pumpEvents();
 
-        final session = container
-            .read(appStateControllerProvider)
-            .activeSession;
-        expect(session, isNotNull);
-        expect(session!.currentExerciseIndex, 1);
-        expect(session.completedSets, hasLength(1));
-        expect(
-          session.completedSets.single.exerciseId,
-          'incline_dumbbell_press',
-        );
-        expect(session.completedSets.single.setNumber, 1);
-        expect(session.completedSets.single.weightKg, 24.0);
-        expect(session.completedSets.single.reps, 10);
-      },
-    );
-
-    test('duplicate watch log_set events are ignored', () async {
-      final seededState = DemoSeedData.initialState().copyWith(
-        sessions: [buildActiveSession('push_day')],
-      );
-      final container = buildContainer(initialState: seededState);
-      addTearDown(container.dispose);
-
-      container.read(watchSyncServiceProvider).initialize();
-      await pumpEvents();
-
-      final workoutController = container.read(workoutControllerProvider);
-      workoutController.goToExercise(1);
-      workoutController.logSet(weightKg: 24.0, reps: 10);
-      await pumpEvents();
-
-      final before = container.read(appStateControllerProvider).activeSession!;
-      expect(before.completedSets, hasLength(1));
-
-      watchEvents!.success(<String, Object?>{
-        'type': 'log_set',
-        'sessionId': 'session_active',
-        'exerciseId': 'incline_dumbbell_press',
-        'setNumber': 1,
-        'weightKg': 24.0,
-        'reps': 10,
-      });
-      await pumpEvents();
-
-      final after = container.read(appStateControllerProvider).activeSession!;
-      expect(after.completedSets, hasLength(1));
-      expect(after.completedSets.single.exerciseId, 'incline_dumbbell_press');
-      expect(after.completedSets.single.setNumber, 1);
-    });
-
-    test(
-      'stale watch log_set events from another session are ignored',
-      () async {
-        final seededState = DemoSeedData.initialState().copyWith(
-          sessions: [buildActiveSession('push_day')],
-        );
-        final container = buildContainer(initialState: seededState);
-        addTearDown(container.dispose);
-
-        container.read(watchSyncServiceProvider).initialize();
-        await pumpEvents();
-
         watchEvents!.success(<String, Object?>{
-          'type': 'log_set',
-          'sessionId': 'older_session',
-          'exerciseId': 'incline_dumbbell_press',
+          'type': 'log_timed_set',
+          'sessionId': 'session_active',
+          'exerciseId': 'flow_core_timer',
           'setNumber': 1,
-          'weightKg': 24.0,
-          'reps': 10,
+          'durationSeconds': 45,
         });
         await pumpEvents();
 
@@ -449,6 +425,7 @@ void main() {
             .activeSession!;
         expect(session.currentExerciseIndex, 0);
         expect(session.completedSets, isEmpty);
+        expect(methodCalls, isEmpty);
       },
     );
   });

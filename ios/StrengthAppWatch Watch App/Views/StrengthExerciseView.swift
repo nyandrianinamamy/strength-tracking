@@ -1,5 +1,4 @@
 import SwiftUI
-import WatchKit
 
 struct StrengthExerciseView: View {
     let exercise: WatchExercise
@@ -7,249 +6,111 @@ struct StrengthExerciseView: View {
     let totalExercises: Int
     let nextExerciseName: String?
     let sessionStartedAt: String
+    let activeRest: WatchRestState?
+    let activeRestRemaining: Int
     let locale: String
     let unit: String
-    let weightIncrement: Double
-    let onLogSet: (Double, Int) -> Void
-
-    @State private var weight: Double = 0
-    @State private var reps: Int = 8
-    @State private var editingWeight: Bool = true
-    @State private var restHapticTimer: Timer? = nil
-    @FocusState private var crownFocused: Bool
 
     private var nextSetNumber: Int {
-        exercise.completedSets.count + 1
-    }
-
-    private var allSetsComplete: Bool {
-        exercise.completedSets.count >= exercise.targetSets
+        min(exercise.completedSets.count + 1, exercise.targetSets)
     }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1)) { context in
-            let restInfo = computeRestRemaining(now: context.date)
-            let sessionTime = elapsedSessionTime(now: context.date)
-
             VStack(spacing: 0) {
-                Spacer().frame(height: 4)
+                header(sessionTime: elapsedSessionTime(now: context.date))
 
-                // Rest timer pill
-                if restInfo.remaining > 0 {
-                    HStack(spacing: 4) {
-                        Image(systemName: "timer")
-                            .font(.system(size: 10, weight: .black))
-                        Text("\(WatchL10n.string("resting", locale: locale)): \(formatTime(restInfo.remaining))")
-                            .font(.system(size: 12, weight: .black))
-                    }
-                    .foregroundColor(.blue)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(Color.blue.opacity(0.1))
-                    .cornerRadius(999)
+                if activeRestRemaining > 0 {
+                    restPill
+                        .padding(.top, 3)
                 }
 
-                Spacer().frame(height: 8)
+                Spacer().frame(height: activeRestRemaining > 0 ? 5 : 10)
 
-                // Set progress
-                Text(WatchL10n.setOf(min(nextSetNumber, exercise.targetSets), exercise.targetSets, locale: locale))
+                Text(WatchL10n.setOf(nextSetNumber, exercise.targetSets, locale: locale))
                     .font(.system(size: 10, weight: .bold))
-                    .kerning(1)
                     .textCase(.uppercase)
                     .foregroundColor(Color(white: 0.63))
 
-                // Exercise name
                 Text(exercise.name)
                     .font(.system(size: 18, weight: .black))
-                    .tracking(-0.45)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .padding(.top, 2)
 
-                Spacer().frame(height: 12)
+                Spacer().frame(height: 7)
 
-                // Weight x Reps — large center stage display
-                if !allSetsComplete {
-                    HStack(alignment: .center, spacing: 8) {
-                        Text(formatWeight(weight, unit: unit))
-                            .font(.system(size: 24, weight: .black))
-                            .tracking(-1.2)
-                            .foregroundColor(editingWeight ? .blue : .blue.opacity(0.5))
-                            .onTapGesture { editingWeight = true; crownFocused = true }
-
-                        Text("x")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(Color(white: 0.63))
-
-                        Text("\(reps) \(WatchL10n.string("reps_short", locale: locale))")
-                            .font(.system(size: 24, weight: .black))
-                            .tracking(-1.2)
-                            .foregroundColor(!editingWeight ? .primary : .primary.opacity(0.7))
-                            .onTapGesture { editingWeight = false; crownFocused = true }
-                    }
-                    .focused($crownFocused)
-                    .digitalCrownRotation(
-                        editingWeight
-                            ? Binding(
-                                get: { weight },
-                                set: { newValue in
-                                    let clamped = max(0, newValue)
-                                    if clamped != weight {
-                                        weight = clamped
-                                    }
-                                    if clamped <= 0 {
-                                        WKInterfaceDevice.current().play(.directionDown)
-                                    }
-                                }
-                              )
-                            : Binding(
-                                get: { Double(reps) },
-                                set: { newValue in
-                                    let newReps = max(1, Int(newValue))
-                                    if newReps != reps {
-                                        reps = newReps
-                                    }
-                                    if newReps <= 1 {
-                                        WKInterfaceDevice.current().play(.directionDown)
-                                    }
-                                }
-                              ),
-                        from: 0,
-                        through: editingWeight ? 500 : 100,
-                        by: editingWeight
-                            ? (unit == "lbs" ? weightIncrement / 2.20462 : weightIncrement)
-                            : 1,
-                        sensitivity: .medium
-                    )
-
-                    Spacer()
-                    Spacer().frame(height: 8)
-
-                    // LOG SET button
-                    Button(action: logSet) {
-                        VStack(spacing: 1) {
-                            Text(WatchL10n.string("log_set", locale: locale))
-                                .font(.system(size: 13, weight: .black))
-                                .tracking(-0.3)
-                                .textCase(.uppercase)
-                            Text(WatchL10n.string("confirm_weight_reps", locale: locale))
-                                .font(.system(size: 8, weight: .bold))
-                                .textCase(.uppercase)
-                                .opacity(0.8)
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.blue)
-                        .cornerRadius(14)
-                    }
-                    .buttonStyle(.plain)
-                } else {
-                    Spacer()
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(.green)
-                    Spacer()
-                }
-
-                // Footer — next exercise + session time
-                Divider()
-                    .padding(.top, 8)
-                HStack {
-                    if let next = nextExerciseName {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(WatchL10n.string("next", locale: locale))
-                                .font(.system(size: 8, weight: .bold))
-                                .textCase(.uppercase)
-                                .foregroundColor(Color(white: 0.63))
-                            Text(next)
-                                .font(.system(size: 10, weight: .black))
-                                .lineLimit(1)
-                        }
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 1) {
-                        Text(WatchL10n.string("session", locale: locale))
-                            .font(.system(size: 8, weight: .bold))
-                            .textCase(.uppercase)
-                            .foregroundColor(Color(white: 0.63))
-                        Text(sessionTime)
-                            .font(.system(size: 10, weight: .black))
+                VStack(spacing: 6) {
+                    StrengthInfoRow(label: "Target", value: "\(exercise.targetReps) reps / \(exercise.restSeconds)s rest")
+                    StrengthInfoRow(label: "Last", value: lastSetText)
+                    if exercise.suggestedWeightKg > 0 {
+                        StrengthInfoRow(label: "Next", value: formatWeight(exercise.suggestedWeightKg, unit: unit))
                     }
                 }
-                .padding(.top, 6)
-                .padding(.bottom, 8)
-                .padding(.horizontal, 4)
+
+                Spacer(minLength: 4)
+                footer
             }
             .padding(.horizontal, 4)
-        }
-        .onAppear {
-            prefillValues()
-            startRestHapticTimer()
-        }
-        .onDisappear {
-            restHapticTimer?.invalidate()
-            restHapticTimer = nil
-        }
-        .onChange(of: exercise.completedSets.count) { _ in
-            prefillValues()
-            startRestHapticTimer()
+            .padding(.bottom, 4)
         }
     }
 
-    // MARK: - Helpers
-
-    private func prefillValues() {
-        if let lastSet = exercise.completedSets.last {
-            weight = lastSet.weightKg
-            reps = exercise.targetReps
-        } else {
-            weight = exercise.suggestedWeightKg
-            reps = exercise.targetReps
+    private func header(sessionTime: String) -> some View {
+        HStack {
+            Text(sessionTime)
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .monospacedDigit()
+            Spacer()
+            Text("\(exerciseIndex + 1)/\(totalExercises)")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(Color(white: 0.63))
         }
+        .padding(.top, 4)
     }
 
-    private func startRestHapticTimer() {
-        restHapticTimer?.invalidate()
-        restHapticTimer = nil
+    private var restPill: some View {
+        HStack {
+            Spacer(minLength: 0)
+            Text("Rest \(formatTime(activeRestRemaining))")
+                .font(.system(size: 12, weight: .black, design: .rounded))
+                .monospacedDigit()
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Color.blue.opacity(0.12))
+        .cornerRadius(7)
+        .foregroundColor(.blue)
+    }
 
-        guard let lastSet = exercise.completedSets.last,
-              let completedAt = parseISO8601(lastSet.completedAt) else { return }
+    private var lastSetText: String {
+        guard let lastSet = exercise.completedSets.last else { return "-" }
+        return "\(formatWeight(lastSet.weightKg, unit: unit)) x \(lastSet.reps)"
+    }
 
-        let totalRest = exercise.restSeconds
-        guard totalRest > 0 else { return }
-
-        let elapsed = Int(Date().timeIntervalSince(completedAt))
-        guard totalRest - elapsed > 0 else { return }
-
-        restHapticTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [completedAt, totalRest] _ in
-            let rem = totalRest - Int(Date().timeIntervalSince(completedAt))
-            if rem == 3 || rem == 2 || rem == 1 {
-                WKInterfaceDevice.current().play(.click)
+    private var footer: some View {
+        HStack {
+            if let nextExerciseName {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(WatchL10n.string("next", locale: locale))
+                        .font(.system(size: 8, weight: .bold))
+                        .textCase(.uppercase)
+                        .foregroundColor(Color(white: 0.63))
+                    Text(nextExerciseName)
+                        .font(.system(size: 10, weight: .black))
+                        .lineLimit(1)
+                }
             }
-            if rem <= 0 {
-                WKInterfaceDevice.current().play(.success)
-                restHapticTimer?.invalidate()
-                restHapticTimer = nil
-            }
+            Spacer()
         }
-    }
-
-    /// Compute rest remaining for display only (no haptics)
-    private func computeRestRemaining(now: Date) -> (remaining: Int, setCount: Int) {
-        guard let lastSet = exercise.completedSets.last,
-              let completedAt = parseISO8601(lastSet.completedAt) else {
-            return (0, 0)
-        }
-        let elapsed = Int(now.timeIntervalSince(completedAt))
-        let remaining = exercise.restSeconds - elapsed
-        return (max(0, remaining), exercise.completedSets.count)
+        .padding(.top, 6)
     }
 
     private func elapsedSessionTime(now: Date) -> String {
         guard let start = parseISO8601(sessionStartedAt) else { return "0:00" }
-        let elapsed = Int(now.timeIntervalSince(start))
-        return formatTime(elapsed)
+        return formatTime(max(0, Int(now.timeIntervalSince(start))))
     }
 
     private func parseISO8601(_ string: String) -> Date? {
@@ -260,22 +121,34 @@ struct StrengthExerciseView: View {
         return formatter.date(from: string)
     }
 
-    private func logSet() {
-        onLogSet(weight, reps)
-        WKInterfaceDevice.current().play(.success)
-    }
-
     private func formatWeight(_ kg: Double, unit: String) -> String {
         let value = unit == "lbs" ? kg * 2.20462 : kg
         if value.truncatingRemainder(dividingBy: 1) == 0 {
-            return "\(Int(value))\(unit)"
+            return "\(Int(value)) \(unit)"
         }
-        return String(format: "%.1f%@", value, unit)
+        return String(format: "%.1f %@", value, unit)
     }
 
     private func formatTime(_ seconds: Int) -> String {
         let m = seconds / 60
         let s = seconds % 60
         return String(format: "%d:%02d", m, s)
+    }
+}
+
+private struct StrengthInfoRow: View {
+    let label: String
+    let value: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(Color(white: 0.63))
+            Spacer(minLength: 6)
+            Text(value)
+                .font(.system(size: 11, weight: .black))
+                .lineLimit(1)
+        }
     }
 }
