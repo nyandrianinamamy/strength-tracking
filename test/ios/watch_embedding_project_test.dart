@@ -19,5 +19,22 @@ void main() {
       contains('StrengthAppWatch Watch App.app in Embed Watch Content'),
     );
     expect(phase, contains('runOnlyForDeploymentPostprocessing = 0;'));
+    expect(
+      RegExp(
+        r'PRODUCT_BUNDLE_IDENTIFIER = "dev\.mamy-r\.kotrana\.watchkitapp";'
+        r'[\s\S]*?SUPPORTED_PLATFORMS = "watchos watchsimulator";',
+      ).allMatches(project),
+      hasLength(3),
+    );
+  });
+
+  test('WatchSessionManager waits for activation and cleans payloads', () {
+    final manager = File('ios/WatchSessionManager.swift').readAsStringSync();
+
+    expect(manager, contains('pendingOutboundMessage'));
+    expect(manager, contains('session.activationState == .activated'));
+    expect(manager, contains('flushPendingOutboundMessage()'));
+    expect(manager, contains('sanitizePropertyListValue'));
+    expect(manager, contains('value is NSNull'));
   });
 }
