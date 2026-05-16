@@ -84,6 +84,20 @@ void main() {
     await Future<void>.delayed(Duration.zero);
   }
 
+  void expectNoNullValues(Object? value) {
+    expect(value, isNotNull);
+    if (value is Map) {
+      for (final entry in value.entries) {
+        expect(entry.key, isNotNull);
+        expectNoNullValues(entry.value as Object?);
+      }
+    } else if (value is Iterable) {
+      for (final item in value) {
+        expectNoNullValues(item as Object?);
+      }
+    }
+  }
+
   Map<String, dynamic> savedEngineState() {
     final engine = TrainingEngine(
       registry: ExerciseRegistry.withDefaults(),
@@ -181,6 +195,7 @@ void main() {
         expect(methodCalls.single.method, 'sendSessionUpdate');
 
         final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
+        expectNoNullValues(arguments);
         expect(arguments['type'], 'session_update');
 
         final session = arguments['session'] as Map<dynamic, dynamic>;
@@ -269,29 +284,25 @@ void main() {
       expect(bench['suggestedWeightKg'], greaterThan(0));
     });
 
-    test(
-      'watch snapshot uses null when no engine recommendation exists',
-      () async {
-        final seededState = DemoSeedData.initialState().copyWith(
-          sessions: [buildActiveSession('push_day')],
-        );
-        final container = buildContainer(initialState: seededState);
-        addTearDown(container.dispose);
+    test('watch snapshot omits recommendation when none exists', () async {
+      final seededState = DemoSeedData.initialState().copyWith(
+        sessions: [buildActiveSession('push_day')],
+      );
+      final container = buildContainer(initialState: seededState);
+      addTearDown(container.dispose);
 
-        container.read(watchSyncServiceProvider).initialize();
-        await pumpEvents();
+      container.read(watchSyncServiceProvider).initialize();
+      await pumpEvents();
 
-        final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
-        final session = arguments['session'] as Map<dynamic, dynamic>;
-        final exercises = session['exercises'] as List<dynamic>;
-        final bench = exercises
-            .map((item) => item as Map<dynamic, dynamic>)
-            .firstWhere((item) => item['exerciseId'] == 'barbell_bench_press');
+      final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
+      final session = arguments['session'] as Map<dynamic, dynamic>;
+      final exercises = session['exercises'] as List<dynamic>;
+      final bench = exercises
+          .map((item) => item as Map<dynamic, dynamic>)
+          .firstWhere((item) => item['exerciseId'] == 'barbell_bench_press');
 
-        expect(bench, contains('suggestedWeightKg'));
-        expect(bench['suggestedWeightKg'], isNull);
-      },
-    );
+      expect(bench, isNot(contains('suggestedWeightKg')));
+    });
 
     test('starting and completing a session sends update then end', () async {
       final container = buildContainer();

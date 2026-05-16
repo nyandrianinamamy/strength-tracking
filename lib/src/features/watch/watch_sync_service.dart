@@ -128,7 +128,17 @@ class WatchSyncService {
               .toList()
             ..sort((a, b) => a.setNumber.compareTo(b.setNumber));
 
-      final exerciseData = {
+      final completedSetData = completedSets.map((s) {
+        return <String, dynamic>{
+          'setNumber': s.setNumber,
+          'weightKg': s.weightKg,
+          'reps': s.reps,
+          'durationSeconds': s.durationSeconds,
+          'completedAt': s.completedAt.toUtc().toIso8601String(),
+        };
+      }).toList();
+
+      final exerciseData = <String, dynamic>{
         'exerciseId': re.exerciseId,
         'name': name,
         'exerciseType': exercise?.exerciseType ?? 'strength',
@@ -136,19 +146,11 @@ class WatchSyncService {
         'targetReps': re.targetReps,
         'targetDurationSeconds': re.targetDurationSeconds,
         'restSeconds': re.restSeconds,
-        'suggestedWeightKg': suggestion?.suggestedWeightKg,
-        'completedSets': completedSets
-            .map(
-              (s) => {
-                'setNumber': s.setNumber,
-                'weightKg': s.weightKg,
-                'reps': s.reps,
-                'durationSeconds': s.durationSeconds,
-                'completedAt': s.completedAt.toUtc().toIso8601String(),
-              },
-            )
-            .toList(),
+        'completedSets': completedSetData,
       };
+      if (suggestion?.suggestedWeightKg != null) {
+        exerciseData['suggestedWeightKg'] = suggestion!.suggestedWeightKg;
+      }
 
       // Add active timer state if this exercise has a running timer
       if (_activeTimerExerciseId == re.exerciseId &&

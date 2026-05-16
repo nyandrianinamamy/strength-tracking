@@ -11,6 +11,7 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     private var methodChannel: FlutterMethodChannel?
     private var eventSink: FlutterEventSink?
     private var pendingEvents: [[String: Any]] = []
+    private var pendingOutboundMessage: [String: Any]?
     private let healthStore = HKHealthStore()
     /// Tracks which session we already launched the watch app for,
     /// so we only trigger once per workout.
@@ -57,8 +58,8 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
                 result(FlutterError(code: "INVALID_ARGS", message: "Expected dictionary", details: nil))
                 return
             }
-            launchWatchAppIfNeeded(args)
-            sendToWatch(args)
+            let message = sanitizedMessage(args)
+            sendToWatch(message)
             result(nil)
 
         case "sendSessionEnd":
@@ -119,9 +120,23 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     // MARK: - Send to Watch
 
     private func sendToWatch(_ message: [String: Any]) {
-        guard let session = session, session.isPaired else { return }
+        guard let session = session else {
+            queueOutboundMessage(message)
+            return
+        }
+        guard session.activationState == .activated else {
+            queueOutboundMessage(message)
+            return
+        }
+        guard session.isPaired else {
+            queueOutboundMessage(message)
+            return
+        }
 
         let isSessionEnd = (message["type"] as? String) == "session_end"
+        if !isSessionEnd {
+            launchWatchAppIfNeeded(message)
+        }
 
         // Try direct message if reachable
         if session.isReachable {
@@ -150,10 +165,75 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
         }
     }
 
+    private func queueOutboundMessage(_ message: [String: Any]) {
+        pendingOutboundMessage = message
+    }
+
+    private func flushPendingOutboundMessage() {
+        guard let message = pendingOutboundMessage else { return }
+        pendingOutboundMessage = nil
+        sendToWatch(message)
+    }
+
+    private func sanitizedMessage(_ message: [String: Any]) -> [String: Any] {
+        sanitizePropertyListValue(message) as? [String: Any] ?? [:]
+    }
+
+    private func sanitizePropertyListValue(_ value: Any) -> Any? {
+        if value is NSNull { return nil }
+
+        if let dictionary = value as? [String: Any] {
+            var sanitized: [String: Any] = [:]
+            for (key, nestedValue) in dictionary {
+                if let cleanValue = sanitizePropertyListValue(nestedValue) {
+                    sanitized[key] = cleanValue
+                }
+            }
+            return sanitized
+        }
+
+        if let array = value as? [Any] {
+            return array.compactMap { sanitizePropertyListValue($0) }
+        }
+
+        switch value {
+        case let value as NSNumber:
+            if CFGetTypeID(value) == CFBooleanGetTypeID() {
+                return value.boolValue
+            }
+            return value
+        case let value as String:
+            return value
+        case let value as Bool:
+            return value
+        case let value as Int:
+            return value
+        case let value as Double:
+            return value
+        case let value as Float:
+            return value
+        case let value as Date:
+            return value
+        case let value as Data:
+            return value
+        default:
+            return nil
+        }
+    }
+
     // MARK: - WCSessionDelegate
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         print("WCSession activated: \(activationState.rawValue), error: \(String(describing: error))")
+        flushPendingOutboundMessage()
+    }
+
+    func sessionReachabilityDidChange(_ session: WCSession) {
+        flushPendingOutboundMessage()
+    }
+
+    func sessionWatchStateDidChange(_ session: WCSession) {
+        flushPendingOutboundMessage()
     }
 
     func sessionDidBecomeInactive(_ session: WCSession) {}
