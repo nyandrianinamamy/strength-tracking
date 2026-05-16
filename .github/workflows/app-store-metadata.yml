@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       build_version:
-        description: "App Store version to update"
+        description: "App Store version page to update"
         required: true
-        default: "1.0.31"
+        default: "1.0"
 
 jobs:
   sync-metadata:
@@ -28,5 +28,5 @@ jobs:
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
           APP_REVIEW_DEMO_PASSWORD: ${{ secrets.APP_REVIEW_DEMO_PASSWORD }}
-          BUILD_VERSION: ${{ inputs.build_version }}
+          APP_STORE_VERSION: ${{ inputs.build_version }}
         run: bundle exec fastlane metadata

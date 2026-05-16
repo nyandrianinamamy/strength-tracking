@@ -16,7 +16,7 @@ This plan captures the decisions needed to prepare Kotrana: Musculation for its 
 - App Store Connect status was `1.0 Prepare for Submission`.
 - App Store metadata, screenshots, App Privacy, pricing/availability, age rating, regulated medical device declaration, and accessibility labels were not yet complete.
 - App Store text metadata and App Review contact notes are now stored under `ios/fastlane/metadata`.
-- Manual workflow `.github/workflows/app-store-metadata.yml` can sync the stored metadata to App Store Connect after adding the `APP_REVIEW_DEMO_PASSWORD` GitHub secret.
+- Manual workflow `.github/workflows/app-store-metadata.yml` can sync the stored metadata to the App Store version `1.0` page after adding the `APP_REVIEW_DEMO_PASSWORD` GitHub secret.
 - Existing untracked files at time of planning were GPT Pro artifacts in `docs/`; leave them untouched unless specifically needed.
 
 ## Current Blocker

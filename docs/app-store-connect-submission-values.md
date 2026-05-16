@@ -2,7 +2,7 @@
 
 Use these values for the Kotrana public App Store submission. Keep reviewer credentials out of commits; paste the real password only in App Store Connect.
 
-The text metadata and App Review contact fields are also stored in `ios/fastlane/metadata`. To sync them without submitting the app, add the reviewer password as GitHub secret `APP_REVIEW_DEMO_PASSWORD`, then run the manual GitHub Actions workflow `Sync App Store Metadata`.
+The text metadata and App Review contact fields are also stored in `ios/fastlane/metadata`. To sync them without submitting the app, add the reviewer password as GitHub secret `APP_REVIEW_DEMO_PASSWORD`, then run the manual GitHub Actions workflow `Sync App Store Metadata` for App Store version `1.0`.
 
 ## App Information
 
