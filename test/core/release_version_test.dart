@@ -8,7 +8,7 @@ void main() {
 
     expect(
       pubspec,
-      contains(RegExp(r'^version: 1\.0\.31\+274$', multiLine: true)),
+      contains(RegExp(r'^version: 1\.0\.31\+275$', multiLine: true)),
     );
   });
 }
