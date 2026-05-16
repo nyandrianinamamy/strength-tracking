@@ -15,6 +15,8 @@ This plan captures the decisions needed to prepare Kotrana: Musculation for its 
 - The public App Store version page was still using old build `1.0.23 (238)` and must be updated after the final release-prep build.
 - App Store Connect status was `1.0 Prepare for Submission`.
 - App Store metadata, screenshots, App Privacy, pricing/availability, age rating, regulated medical device declaration, and accessibility labels were not yet complete.
+- App Store text metadata and App Review contact notes are now stored under `ios/fastlane/metadata`.
+- Manual workflow `.github/workflows/app-store-metadata.yml` can sync the stored metadata to App Store Connect after adding the `APP_REVIEW_DEMO_PASSWORD` GitHub secret.
 - Existing untracked files at time of planning were GPT Pro artifacts in `docs/`; leave them untouched unless specifically needed.
 
 ## Current Blocker
@@ -436,10 +438,11 @@ Before tagging `v1.0.31`:
 6. Confirm GitHub Actions iOS/TestFlight upload succeeds.
 7. Confirm App Store Connect receives build `1.0.31 (281)`.
 8. Select latest build for iOS App Version `1.0`.
-9. Fill App Store metadata, App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and App Review information.
-10. Upload screenshots.
-11. Choose manual release.
-12. Add for Review and submit.
+9. Sync App Store text metadata and App Review information with the manual `Sync App Store Metadata` workflow, or fill manually from `docs/app-store-connect-submission-values.md`.
+10. Fill App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and any screenshots not covered by Fastlane metadata.
+11. Upload screenshots.
+12. Choose manual release.
+13. Add for Review and submit.
 
 ## Open Checks Before Implementation
 
