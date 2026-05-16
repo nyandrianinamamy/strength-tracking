@@ -1,5 +1,25 @@
 default_platform(:ios)
 
+def ensure_bundle_capability(app_identifier, capability_type)
+  bundle_id = Spaceship::ConnectAPI::BundleId.find(app_identifier)
+  UI.user_error!("Bundle ID #{app_identifier} was not found") unless bundle_id
+
+  capabilities = Spaceship::ConnectAPI::BundleIdCapability.all(
+    bundle_id_id: bundle_id.id,
+  )
+
+  if capabilities.any? { |capability| capability.is_type?(capability_type) }
+    UI.message("#{app_identifier} already has #{capability_type}")
+    return
+  end
+
+  UI.message("Enabling #{capability_type} for #{app_identifier}")
+  Spaceship::ConnectAPI::BundleIdCapability.create(
+    bundle_id_id: bundle_id.id,
+    capability_type: capability_type,
+  )
+end
+
 platform :ios do
   desc "Build and upload to TestFlight"
   lane :beta do
@@ -13,10 +33,16 @@ platform :ios do
       is_key_content_base64: true,
     )
 
+    ensure_bundle_capability(
+      "dev.mamy-r.kotrana",
+      Spaceship::ConnectAPI::BundleIdCapability::Type::APPLE_ID_AUTH,
+    )
+
     # Fetch signing certificates and profiles
     match(
       type: "appstore",
-      readonly: true,
+      readonly: false,
+      force: true,
       api_key: api_key,
     )
 
