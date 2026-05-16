@@ -130,4 +130,4 @@ Leave unclaimed unless directly verified:
 
 ## Build Selection
 
-- Select build: `1.0.31 (276)` after the `v1.0.31` tag upload has completed processing.
+- Select build: `1.0.31 (277)` after the `v1.0.31` tag upload has completed processing.
