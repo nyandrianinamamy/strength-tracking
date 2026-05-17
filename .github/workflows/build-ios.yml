@@ -61,7 +61,13 @@ jobs:
         run: |
           TAG="${RELEASE_REF#refs/tags/}"
           TAG="${TAG#v}"
-          echo "number=${TAG}" >> "$GITHUB_OUTPUT"
+          VERSION="${TAG%%+*}"
+          BUILD="${TAG#*+}"
+          if [[ "$BUILD" == "$TAG" ]]; then
+            BUILD=""
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "build=${BUILD}" >> "$GITHUB_OUTPUT"
 
       - name: Build and upload to TestFlight
         working-directory: ios
@@ -71,5 +77,6 @@ jobs:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
-          BUILD_VERSION: ${{ steps.version.outputs.number }}
+          BUILD_VERSION: ${{ steps.version.outputs.version }}
+          BUILD_NUMBER: ${{ steps.version.outputs.build }}
         run: bundle exec fastlane beta
