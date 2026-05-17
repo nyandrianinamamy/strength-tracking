@@ -275,6 +275,7 @@ final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
     await engine.refreshHealthKitIfStale(
       fetchSleep: () => healthKit.fetchRecentSleep(),
       fetchHrv: () => healthKit.fetchRecentHrv(),
+      threshold: _healthKitRefreshThreshold(engine),
     );
 
     // Persist updated state after refresh
@@ -284,6 +285,13 @@ final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
 
   return engine.computeReadiness();
 });
+
+Duration _healthKitRefreshThreshold(TrainingEngine engine) {
+  if (engine.state.sleepHistory.isEmpty || engine.state.hrvHistory.isEmpty) {
+    return Duration.zero;
+  }
+  return const Duration(hours: 1);
+}
 
 /// Clears persisted engine state and re-bootstraps from AppState history.
 ///

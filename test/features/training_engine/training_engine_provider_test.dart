@@ -176,12 +176,14 @@ ProviderContainer _buildContainer({
 
 class _FakeHealthKitDataSource extends HealthKitDataSource {
   const _FakeHealthKitDataSource({
+    this.sleepRecords = const [],
+    this.hrvRecords = const [],
     this.sleepStatus = HealthKitFetchStatus.success,
     this.hrvStatus = HealthKitFetchStatus.success,
   });
 
-  final List<SleepRecord> sleepRecords = const [];
-  final List<HrvRecord> hrvRecords = const [];
+  final List<SleepRecord> sleepRecords;
+  final List<HrvRecord> hrvRecords;
   final HealthKitFetchStatus sleepStatus;
   final HealthKitFetchStatus hrvStatus;
 
@@ -701,6 +703,45 @@ void main() {
         expect(engine.state.sleepHistory, isEmpty);
         expect(engine.state.hrvHistory, isEmpty);
         expect(engine.state.lastHealthKitFetch, isNotNull);
+      },
+    );
+
+    test(
+      'readiness refresh retries HealthKit immediately when restored health history is incomplete',
+      () async {
+        final appState = _appStateWithCompletedSession().copyWith(
+          healthKitEnabled: true,
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final savedState = _savedEngineStateWithBenchAndSquatData();
+        savedState['lastHealthKitFetch'] = DateTime.now().toIso8601String();
+        final sleepRecord = SleepRecord(
+          date: DateTime.now(),
+          totalSleep: const Duration(hours: 7, minutes: 45),
+          deepSleep: const Duration(hours: 1),
+          remSleep: const Duration(hours: 1, minutes: 20),
+          coreSleep: const Duration(hours: 5, minutes: 25),
+        );
+        final hrvRecord = HrvRecord(date: DateTime.now(), sdnn: 42);
+        final engineRepository = MemoryTrainingEngineStateRepository(
+          initialState: savedState,
+        );
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+          healthKit: _FakeHealthKitDataSource(
+            sleepRecords: [sleepRecord],
+            hrvRecords: [hrvRecord],
+          ),
+        );
+        addTearDown(container.dispose);
+
+        await container.read(readinessProvider.future);
+        final engine = await container.read(trainingEngineProvider.future);
+
+        expect(engine.state.sleepHistory, [sleepRecord]);
+        expect(engine.state.hrvHistory, [hrvRecord]);
       },
     );
 

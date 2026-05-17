@@ -27,6 +27,7 @@ class HealthKitDataSource {
 
   static const _readTypes = [
     HealthDataType.SLEEP_ASLEEP,
+    HealthDataType.SLEEP_IN_BED,
     HealthDataType.SLEEP_DEEP,
     HealthDataType.SLEEP_REM,
     HealthDataType.SLEEP_LIGHT,
@@ -95,6 +96,7 @@ class HealthKitDataSource {
       final samples = await _health.getHealthDataFromTypes(
         types: [
           HealthDataType.SLEEP_ASLEEP,
+          HealthDataType.SLEEP_IN_BED,
           HealthDataType.SLEEP_DEEP,
           HealthDataType.SLEEP_REM,
           HealthDataType.SLEEP_LIGHT,
@@ -110,47 +112,7 @@ class HealthKitDataSource {
         );
       }
 
-      // Group samples by the night they belong to.
-      // A sleep sample's "night" is the date of the start time,
-      // shifted so anything before 6 PM counts as the previous night.
-      final byNight = <DateTime, _SleepAccumulator>{};
-
-      for (final sample in samples) {
-        final nightDate = _nightOf(sample.dateFrom);
-        final acc = byNight.putIfAbsent(nightDate, _SleepAccumulator.new);
-        final duration = sample.dateTo.difference(sample.dateFrom);
-
-        switch (sample.type) {
-          case HealthDataType.SLEEP_DEEP:
-            acc.deep += duration;
-            acc.total += duration;
-          case HealthDataType.SLEEP_REM:
-            acc.rem += duration;
-            acc.total += duration;
-          case HealthDataType.SLEEP_LIGHT:
-            acc.core += duration;
-            acc.total += duration;
-          case HealthDataType.SLEEP_ASLEEP:
-            // Generic "asleep" — only count if no typed breakdown exists
-            acc.genericAsleep += duration;
-          default:
-            break;
-        }
-      }
-
-      final records = byNight.entries.map((entry) {
-        final acc = entry.value;
-        // If we have typed breakdowns, total is already summed.
-        // If only generic SLEEP_ASLEEP data, use that as total.
-        final total = acc.total > Duration.zero ? acc.total : acc.genericAsleep;
-        return SleepRecord(
-          date: entry.key,
-          totalSleep: total,
-          deepSleep: acc.deep,
-          remSleep: acc.rem,
-          coreSleep: acc.core,
-        );
-      }).toList()..sort((a, b) => a.date.compareTo(b.date));
+      final records = sleepRecordsFromSamples(samples);
       return HealthKitFetchResult(
         status: records.isEmpty
             ? HealthKitFetchStatus.noSamples
@@ -281,6 +243,67 @@ class HealthKitDataSource {
     }
     return null;
   }
+
+  @visibleForTesting
+  static List<SleepRecord> sleepRecordsFromSamples(
+    List<HealthDataPoint> samples,
+  ) {
+    // Group samples by the night they belong to.
+    // A sleep sample's "night" is the date of the start time,
+    // shifted so anything before 6 PM counts as the previous night.
+    final byNight = <DateTime, _SleepAccumulator>{};
+
+    for (final sample in samples) {
+      final nightDate = _nightOf(sample.dateFrom);
+      final acc = byNight.putIfAbsent(nightDate, _SleepAccumulator.new);
+      final duration = sample.dateTo.difference(sample.dateFrom);
+
+      switch (sample.type) {
+        case HealthDataType.SLEEP_DEEP:
+          acc.deep += duration;
+          acc.total += duration;
+        case HealthDataType.SLEEP_REM:
+          acc.rem += duration;
+          acc.total += duration;
+        case HealthDataType.SLEEP_LIGHT:
+          acc.core += duration;
+          acc.total += duration;
+        case HealthDataType.SLEEP_ASLEEP:
+          // Generic "asleep" — only count if no typed breakdown exists.
+          acc.genericAsleep += duration;
+        case HealthDataType.SLEEP_IN_BED:
+          // Some devices/sources provide only in-bed sleep analysis. Use it
+          // as a last-resort duration so permissioned HealthKit does not look
+          // empty when no staged or generic asleep samples exist.
+          acc.inBed += duration;
+        default:
+          break;
+      }
+    }
+
+    final records =
+        byNight.entries
+            .map((entry) {
+              final acc = entry.value;
+              // Prefer typed stage totals, then generic asleep, then in-bed fallback.
+              final total = acc.total > Duration.zero
+                  ? acc.total
+                  : acc.genericAsleep > Duration.zero
+                  ? acc.genericAsleep
+                  : acc.inBed;
+              return SleepRecord(
+                date: entry.key,
+                totalSleep: total,
+                deepSleep: acc.deep,
+                remSleep: acc.rem,
+                coreSleep: acc.core,
+              );
+            })
+            .where((record) => record.totalSleep > Duration.zero)
+            .toList()
+          ..sort((a, b) => a.date.compareTo(b.date));
+    return records;
+  }
 }
 
 /// Accumulates sleep durations across multiple samples for one night.
@@ -290,4 +313,5 @@ class _SleepAccumulator {
   Duration rem = Duration.zero;
   Duration core = Duration.zero;
   Duration genericAsleep = Duration.zero;
+  Duration inBed = Duration.zero;
 }
