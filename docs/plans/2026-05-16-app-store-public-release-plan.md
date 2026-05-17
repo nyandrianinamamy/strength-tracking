@@ -13,35 +13,30 @@ For the short no-submit execution checklist, use `docs/app-store-pre-submission-
 
 - `v1.0.31` currently points at `ba9d896`, the verified release build commit.
 - `main` may be ahead of `v1.0.31` with documentation-only readiness notes and an automatically bumped `pubspec.yaml` build number. Do not infer the App Store build number from `main` unless the tag is intentionally moved again.
-- TestFlight/App Store Connect has uploaded build `1.0.30 (272)`.
-- The current `v1.0.31` tag has `pubspec.yaml` at `1.0.31+286`; after the Apple Developer capability blocker is cleared, rerunning the current `v1.0.31` Build iOS workflow should upload App Store Connect build `1.0.31 (286)`.
-- The public App Store version page was still using old build `1.0.23 (238)` and must be updated after the final release-prep build.
+- TestFlight/App Store Connect has uploaded release-candidate build `1.0.31 (286)` from manual `Build iOS` workflow run `25989519652`.
+- The current `v1.0.31` tag has `pubspec.yaml` at `1.0.31+286`; workflow run `25989519652` checked out the tag at `ba9d896` before uploading.
+- The public App Store version page must select processed build `1.0.31 (286)` after App Store Connect finishes processing it.
 - App Store Connect status was `1.0 Prepare for Submission`.
-- App Store metadata, screenshots, App Privacy, pricing/availability, age rating, regulated medical device declaration, and accessibility labels were not yet complete.
+- App Store metadata, screenshots, and App Review information were synced by workflow run `25989760214`; App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and processed-build selection still need App Store Connect confirmation.
 - App Store text metadata and App Review contact notes are now stored under `ios/fastlane/metadata`.
 - App Store screenshots are now prepared under `ios/fastlane/screenshots/en-US` as `1290 x 2796` iPhone 6.9-inch portrait PNGs.
-- Manual workflow `.github/workflows/app-store-metadata.yml` can sync the stored metadata to the App Store version `1.0` page after adding the `APP_REVIEW_DEMO_PASSWORD` GitHub secret. It can also upload the prepared screenshots when `upload_screenshots` is enabled.
+- Manual workflow `.github/workflows/app-store-metadata.yml` can sync the stored metadata to the App Store version `1.0` page and upload the prepared screenshots when `upload_screenshots` is enabled.
 - Existing untracked files at time of planning were GPT Pro artifacts in `docs/`; leave them untouched unless specifically needed.
 
-## Current Blocker
+## Current Manual App Store Connect Work
 
-- Build iOS workflow `25988195896` fails before archive because Apple Developer rejects enabling `APPLE_ID_AUTH` for `dev.mamy-r.kotrana` through the App Store Connect API key.
-- Error observed on job `76389454500`: `This request is forbidden for security reasons - You are not allowed to perform this operation.`
-- Read-only capability check workflow `25988649424` confirms `dev.mamy-r.kotrana` is missing `APPLE_ID_AUTH`.
-- Manual Team Admin action required before rerunning the tag workflow:
-  1. Apple Developer > Certificates, Identifiers & Profiles.
-  2. Open identifier `dev.mamy-r.kotrana`.
-  3. Enable `Sign in with Apple`.
-  4. Save the identifier.
-- After this, manually run the read-only `Check App Store Capability` workflow. When it passes, manually run the `Build iOS` workflow with `release_tag` set to `v1.0.31` or rerun failed workflow `25988195896`. The workflow checks out the tag rather than `main`, so it should build the release commit. The Fastlane lane should detect the existing capability, regenerate the App Store profile with `match(force: true)`, and continue to archive/upload.
+- Read-only capability check workflow run `25989507219` passed after Sign in with Apple was enabled for `dev.mamy-r.kotrana`.
+- Manual `Build iOS` workflow run `25989519652` uploaded the tagged `v1.0.31` signed IPA to App Store Connect/TestFlight.
+- Because the upload lane uses `skip_waiting_for_build_processing`, confirm that build `1.0.31 (286)` has finished processing before selecting it on the version `1.0` page.
+- Finish the remaining App Store Connect fields: App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and any build-selection prompts.
+- Stop before `Add for Review`; this plan does not authorize App Review submission.
 
 ## Metadata Automation Status
 
 - GitHub secret `APP_REVIEW_DEMO_PASSWORD` is set.
 - Manual workflow `Sync App Store Metadata` targets the existing App Store version page `1.0`.
-- Workflow run `25964706927` verified that Fastlane can authenticate, find App Store version `1.0`, and load every metadata/review-info file from `ios/fastlane/metadata`.
-- The same run failed when uploading metadata with: `This request is forbidden for security reasons - The API key in use does not allow this request`.
-- To use metadata automation, replace/update the App Store Connect API key GitHub secrets with a key that has permission to edit App Store metadata, such as an App Manager/Admin-capable key, or fill the fields manually in App Store Connect from `docs/app-store-connect-submission-values.md`.
+- Workflow run `25989760214` verified that Fastlane can authenticate, find App Store version `1.0`, upload metadata/App Review information, confirm screenshots, and pass precheck.
+- Fastlane precheck is configured with `precheck_include_in_app_purchases: false` because Kotrana has no in-app purchases and App Store Connect API key authentication cannot perform that precheck category.
 
 ## Firebase Auth Provider Status
 
@@ -454,21 +449,21 @@ Before tagging `v1.0.31`:
 3. Commit and open PR.
 4. Wait for PR checks and merge.
 5. Tag merged `main` as `v1.0.31`.
-6. Confirm GitHub Actions iOS/TestFlight upload succeeds. After the Apple Developer capability is enabled, run `Check App Store Capability`, then use the manual `Build iOS` workflow with `release_tag=v1.0.31` or rerun failed workflow `25988195896`.
-7. Confirm App Store Connect receives the build produced by the current `v1.0.31` tag. At the latest failed tag run, this was expected to be `1.0.31 (286)`.
-8. Select latest build for iOS App Version `1.0`.
-9. Sync App Store text metadata and App Review information with the manual `Sync App Store Metadata` workflow, or fill manually from `docs/app-store-connect-submission-values.md`.
-10. Fill App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and any screenshots not covered by Fastlane metadata.
-11. Upload screenshots.
+6. Confirm GitHub Actions iOS/TestFlight upload succeeds. Done by manual `Build iOS` workflow run `25989519652` with `release_tag=v1.0.31`.
+7. Confirm App Store Connect finishes processing build `1.0.31 (286)` from the current `v1.0.31` tag.
+8. Select processed build `1.0.31 (286)` for iOS App Version `1.0`.
+9. Sync App Store text metadata, screenshots, and App Review information with the manual `Sync App Store Metadata` workflow. Done by workflow run `25989760214`.
+10. Fill App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and any screenshot prompts not covered by Fastlane metadata.
+11. Confirm the uploaded screenshots remain attached to the version page.
 12. Choose manual release.
-13. Add for Review and submit.
+13. Stop before `Add for Review` unless the user explicitly asks to submit in a later task.
 
 ## Open Checks Before Implementation
 
-- Confirm Firebase Auth email/password provider is enabled.
-- Confirm Firebase Auth Apple provider is configured.
-- Confirm Apple developer capability for Sign in with Apple is enabled for `dev.mamy-r.kotrana`.
-- Confirm App Store Connect API key can edit app metadata, or plan to fill App Store Connect manually.
+- Firebase Auth email/password provider is enabled.
+- Firebase Auth Apple provider is configured.
+- Apple developer capability for Sign in with Apple is enabled for `dev.mamy-r.kotrana`; workflow run `25989507219` passed.
+- App Store Connect API key can upload metadata/screenshots; workflow run `25989760214` passed.
 - Confirm Firestore data document path used by `FirestoreAppStateRepository`.
 - Confirm whether HealthKit background delivery is referenced anywhere beyond entitlements.
 - Confirm whether direct Bluetooth/BLE code exists; remove Bluetooth string if not.

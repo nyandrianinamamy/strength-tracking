@@ -28,7 +28,7 @@ Not allowed for this goal:
 - Submit the app for App Review.
 - Enable automatic public release.
 
-## External Blockers
+## External State
 
 ### Firebase Auth Providers
 
@@ -58,46 +58,17 @@ KOTRANA_FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" dart run tool/
 
 ### Apple Developer Capability
 
-The latest tagged iOS build failed before archive in GitHub Actions run `25988195896`, job `76389454500`, because the current App Store Connect API key cannot enable `APPLE_ID_AUTH` for `dev.mamy-r.kotrana`.
+Read-only capability check workflow run `25989507219` passed on 2026-05-17 after Team Admin enabled Sign in with Apple for `dev.mamy-r.kotrana`.
 
-The read-only capability check workflow also failed in run `25988649424` with: `dev.mamy-r.kotrana is missing APPLE_ID_AUTH`.
+Manual `Build iOS` workflow run `25989519652` checked out release tag `v1.0.31` at `ba9d896` and successfully uploaded the signed IPA to App Store Connect/TestFlight. The expected uploaded build is `1.0.31 (286)`.
 
-Manual Team Admin step:
+The workflow uses `skip_waiting_for_build_processing`, so App Store Connect build processing must still be confirmed before selecting the build on the version `1.0` page.
 
-1. Open Apple Developer > Certificates, Identifiers & Profiles.
-2. Open identifier `dev.mamy-r.kotrana`.
-3. Enable `Sign in with Apple`.
-4. Save the identifier.
+### Metadata And Screenshots
 
-After this, rerun the tagged build using either path:
+Manual `Sync App Store Metadata` workflow run `25989760214` succeeded on 2026-05-17 with `build_version=1.0` and `upload_screenshots=true`.
 
-```bash
-gh workflow run "Check App Store Capability"
-```
-
-Wait for this read-only capability check to pass, then run:
-
-```bash
-gh workflow run "Build iOS" -f release_tag=v1.0.31
-```
-
-You can also rerun failed workflow `25988195896` from GitHub Actions, but the manual `Build iOS` workflow is the clearest path after the capability check passes.
-
-The `Build iOS` workflow checks out the tag for manual runs, so it builds `v1.0.31`, not the tip of `main`.
-
-### Metadata Permission
-
-The latest metadata run `25964706927` authenticated, found App Store version `1.0`, and loaded the local metadata files, then failed because the API key cannot edit App Store metadata.
-
-Use one of these paths:
-
-1. Replace/update the `APP_STORE_CONNECT_*` GitHub secrets with an API key that can edit metadata, then run:
-
-```bash
-gh workflow run "Sync App Store Metadata" -f build_version=1.0 -f upload_screenshots=true
-```
-
-2. Fill App Store Connect manually from `docs/app-store-connect-submission-values.md` and upload screenshots from `ios/fastlane/screenshots/en-US`.
+The run uploaded metadata and App Review information, confirmed the five iPhone 6.9-inch screenshots are present, and passed Fastlane precheck with `precheck_include_in_app_purchases: false`.
 
 ## Manual App Store Connect Checklist
 
@@ -107,7 +78,7 @@ Fill or verify these fields before stopping:
 - Pricing and availability: free, all countries/regions, Mac availability off, Vision Pro availability off, manual release.
 - iOS version metadata: promotional text, description, keywords, support URL, privacy URL, copyright, optional blank marketing URL.
 - App Review information: contact, reviewer login email, real reviewer password, review notes.
-- Build: processed `1.0.31` build from the current `v1.0.31` tag.
+- Build: select the processed `1.0.31 (286)` build uploaded by workflow run `25989519652`.
 - Screenshots: the five prepared iPhone 6.9-inch screenshots in `ios/fastlane/screenshots/en-US`.
 - Age rating: health/wellness yes; medical/treatment no; no web access, user-generated public content, messaging, ads, gambling, violence, sexual content, drugs, alcohol, horror, profanity, or crude humor.
 - Regulated medical device: no.
@@ -131,5 +102,8 @@ The latest local readiness pass completed successfully:
 - Build iOS workflow YAML parse
 - Fastlane screenshot validation for five screenshots
 - Live legal URLs returned `200` for `/privacy`, `/terms`, and `/support`
+- `gh workflow run "Check App Store Capability"` -> run `25989507219` passed
+- `gh workflow run "Build iOS" -f release_tag=v1.0.31` -> run `25989519652` uploaded `v1.0.31`
+- `gh workflow run "Sync App Store Metadata" -f build_version=1.0 -f upload_screenshots=true` -> run `25989760214` passed
 
 Re-run the relevant checks after changing code, metadata automation, screenshots, entitlements, Firebase rules, or release workflows.
