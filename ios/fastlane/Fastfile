@@ -157,6 +157,7 @@ platform :ios do
       submit_for_review: false,
       automatic_release: false,
       force: true,
+      precheck_include_in_app_purchases: false,
       app_review_information: {
         demo_password: demo_password,
       },
