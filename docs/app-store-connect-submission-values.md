@@ -134,7 +134,7 @@ Leave unclaimed unless directly verified:
 
 ## Build Selection
 
-- Select build: `1.0.31 (286)` after the `v1.0.31` tag upload has completed processing.
+- Select the processed `1.0.31` build produced by the current `v1.0.31` tag. At the latest failed tag run, this was expected to be `1.0.31 (286)`.
 
 ## Screenshots
 

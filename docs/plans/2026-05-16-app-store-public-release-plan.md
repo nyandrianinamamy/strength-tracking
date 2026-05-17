@@ -2,16 +2,17 @@
 
 Date: 2026-05-16
 Target candidate: `v1.0.31`
-Build number: `286`
+Tagged build number: `286`
 Release mode: manual release after App Review approval
 
 This plan captures the decisions needed to prepare Kotrana: Musculation for its first public App Store release. It is intended to survive context loss and let a future Codex session continue without re-interviewing the user.
 
 ## Current Known State
 
-- `main` contains the merged release-prep work and `v1.0.31` currently points at `ba9d896`.
+- `v1.0.31` currently points at `ba9d896`, the verified release build commit.
+- `main` may be ahead of `v1.0.31` with documentation-only readiness notes and an automatically bumped `pubspec.yaml` build number. Do not infer the App Store build number from `main` unless the tag is intentionally moved again.
 - TestFlight/App Store Connect has uploaded build `1.0.30 (272)`.
-- The release-prep work now bumps `pubspec.yaml` to `1.0.31+286`; after the Apple Developer capability blocker is cleared, rerunning the current `v1.0.31` Build iOS workflow should upload App Store Connect build `1.0.31 (286)`.
+- The current `v1.0.31` tag has `pubspec.yaml` at `1.0.31+286`; after the Apple Developer capability blocker is cleared, rerunning the current `v1.0.31` Build iOS workflow should upload App Store Connect build `1.0.31 (286)`.
 - The public App Store version page was still using old build `1.0.23 (238)` and must be updated after the final release-prep build.
 - App Store Connect status was `1.0 Prepare for Submission`.
 - App Store metadata, screenshots, App Privacy, pricing/availability, age rating, regulated medical device declaration, and accessibility labels were not yet complete.
@@ -445,7 +446,7 @@ Before tagging `v1.0.31`:
 4. Wait for PR checks and merge.
 5. Tag merged `main` as `v1.0.31`.
 6. Confirm GitHub Actions iOS/TestFlight upload succeeds.
-7. Confirm App Store Connect receives build `1.0.31 (286)`.
+7. Confirm App Store Connect receives the build produced by the current `v1.0.31` tag. At the latest failed tag run, this was expected to be `1.0.31 (286)`.
 8. Select latest build for iOS App Version `1.0`.
 9. Sync App Store text metadata and App Review information with the manual `Sync App Store Metadata` workflow, or fill manually from `docs/app-store-connect-submission-values.md`.
 10. Fill App Privacy, pricing/availability, age rating, regulated medical device declaration, accessibility labels, and any screenshots not covered by Fastlane metadata.
