@@ -40,6 +40,22 @@ Read-only Firebase Auth config checks on 2026-05-17 verified:
 
 The check used the Identity Toolkit Admin API with `x-goog-user-project: myappv4`. Do not paste the raw API response into docs or logs because provider responses can include sensitive OAuth/client material.
 
+### Reviewer Access
+
+Read-only release access checks on 2026-05-17 verified:
+
+- `allowedEmails/app-review@mamy-r.dev` exists, is enabled, and has role `reviewer`.
+- `allowedEmails/ramiasamananaando5@gmail.com` exists, is enabled, and has role `user`.
+- `allowedEmails/nyandrianinamamy@gmail.com` exists, is enabled, and has role `admin`.
+- Firebase Auth contains exactly one reviewer account for `app-review@mamy-r.dev`.
+- The reviewer account has seeded Firestore demo state with exercises, routines, a routine group, and completed sessions.
+
+Re-run without printing tokens or reviewer passwords:
+
+```bash
+KOTRANA_FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" dart run tool/verify_release_access.dart
+```
+
 ### Apple Developer Capability
 
 The latest tagged iOS build failed before archive in GitHub Actions run `25988195896`, job `76389454500`, because the current App Store Connect API key cannot enable `APPLE_ID_AUTH` for `dev.mamy-r.kotrana`.
@@ -106,6 +122,7 @@ The latest local readiness pass completed successfully:
 - `flutter test`
 - `cd packages/training_engine && dart test`
 - `firebase emulators:exec --only auth,firestore --project myappv4 "dart run tool/verify_firestore_rules.dart"`
+- `KOTRANA_FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" dart run tool/verify_release_access.dart`
 - `flutter build ios --release --no-codesign`
 - `bash tool/ci/run_web_e2e.sh`
 - `flutter test test/core/release_ios_metadata_test.dart test/core/release_version_test.dart` verifies release version, iPhone-only release targeting, HealthKit/Bluetooth entitlement hygiene, and the five `1290 x 2796` iPhone 6.9-inch screenshots.
