@@ -174,7 +174,7 @@ void main() {
   testWidgets('shows routine-target progression for a five-rep prescription', (
     tester,
   ) async {
-    final completedAt = DateTime.now().subtract(const Duration(days: 8));
+    final completedAt = DateTime.now();
     final appState = AppState(
       exercises: const [_benchExercise],
       routines: const [_strengthRoutine],
@@ -202,7 +202,7 @@ void main() {
   testWidgets(
     'prefills routine-aware engine suggestion after current and previous sets are absent',
     (tester) async {
-      final completedAt = DateTime.now().subtract(const Duration(days: 8));
+      final completedAt = DateTime.now();
       final appState = AppState(
         exercises: const [_benchExercise, _squatExercise],
         routines: const [_strengthRoutine],
