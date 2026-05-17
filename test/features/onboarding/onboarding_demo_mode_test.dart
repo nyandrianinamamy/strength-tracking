@@ -74,17 +74,11 @@ void main() {
     await tester.pumpWidget(buildTestApp());
     await tester.pumpAndSettle();
 
-    // Name field is empty
-    final nameField = find.widgetWithText(TextField, 'Your name');
-    expect(nameField, findsOneWidget);
-    expect(tester.widget<TextField>(nameField).controller?.text, isEmpty);
+    // Signed-out onboarding no longer asks for a local profile name.
+    expect(find.widgetWithText(TextField, 'Your name'), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Next'), findsNothing);
 
-    // "Next" button should be disabled (no name entered)
-    final nextButton = find.widgetWithText(FilledButton, 'Next');
-    expect(nextButton, findsOneWidget);
-    expect(tester.widget<FilledButton>(nextButton).onPressed, isNull);
-
-    // Demo button is always enabled regardless of name
+    // Demo button is still enabled for local exploration.
     final demoButton = find.widgetWithText(
       OutlinedButton,
       'Explore with Demo Data',

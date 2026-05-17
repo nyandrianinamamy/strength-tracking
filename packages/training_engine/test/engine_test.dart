@@ -661,6 +661,29 @@ void main() {
       // After a single session with equal acute/chronic, ratio = 1.0 → optimal
       expect(engine.currentAcwr(), isNotNull);
     });
+
+    test('decays skipped rest days when queried for a later date', () {
+      final engine = _engine();
+      engine.restoreState(
+        engine.state
+            .copyWith(
+              acwrState: EwmaState(
+                acuteEwma: 2156.0002857567906,
+                chronicEwma: 1578.565613245085,
+                lastComputedDate: DateTime.utc(2026, 5, 15),
+              ),
+            )
+            .toJson(),
+      );
+
+      final stored = engine.currentAcwr();
+      expect(stored!.ratio, closeTo(1.3658, 0.0001));
+      expect(stored.zone, equals(AcwrZone.caution));
+
+      final current = engine.currentAcwr(at: DateTime.utc(2026, 5, 17, 12));
+      expect(current!.ratio, closeTo(0.8863, 0.0001));
+      expect(current.zone, equals(AcwrZone.optimal));
+    });
   });
 
   group('TrainingEngine.computeReadiness', () {
@@ -677,6 +700,29 @@ void main() {
       final readiness = engine.computeReadiness();
       // Should have at least ACWR data now
       expect(readiness.tier, isNot(equals(ReadinessTier.cold)));
+    });
+
+    test('uses rest-day-decayed ACWR for the query date', () {
+      final engine = _engine();
+      engine.restoreState(
+        engine.state
+            .copyWith(
+              acwrState: EwmaState(
+                acuteEwma: 2156.0002857567906,
+                chronicEwma: 1578.565613245085,
+                lastComputedDate: DateTime.utc(2026, 5, 15),
+              ),
+            )
+            .toJson(),
+      );
+
+      final readiness = engine.computeReadiness(
+        at: DateTime.utc(2026, 5, 17, 12),
+      );
+
+      expect(readiness.tier, equals(ReadinessTier.acwrOnly));
+      expect(readiness.componentScores['acwr'], closeTo(92.5, 0.001));
+      expect(readiness.score, closeTo(92.5, 0.001));
     });
 
     test('manual slider shifts score', () {
@@ -743,6 +789,50 @@ void main() {
         expect(rec.suggestedWeightKg, greaterThan(0));
       },
     );
+
+    test('uses rest-day-decayed ACWR for recommendation gates', () {
+      final engine = _engine();
+      final lastTopSet = LoggedSet(
+        exerciseId: 'barbell_back_squat',
+        weightKg: 100.0,
+        reps: 10,
+        rpe: 8.0,
+        completedAt: DateTime.utc(2026, 5, 15, 18),
+      );
+      engine.restoreState(
+        engine.state
+            .copyWith(
+              acwrState: EwmaState(
+                acuteEwma: 2156.0002857567906,
+                chronicEwma: 1578.565613245085,
+                lastComputedDate: DateTime.utc(2026, 5, 15),
+              ),
+              e1rmHistory: {
+                'barbell_back_squat': [
+                  E1rmEstimate(
+                    exerciseId: 'barbell_back_squat',
+                    value: 130.0,
+                    rMax: 12.0,
+                    confidence: 0.6,
+                    estimatedAt: DateTime.utc(2026, 5, 15, 18),
+                    fromEstimatedRpe: false,
+                  ),
+                ],
+              },
+              lastTopSets: {'barbell_back_squat': lastTopSet},
+              sessionsIngested: 1,
+            )
+            .toJson(),
+      );
+
+      final recommendation = engine.recommendLoad(
+        'barbell_back_squat',
+        at: DateTime.utc(2026, 5, 17, 12),
+      );
+
+      expect(recommendation.gateResult.reason, isNot(GateReason.acwrCaution));
+      expect(recommendation.gateResult.reason, isNot(GateReason.acwrDanger));
+    });
 
     test('returns recommendation using custom TargetParams', () {
       final engine = _engine();

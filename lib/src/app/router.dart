@@ -21,6 +21,14 @@ import 'package:strength_training_tracker/src/features/smart_planner/smart_plann
 import 'package:strength_training_tracker/src/shared/widgets/app_shell_scaffold.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  bool hasSignedInUser() {
+    try {
+      return ref.read(authServiceProvider).currentUser != null;
+    } catch (_) {
+      return false;
+    }
+  }
+
   return GoRouter(
     redirect: (context, state) {
       final appState = ref.read(appStateControllerProvider);
@@ -35,8 +43,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) {
-          final showProfileSetup =
-              kDebugMode || ref.read(authServiceProvider).currentUser != null;
+          final showProfileSetup = (kIsWeb && kDebugMode) || hasSignedInUser();
           return OnboardingScreen(showProfileSetup: showProfileSetup);
         },
       ),
