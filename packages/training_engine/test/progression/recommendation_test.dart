@@ -361,7 +361,7 @@ void main() {
 
         final defaultRecommendation = engine.recommendLoad(
           'barbell_bench_press',
-          at: completedAt.add(const Duration(days: 8)),
+          at: completedAt,
         );
         final routineRecommendation = engine.recommendLoad(
           'barbell_bench_press',
@@ -370,7 +370,7 @@ void main() {
             targetRepsHigh: 5,
             targetRpe: 8.0,
           ),
-          at: completedAt.add(const Duration(days: 8)),
+          at: completedAt,
         );
 
         expect(

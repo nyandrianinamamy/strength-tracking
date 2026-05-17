@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -36,7 +35,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (context, state) {
           final showProfileSetup =
-              kDebugMode || ref.read(authServiceProvider).currentUser != null;
+              ref.read(authServiceProvider).currentUser != null;
           return OnboardingScreen(showProfileSetup: showProfileSetup);
         },
       ),
