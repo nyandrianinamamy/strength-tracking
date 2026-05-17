@@ -29,7 +29,32 @@ def ensure_bundle_capability(app_identifier, capability_type)
   )
 end
 
+def bundle_capability_enabled?(app_identifier, capability_type)
+  bundle_id = Spaceship::ConnectAPI::BundleId.find(app_identifier)
+  UI.user_error!("Bundle ID #{app_identifier} was not found") unless bundle_id
+
+  capabilities = Spaceship::ConnectAPI::BundleIdCapability.all(
+    bundle_id_id: bundle_id.id,
+  )
+
+  capabilities.any? { |capability| capability.is_type?(capability_type) }
+end
+
 platform :ios do
+  desc "Read-only check that Sign in with Apple is enabled on the main bundle ID"
+  lane :check_apple_sign_in_capability do
+    app_store_connect_api_key_from_env
+
+    app_identifier = "dev.mamy-r.kotrana"
+    capability_type = Spaceship::ConnectAPI::BundleIdCapability::Type::APPLE_ID_AUTH
+
+    if bundle_capability_enabled?(app_identifier, capability_type)
+      UI.success("#{app_identifier} has #{capability_type} enabled")
+    else
+      UI.user_error!("#{app_identifier} is missing #{capability_type}; enable Sign in with Apple in Apple Developer before rerunning Build iOS")
+    end
+  end
+
   desc "Build and upload to TestFlight"
   lane :beta do
     setup_ci

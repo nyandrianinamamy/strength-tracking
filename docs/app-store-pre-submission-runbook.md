@@ -44,10 +44,16 @@ Manual Team Admin step:
 After this, rerun the tagged build using either path:
 
 ```bash
+gh workflow run "Check App Store Capability"
+```
+
+Wait for this read-only capability check to pass, then run:
+
+```bash
 gh workflow run "Build iOS" -f release_tag=v1.0.31
 ```
 
-or rerun failed workflow `25988195896` from GitHub Actions.
+You can also rerun failed workflow `25988195896` from GitHub Actions, but the manual `Build iOS` workflow is the clearest path after the capability check passes.
 
 The `Build iOS` workflow checks out the tag for manual runs, so it builds `v1.0.31`, not the tip of `main`.
 

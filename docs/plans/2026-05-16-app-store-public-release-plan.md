@@ -32,7 +32,7 @@ For the short no-submit execution checklist, use `docs/app-store-pre-submission-
   2. Open identifier `dev.mamy-r.kotrana`.
   3. Enable `Sign in with Apple`.
   4. Save the identifier.
-- After this, manually run the `Build iOS` workflow with `release_tag` set to `v1.0.31` or rerun failed workflow `25988195896`. The workflow checks out the tag rather than `main`, so it should build the release commit. The Fastlane lane should detect the existing capability, regenerate the App Store profile with `match(force: true)`, and continue to archive/upload.
+- After this, manually run the read-only `Check App Store Capability` workflow. When it passes, manually run the `Build iOS` workflow with `release_tag` set to `v1.0.31` or rerun failed workflow `25988195896`. The workflow checks out the tag rather than `main`, so it should build the release commit. The Fastlane lane should detect the existing capability, regenerate the App Store profile with `match(force: true)`, and continue to archive/upload.
 
 ## Metadata Automation Status
 
@@ -447,7 +447,7 @@ Before tagging `v1.0.31`:
 3. Commit and open PR.
 4. Wait for PR checks and merge.
 5. Tag merged `main` as `v1.0.31`.
-6. Confirm GitHub Actions iOS/TestFlight upload succeeds. After the Apple Developer capability is enabled, use the manual `Build iOS` workflow with `release_tag=v1.0.31` or rerun failed workflow `25988195896`.
+6. Confirm GitHub Actions iOS/TestFlight upload succeeds. After the Apple Developer capability is enabled, run `Check App Store Capability`, then use the manual `Build iOS` workflow with `release_tag=v1.0.31` or rerun failed workflow `25988195896`.
 7. Confirm App Store Connect receives the build produced by the current `v1.0.31` tag. At the latest failed tag run, this was expected to be `1.0.31 (286)`.
 8. Select latest build for iOS App Version `1.0`.
 9. Sync App Store text metadata and App Review information with the manual `Sync App Store Metadata` workflow, or fill manually from `docs/app-store-connect-submission-values.md`.
