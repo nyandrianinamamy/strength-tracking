@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to build and upload"
+        required: true
+        default: "v1.0.31"
 
 jobs:
   # ─── TestFlight upload via Fastlane ───
@@ -11,6 +17,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
 
       - name: Select Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
@@ -48,8 +56,11 @@ jobs:
 
       - name: Extract version from tag
         id: version
+        env:
+          RELEASE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
         run: |
-          TAG="${GITHUB_REF#refs/tags/v}"
+          TAG="${RELEASE_REF#refs/tags/}"
+          TAG="${TAG#v}"
           echo "number=${TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Build and upload to TestFlight
