@@ -49,6 +49,27 @@ void main() {
     expect(info, isNot(contains('NSBluetoothAlwaysUsageDescription')));
   });
 
+  test('TestFlight workflow maps tag suffix to build number', () {
+    final workflow = File('.github/workflows/build-ios.yml').readAsStringSync();
+    final fastfile = File('ios/fastlane/Fastfile').readAsStringSync();
+
+    expect(workflow, contains(r'VERSION="${TAG%%+*}"'));
+    expect(workflow, contains(r'BUILD="${TAG#*+}"'));
+    expect(
+      workflow,
+      contains(r'BUILD_VERSION: ${{ steps.version.outputs.version }}'),
+    );
+    expect(
+      workflow,
+      contains(r'BUILD_NUMBER: ${{ steps.version.outputs.build }}'),
+    );
+
+    expect(fastfile, contains('increment_version_number'));
+    expect(fastfile, contains('version_number: ENV["BUILD_VERSION"]'));
+    expect(fastfile, contains('increment_build_number'));
+    expect(fastfile, contains('build_number: ENV["BUILD_NUMBER"]'));
+  });
+
   test('Runner release target stays iPhone-only for prepared screenshots', () {
     final project = File(
       'ios/Runner.xcodeproj/project.pbxproj',
