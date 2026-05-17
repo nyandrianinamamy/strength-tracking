@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/app/app.dart';
@@ -385,6 +386,8 @@ void main() {
       expect(find.text('Heatmap Payload'), findsOneWidget);
       expect(find.text('Recommendation Breakdown'), findsOneWidget);
       expect(find.text('Persisted State Summary'), findsOneWidget);
+      expect(find.text('Stored ACWR'), findsOneWidget);
+      expect(find.text('Current ACWR'), findsOneWidget);
       expect(find.text('Raw Snapshot'), findsOneWidget);
       expect(find.textContaining('Barbell Back Squat'), findsWidgets);
       expect(find.textContaining('Barbell Bench Press'), findsWidgets);
@@ -395,6 +398,52 @@ void main() {
       expect(find.textContaining('lastTopSets'), findsWidgets);
     },
   );
+
+  testWidgets('raw snapshot copy button copies serialized engine state', (
+    tester,
+  ) async {
+    final savedEngineState = _savedEngineStateWithBenchAndSquatData();
+    final appState = _appStateWithCompletedSessionIds(['debug-session-1']);
+    String? copiedText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+      SystemChannels.platform,
+      (call) async {
+        if (call.method == 'Clipboard.setData') {
+          final data = Map<String, dynamic>.from(call.arguments as Map);
+          copiedText = data['text'] as String?;
+        }
+        return null;
+      },
+    );
+    addTearDown(() {
+      tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        SystemChannels.platform,
+        null,
+      );
+    });
+
+    await tester.pumpWidget(
+      _buildDebugScreenApp(
+        appState: appState,
+        savedEngineState: savedEngineState,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.scrollUntilVisible(
+      find.byTooltip('Copy raw snapshot'),
+      400,
+      scrollable: find.byType(Scrollable),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Copy raw snapshot'));
+    await tester.pumpAndSettle();
+
+    expect(copiedText, contains('barbell_back_squat'));
+    expect(copiedText, contains('lastTopSets'));
+    expect(find.text('Raw snapshot copied'), findsOneWidget);
+  });
 
   testWidgets('dashboard shows engine debug button and opens debug screen', (
     tester,

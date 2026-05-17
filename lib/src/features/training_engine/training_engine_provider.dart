@@ -441,6 +441,7 @@ class EngineDebugCountRow {
 class EngineDebugPersistedStateSummary {
   const EngineDebugPersistedStateSummary({
     required this.acwrSummary,
+    required this.currentAcwrSummary,
     required this.dailyLoadsCount,
     required this.lastTopSetsCount,
     required this.e1rmHistoryCount,
@@ -450,6 +451,7 @@ class EngineDebugPersistedStateSummary {
   });
 
   final String acwrSummary;
+  final String currentAcwrSummary;
   final int dailyLoadsCount;
   final int lastTopSetsCount;
   final int e1rmHistoryCount;
@@ -467,7 +469,15 @@ final engineDebugPersistedStateSummaryProvider =
       final acwrSummary = acwrState == null
           ? 'Unavailable'
           : 'daily acute ${acwrState.acuteEwma.toStringAsFixed(1)} / '
-                'chronic ${acwrState.chronicEwma.toStringAsFixed(1)}';
+                'chronic ${acwrState.chronicEwma.toStringAsFixed(1)} · '
+                'ratio ${engine.currentAcwr()?.ratio.toStringAsFixed(2)} · '
+                '${engine.currentAcwr()?.zone.name} · '
+                '${acwrState.lastComputedDate.toLocal().toIso8601String()}';
+      final currentAcwr = engine.currentAcwr(at: DateTime.now());
+      final currentAcwrSummary = currentAcwr == null
+          ? 'Unavailable'
+          : 'ratio ${currentAcwr.ratio.toStringAsFixed(2)} · '
+                '${currentAcwr.zone.name}';
 
       final dailyLoads = state.dailyLoads;
       final latestDailyLoad = dailyLoads.isEmpty
@@ -486,6 +496,7 @@ final engineDebugPersistedStateSummaryProvider =
 
       return EngineDebugPersistedStateSummary(
         acwrSummary: acwrSummary,
+        currentAcwrSummary: currentAcwrSummary,
         dailyLoadsCount: dailyLoads.length,
         lastTopSetsCount: lastTopSetRows.length,
         e1rmHistoryCount: e1rmHistoryRows.length,

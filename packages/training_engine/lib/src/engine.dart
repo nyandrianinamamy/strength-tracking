@@ -11,6 +11,7 @@ import 'models/e1rm_estimate.dart';
 import 'models/engine_exercise.dart';
 import 'models/engine_session.dart';
 import 'models/enums.dart';
+import 'models/ewma_state.dart';
 import 'models/fatigue_impulse.dart';
 import 'models/hrv_record.dart';
 import 'models/logged_set.dart';
@@ -428,15 +429,19 @@ class TrainingEngine {
   }
 
   /// Returns the current ACWR status, or `null` if not enough data.
-  acwr_lib.AcwrStatus? currentAcwr() {
+  acwr_lib.AcwrStatus? currentAcwr({DateTime? at}) {
     if (_state.acwrState == null) return null;
-    return acwr_lib.computeAcwr(_state.acwrState!);
+    final state = _acwrStateAsOf(at);
+    return acwr_lib.computeAcwr(state);
   }
 
   /// Computes a composite readiness score from all available data sources.
-  readiness_lib.ReadinessScore computeReadiness({double? manualSlider}) {
-    final now = DateTime.now();
-    final acwr = currentAcwr();
+  readiness_lib.ReadinessScore computeReadiness({
+    double? manualSlider,
+    DateTime? at,
+  }) {
+    final now = at ?? DateTime.now();
+    final acwr = currentAcwr(at: now);
     final sleepDetails = sleep_lib.scoreSleepDetailed(_state.sleepHistory, now);
     final hrvDetails = hrv_lib.scoreHrvDetailed(_state.hrvHistory, now);
     return readiness_lib.computeReadiness(
@@ -483,10 +488,10 @@ class TrainingEngine {
     }
 
     // ACWR zone
-    final acwrZone = currentAcwr()?.zone;
+    final acwrZone = currentAcwr(at: now)?.zone;
 
     // Readiness score
-    final readiness = computeReadiness();
+    final readiness = computeReadiness(at: now);
 
     // Last top set
     final lastTopSet = _state.lastTopSets[exerciseId];
@@ -532,6 +537,21 @@ class TrainingEngine {
       return highSynergistMax;
     }
     return primaryMax;
+  }
+
+  EwmaState _acwrStateAsOf(DateTime? at) {
+    final state = _state.acwrState!;
+    if (at == null) return state;
+
+    final queryDay = ewma_lib.localCalendarDay(at);
+    final stateDay = ewma_lib.localCalendarDay(state.lastComputedDate);
+    if (!queryDay.isAfter(stateDay)) return state;
+
+    return ewma_lib.updateEwma(
+      previous: state,
+      todayLoad: 0.0,
+      today: queryDay,
+    );
   }
 
   // ---------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:training_engine/training_engine.dart';
 
@@ -59,7 +60,12 @@ class TrainingEngineDebugScreen extends ConsumerWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          16,
+          16,
+          MediaQuery.paddingOf(context).bottom + 176,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -329,7 +335,8 @@ class _PersistedStateCard extends StatelessWidget {
     return _SectionCard(
       title: 'Persisted State Summary',
       children: [
-        _KvRow(label: 'ACWR state', value: summary.acwrSummary),
+        _KvRow(label: 'Stored ACWR', value: summary.acwrSummary),
+        _KvRow(label: 'Current ACWR', value: summary.currentAcwrSummary),
         _KvRow(
           label: 'Aggregated daily loads',
           value: summary.dailyLoadsCount.toString(),
@@ -400,6 +407,18 @@ class _RawSnapshotCard extends StatelessWidget {
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        trailing: IconButton(
+          icon: const Icon(Icons.copy_all_outlined),
+          tooltip: 'Copy raw snapshot',
+          onPressed: () async {
+            await Clipboard.setData(ClipboardData(text: snapshot));
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Raw snapshot copied')),
+              );
+            }
+          },
         ),
         children: [
           Padding(
