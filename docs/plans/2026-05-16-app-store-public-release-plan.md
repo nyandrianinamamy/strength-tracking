@@ -27,6 +27,7 @@ For the short no-submit execution checklist, use `docs/app-store-pre-submission-
 
 - Build iOS workflow `25988195896` fails before archive because Apple Developer rejects enabling `APPLE_ID_AUTH` for `dev.mamy-r.kotrana` through the App Store Connect API key.
 - Error observed on job `76389454500`: `This request is forbidden for security reasons - You are not allowed to perform this operation.`
+- Read-only capability check workflow `25988649424` confirms `dev.mamy-r.kotrana` is missing `APPLE_ID_AUTH`.
 - Manual Team Admin action required before rerunning the tag workflow:
   1. Apple Developer > Certificates, Identifiers & Profiles.
   2. Open identifier `dev.mamy-r.kotrana`.

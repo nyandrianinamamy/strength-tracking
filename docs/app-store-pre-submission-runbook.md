@@ -34,6 +34,8 @@ Not allowed for this goal:
 
 The latest tagged iOS build failed before archive in GitHub Actions run `25988195896`, job `76389454500`, because the current App Store Connect API key cannot enable `APPLE_ID_AUTH` for `dev.mamy-r.kotrana`.
 
+The read-only capability check workflow also failed in run `25988649424` with: `dev.mamy-r.kotrana is missing APPLE_ID_AUTH`.
+
 Manual Team Admin step:
 
 1. Open Apple Developer > Certificates, Identifiers & Profiles.
