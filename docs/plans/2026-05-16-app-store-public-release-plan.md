@@ -7,6 +7,8 @@ Release mode: manual release after App Review approval
 
 This plan captures the decisions needed to prepare Kotrana: Musculation for its first public App Store release. It is intended to survive context loss and let a future Codex session continue without re-interviewing the user.
 
+For the short no-submit execution checklist, use `docs/app-store-pre-submission-runbook.md`.
+
 ## Current Known State
 
 - `v1.0.31` currently points at `ba9d896`, the verified release build commit.
