@@ -30,6 +30,16 @@ Not allowed for this goal:
 
 ## External Blockers
 
+### Firebase Auth Providers
+
+Read-only Firebase Auth config checks on 2026-05-17 verified:
+
+- Email/password sign-in is enabled with password required.
+- Default Google provider `google.com` is enabled.
+- Default Apple provider `apple.com` is enabled.
+
+The check used the Identity Toolkit Admin API with `x-goog-user-project: myappv4`. Do not paste the raw API response into docs or logs because provider responses can include sensitive OAuth/client material.
+
 ### Apple Developer Capability
 
 The latest tagged iOS build failed before archive in GitHub Actions run `25988195896`, job `76389454500`, because the current App Store Connect API key cannot enable `APPLE_ID_AUTH` for `dev.mamy-r.kotrana`.

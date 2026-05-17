@@ -43,6 +43,12 @@ For the short no-submit execution checklist, use `docs/app-store-pre-submission-
 - The same run failed when uploading metadata with: `This request is forbidden for security reasons - The API key in use does not allow this request`.
 - To use metadata automation, replace/update the App Store Connect API key GitHub secrets with a key that has permission to edit App Store metadata, such as an App Manager/Admin-capable key, or fill the fields manually in App Store Connect from `docs/app-store-connect-submission-values.md`.
 
+## Firebase Auth Provider Status
+
+- Read-only Identity Toolkit Admin API checks on 2026-05-17 verified email/password sign-in is enabled with password required.
+- The same check verified Firebase default supported providers `google.com` and `apple.com` are enabled.
+- Do not paste raw provider config responses into docs because they can include sensitive OAuth/client material.
+
 ## Product and Access Decisions
 
 - Public App Store distribution: yes, discoverable, free, available everywhere.
