@@ -70,7 +70,7 @@ void main() {
     }
   });
 
-  test('prepared App Store screenshots are iPhone 6.9-inch PNGs', () {
+  test('prepared App Store screenshots include iPhone and Apple Watch PNGs', () {
     final screenshotDir = Directory('ios/fastlane/screenshots/en-US');
     final screenshots =
         screenshotDir
@@ -80,17 +80,34 @@ void main() {
             .toList()
           ..sort((a, b) => a.path.compareTo(b.path));
 
-    expect(screenshots.map((file) => file.uri.pathSegments.last), [
+    final iPhoneScreenshots =
+        screenshots
+            .where((file) => file.uri.pathSegments.last.endsWith('_6_9.png'))
+            .toList();
+    expect(iPhoneScreenshots.map((file) => file.uri.pathSegments.last), [
       '01_dashboard_6_9.png',
       '02_routines_6_9.png',
       '03_progress_6_9.png',
       '04_exercises_6_9.png',
       '05_heatmap_6_9.png',
     ]);
-    for (final screenshot in screenshots) {
+    for (final screenshot in iPhoneScreenshots) {
       final dimensions = _readPngDimensions(screenshot);
       expect(dimensions.width, 1290, reason: screenshot.path);
       expect(dimensions.height, 2796, reason: screenshot.path);
+    }
+
+    final watchScreenshots =
+        screenshots
+            .where((file) => file.uri.pathSegments.last.endsWith('_45mm.png'))
+            .toList();
+    expect(watchScreenshots.map((file) => file.uri.pathSegments.last), [
+      '01_watch_45mm.png',
+    ]);
+    for (final screenshot in watchScreenshots) {
+      final dimensions = _readPngDimensions(screenshot);
+      expect(dimensions.width, 396, reason: screenshot.path);
+      expect(dimensions.height, 484, reason: screenshot.path);
     }
   });
 }
