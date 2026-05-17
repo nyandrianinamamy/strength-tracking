@@ -9,6 +9,7 @@ import 'package:strength_training_tracker/src/data/repository/app_state_reposito
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 import 'package:strength_training_tracker/src/features/auth/invite_access.dart';
+import 'package:strength_training_tracker/src/shared/widgets/app_loading_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({
@@ -129,6 +130,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isSigningIn) {
+      return const AppLoadingScreen(message: 'Restoring your training data...');
+    }
+
     final pages = <Widget>[
       _buildWelcomePage(context),
       if (widget.showProfileSetup) ...[
@@ -319,10 +324,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 label: Text(l10n.continueWithGoogle),
               ),
             ),
-            if (_isSigningIn) ...[
-              const SizedBox(height: 16),
-              const CircularProgressIndicator(),
-            ],
           ],
         ),
       ),
