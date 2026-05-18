@@ -24,13 +24,6 @@ import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/features/watch/watch_sync_service.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
-class _TimedExerciseState {
-  DateTime? start;
-  int duration = 0;
-  bool running = false;
-  bool beeped = false;
-}
-
 class ActiveWorkoutScreen extends ConsumerStatefulWidget {
   const ActiveWorkoutScreen({super.key});
 
@@ -60,8 +53,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   // DateTime.now() calls within the same tick.
   int _cachedRemainingRest = 0;
 
-  // Timed exercise countdown state — per exercise so switching doesn't reset
-  final Map<String, _TimedExerciseState> _timedExerciseStates = {};
+  // Timed exercise countdown state is stored on the active session so route
+  // changes and view recreation do not reset it.
   String? _activeTimedExerciseId;
 
   // Auto-switch countdown when all sets completed
@@ -114,10 +107,12 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         // Timed exercise auto-log when countdown reaches zero
         final activeTs = _activeTimedState;
         if (activeTs != null &&
-            activeTs.running &&
+            activeTs.isRunning &&
             _timedCountdownRemaining <= 0 &&
             !activeTs.beeped) {
-          activeTs.beeped = true;
+          ref
+              .read(workoutControllerProvider)
+              .markTimedExerciseTimerBeeped(activeTs.exerciseId);
           _playRestTimerBeep();
           _autoLogTimedSet();
         }
@@ -162,68 +157,61 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   // Timed exercise helpers
-  _TimedExerciseState _timedStateFor(String exerciseId) {
-    return _timedExerciseStates.putIfAbsent(
-      exerciseId,
-      () => _TimedExerciseState(),
-    );
-  }
-
-  _TimedExerciseState? get _activeTimedState {
+  TimedExerciseTimerState? get _activeTimedState {
     final id = _activeTimedExerciseId;
-    return id == null ? null : _timedExerciseStates[id];
+    return id == null
+        ? null
+        : ref.read(workoutControllerProvider).timedExerciseTimerFor(id);
   }
 
   int get _timedCountdownRemaining {
-    final ts = _activeTimedState;
-    if (ts == null || ts.start == null || !ts.running) {
-      return ts?.duration ?? 0;
-    }
-    final elapsed = DateTime.now().difference(ts.start!).inSeconds;
-    return (ts.duration - elapsed).clamp(0, 9999);
+    final id = _activeTimedExerciseId;
+    if (id == null) return 0;
+    return ref.read(workoutControllerProvider).timedExerciseRemaining(id);
   }
 
-  bool get _timedExerciseRunning => _activeTimedState?.running ?? false;
+  bool get _timedExerciseRunning {
+    final id = _activeTimedExerciseId;
+    return id != null &&
+        ref.read(workoutControllerProvider).timedExerciseRunning(id);
+  }
 
   void _startTimedExercise(int durationSeconds) {
-    final ts = _activeTimedState;
-    if (ts == null) return;
-    setState(() {
-      ts.duration = durationSeconds;
-      ts.start = DateTime.now();
-      ts.running = true;
-      ts.beeped = false;
-    });
+    final exerciseId = _activeTimedExerciseId;
+    if (exerciseId == null) return;
+    final startedAt = DateTime.now();
+    ref
+        .read(workoutControllerProvider)
+        .startTimedExerciseTimer(
+          exerciseId: exerciseId,
+          durationSeconds: durationSeconds,
+          now: startedAt,
+        );
     ref
         .read(watchSyncServiceProvider)
-        .updateTimedExerciseTimer(
-          exerciseId: _activeTimedExerciseId,
-          startedAt: ts.start,
-        );
+        .updateTimedExerciseTimer(exerciseId: exerciseId, startedAt: startedAt);
   }
 
   void _pauseTimedExercise() {
-    final ts = _activeTimedState;
-    if (ts == null) return;
-    setState(() {
-      ts.duration = _timedCountdownRemaining;
-      ts.start = null;
-      ts.running = false;
-    });
+    final exerciseId = _activeTimedExerciseId;
+    if (exerciseId == null) return;
+    ref
+        .read(workoutControllerProvider)
+        .pauseTimedExerciseTimer(exerciseId: exerciseId);
     ref
         .read(watchSyncServiceProvider)
         .updateTimedExerciseTimer(exerciseId: null, startedAt: null);
   }
 
   void _resetTimedExercise(int durationSeconds) {
-    final ts = _activeTimedState;
-    if (ts == null) return;
-    setState(() {
-      ts.duration = durationSeconds;
-      ts.start = null;
-      ts.running = false;
-      ts.beeped = false;
-    });
+    final exerciseId = _activeTimedExerciseId;
+    if (exerciseId == null) return;
+    ref
+        .read(workoutControllerProvider)
+        .resetTimedExerciseTimer(
+          exerciseId: exerciseId,
+          durationSeconds: durationSeconds,
+        );
     ref
         .read(watchSyncServiceProvider)
         .updateTimedExerciseTimer(exerciseId: null, startedAt: null);
@@ -232,12 +220,16 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   void _initTimedExercise(String exerciseId, int durationSeconds) {
     setState(() {
       _activeTimedExerciseId = exerciseId;
-      final ts = _timedStateFor(exerciseId);
-      // Only set the duration if this exercise hasn't been initialized yet
-      if (ts.duration == 0 && !ts.running) {
-        ts.duration = durationSeconds;
-      }
     });
+    if (ref.read(workoutControllerProvider).timedExerciseTimerFor(exerciseId) ==
+        null) {
+      ref
+          .read(workoutControllerProvider)
+          .resetTimedExerciseTimer(
+            exerciseId: exerciseId,
+            durationSeconds: durationSeconds,
+          );
+    }
   }
 
   void _autoLogTimedSet() {

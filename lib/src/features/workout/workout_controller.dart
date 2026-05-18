@@ -21,6 +21,82 @@ class WorkoutController {
   WorkoutSession? resumeActive() =>
       _ref.read(appStateControllerProvider).activeSession;
 
+  TimedExerciseTimerState? timedExerciseTimerFor(String exerciseId) {
+    return _ref
+        .read(appStateControllerProvider)
+        .activeSession
+        ?.timedExerciseTimers[exerciseId];
+  }
+
+  int timedExerciseRemaining(String exerciseId, {DateTime? now}) {
+    return timedExerciseTimerFor(
+          exerciseId,
+        )?.remainingAt(now ?? DateTime.now()) ??
+        0;
+  }
+
+  bool timedExerciseRunning(String exerciseId) {
+    return timedExerciseTimerFor(exerciseId)?.isRunning ?? false;
+  }
+
+  WorkoutSession? startTimedExerciseTimer({
+    required String exerciseId,
+    required int durationSeconds,
+    DateTime? now,
+  }) {
+    final session = _ref.read(appStateControllerProvider).activeSession;
+    if (session == null) return null;
+
+    final startedAt = now ?? DateTime.now();
+    final timer = TimedExerciseTimerState(
+      exerciseId: exerciseId,
+      remainingSeconds: durationSeconds,
+      endsAt: startedAt.add(Duration(seconds: durationSeconds)),
+    );
+    return _persistTimedExerciseTimer(session, timer);
+  }
+
+  WorkoutSession? pauseTimedExerciseTimer({
+    required String exerciseId,
+    DateTime? now,
+  }) {
+    final session = _ref.read(appStateControllerProvider).activeSession;
+    if (session == null) return null;
+
+    final timer = session.timedExerciseTimers[exerciseId];
+    if (timer == null) return session;
+
+    final paused = timer.copyWith(
+      remainingSeconds: timer.remainingAt(now ?? DateTime.now()),
+      clearEndsAt: true,
+    );
+    return _persistTimedExerciseTimer(session, paused);
+  }
+
+  WorkoutSession? resetTimedExerciseTimer({
+    required String exerciseId,
+    required int durationSeconds,
+  }) {
+    final session = _ref.read(appStateControllerProvider).activeSession;
+    if (session == null) return null;
+
+    final timer = TimedExerciseTimerState(
+      exerciseId: exerciseId,
+      remainingSeconds: durationSeconds,
+      endsAt: null,
+    );
+    return _persistTimedExerciseTimer(session, timer);
+  }
+
+  WorkoutSession? markTimedExerciseTimerBeeped(String exerciseId) {
+    final session = _ref.read(appStateControllerProvider).activeSession;
+    if (session == null) return null;
+
+    final timer = session.timedExerciseTimers[exerciseId];
+    if (timer == null) return session;
+    return _persistTimedExerciseTimer(session, timer.copyWith(beeped: true));
+  }
+
   WorkoutSession? logSet({
     required double weightKg,
     required int reps,
@@ -349,6 +425,22 @@ class WorkoutController {
                 .toList(),
           ),
         );
+  }
+
+  WorkoutSession _persistTimedExerciseTimer(
+    WorkoutSession session,
+    TimedExerciseTimerState timer,
+  ) {
+    final timers = Map<String, TimedExerciseTimerState>.of(
+      session.timedExerciseTimers,
+    );
+    timers[timer.exerciseId] = timer;
+    final updatedSession = session.copyWith(
+      lastActivityAt: DateTime.now(),
+      timedExerciseTimers: timers,
+    );
+    _persistSession(updatedSession);
+    return updatedSession;
   }
 
   Future<void> _syncTrainingEngine(WorkoutSession session) async {
