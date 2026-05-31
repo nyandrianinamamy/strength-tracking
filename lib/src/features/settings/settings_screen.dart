@@ -16,6 +16,7 @@ import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 import 'package:strength_training_tracker/src/features/auth/invite_access.dart';
 import 'package:strength_training_tracker/src/features/settings/account_deletion_service.dart';
+import 'package:strength_training_tracker/src/features/smart_planner/widgets/day_picker.dart';
 import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
 
@@ -365,6 +366,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final state = ref.watch(appStateControllerProvider);
     final authService = ref.read(authServiceProvider);
     final user = authService.currentUser;
+    final maxSessionDurationMinutes = state.maxSessionDurationMinutes
+        .clamp(15, 180)
+        .toInt();
 
     // Resync text controllers when state changes externally
     // (e.g., sign-in replaces state with cloud data).
@@ -500,6 +504,110 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             },
                           );
                         }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Experience Level
+                  Text(
+                    l10n.experienceLevel,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        [
+                          ('beginner', l10n.experienceBeginner),
+                          ('intermediate', l10n.experienceIntermediate),
+                          ('advanced', l10n.experienceAdvanced),
+                        ].map((entry) {
+                          final value = entry.$1;
+                          final label = entry.$2;
+                          return ChoiceChip(
+                            label: Text(label),
+                            selected: state.experience == value,
+                            onSelected: (selected) {
+                              if (!selected) return;
+                              ref
+                                  .read(appStateControllerProvider.notifier)
+                                  .updateState(
+                                    (s) => s.copyWith(experience: value),
+                                  );
+                            },
+                          );
+                        }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Training Days
+                  Text(
+                    l10n.trainingDays,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DayPicker(
+                    selectedDays: state.availableDays.toSet(),
+                    onDayToggled: (day) {
+                      final updatedDays = state.availableDays.toSet();
+                      if (updatedDays.contains(day)) {
+                        updatedDays.remove(day);
+                      } else {
+                        updatedDays.add(day);
+                      }
+                      ref
+                          .read(appStateControllerProvider.notifier)
+                          .updateState(
+                            (s) => s.copyWith(
+                              availableDays: updatedDays.toList()..sort(),
+                            ),
+                          );
+                    },
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Max Session Duration
+                  Text(
+                    l10n.maxSessionDuration,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Slider(
+                          value: maxSessionDurationMinutes.toDouble(),
+                          min: 15,
+                          max: 180,
+                          divisions: 11,
+                          label: '$maxSessionDurationMinutes min',
+                          onChanged: (value) {
+                            ref
+                                .read(appStateControllerProvider.notifier)
+                                .updateState(
+                                  (s) => s.copyWith(
+                                    maxSessionDurationMinutes: value.round(),
+                                  ),
+                                );
+                          },
+                        ),
+                      ),
+                      SizedBox(
+                        width: 56,
+                        child: Text(
+                          '$maxSessionDurationMinutes min',
+                          textAlign: TextAlign.end,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
