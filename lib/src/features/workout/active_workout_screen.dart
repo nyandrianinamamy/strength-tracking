@@ -1574,6 +1574,16 @@ String _setTitle(
   return '$baseTitle • RPE ${set.rpe!.toStringAsFixed(1)}';
 }
 
+String _previousPerformanceSubtitle(CompletedSet set) {
+  final date = AppFormatters.weekdayMonthDay(set.completedAt);
+  final rpe = set.rpe;
+  if (rpe == null) {
+    return date;
+  }
+
+  return '$date • RPE ${rpe.toStringAsFixed(1)}';
+}
+
 class _ExercisePage extends ConsumerWidget {
   const _ExercisePage({
     super.key,
@@ -2146,9 +2156,7 @@ class _ExercisePage extends ConsumerWidget {
                               ],
                             ],
                           ),
-                          subtitle: Text(
-                            AppFormatters.weekdayMonthDay(set.completedAt),
-                          ),
+                          subtitle: Text(_previousPerformanceSubtitle(set)),
                         ),
                       );
                     }).toList(),

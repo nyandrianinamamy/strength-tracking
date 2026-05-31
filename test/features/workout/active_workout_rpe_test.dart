@@ -374,6 +374,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.textContaining('Suggested'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('RPE 8.0'), findsOneWidget);
     },
   );
 }
