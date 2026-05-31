@@ -552,6 +552,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   Future<void> _showFinishConfirmation(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(workoutControllerProvider);
+    final sessionId = ref.read(appStateControllerProvider).activeSession?.id;
     final completedSessionId = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -598,7 +599,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 FilledButton.icon(
                   onPressed: () {
                     final completed = controller.completeSession();
-                    Navigator.of(sheetContext).pop(completed?.id);
+                    Navigator.of(sheetContext).pop(completed?.id ?? sessionId);
                   },
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),

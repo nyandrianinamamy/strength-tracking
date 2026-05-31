@@ -13,6 +13,7 @@ import 'package:strength_training_tracker/src/features/routines/routine_controll
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:strength_training_tracker/src/features/workout/active_workout_screen.dart';
+import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_summary_screen.dart';
 import 'package:training_engine/training_engine.dart';
 
@@ -123,6 +124,80 @@ void main() {
 
       expect(find.text('Workout Complete'), findsOneWidget);
       expect(find.text('Push Day'), findsOneWidget);
+      expect(find.text('Finish & Save'), findsNothing);
+      expect(find.byType(BottomSheet), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'finish sheet still routes to summary if active session clears before tap',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 932);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final repository = MemoryAppStateRepository(
+        initialState: DemoSeedData.initialState(),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          appStateRepositoryProvider.overrideWithValue(repository),
+          initialAppStateProvider.overrideWithValue(repository.state),
+          trainingEngineStateRepositoryProvider.overrideWithValue(
+            MemoryTrainingEngineStateRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final active = container
+          .read(routineControllerProvider)
+          .startSession('push_day');
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const ActiveWorkoutScreen(),
+          ),
+          GoRoute(
+            path: '/workout/:sessionId/summary',
+            builder: (context, state) => WorkoutSummaryScreen(
+              sessionId: state.pathParameters['sessionId']!,
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await _pumpFrames(tester);
+
+      await tester.tap(find.text('FINISH').last);
+      await _pumpFrames(tester);
+      expect(find.text('Finish & Save'), findsOneWidget);
+
+      container.read(workoutControllerProvider).completeSession(rpe: 8);
+      await _pumpFrames(tester);
+
+      await tester.tap(find.text('Finish & Save'));
+      await _pumpFrames(tester);
+
+      expect(find.text('Workout Complete'), findsOneWidget);
+      expect(find.text('Push Day'), findsOneWidget);
+      expect(
+        router.routeInformationProvider.value.uri.path,
+        '/workout/${active.id}/summary',
+      );
       expect(find.text('Finish & Save'), findsNothing);
       expect(find.byType(BottomSheet), findsNothing);
     },
