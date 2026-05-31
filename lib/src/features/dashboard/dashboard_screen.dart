@@ -25,6 +25,22 @@ String? _displayCategory(AppLocalizations l10n, String? raw) {
   };
 }
 
+String _workoutCardMetricValue({
+  required double totalVolumeKg,
+  required Duration duration,
+  required String preferredUnit,
+}) {
+  if (totalVolumeKg > 0) {
+    return AppFormatters.weight(totalVolumeKg, preferredUnit);
+  }
+
+  return AppFormatters.duration(duration);
+}
+
+String _workoutCardMetricLabel(AppLocalizations l10n, double totalVolumeKg) {
+  return totalVolumeKg > 0 ? l10n.volume : l10n.time;
+}
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -392,9 +408,10 @@ class DashboardScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  AppFormatters.weight(
-                                    workout.totalVolumeKg,
-                                    state.preferredUnit,
+                                  _workoutCardMetricValue(
+                                    totalVolumeKg: workout.totalVolumeKg,
+                                    duration: workout.duration,
+                                    preferredUnit: state.preferredUnit,
                                   ),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w800,
@@ -402,7 +419,10 @@ class DashboardScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  l10n.volume,
+                                  _workoutCardMetricLabel(
+                                    l10n,
+                                    workout.totalVolumeKg,
+                                  ),
                                   style: TextStyle(
                                     fontSize: 12,
                                     color: colorScheme.onSurface.withValues(
@@ -515,9 +535,10 @@ class DashboardScreen extends ConsumerWidget {
                                     '${AppFormatters.duration(duration)} \u2022 ${workout.completedSets.length} sets',
                                   ),
                                   trailing: Text(
-                                    AppFormatters.weight(
-                                      volume,
-                                      state.preferredUnit,
+                                    _workoutCardMetricValue(
+                                      totalVolumeKg: volume,
+                                      duration: duration,
+                                      preferredUnit: state.preferredUnit,
                                     ),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
