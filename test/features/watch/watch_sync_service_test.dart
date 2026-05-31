@@ -293,6 +293,17 @@ void main() {
 
       container.read(watchSyncServiceProvider).initialize();
       await pumpEvents();
+      final defaultSuggestion = await container.read(
+        engineWeightSuggestionProvider('barbell_bench_press').future,
+      );
+      final routineSuggestion = await container.read(
+        routineEngineWeightSuggestionProvider(
+          const RoutineLoadRecommendationParams(
+            exerciseId: 'barbell_bench_press',
+            targetReps: 6,
+          ),
+        ).future,
+      );
 
       final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
       final session = arguments['session'] as Map<dynamic, dynamic>;
@@ -301,7 +312,13 @@ void main() {
           .map((item) => item as Map<dynamic, dynamic>)
           .firstWhere((item) => item['exerciseId'] == 'barbell_bench_press');
 
-      expect(bench['suggestedWeightKg'], greaterThan(0));
+      expect(defaultSuggestion?.suggestedWeightKg, isNotNull);
+      expect(routineSuggestion?.suggestedWeightKg, isNotNull);
+      expect(
+        defaultSuggestion!.suggestedWeightKg,
+        isNot(routineSuggestion!.suggestedWeightKg),
+      );
+      expect(bench['suggestedWeightKg'], routineSuggestion.suggestedWeightKg);
     });
 
     test('watch snapshot omits recommendation when none exists', () async {

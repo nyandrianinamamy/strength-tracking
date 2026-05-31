@@ -56,7 +56,7 @@ class TrainingEngineAdapter {
         : null;
 
     final mappedSets = session.completedSets
-        .where((set) => _shouldMapSet(set, registry: registry))
+        .where((set) => shouldMapSet(set, registry: registry))
         .map(
           (set) => toLoggedSet(
             set,
@@ -250,7 +250,7 @@ class TrainingEngineAdapter {
     return rpe != null && rpe >= 0.0 && rpe <= 10.0;
   }
 
-  bool _shouldMapSet(CompletedSet set, {ExerciseRegistry? registry}) {
+  bool shouldMapSet(CompletedSet set, {ExerciseRegistry? registry}) {
     if (!_hasEngineLoad(set)) return false;
     final kind = registry?.lookup(set.exerciseId)?.localFatigueKind;
     if (kind == LocalFatigueKind.cardioAerobicLocal) {

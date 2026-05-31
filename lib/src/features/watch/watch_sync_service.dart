@@ -119,7 +119,12 @@ class WatchSyncService {
           ? _localizedExerciseName(exercise, locale)
           : 'Unknown';
       final suggestion = await _ref.read(
-        engineWeightSuggestionProvider(re.exerciseId).future,
+        routineEngineWeightSuggestionProvider(
+          RoutineLoadRecommendationParams(
+            exerciseId: re.exerciseId,
+            targetReps: re.targetReps,
+          ),
+        ).future,
       );
       final completedSets =
           session.completedSets
