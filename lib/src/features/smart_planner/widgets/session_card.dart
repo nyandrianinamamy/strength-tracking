@@ -16,13 +16,13 @@ const _purple100 = Color(0xFFF3E8FF);
 // ---------------------------------------------------------------------------
 
 const List<String> _dayNames = [
-  'Sunday',    // 0
-  'Monday',    // 1
-  'Tuesday',   // 2
+  'Sunday', // 0
+  'Monday', // 1
+  'Tuesday', // 2
   'Wednesday', // 3
-  'Thursday',  // 4
-  'Friday',    // 5
-  'Saturday',  // 6
+  'Thursday', // 4
+  'Friday', // 5
+  'Saturday', // 6
 ];
 
 String _focusLabel(SessionFocus focus) {
@@ -75,7 +75,8 @@ class SessionCard extends StatelessWidget {
     required int exerciseIndex,
     required int? sets,
     required int? reps,
-  }) onExerciseUpdated;
+  })
+  onExerciseUpdated;
 
   /// Called when an exercise is dismissed (swipe-to-delete).
   final ValueChanged<int> onExerciseRemoved;
@@ -90,22 +91,17 @@ class SessionCard extends StatelessWidget {
     final durationMin = session.estimatedDuration.inMinutes;
     final count = session.exercises.length;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _slate200),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 4,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        elevation: 1,
+        shadowColor: const Color(0x0A000000),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: _slate200),
+        ),
+        clipBehavior: Clip.antiAlias,
         child: ExpansionTile(
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           title: Text(
@@ -118,15 +114,9 @@ class SessionCard extends StatelessWidget {
           ),
           subtitle: Text(
             '$durationMin min \u2022 $count exercises',
-            style: const TextStyle(
-              fontSize: 13,
-              color: _slate500,
-            ),
+            style: const TextStyle(fontSize: 13, color: _slate500),
           ),
-          trailing: const Icon(
-            Icons.chevron_right,
-            color: _slate500,
-          ),
+          trailing: const Icon(Icons.chevron_right, color: _slate500),
           children: [
             Container(
               color: _slate50,
@@ -134,12 +124,19 @@ class SessionCard extends StatelessWidget {
                 children: [
                   for (int i = 0; i < session.exercises.length; i++) ...[
                     if (i > 0)
-                      Divider(height: 1, color: _slate200, indent: 16, endIndent: 16),
+                      Divider(
+                        height: 1,
+                        color: _slate200,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
                     _ExerciseRow(
                       exercise: session.exercises[i],
                       exerciseIndex: i,
                       sessionIndex: sessionIndex,
-                      name: exerciseNameResolver(session.exercises[i].exerciseId),
+                      name: exerciseNameResolver(
+                        session.exercises[i].exerciseId,
+                      ),
                       isEdited: editedKeys.contains('$sessionIndex:$i'),
                       onUpdated: onExerciseUpdated,
                       onRemoved: onExerciseRemoved,
@@ -183,7 +180,8 @@ class _ExerciseRow extends StatelessWidget {
     required int exerciseIndex,
     required int? sets,
     required int? reps,
-  }) onUpdated;
+  })
+  onUpdated;
 
   final ValueChanged<int> onRemoved;
   final ValueChanged<int> onSwapRequested;
