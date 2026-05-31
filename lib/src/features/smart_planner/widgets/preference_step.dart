@@ -63,10 +63,7 @@ class PreferenceStep extends StatelessWidget {
       children: [
         // ── Preferred exercises ──────────────────────────────────────────
         // Section header — text matches test expectation ("Preferred Exercises")
-        _SectionHeader(
-          label: l10n.preferredExercises,
-          color: _blue600,
-        ),
+        _SectionHeader(label: l10n.preferredExercises, color: _blue600),
         const SizedBox(height: 4),
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -75,11 +72,11 @@ class PreferenceStep extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: _slate600),
           ),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: _slate50,
+        Material(
+          color: _slate50,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _slate200),
+            side: const BorderSide(color: _slate200),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -105,10 +102,7 @@ class PreferenceStep extends StatelessWidget {
         const SizedBox(height: 24),
 
         // ── Excluded exercises ───────────────────────────────────────────
-        _SectionHeader(
-          label: l10n.excludedExercises,
-          color: _red500,
-        ),
+        _SectionHeader(label: l10n.excludedExercises, color: _red500),
         const SizedBox(height: 4),
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
@@ -117,11 +111,11 @@ class PreferenceStep extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: _slate600),
           ),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: _slate50,
+        Material(
+          color: _slate50,
+          shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: _slate200),
+            side: const BorderSide(color: _slate200),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -158,11 +152,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: color,
-      ),
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: color),
     );
   }
 }

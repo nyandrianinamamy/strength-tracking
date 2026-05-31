@@ -28,12 +28,24 @@ class TrainingEngineAdapter {
       sex: sex,
       age: appState.age ?? 25,
       bodyWeightKg: appState.weight ?? 75.0,
-      experience: ExperienceLevel.intermediate,
+      experience: _mapExperienceLevel(appState.experience),
       goal: _mapFitnessGoal(appState.fitnessGoal),
-      availableDays: const [1, 3, 5],
-      maxSessionDuration: const Duration(minutes: 60),
+      availableDays: appState.availableDays,
+      maxSessionDuration: Duration(minutes: appState.maxSessionDurationMinutes),
       createdAt: DateTime.now(),
     );
+  }
+
+  ExperienceLevel _mapExperienceLevel(String experience) {
+    switch (experience.trim().toLowerCase()) {
+      case 'beginner':
+        return ExperienceLevel.beginner;
+      case 'advanced':
+        return ExperienceLevel.advanced;
+      case 'intermediate':
+      default:
+        return ExperienceLevel.intermediate;
+    }
   }
 
   // ---------------------------------------------------------------------------

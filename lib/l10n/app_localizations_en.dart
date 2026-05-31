@@ -906,6 +906,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trainingGoal => 'Training Goal';
 
   @override
+  String get experienceLevel => 'Experience Level';
+
+  @override
+  String get experienceBeginner => 'Beginner';
+
+  @override
+  String get experienceIntermediate => 'Intermediate';
+
+  @override
+  String get experienceAdvanced => 'Advanced';
+
+  @override
   String get maxSessionDuration => 'Max Session Duration';
 
   @override

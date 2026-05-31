@@ -20,6 +20,9 @@ class AppState {
     this.preferredTheme = '',
     this.activeRoutineGroupId,
     this.healthKitEnabled = false,
+    this.experience = 'intermediate',
+    this.availableDays = const [1, 3, 5],
+    this.maxSessionDurationMinutes = 60,
   });
 
   final List<Exercise> exercises;
@@ -36,6 +39,9 @@ class AppState {
   final String preferredTheme;
   final String? activeRoutineGroupId;
   final bool healthKitEnabled;
+  final String experience;
+  final List<int> availableDays;
+  final int maxSessionDurationMinutes;
 
   factory AppState.empty() {
     return const AppState(
@@ -64,6 +70,9 @@ class AppState {
     String? activeRoutineGroupId,
     bool clearActiveRoutineGroupId = false,
     bool? healthKitEnabled,
+    String? experience,
+    List<int>? availableDays,
+    int? maxSessionDurationMinutes,
   }) {
     return AppState(
       exercises: exercises ?? this.exercises,
@@ -82,6 +91,10 @@ class AppState {
           ? null
           : activeRoutineGroupId ?? this.activeRoutineGroupId,
       healthKitEnabled: healthKitEnabled ?? this.healthKitEnabled,
+      experience: experience ?? this.experience,
+      availableDays: availableDays ?? this.availableDays,
+      maxSessionDurationMinutes:
+          maxSessionDurationMinutes ?? this.maxSessionDurationMinutes,
     );
   }
 
@@ -142,6 +155,13 @@ class AppState {
       preferredTheme: json['preferredTheme'] as String? ?? '',
       activeRoutineGroupId: json['activeRoutineGroupId'] as String?,
       healthKitEnabled: json['healthKitEnabled'] as bool? ?? false,
+      experience: json['experience'] as String? ?? 'intermediate',
+      availableDays:
+          (json['availableDays'] as List<dynamic>? ?? const [1, 3, 5])
+              .map((item) => (item as num).toInt())
+              .toList(),
+      maxSessionDurationMinutes:
+          json['maxSessionDurationMinutes'] as int? ?? 60,
     );
   }
 
@@ -161,6 +181,9 @@ class AppState {
       'preferredTheme': preferredTheme,
       'activeRoutineGroupId': activeRoutineGroupId,
       'healthKitEnabled': healthKitEnabled,
+      'experience': experience,
+      'availableDays': availableDays,
+      'maxSessionDurationMinutes': maxSessionDurationMinutes,
     };
   }
 }

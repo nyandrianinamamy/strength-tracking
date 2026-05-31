@@ -54,6 +54,36 @@ void main() {
       expect(hypertrophyProfile.goal, HypertrophyGoal.hypertrophy);
     });
 
+    test('maps app training profile preferences into the engine profile', () {
+      const appState = AppState(
+        exercises: [],
+        routines: [],
+        sessions: [],
+        experience: 'advanced',
+        availableDays: [1, 2, 4, 6],
+        maxSessionDurationMinutes: 75,
+      );
+
+      final profile = adapter.toUserProfile(appState);
+
+      expect(profile.experience, ExperienceLevel.advanced);
+      expect(profile.availableDays, [1, 2, 4, 6]);
+      expect(profile.maxSessionDuration, const Duration(minutes: 75));
+    });
+
+    test('falls back to intermediate for unknown experience values', () {
+      const appState = AppState(
+        exercises: [],
+        routines: [],
+        sessions: [],
+        experience: 'expert',
+      );
+
+      final profile = adapter.toUserProfile(appState);
+
+      expect(profile.experience, ExperienceLevel.intermediate);
+    });
+
     test('maps non-strength goals to the general engine goal', () {
       for (final goal in ['', 'general_fitness', 'endurance', 'weight_loss']) {
         final profile = adapter.toUserProfile(

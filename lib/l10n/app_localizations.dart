@@ -1838,6 +1838,30 @@ abstract class AppLocalizations {
   /// **'Training Goal'**
   String get trainingGoal;
 
+  /// No description provided for @experienceLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience Level'**
+  String get experienceLevel;
+
+  /// No description provided for @experienceBeginner.
+  ///
+  /// In en, this message translates to:
+  /// **'Beginner'**
+  String get experienceBeginner;
+
+  /// No description provided for @experienceIntermediate.
+  ///
+  /// In en, this message translates to:
+  /// **'Intermediate'**
+  String get experienceIntermediate;
+
+  /// No description provided for @experienceAdvanced.
+  ///
+  /// In en, this message translates to:
+  /// **'Advanced'**
+  String get experienceAdvanced;
+
   /// No description provided for @maxSessionDuration.
   ///
   /// In en, this message translates to:

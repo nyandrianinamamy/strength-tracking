@@ -910,6 +910,18 @@ class AppLocalizationsFr extends AppLocalizations {
   String get trainingGoal => 'Objectif d\'entraînement';
 
   @override
+  String get experienceLevel => 'Niveau d\'expérience';
+
+  @override
+  String get experienceBeginner => 'Débutant';
+
+  @override
+  String get experienceIntermediate => 'Intermédiaire';
+
+  @override
+  String get experienceAdvanced => 'Avancé';
+
+  @override
   String get maxSessionDuration => 'Durée maximale de séance';
 
   @override
