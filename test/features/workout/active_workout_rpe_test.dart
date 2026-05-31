@@ -204,7 +204,7 @@ void main() {
   );
 
   testWidgets(
-    'logging a strength set shows its per-set RPE in session history',
+    'logging strength sets shows newest set first in session history',
     (tester) async {
       tester.view.physicalSize = const Size(1200, 1400);
       tester.view.devicePixelRatio = 1.0;
@@ -255,12 +255,29 @@ void main() {
       expect(find.text('Log Set RPE'), findsOneWidget);
       expect(find.byType(Slider), findsOneWidget);
 
-      // Accept the default RPE 8.0 and log the set
-      await tester.tap(find.text('Save & Log Set'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      for (var i = 0; i < 3; i++) {
+        if (i > 0) {
+          await tester.tap(
+            find.byKey(const ValueKey('active-workout-log-set-button')),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+        }
+
+        await tester.tap(find.text('Save & Log Set'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+      }
 
       expect(find.textContaining('RPE 8.0'), findsWidgets);
+      final set3 = find.text('Set 3: 100 kg x 6 • RPE 8.0');
+      final set2 = find.text('Set 2: 100 kg x 6 • RPE 8.0');
+      final set1 = find.text('Set 1: 100 kg x 6 • RPE 8.0');
+      expect(set3, findsOneWidget);
+      expect(set2, findsOneWidget);
+      expect(set1, findsOneWidget);
+      expect(tester.getTopLeft(set3).dy, lessThan(tester.getTopLeft(set2).dy));
+      expect(tester.getTopLeft(set2).dy, lessThan(tester.getTopLeft(set1).dy));
     },
   );
 

@@ -1640,6 +1640,7 @@ class _ExercisePage extends ConsumerWidget {
     final currentSets = session.completedSets
         .where((set) => set.exerciseId == prescription.exerciseId)
         .toList();
+    final displayedCurrentSets = currentSets.reversed.toList();
     final previousPerformance =
         state.completedSessions
             .where((item) => item.id != session.id)
@@ -2015,7 +2016,7 @@ class _ExercisePage extends ConsumerWidget {
                     body: l10n.setsWillAppear,
                   )
                 : Column(
-                    children: currentSets.map((set) {
+                    children: displayedCurrentSets.map((set) {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: ListTile(
