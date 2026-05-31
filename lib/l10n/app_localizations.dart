@@ -350,17 +350,23 @@ abstract class AppLocalizations {
   /// **'Per week average'**
   String get perWeekAverage;
 
-  /// No description provided for @activeStreak.
+  /// No description provided for @consistency.
   ///
   /// In en, this message translates to:
-  /// **'Active Streak'**
-  String get activeStreak;
+  /// **'Consistency'**
+  String get consistency;
 
-  /// No description provided for @contiguousStreak.
+  /// No description provided for @thisWeekProgress.
   ///
   /// In en, this message translates to:
-  /// **'Contiguous training streak'**
-  String get contiguousStreak;
+  /// **'{completed} / {target} this week'**
+  String thisWeekProgress(Object completed, Object target);
+
+  /// No description provided for @weeksOnTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'{weeks, plural, =0{No weeks on track yet} =1{1 week on track} other{{weeks} weeks on track}}'**
+  String weeksOnTrack(num weeks);
 
   /// No description provided for @personalRecords.
   ///
@@ -2017,6 +2023,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Weight'**
   String get weight;
+
+  /// No description provided for @weeklyTrainingTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly training target'**
+  String get weeklyTrainingTarget;
+
+  /// No description provided for @weeklyTrainingTargetDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest days are expected; consistency is measured by weeks on target.'**
+  String get weeklyTrainingTargetDetail;
+
+  /// No description provided for @daysPerWeek.
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day / week} other{{days} days / week}}'**
+  String daysPerWeek(num days);
 
   /// No description provided for @fitnessGoal.
   ///

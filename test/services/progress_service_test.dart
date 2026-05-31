@@ -59,6 +59,21 @@ void main() {
     );
   }
 
+  WorkoutSession completedSessionOn(String id, DateTime endedAt) {
+    return WorkoutSession(
+      id: id,
+      routineId: 'routine-1',
+      status: WorkoutSessionStatus.completed,
+      startedAt: endedAt.subtract(const Duration(hours: 1)),
+      endedAt: endedAt,
+      lastActivityAt: endedAt,
+      currentExerciseIndex: 0,
+      completedSets: const [],
+      sessionNote: '',
+      rpe: null,
+    );
+  }
+
   test('dashboard snapshot exposes recent workouts and a next routine', () {
     final state = DemoSeedData.initialState();
     final snapshot = service.dashboardSnapshot(
@@ -95,21 +110,77 @@ void main() {
     expect(snapshot.nextRoutineReason, contains('2 workouts left'));
   });
 
-  test('progress snapshot computes streak, volume, and personal records', () {
-    final state = DemoSeedData.initialState();
-    final snapshot = service.progressSnapshot(
-      state,
-      currentE1rmsByExercise: const {
-        'barbell_bench_press': 100,
-        'barbell_back_squat': 120,
-      },
-    );
+  test(
+    'progress snapshot computes consistency, volume, and personal records',
+    () {
+      final state = DemoSeedData.initialState();
+      final snapshot = service.progressSnapshot(
+        state,
+        currentE1rmsByExercise: const {
+          'barbell_bench_press': 100,
+          'barbell_back_squat': 120,
+        },
+      );
 
-    expect(snapshot.averageWorkoutDaysPerWeek, greaterThan(0));
-    expect(snapshot.personalRecords, isNotEmpty);
-    expect(snapshot.weeklyVolume, isNotEmpty);
-    expect(snapshot.topLifts.first.estimatedOneRepMax, greaterThan(0));
-  });
+      expect(snapshot.averageWorkoutDaysPerWeek, greaterThan(0));
+      expect(snapshot.personalRecords, isNotEmpty);
+      expect(snapshot.weeklyVolume, isNotEmpty);
+      expect(snapshot.topLifts.first.estimatedOneRepMax, greaterThan(0));
+    },
+  );
+
+  test(
+    'weekly consistency counts workout days and lets current week finish',
+    () {
+      final now = DateTime.utc(2026, 5, 20, 12);
+      final state = AppState(
+        exercises: const [],
+        routines: const [],
+        weeklyTrainingTargetDays: 2,
+        sessions: [
+          completedSessionOn(
+            'current-duplicate-a',
+            DateTime.utc(2026, 5, 18, 18),
+          ),
+          completedSessionOn(
+            'current-duplicate-b',
+            DateTime.utc(2026, 5, 18, 20),
+          ),
+          completedSessionOn('last-week-a', DateTime.utc(2026, 5, 11, 18)),
+          completedSessionOn('last-week-b', DateTime.utc(2026, 5, 13, 18)),
+          completedSessionOn('two-weeks-a', DateTime.utc(2026, 5, 4, 18)),
+          completedSessionOn('two-weeks-b', DateTime.utc(2026, 5, 6, 18)),
+        ],
+      );
+
+      final snapshot = service.progressSnapshot(
+        state,
+        currentE1rmsByExercise: const {},
+        now: now,
+      );
+
+      expect(snapshot.weeklyTrainingTargetDays, 2);
+      expect(snapshot.currentWeekWorkoutDays, 1);
+      expect(snapshot.weeksOnTrack, 2);
+
+      final onTrackThisWeek = service.progressSnapshot(
+        state.copyWith(
+          sessions: [
+            ...state.sessions,
+            completedSessionOn(
+              'current-second-day',
+              DateTime.utc(2026, 5, 19, 18),
+            ),
+          ],
+        ),
+        currentE1rmsByExercise: const {},
+        now: now,
+      );
+
+      expect(onTrackThisWeek.currentWeekWorkoutDays, 2);
+      expect(onTrackThisWeek.weeksOnTrack, 3);
+    },
+  );
 
   test('progress strength e1RM values come from engine current e1RM', () {
     final state = progressStateWithSets();

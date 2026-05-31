@@ -442,7 +442,7 @@ intended to keep new E2E tests close to the existing `app_test.dart` style.
 ### Progress
 
 - Empty progress shows empty/no-data states for PRs and volume.
-- Overview tab shows workout days, active streak, and personal records after
+- Overview tab shows workout days, weekly consistency, and personal records after
   workouts.
 - Lifts tab shows best set, estimated 1RM, and achieved date.
 - Volume tab shows weekly volume chart and list.
