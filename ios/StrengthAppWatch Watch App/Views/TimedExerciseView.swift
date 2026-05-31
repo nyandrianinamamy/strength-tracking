@@ -49,7 +49,7 @@ struct TimedExerciseView: View {
                     .foregroundColor(activeTimedRemaining(now: context.date) == nil ? .primary : .blue)
 
                 VStack(spacing: 6) {
-                    TimedInfoRow(label: "Target", value: "\(targetDuration)s / \(exercise.restSeconds)s rest")
+                    TimedInfoRow(label: "Target", value: targetText)
                     TimedInfoRow(label: "Last", value: lastSetText)
                 }
                 .padding(.top, 6)
@@ -73,6 +73,14 @@ struct TimedExerciseView: View {
                 .foregroundColor(Color(white: 0.63))
         }
         .padding(.top, 4)
+    }
+
+    private var targetText: String {
+        if exercise.restSeconds <= 0 {
+            return formatDurationLabel(targetDuration)
+        }
+
+        return "\(formatDurationLabel(targetDuration)) / \(formatDurationLabel(exercise.restSeconds)) rest"
     }
 
     private var restPill: some View {
@@ -132,6 +140,18 @@ struct TimedExerciseView: View {
         if let date = formatter.date(from: string) { return date }
         formatter.formatOptions = [.withInternetDateTime]
         return formatter.date(from: string)
+    }
+
+    private func formatDurationLabel(_ seconds: Int) -> String {
+        if seconds >= 60, seconds % 60 == 0 {
+            return "\(seconds / 60) min"
+        }
+
+        if seconds >= 60 {
+            return formatTime(seconds)
+        }
+
+        return "\(seconds)s"
     }
 
     private func formatTime(_ seconds: Int) -> String {

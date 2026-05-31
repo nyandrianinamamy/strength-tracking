@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,6 +25,7 @@ void main() {
   ProviderContainer buildContainer({
     AppState? initialState,
     TrainingEngineStateRepository? trainingEngineRepository,
+    List<Override> overrides = const [],
   }) {
     final repository = MemoryAppStateRepository(
       initialState: initialState ?? DemoSeedData.initialState(),
@@ -35,6 +38,7 @@ void main() {
         trainingEngineStateRepositoryProvider.overrideWithValue(
           trainingEngineRepository ?? MemoryTrainingEngineStateRepository(),
         ),
+        ...overrides,
       ],
     );
   }
@@ -131,6 +135,22 @@ void main() {
     );
 
     return engine.serializeState();
+  }
+
+  TrainingEngine emptyTrainingEngine() {
+    return TrainingEngine(
+      registry: ExerciseRegistry.withDefaults(),
+      profile: UserProfile(
+        sex: Sex.male,
+        age: 28,
+        bodyWeightKg: 80,
+        experience: ExperienceLevel.intermediate,
+        goal: HypertrophyGoal.hypertrophy,
+        availableDays: const [1, 3, 5],
+        maxSessionDuration: const Duration(minutes: 60),
+        createdAt: DateTime.utc(2026, 1, 1),
+      ),
+    );
   }
 
   group('WatchSyncService', () {
@@ -273,6 +293,17 @@ void main() {
 
       container.read(watchSyncServiceProvider).initialize();
       await pumpEvents();
+      final defaultSuggestion = await container.read(
+        engineWeightSuggestionProvider('barbell_bench_press').future,
+      );
+      final routineSuggestion = await container.read(
+        routineEngineWeightSuggestionProvider(
+          const RoutineLoadRecommendationParams(
+            exerciseId: 'barbell_bench_press',
+            targetReps: 6,
+          ),
+        ).future,
+      );
 
       final arguments = methodCalls.single.arguments as Map<dynamic, dynamic>;
       final session = arguments['session'] as Map<dynamic, dynamic>;
@@ -281,7 +312,13 @@ void main() {
           .map((item) => item as Map<dynamic, dynamic>)
           .firstWhere((item) => item['exerciseId'] == 'barbell_bench_press');
 
-      expect(bench['suggestedWeightKg'], greaterThan(0));
+      expect(defaultSuggestion?.suggestedWeightKg, isNotNull);
+      expect(routineSuggestion?.suggestedWeightKg, isNotNull);
+      expect(
+        defaultSuggestion!.suggestedWeightKg,
+        isNot(routineSuggestion!.suggestedWeightKg),
+      );
+      expect(bench['suggestedWeightKg'], routineSuggestion.suggestedWeightKg);
     });
 
     test('watch snapshot omits recommendation when none exists', () async {
@@ -364,6 +401,36 @@ void main() {
 
       expect(methodCalls, hasLength(1));
       expect(methodCalls.single.method, 'sendSessionEnd');
+    });
+
+    test('completion suppresses a stale in-flight active snapshot', () async {
+      final engineCompleter = Completer<TrainingEngine>();
+      final container = buildContainer(
+        overrides: [
+          trainingEngineProvider.overrideWith((ref) => engineCompleter.future),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      container.read(watchSyncServiceProvider).initialize();
+      await pumpEvents();
+      methodCalls.clear();
+
+      container.read(routineControllerProvider).startSession('pull_day');
+      await pumpEvents();
+
+      expect(methodCalls, isEmpty);
+
+      container.read(workoutControllerProvider).completeSession(rpe: 8);
+      await pumpEvents();
+
+      expect(methodCalls.map((call) => call.method), ['sendSessionEnd']);
+
+      methodCalls.clear();
+      engineCompleter.complete(emptyTrainingEngine());
+      await pumpEvents();
+
+      expect(methodCalls, isEmpty);
     });
 
     test('request_sync event resends the latest session snapshot', () async {

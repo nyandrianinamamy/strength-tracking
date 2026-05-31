@@ -539,6 +539,43 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   const SizedBox(height: 20),
 
+                  // Weekly training target
+                  Text(
+                    l10n.weeklyTrainingTarget,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    l10n.weeklyTrainingTargetDetail,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: context.appColors.subtleText,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: List.generate(6, (index) {
+                      final days = index + 1;
+                      return ChoiceChip(
+                        label: Text(l10n.daysPerWeek(days)),
+                        selected: state.weeklyTrainingTargetDays == days,
+                        onSelected: (selected) {
+                          if (!selected) return;
+                          ref
+                              .read(appStateControllerProvider.notifier)
+                              .updateState(
+                                (s) =>
+                                    s.copyWith(weeklyTrainingTargetDays: days),
+                              );
+                        },
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 20),
+
                   // Language
                   Text(
                     l10n.language,

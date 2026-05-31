@@ -21,6 +21,13 @@ class WorkoutSummaryScreen extends ConsumerWidget {
     CompletedSet set,
     AppLocalizations l10n,
   ) {
+    if (set.durationSeconds > 0) {
+      return l10n.setTimedSummary(
+        set.setNumber,
+        (set.durationSeconds / 60).round(),
+      );
+    }
+
     if (set.rpe == null) {
       return l10n.setWeightSummary(
         set.setNumber,
@@ -35,6 +42,14 @@ class WorkoutSummaryScreen extends ConsumerWidget {
       set.reps,
       set.rpe!.toStringAsFixed(1),
     );
+  }
+
+  String _prValueText(ExercisePersonalRecord pr, String preferredUnit) {
+    if (pr.isTimed) {
+      return AppFormatters.duration(Duration(seconds: pr.durationSeconds));
+    }
+
+    return '${AppFormatters.weight(pr.weightKg, preferredUnit)} x ${pr.reps}';
   }
 
   @override
@@ -88,10 +103,14 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                     TextButton(
                       onPressed: () {
                         Navigator.pop(dialogContext);
-                        ref.read(workoutControllerProvider).deleteSession(sessionId);
+                        ref
+                            .read(workoutControllerProvider)
+                            .deleteSession(sessionId);
                         context.go('/');
                       },
-                      style: TextButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.error,
+                      ),
                       child: Text(l10n.delete),
                     ),
                   ],
@@ -111,11 +130,16 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                 Container(
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    border: Border.all(color: Theme.of(context).colorScheme.primary, width: 4),
+                    border: Border.all(
+                      color: Theme.of(context).colorScheme.primary,
+                      width: 4,
+                    ),
                   ),
                   child: CircleAvatar(
                     radius: 64,
-                    backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
                     child: Icon(
                       Icons.workspace_premium,
                       size: 48,
@@ -127,8 +151,8 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                 Text(
                   routine?.name ?? l10n.workoutLabel,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                    fontWeight: FontWeight.w900,
+                  ),
                 ),
                 if (prs.isNotEmpty) ...[
                   const SizedBox(height: 8),
@@ -138,7 +162,9 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(999),
                     ),
                     child: Row(
@@ -152,11 +178,11 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Text(
                           l10n.newPersonalRecord,
-                          style:
-                              Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: Theme.of(context).colorScheme.primary,
-                                    fontWeight: FontWeight.w800,
-                                  ),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.primary,
+                                fontWeight: FontWeight.w800,
+                              ),
                         ),
                       ],
                     ),
@@ -173,7 +199,12 @@ class WorkoutSummaryScreen extends ConsumerWidget {
               Expanded(
                 child: StatCard(
                   label: l10n.volume,
-                  value: AppFormatters.decimal(AppFormatters.convertWeight(totalVolume, state.preferredUnit)),
+                  value: AppFormatters.decimal(
+                    AppFormatters.convertWeight(
+                      totalVolume,
+                      state.preferredUnit,
+                    ),
+                  ),
                   subtext: state.preferredUnit.toUpperCase(),
                   showAccent: true,
                 ),
@@ -204,10 +235,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
           PageSection(
             title: l10n.prHighlights,
             child: prs.isEmpty
-                ? EmptyStateCard(
-                    title: l10n.noNewPrs,
-                    body: l10n.prContributes,
-                  )
+                ? EmptyStateCard(title: l10n.noNewPrs, body: l10n.prContributes)
                 : SizedBox(
                     height: 120,
                     child: ListView.separated(
@@ -229,32 +257,36 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 pr.exerciseName,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
+                                style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(fontWeight: FontWeight.w800),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                '${AppFormatters.weight(pr.weightKg, state.preferredUnit)} x ${pr.reps}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleLarge
+                                _prValueText(pr, state.preferredUnit),
+                                style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(
-                                      color: Theme.of(context).colorScheme.primary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
                                       fontWeight: FontWeight.w900,
                                     ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                l10n.est1rmValue(AppFormatters.decimal(pr.estimatedOneRepMax)),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(color: context.appColors.subtleText),
-                              ),
+                              if (!pr.isTimed) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  l10n.est1rmValue(
+                                    AppFormatters.decimal(
+                                      pr.estimatedOneRepMax,
+                                    ),
+                                  ),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: context.appColors.subtleText,
+                                      ),
+                                ),
+                              ],
                             ],
                           ),
                         );
@@ -286,9 +318,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                             Expanded(
                               child: Text(
                                 exercise?.name ?? l10n.exerciseFallback,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(fontWeight: FontWeight.w900),
                               ),
                             ),
@@ -303,11 +333,11 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                               ),
                               child: Text(
                                 l10n.nSets(sets.length),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelSmall
+                                style: Theme.of(context).textTheme.labelSmall
                                     ?.copyWith(
-                                      color: Theme.of(context).colorScheme.onPrimary,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
                                       fontWeight: FontWeight.w800,
                                     ),
                               ),
@@ -318,9 +348,7 @@ class WorkoutSummaryScreen extends ConsumerWidget {
                         ...sets.map((set) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 6),
-                            child: Text(
-                              _setSummaryText(state, set, l10n),
-                            ),
+                            child: Text(_setSummaryText(state, set, l10n)),
                           );
                         }),
                       ],
@@ -333,15 +361,16 @@ class WorkoutSummaryScreen extends ConsumerWidget {
           if (session.sessionNote.isNotEmpty) ...[
             const SizedBox(height: 28),
             Card(
-              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.05),
               child: Padding(
                 padding: const EdgeInsets.all(18),
                 child: Text(
                   session.sessionNote,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: context.appColors.subtleText),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: context.appColors.subtleText,
+                  ),
                 ),
               ),
             ),

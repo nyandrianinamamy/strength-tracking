@@ -46,8 +46,20 @@
   "volumeTab": "Volume",
   "workoutDays": "Jours d'entraînement",
   "perWeekAverage": "Moyenne par semaine",
-  "activeStreak": "Série active",
-  "contiguousStreak": "Série d'entraînements consécutifs",
+  "consistency": "Régularité",
+  "thisWeekProgress": "{completed} / {target} cette semaine",
+  "@thisWeekProgress": {
+    "placeholders": {
+      "completed": {},
+      "target": {}
+    }
+  },
+  "weeksOnTrack": "{weeks, plural, =0{Aucune semaine dans l'objectif} =1{1 semaine dans l'objectif} other{{weeks} semaines dans l'objectif}}",
+  "@weeksOnTrack": {
+    "placeholders": {
+      "weeks": {}
+    }
+  },
   "personalRecords": "Records personnels",
   "weeklyVolume": "Volume hebdomadaire",
   "noVolumeData": "Aucune donnée de volume",
@@ -355,6 +367,14 @@
   "female": "Femme",
   "age": "Âge",
   "weight": "Poids",
+  "weeklyTrainingTarget": "Objectif hebdomadaire",
+  "weeklyTrainingTargetDetail": "Les jours de repos sont prévus ; la régularité mesure les semaines dans l'objectif.",
+  "daysPerWeek": "{days, plural, =1{1 jour / semaine} other{{days} jours / semaine}}",
+  "@daysPerWeek": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "fitnessGoal": "Objectif",
   "goalStrength": "Force",
   "goalHypertrophy": "Hypertrophie",

@@ -70,10 +70,16 @@ class ProgressScreen extends ConsumerWidget {
                             icon: Icons.calendar_month_rounded,
                           ),
                           MetricCard(
-                            label: l10n.activeStreak,
-                            value: '${snapshot.activeStreakDays} days',
-                            detail: l10n.contiguousStreak,
-                            icon: Icons.bolt_rounded,
+                            label: l10n.consistency,
+                            value: l10n.thisWeekProgress(
+                              math.min(
+                                snapshot.currentWeekWorkoutDays,
+                                snapshot.weeklyTrainingTargetDays,
+                              ),
+                              snapshot.weeklyTrainingTargetDays,
+                            ),
+                            detail: l10n.weeksOnTrack(snapshot.weeksOnTrack),
+                            icon: Icons.track_changes_rounded,
                           ),
                         ],
                       ),

@@ -138,10 +138,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get perWeekAverage => 'Per week average';
 
   @override
-  String get activeStreak => 'Active Streak';
+  String get consistency => 'Consistency';
 
   @override
-  String get contiguousStreak => 'Contiguous training streak';
+  String thisWeekProgress(Object completed, Object target) {
+    return '$completed / $target this week';
+  }
+
+  @override
+  String weeksOnTrack(num weeks) {
+    String _temp0 = intl.Intl.pluralLogic(
+      weeks,
+      locale: localeName,
+      other: '$weeks weeks on track',
+      one: '1 week on track',
+      zero: 'No weeks on track yet',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get personalRecords => 'Personal Records';
@@ -1008,6 +1022,24 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weight => 'Weight';
+
+  @override
+  String get weeklyTrainingTarget => 'Weekly training target';
+
+  @override
+  String get weeklyTrainingTargetDetail =>
+      'Rest days are expected; consistency is measured by weeks on target.';
+
+  @override
+  String daysPerWeek(num days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days / week',
+      one: '1 day / week',
+    );
+    return '$_temp0';
+  }
 
   @override
   String get fitnessGoal => 'Fitness Goal';

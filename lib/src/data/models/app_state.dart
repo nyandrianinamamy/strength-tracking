@@ -12,6 +12,7 @@ class AppState {
     this.routineGroups = const [],
     this.userName = '',
     this.preferredUnit = 'kg',
+    this.weeklyTrainingTargetDays = 3,
     this.sex = 'male',
     this.age,
     this.weight,
@@ -28,6 +29,7 @@ class AppState {
   final List<WorkoutSession> sessions;
   final String userName;
   final String preferredUnit;
+  final int weeklyTrainingTargetDays;
   final String sex;
   final int? age;
   final double? weight;
@@ -53,6 +55,7 @@ class AppState {
     List<WorkoutSession>? sessions,
     String? userName,
     String? preferredUnit,
+    int? weeklyTrainingTargetDays,
     String? sex,
     int? age,
     bool clearAge = false,
@@ -72,6 +75,8 @@ class AppState {
       sessions: sessions ?? this.sessions,
       userName: userName ?? this.userName,
       preferredUnit: preferredUnit ?? this.preferredUnit,
+      weeklyTrainingTargetDays:
+          weeklyTrainingTargetDays ?? this.weeklyTrainingTargetDays,
       sex: sex ?? this.sex,
       age: clearAge ? null : age ?? this.age,
       weight: clearWeight ? null : weight ?? this.weight,
@@ -134,6 +139,7 @@ class AppState {
           .toList(),
       userName: json['userName'] as String? ?? '',
       preferredUnit: json['preferredUnit'] as String? ?? 'kg',
+      weeklyTrainingTargetDays: json['weeklyTrainingTargetDays'] as int? ?? 3,
       sex: json['sex'] as String? ?? json['bodyGender'] as String? ?? 'male',
       age: json['age'] as int?,
       weight: (json['weight'] as num?)?.toDouble(),
@@ -153,6 +159,7 @@ class AppState {
       'sessions': sessions.map((item) => item.toJson()).toList(),
       'userName': userName,
       'preferredUnit': preferredUnit,
+      'weeklyTrainingTargetDays': weeklyTrainingTargetDays,
       'sex': sex,
       'age': age,
       'weight': weight,

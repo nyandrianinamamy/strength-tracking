@@ -707,7 +707,7 @@ void main() {
     );
 
     test(
-      'readiness refresh retries HealthKit immediately when restored health history is incomplete',
+      'readiness refresh respects HealthKit throttle when last fetch is fresh',
       () async {
         final appState = _appStateWithCompletedSession().copyWith(
           healthKitEnabled: true,
@@ -740,8 +740,8 @@ void main() {
         await container.read(readinessProvider.future);
         final engine = await container.read(trainingEngineProvider.future);
 
-        expect(engine.state.sleepHistory, [sleepRecord]);
-        expect(engine.state.hrvHistory, [hrvRecord]);
+        expect(engine.state.sleepHistory, isEmpty);
+        expect(engine.state.hrvHistory, isEmpty);
       },
     );
 
@@ -1045,6 +1045,66 @@ void main() {
       expect(heatmap[Muscle.abs], isNotNull);
       expect(heatmap[Muscle.abs]!.intensity, greaterThan(0));
     });
+
+    test(
+      'live heatmap preview ignores active strength sets with unsupported RPE',
+      () async {
+        final completedAt = DateTime.utc(2026, 4, 2, 18, 0);
+        final appState = AppState(
+          exercises: const [
+            Exercise(
+              id: 'barbell_bench_press',
+              name: 'Barbell Bench Press',
+              primaryMuscles: ['Chest'],
+              secondaryMuscles: ['Triceps'],
+              equipment: ['Barbell'],
+              instructions: '',
+              archived: false,
+            ),
+          ],
+          routines: const [],
+          sessions: [
+            WorkoutSession(
+              id: 'active-low-rpe-session',
+              routineId: 'routine-strength',
+              status: WorkoutSessionStatus.active,
+              startedAt: completedAt.subtract(const Duration(minutes: 10)),
+              endedAt: null,
+              lastActivityAt: completedAt,
+              currentExerciseIndex: 0,
+              completedSets: [
+                CompletedSet(
+                  exerciseId: 'barbell_bench_press',
+                  setNumber: 1,
+                  weightKg: 60.0,
+                  reps: 8,
+                  completedAt: completedAt,
+                  note: '',
+                  rpe: 4.0,
+                ),
+              ],
+              sessionNote: '',
+              rpe: null,
+            ),
+          ],
+          sex: 'male',
+        );
+        final appRepository = MemoryAppStateRepository(initialState: appState);
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(
+          initialState: appState,
+          appRepository: appRepository,
+          engineRepository: engineRepository,
+        );
+        addTearDown(container.dispose);
+
+        final heatmap = await container.read(
+          liveEngineHeatmapDataProvider.future,
+        );
+
+        expect(heatmap, isEmpty);
+      },
+    );
 
     test(
       'live heatmap preview keeps 10 minute treadmill below acute',

@@ -119,7 +119,12 @@ class WatchSyncService {
           ? _localizedExerciseName(exercise, locale)
           : 'Unknown';
       final suggestion = await _ref.read(
-        engineWeightSuggestionProvider(re.exerciseId).future,
+        routineEngineWeightSuggestionProvider(
+          RoutineLoadRecommendationParams(
+            exerciseId: re.exerciseId,
+            targetReps: re.targetReps,
+          ),
+        ).future,
       );
       final completedSets =
           session.completedSets
@@ -307,6 +312,8 @@ class WatchSyncService {
     Map<String, dynamic> snapshot,
     String sessionId,
   ) async {
+    if (!_isCurrentActiveSession(sessionId)) return;
+
     final success = await _sendSessionUpdate(snapshot);
     if (success) {
       _pendingSyncRetry?.cancel();
@@ -314,14 +321,19 @@ class WatchSyncService {
       return;
     }
 
-    if (_lastSentSessionId != sessionId) return;
+    if (!_isCurrentActiveSession(sessionId)) return;
     _pendingSnapshot = snapshot;
     _pendingSyncRetry?.cancel();
     _pendingSyncRetry = Timer(_initialSyncRetryDelay, () {
       final pending = _pendingSnapshot;
-      if (pending == null || _lastSentSessionId != sessionId) return;
+      if (pending == null || !_isCurrentActiveSession(sessionId)) return;
       _sendSessionUpdateWithRetry(pending, sessionId);
     });
+  }
+
+  bool _isCurrentActiveSession(String sessionId) {
+    return _lastSentSessionId == sessionId &&
+        _ref.read(appStateControllerProvider).activeSession?.id == sessionId;
   }
 
   Future<bool> _sendSessionUpdate(Map<String, dynamic> snapshot) async {

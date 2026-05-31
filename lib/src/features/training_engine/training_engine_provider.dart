@@ -248,7 +248,7 @@ final liveEngineHeatmapDataProvider = FutureProvider<Map<Muscle, MuscleData>>((
 
   // Convert app CompletedSets to engine LoggedSets
   final engineSets = activeSets
-      .where((s) => s.reps > 0 || s.durationSeconds > 0)
+      .where((s) => adapter.shouldMapSet(s, registry: engine.registry))
       .map(
         (s) => adapter.toLoggedSet(
           s,
@@ -287,9 +287,6 @@ final readinessProvider = FutureProvider<ReadinessScore>((ref) async {
 });
 
 Duration _healthKitRefreshThreshold(TrainingEngine engine) {
-  if (engine.state.sleepHistory.isEmpty || engine.state.hrvHistory.isEmpty) {
-    return Duration.zero;
-  }
   return const Duration(hours: 1);
 }
 

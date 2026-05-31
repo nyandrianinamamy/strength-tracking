@@ -552,6 +552,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   Future<void> _showFinishConfirmation(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
     final controller = ref.read(workoutControllerProvider);
+    final sessionId = ref.read(appStateControllerProvider).activeSession?.id;
     final completedSessionId = await showModalBottomSheet<String>(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -598,7 +599,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                 FilledButton.icon(
                   onPressed: () {
                     final completed = controller.completeSession();
-                    Navigator.of(sheetContext).pop(completed?.id);
+                    Navigator.of(sheetContext).pop(completed?.id ?? sessionId);
                   },
                   style: FilledButton.styleFrom(
                     minimumSize: const Size.fromHeight(52),
@@ -1573,6 +1574,32 @@ String _setTitle(
   return '$baseTitle • RPE ${set.rpe!.toStringAsFixed(1)}';
 }
 
+class _PreviousPerformanceEntry {
+  const _PreviousPerformanceEntry({required this.set, required this.rpe});
+
+  final CompletedSet set;
+  final double? rpe;
+}
+
+String _previousPerformanceSubtitle(_PreviousPerformanceEntry entry) {
+  final set = entry.set;
+  final date = AppFormatters.weekdayMonthDay(set.completedAt);
+  final rpe = entry.rpe;
+  if (rpe == null) {
+    return date;
+  }
+
+  return '$date • RPE ${rpe.toStringAsFixed(1)}';
+}
+
+String _previousPerformanceTitle(CompletedSet set, String preferredUnit) {
+  if (set.durationSeconds > 0) {
+    return '${(set.durationSeconds / 60).round()} min';
+  }
+
+  return '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}';
+}
+
 class _ExercisePage extends ConsumerWidget {
   const _ExercisePage({
     super.key,
@@ -1629,13 +1656,21 @@ class _ExercisePage extends ConsumerWidget {
     final currentSets = session.completedSets
         .where((set) => set.exerciseId == prescription.exerciseId)
         .toList();
+    final displayedCurrentSets = currentSets.reversed.toList();
     final previousPerformance =
         state.completedSessions
             .where((item) => item.id != session.id)
-            .expand((item) => item.completedSets)
-            .where((set) => set.exerciseId == prescription.exerciseId)
+            .expand(
+              (item) => item.completedSets.map(
+                (set) => _PreviousPerformanceEntry(
+                  set: set,
+                  rpe: set.rpe ?? item.rpe,
+                ),
+              ),
+            )
+            .where((entry) => entry.set.exerciseId == prescription.exerciseId)
             .toList()
-          ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+          ..sort((a, b) => b.set.completedAt.compareTo(a.set.completedAt));
     final suggestion = ref
         .watch(
           routineEngineWeightSuggestionProvider(
@@ -1655,7 +1690,7 @@ class _ExercisePage extends ConsumerWidget {
         final lastSet = currentSets.isNotEmpty
             ? currentSets.last
             : previousPerformance.isNotEmpty
-            ? previousPerformance.first
+            ? previousPerformance.first.set
             : null;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           weightController.text = lastSet != null
@@ -1688,7 +1723,7 @@ class _ExercisePage extends ConsumerWidget {
     final highestPrevWeight = previousPerformance.isEmpty
         ? 0.0
         : previousPerformance
-              .map((s) => s.weightKg)
+              .map((entry) => entry.set.weightKg)
               .reduce((a, b) => a > b ? a : b);
 
     return GestureDetector(
@@ -2004,7 +2039,7 @@ class _ExercisePage extends ConsumerWidget {
                     body: l10n.setsWillAppear,
                   )
                 : Column(
-                    children: currentSets.map((set) {
+                    children: displayedCurrentSets.map((set) {
                       return Card(
                         margin: const EdgeInsets.only(bottom: 10),
                         child: ListTile(
@@ -2101,7 +2136,8 @@ class _ExercisePage extends ConsumerWidget {
                     body: l10n.historyWillAppear,
                   )
                 : Column(
-                    children: previousPerformance.take(4).map((set) {
+                    children: previousPerformance.take(4).map((entry) {
+                      final set = entry.set;
                       final isPb =
                           set.weightKg == highestPrevWeight &&
                           highestPrevWeight > 0;
@@ -2111,9 +2147,7 @@ class _ExercisePage extends ConsumerWidget {
                           title: Row(
                             children: [
                               Text(
-                                set.durationSeconds > 0
-                                    ? '${set.durationSeconds}s'
-                                    : '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                                _previousPerformanceTitle(set, preferredUnit),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -2145,9 +2179,7 @@ class _ExercisePage extends ConsumerWidget {
                               ],
                             ],
                           ),
-                          subtitle: Text(
-                            AppFormatters.weekdayMonthDay(set.completedAt),
-                          ),
+                          subtitle: Text(_previousPerformanceSubtitle(entry)),
                         ),
                       );
                     }).toList(),

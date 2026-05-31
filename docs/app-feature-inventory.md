@@ -264,7 +264,7 @@ Implemented:
 
 - Progress screen with Overview, Lifts, and Volume tabs.
 - Average workout days per week.
-- Active streak days.
+- Weekly consistency target with weeks-on-track progress.
 - Progress computes calendar-session data reused by the Dashboard workout-frequency calendar.
 - Personal-record list.
 - Top lifts.

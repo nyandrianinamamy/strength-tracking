@@ -6,6 +6,8 @@ import 'package:strength_training_tracker/l10n/app_localizations.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_theme.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
+import 'package:strength_training_tracker/src/data/models/routine.dart';
+import 'package:strength_training_tracker/src/data/models/routine_exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
@@ -13,6 +15,7 @@ import 'package:strength_training_tracker/src/features/routines/routine_controll
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:strength_training_tracker/src/features/workout/active_workout_screen.dart';
+import 'package:strength_training_tracker/src/features/workout/workout_controller.dart';
 import 'package:strength_training_tracker/src/features/workout/workout_summary_screen.dart';
 import 'package:training_engine/training_engine.dart';
 
@@ -129,7 +132,81 @@ void main() {
   );
 
   testWidgets(
-    'logging a strength set shows its per-set RPE in session history',
+    'finish sheet still routes to summary if active session clears before tap',
+    (tester) async {
+      tester.view.physicalSize = const Size(430, 932);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      final repository = MemoryAppStateRepository(
+        initialState: DemoSeedData.initialState(),
+      );
+      final container = ProviderContainer(
+        overrides: [
+          appStateRepositoryProvider.overrideWithValue(repository),
+          initialAppStateProvider.overrideWithValue(repository.state),
+          trainingEngineStateRepositoryProvider.overrideWithValue(
+            MemoryTrainingEngineStateRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final active = container
+          .read(routineControllerProvider)
+          .startSession('push_day');
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const ActiveWorkoutScreen(),
+          ),
+          GoRoute(
+            path: '/workout/:sessionId/summary',
+            builder: (context, state) => WorkoutSummaryScreen(
+              sessionId: state.pathParameters['sessionId']!,
+            ),
+          ),
+        ],
+      );
+      addTearDown(router.dispose);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: MaterialApp.router(
+            theme: AppTheme.light(),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: router,
+          ),
+        ),
+      );
+      await _pumpFrames(tester);
+
+      await tester.tap(find.text('FINISH').last);
+      await _pumpFrames(tester);
+      expect(find.text('Finish & Save'), findsOneWidget);
+
+      container.read(workoutControllerProvider).completeSession(rpe: 8);
+      await _pumpFrames(tester);
+
+      await tester.tap(find.text('Finish & Save'));
+      await _pumpFrames(tester);
+
+      expect(find.text('Workout Complete'), findsOneWidget);
+      expect(find.text('Push Day'), findsOneWidget);
+      expect(
+        router.routeInformationProvider.value.uri.path,
+        '/workout/${active.id}/summary',
+      );
+      expect(find.text('Finish & Save'), findsNothing);
+      expect(find.byType(BottomSheet), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'logging strength sets shows newest set first in session history',
     (tester) async {
       tester.view.physicalSize = const Size(1200, 1400);
       tester.view.devicePixelRatio = 1.0;
@@ -180,12 +257,29 @@ void main() {
       expect(find.text('Log Set RPE'), findsOneWidget);
       expect(find.byType(Slider), findsOneWidget);
 
-      // Accept the default RPE 8.0 and log the set
-      await tester.tap(find.text('Save & Log Set'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 500));
+      for (var i = 0; i < 3; i++) {
+        if (i > 0) {
+          await tester.tap(
+            find.byKey(const ValueKey('active-workout-log-set-button')),
+          );
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 500));
+        }
+
+        await tester.tap(find.text('Save & Log Set'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 500));
+      }
 
       expect(find.textContaining('RPE 8.0'), findsWidgets);
+      final set3 = find.text('Set 3: 100 kg x 6 • RPE 8.0');
+      final set2 = find.text('Set 2: 100 kg x 6 • RPE 8.0');
+      final set1 = find.text('Set 1: 100 kg x 6 • RPE 8.0');
+      expect(set3, findsOneWidget);
+      expect(set2, findsOneWidget);
+      expect(set1, findsOneWidget);
+      expect(tester.getTopLeft(set3).dy, lessThan(tester.getTopLeft(set2).dy));
+      expect(tester.getTopLeft(set2).dy, lessThan(tester.getTopLeft(set1).dy));
     },
   );
 
@@ -299,6 +393,237 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       expect(find.textContaining('Suggested'), findsAtLeastNWidgets(1));
+      expect(find.textContaining('RPE 8.0'), findsOneWidget);
     },
   );
+
+  testWidgets('previous performance falls back to session RPE', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final completedAt = DateTime.utc(2026, 4, 1, 18, 0);
+    final completedSession = WorkoutSession(
+      id: 'session-rpe-history',
+      routineId: 'push_day',
+      status: WorkoutSessionStatus.completed,
+      startedAt: DateTime.utc(2026, 4, 1, 17, 0),
+      endedAt: completedAt,
+      lastActivityAt: completedAt,
+      currentExerciseIndex: 0,
+      completedSets: [
+        CompletedSet(
+          exerciseId: 'barbell_bench_press',
+          weightKg: 80,
+          reps: 8,
+          completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+          note: '',
+          setNumber: 1,
+        ),
+      ],
+      sessionNote: '',
+      rpe: 7.5,
+    );
+    final initialState = DemoSeedData.initialState().copyWith(
+      sessions: [completedSession],
+    );
+    final repository = MemoryAppStateRepository(initialState: initialState);
+    final container = ProviderContainer(
+      overrides: [
+        appStateRepositoryProvider.overrideWithValue(repository),
+        initialAppStateProvider.overrideWithValue(repository.state),
+        trainingEngineStateRepositoryProvider.overrideWithValue(
+          MemoryTrainingEngineStateRepository(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(routineControllerProvider).startSession('push_day');
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ActiveWorkoutScreen(),
+        ),
+      ),
+    );
+    await _pumpFrames(tester);
+
+    expect(find.text('80 kg x 8'), findsOneWidget);
+    expect(find.textContaining('RPE 7.5'), findsOneWidget);
+  });
+
+  testWidgets('timed previous performance is shown in minutes', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final completedAt = DateTime.utc(2026, 5, 1, 18, 0);
+    final treadmillRoutine = Routine(
+      id: 'treadmill_day',
+      name: 'Treadmill Day',
+      category: 'cardio',
+      estimatedDurationMin: 30,
+      archived: false,
+      exercises: const [
+        RoutineExercise(
+          exerciseId: 'treadmill',
+          targetSets: 1,
+          targetReps: 1,
+          restSeconds: 60,
+          order: 0,
+          targetDurationSeconds: 720,
+        ),
+      ],
+    );
+    final completedSession = WorkoutSession(
+      id: 'previous-treadmill-session',
+      routineId: treadmillRoutine.id,
+      status: WorkoutSessionStatus.completed,
+      startedAt: DateTime.utc(2026, 5, 1, 17, 30),
+      endedAt: completedAt,
+      lastActivityAt: completedAt,
+      currentExerciseIndex: 0,
+      completedSets: [
+        CompletedSet(
+          exerciseId: 'treadmill',
+          setNumber: 1,
+          weightKg: 0,
+          reps: 1,
+          durationSeconds: 720,
+          rpe: 7.5,
+          completedAt: DateTime.utc(2026, 5, 1, 17, 45),
+          note: '',
+        ),
+      ],
+      sessionNote: '',
+      rpe: 7.5,
+    );
+    final baseState = DemoSeedData.initialState();
+    final initialState = baseState.copyWith(
+      routines: [treadmillRoutine, ...baseState.routines],
+      sessions: [completedSession],
+    );
+    final repository = MemoryAppStateRepository(initialState: initialState);
+    final container = ProviderContainer(
+      overrides: [
+        appStateRepositoryProvider.overrideWithValue(repository),
+        initialAppStateProvider.overrideWithValue(repository.state),
+        trainingEngineStateRepositoryProvider.overrideWithValue(
+          MemoryTrainingEngineStateRepository(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(routineControllerProvider).startSession(treadmillRoutine.id);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ActiveWorkoutScreen(),
+        ),
+      ),
+    );
+    await _pumpFrames(tester);
+
+    expect(find.text('12 min'), findsOneWidget);
+    expect(find.text('720s'), findsNothing);
+    expect(find.textContaining('RPE 7.5'), findsOneWidget);
+  });
+
+  testWidgets('timed workout summary does not show strength PR values', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final completedAt = DateTime.utc(2026, 5, 2, 18, 0);
+    final treadmillRoutine = Routine(
+      id: 'summary_treadmill_day',
+      name: 'Treadmill Day',
+      category: 'cardio',
+      estimatedDurationMin: 30,
+      archived: false,
+      exercises: const [
+        RoutineExercise(
+          exerciseId: 'treadmill',
+          targetSets: 1,
+          targetReps: 1,
+          restSeconds: 60,
+          order: 0,
+          targetDurationSeconds: 720,
+        ),
+      ],
+    );
+    final completedSession = WorkoutSession(
+      id: 'summary-treadmill-session',
+      routineId: treadmillRoutine.id,
+      status: WorkoutSessionStatus.completed,
+      startedAt: DateTime.utc(2026, 5, 2, 17, 30),
+      endedAt: completedAt,
+      lastActivityAt: completedAt,
+      currentExerciseIndex: 0,
+      completedSets: [
+        CompletedSet(
+          exerciseId: 'treadmill',
+          setNumber: 1,
+          weightKg: 0,
+          reps: 0,
+          durationSeconds: 720,
+          rpe: 7.5,
+          completedAt: DateTime.utc(2026, 5, 2, 17, 45),
+          note: '',
+        ),
+      ],
+      sessionNote: '',
+      rpe: 7.5,
+    );
+    final baseState = DemoSeedData.initialState();
+    final repository = MemoryAppStateRepository(
+      initialState: baseState.copyWith(
+        routines: [treadmillRoutine, ...baseState.routines],
+        sessions: [completedSession],
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appStateRepositoryProvider.overrideWithValue(repository),
+        initialAppStateProvider.overrideWithValue(repository.state),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const WorkoutSummaryScreen(
+            sessionId: 'summary-treadmill-session',
+          ),
+        ),
+      ),
+    );
+    await _pumpFrames(tester);
+
+    expect(find.text('Treadmill'), findsWidgets);
+    expect(find.text('12m'), findsOneWidget);
+    expect(find.text('Set 1: 12 min'), findsOneWidget);
+    expect(find.text('0 kg x 0'), findsNothing);
+    expect(find.text('Set 1: 0 kg x 0'), findsNothing);
+    expect(find.text('Est. 1RM: 0'), findsNothing);
+  });
 }

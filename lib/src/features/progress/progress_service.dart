@@ -110,17 +110,25 @@ class ProgressService {
   ProgressSnapshot progressSnapshot(
     AppState state, {
     required Map<String, double> currentE1rmsByExercise,
+    DateTime? now,
   }) {
     final completedSessions = state.completedSessions;
+    final today = now ?? DateTime.now();
+    final workoutDays = _workoutDays(completedSessions);
+    final targetDays = _weeklyTrainingTargetDays(state);
+    final currentWeekWorkoutDays = _workoutDaysInWeek(
+      workoutDays,
+      _startOfWeek(today),
+    );
     final personalRecords = _personalRecords(
       state,
       currentE1rmsByExercise: currentE1rmsByExercise,
     );
     final earliest = completedSessions.isEmpty
-        ? DateTime.now()
+        ? today
         : (completedSessions.last.endedAt ?? completedSessions.last.startedAt);
     final weeksSpan = math
-        .max(1, DateTime.now().difference(earliest).inDays / 7)
+        .max(1, today.difference(earliest).inDays / 7)
         .toDouble();
 
     final calendarSessions = completedSessions.map((s) {
@@ -128,8 +136,10 @@ class ProgressService {
     }).toList();
 
     return ProgressSnapshot(
-      averageWorkoutDaysPerWeek: completedSessions.length / weeksSpan,
-      activeStreakDays: _activeStreakDays(completedSessions),
+      averageWorkoutDaysPerWeek: workoutDays.length / weeksSpan,
+      currentWeekWorkoutDays: currentWeekWorkoutDays,
+      weeklyTrainingTargetDays: targetDays,
+      weeksOnTrack: _weeksOnTrack(workoutDays, today, targetDays),
       calendarSessions: calendarSessions,
       personalRecords: personalRecords,
       weeklyVolume: _weeklyVolume(completedSessions),
@@ -389,34 +399,6 @@ class ProgressService {
     return records;
   }
 
-  int _activeStreakDays(List<WorkoutSession> sessions) {
-    if (sessions.isEmpty) {
-      return 0;
-    }
-
-    final workoutDays = sessions.map((session) {
-      final date = session.endedAt ?? session.startedAt;
-      return DateTime(date.year, date.month, date.day);
-    }).toSet();
-
-    var cursor = DateTime.now();
-    cursor = DateTime(cursor.year, cursor.month, cursor.day);
-
-    if (!workoutDays.contains(cursor)) {
-      cursor = cursor.subtract(const Duration(days: 1));
-      if (!workoutDays.contains(cursor)) {
-        return 0;
-      }
-    }
-
-    var streak = 0;
-    while (workoutDays.contains(cursor)) {
-      streak += 1;
-      cursor = cursor.subtract(const Duration(days: 1));
-    }
-    return streak;
-  }
-
   List<VolumePoint> _weeklyVolume(List<WorkoutSession> sessions) {
     final totals = <DateTime, double>{};
 
@@ -441,6 +423,49 @@ class ProgressService {
           ..sort((a, b) => a.weekStart.compareTo(b.weekStart));
     return points;
   }
+
+  int _weeklyTrainingTargetDays(AppState state) {
+    return math.min(6, math.max(1, state.weeklyTrainingTargetDays));
+  }
+
+  Set<DateTime> _workoutDays(List<WorkoutSession> sessions) {
+    return sessions.map((session) {
+      return _startOfDay(session.endedAt ?? session.startedAt);
+    }).toSet();
+  }
+
+  int _weeksOnTrack(Set<DateTime> workoutDays, DateTime now, int targetDays) {
+    final currentWeekStart = _startOfWeek(now);
+    var cursor = currentWeekStart;
+    var weeks = 0;
+
+    if (_workoutDaysInWeek(workoutDays, cursor) >= targetDays) {
+      weeks += 1;
+    }
+
+    cursor = cursor.subtract(const Duration(days: 7));
+    while (_workoutDaysInWeek(workoutDays, cursor) >= targetDays) {
+      weeks += 1;
+      cursor = cursor.subtract(const Duration(days: 7));
+    }
+
+    return weeks;
+  }
+
+  int _workoutDaysInWeek(Set<DateTime> workoutDays, DateTime weekStart) {
+    final nextWeekStart = weekStart.add(const Duration(days: 7));
+    return workoutDays.where((date) {
+      return !date.isBefore(weekStart) && date.isBefore(nextWeekStart);
+    }).length;
+  }
+
+  DateTime _startOfWeek(DateTime date) {
+    final day = _startOfDay(date);
+    return day.subtract(Duration(days: day.weekday - 1));
+  }
+
+  DateTime _startOfDay(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   String _daysAgoLabel(int days) {
     if (days <= 0) {
@@ -535,7 +560,9 @@ class RoutineRecommendation {
 class ProgressSnapshot {
   const ProgressSnapshot({
     required this.averageWorkoutDaysPerWeek,
-    required this.activeStreakDays,
+    required this.currentWeekWorkoutDays,
+    required this.weeklyTrainingTargetDays,
+    required this.weeksOnTrack,
     required this.calendarSessions,
     required this.personalRecords,
     required this.weeklyVolume,
@@ -543,7 +570,9 @@ class ProgressSnapshot {
   });
 
   final double averageWorkoutDaysPerWeek;
-  final int activeStreakDays;
+  final int currentWeekWorkoutDays;
+  final int weeklyTrainingTargetDays;
+  final int weeksOnTrack;
   final List<MonthFrequencySession> calendarSessions;
   final List<ExercisePersonalRecord> personalRecords;
   final List<VolumePoint> weeklyVolume;
