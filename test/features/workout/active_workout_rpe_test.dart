@@ -540,4 +540,90 @@ void main() {
     expect(find.text('720s'), findsNothing);
     expect(find.textContaining('RPE 7.5'), findsOneWidget);
   });
+
+  testWidgets('timed workout summary does not show strength PR values', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final completedAt = DateTime.utc(2026, 5, 2, 18, 0);
+    final treadmillRoutine = Routine(
+      id: 'summary_treadmill_day',
+      name: 'Treadmill Day',
+      category: 'cardio',
+      estimatedDurationMin: 30,
+      archived: false,
+      exercises: const [
+        RoutineExercise(
+          exerciseId: 'treadmill',
+          targetSets: 1,
+          targetReps: 1,
+          restSeconds: 60,
+          order: 0,
+          targetDurationSeconds: 720,
+        ),
+      ],
+    );
+    final completedSession = WorkoutSession(
+      id: 'summary-treadmill-session',
+      routineId: treadmillRoutine.id,
+      status: WorkoutSessionStatus.completed,
+      startedAt: DateTime.utc(2026, 5, 2, 17, 30),
+      endedAt: completedAt,
+      lastActivityAt: completedAt,
+      currentExerciseIndex: 0,
+      completedSets: [
+        CompletedSet(
+          exerciseId: 'treadmill',
+          setNumber: 1,
+          weightKg: 0,
+          reps: 0,
+          durationSeconds: 720,
+          rpe: 7.5,
+          completedAt: DateTime.utc(2026, 5, 2, 17, 45),
+          note: '',
+        ),
+      ],
+      sessionNote: '',
+      rpe: 7.5,
+    );
+    final baseState = DemoSeedData.initialState();
+    final repository = MemoryAppStateRepository(
+      initialState: baseState.copyWith(
+        routines: [treadmillRoutine, ...baseState.routines],
+        sessions: [completedSession],
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        appStateRepositoryProvider.overrideWithValue(repository),
+        initialAppStateProvider.overrideWithValue(repository.state),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const WorkoutSummaryScreen(
+            sessionId: 'summary-treadmill-session',
+          ),
+        ),
+      ),
+    );
+    await _pumpFrames(tester);
+
+    expect(find.text('Treadmill'), findsWidgets);
+    expect(find.text('12m'), findsOneWidget);
+    expect(find.text('Set 1: 12 min'), findsOneWidget);
+    expect(find.text('0 kg x 0'), findsNothing);
+    expect(find.text('Set 1: 0 kg x 0'), findsNothing);
+    expect(find.text('Est. 1RM: 0'), findsNothing);
+  });
 }
