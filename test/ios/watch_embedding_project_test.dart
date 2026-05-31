@@ -70,6 +70,8 @@ void main() {
     expect(strengthView, isNot(contains('LOG SET')));
     expect(timedView, isNot(contains('Button(action: toggleTimer)')));
     expect(timedView, isNot(contains('onLogTimedSet')));
+    expect(timedView, isNot(contains(r'\(targetDuration)s')));
+    expect(timedView, contains('formatDurationLabel(targetDuration)'));
 
     expect(sessionModel, contains('WatchRestState'));
     expect(sessionModel, contains('activeRest'));
