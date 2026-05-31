@@ -18,6 +18,7 @@ import 'package:strength_training_tracker/src/features/auth/invite_access.dart';
 import 'package:strength_training_tracker/src/features/settings/account_deletion_service.dart';
 import 'package:strength_training_tracker/src/features/training_engine/healthkit_data_source.dart';
 import 'package:strength_training_tracker/src/shared/widgets/common_widgets.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -325,15 +326,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     try {
       final authService = ref.read(authServiceProvider);
+      final providers =
+          authService.currentUser?.providerData
+              .map((provider) => provider.providerId)
+              .toList() ??
+          const [];
+      final isAppleUser = providers.contains('apple.com');
+
+      String? appleAuthorizationCode;
+      if (!kIsWeb && isAppleUser) {
+        final appleCredential = await SignInWithApple.getAppleIDCredential(
+          scopes: [AppleIDAuthorizationScopes.email],
+        );
+        appleAuthorizationCode = appleCredential.authorizationCode;
+      }
+
       final deletionService = AccountDeletionService(
         deleteUserData: ref.read(appStateRepositoryProvider).deleteUserData,
         deleteCurrentUser: authService.deleteCurrentUser,
         clearLocalState: ref
             .read(appStateControllerProvider.notifier)
             .clearLocal,
+        revokeAppleToken: authService.revokeAppleToken,
       );
 
-      await deletionService.deleteAccount();
+      await deletionService.deleteAccount(
+        appleAuthorizationCode: appleAuthorizationCode,
+      );
 
       if (mounted) {
         context.go('/onboarding');

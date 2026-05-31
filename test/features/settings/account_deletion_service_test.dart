@@ -19,6 +19,26 @@ void main() {
     ]);
   });
 
+  test('revokes Apple token before deleting stored user data', () async {
+    final events = <String>[];
+    final service = AccountDeletionService(
+      revokeAppleToken: (authorizationCode) async =>
+          events.add('revoke-apple-token:$authorizationCode'),
+      deleteUserData: () async => events.add('delete-user-data'),
+      deleteCurrentUser: () async => events.add('delete-current-user'),
+      clearLocalState: () => events.add('clear-local-state'),
+    );
+
+    await service.deleteAccount(appleAuthorizationCode: 'apple-code');
+
+    expect(events, [
+      'revoke-apple-token:apple-code',
+      'delete-user-data',
+      'delete-current-user',
+      'clear-local-state',
+    ]);
+  });
+
   test('does not clear local state when remote deletion fails', () async {
     final events = <String>[];
     final service = AccountDeletionService(
