@@ -164,6 +164,32 @@ void main() {
       );
     });
 
+    test(
+      'serializes concurrent readiness mutations without losing writes',
+      () async {
+        final engineRepository = MemoryTrainingEngineStateRepository();
+        final container = _buildContainer(engineRepository: engineRepository);
+        addTearDown(container.dispose);
+
+        final sleep = SleepRecord(
+          date: DateTime.utc(2026, 4, 2),
+          totalSleep: const Duration(hours: 8),
+          deepSleep: const Duration(hours: 1, minutes: 20),
+          remSleep: const Duration(hours: 1, minutes: 40),
+          coreSleep: const Duration(hours: 5),
+        );
+        final hrv = HrvRecord(date: DateTime.utc(2026, 4, 2), sdnn: 42);
+
+        await Future.wait([
+          container.read(trainingEngineControllerProvider).ingestSleep(sleep),
+          container.read(trainingEngineControllerProvider).ingestHrv(hrv),
+        ]);
+
+        expect(engineRepository.state?['sleepHistory'], hasLength(1));
+        expect(engineRepository.state?['hrvHistory'], hasLength(1));
+      },
+    );
+
     test('ingestSleep persists readiness inputs', () async {
       final engineRepository = MemoryTrainingEngineStateRepository();
       final container = _buildContainer(engineRepository: engineRepository);
