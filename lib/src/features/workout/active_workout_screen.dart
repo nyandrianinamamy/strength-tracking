@@ -1584,6 +1584,14 @@ String _previousPerformanceSubtitle(CompletedSet set) {
   return '$date • RPE ${rpe.toStringAsFixed(1)}';
 }
 
+String _previousPerformanceTitle(CompletedSet set, String preferredUnit) {
+  if (set.durationSeconds > 0) {
+    return '${(set.durationSeconds / 60).round()} min';
+  }
+
+  return '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}';
+}
+
 class _ExercisePage extends ConsumerWidget {
   const _ExercisePage({
     super.key,
@@ -2123,9 +2131,7 @@ class _ExercisePage extends ConsumerWidget {
                           title: Row(
                             children: [
                               Text(
-                                set.durationSeconds > 0
-                                    ? '${set.durationSeconds}s'
-                                    : '${AppFormatters.weight(set.weightKg, preferredUnit)} x ${set.reps}',
+                                _previousPerformanceTitle(set, preferredUnit),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w800,
                                 ),
