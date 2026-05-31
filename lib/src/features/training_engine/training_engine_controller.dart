@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:training_engine/training_engine.dart';
 
@@ -12,6 +14,7 @@ class TrainingEngineController {
   TrainingEngineController(this._ref);
 
   final Ref _ref;
+  Future<void> _lock = Future.value();
 
   Future<TrainingEngine> ingestSession(EngineSession session) {
     return _mutate((engine) => engine.ingestSession(session));
@@ -28,17 +31,34 @@ class TrainingEngineController {
   Future<TrainingEngine> _mutate(
     void Function(TrainingEngine engine) update,
   ) async {
-    final engine = await loadTrainingEngine(
-      appState: _ref.read(appStateControllerProvider),
-      adapter: _ref.read(trainingEngineAdapterProvider),
-      healthKit: _ref.read(healthKitDataSourceProvider),
-      repository: _ref.read(trainingEngineStateRepositoryProvider),
-    );
-    update(engine);
-    await _ref
-        .read(trainingEngineStateRepositoryProvider)
-        .save(engine.serializeState());
-    _ref.invalidate(trainingEngineProvider);
-    return engine;
+    final completer = Completer<TrainingEngine>();
+    final previousLock = _lock;
+
+    _lock = () async {
+      try {
+        await previousLock;
+      } catch (_) {
+        // Keep the queue moving after a failed prior mutation.
+      }
+
+      try {
+        final engine = await loadTrainingEngine(
+          appState: _ref.read(appStateControllerProvider),
+          adapter: _ref.read(trainingEngineAdapterProvider),
+          healthKit: _ref.read(healthKitDataSourceProvider),
+          repository: _ref.read(trainingEngineStateRepositoryProvider),
+        );
+        update(engine);
+        await _ref
+            .read(trainingEngineStateRepositoryProvider)
+            .save(engine.serializeState());
+        _ref.invalidate(trainingEngineProvider);
+        completer.complete(engine);
+      } catch (error, stackTrace) {
+        completer.completeError(error, stackTrace);
+      }
+    }();
+
+    return completer.future;
   }
 }
