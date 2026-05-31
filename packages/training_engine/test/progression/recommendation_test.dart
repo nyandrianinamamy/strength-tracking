@@ -114,7 +114,7 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.muscleFatigue));
         expect(rec.gateResult.action, equals(GateAction.reduceLoad));
-        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.delta, equals(PerformanceDelta.regression));
         expect(rec.suggestedWeightKg, closeTo(90.0, 0.1));
         expect(rec.suggestedWeightKg!, lessThan(100.0));
         expect(rec.explanation, contains('fatigue'));
@@ -136,7 +136,7 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.muscleFatigue));
         expect(rec.gateResult.action, equals(GateAction.suggestAlternative));
-        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.delta, equals(PerformanceDelta.regression));
         expect(rec.suggestedWeightKg, closeTo(80.0, 0.1));
         expect(rec.suggestedWeightKg!, lessThan(100.0));
         expect(rec.explanation, contains('alternative exercise'));
@@ -163,7 +163,7 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.acwrDanger));
         expect(rec.gateResult.action, equals(GateAction.deload));
-        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.delta, equals(PerformanceDelta.regression));
         // 140 * 0.7 = 98, rounded to 97.5
         expect(rec.suggestedWeightKg, closeTo(97.5, 0.1));
         expect(rec.suggestedWeightKg!, lessThan(140.0));
@@ -191,7 +191,7 @@ void main() {
         expect(rec.gateResult.passed, isFalse);
         expect(rec.gateResult.reason, equals(GateReason.lowReadiness));
         expect(rec.gateResult.action, equals(GateAction.reduceLoad));
-        expect(rec.delta, equals(PerformanceDelta.maintenance));
+        expect(rec.delta, equals(PerformanceDelta.regression));
         expect(rec.suggestedWeightKg, closeTo(72.5, 0.1));
         expect(rec.suggestedWeightKg!, lessThan(80.0));
         expect(rec.explanation, contains('Readiness score is low'));
