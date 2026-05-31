@@ -68,7 +68,7 @@ LoadRecommendation buildRecommendation({
         exerciseId: exerciseId,
         suggestedWeightKg: suggested,
         targets: targets,
-        delta: PerformanceDelta.maintenance,
+        delta: PerformanceDelta.regression,
         gateResult: gate,
         e1rm: e1rm,
         previousWeightKg: previousWeightKg,
@@ -100,7 +100,7 @@ LoadRecommendation buildRecommendation({
         exerciseId: exerciseId,
         suggestedWeightKg: suggested,
         targets: targets,
-        delta: PerformanceDelta.maintenance,
+        delta: PerformanceDelta.regression,
         gateResult: gate,
         e1rm: e1rm,
         previousWeightKg: previousWeightKg,
@@ -116,7 +116,7 @@ LoadRecommendation buildRecommendation({
         exerciseId: exerciseId,
         suggestedWeightKg: suggested,
         targets: targets,
-        delta: PerformanceDelta.maintenance,
+        delta: PerformanceDelta.regression,
         gateResult: gate,
         e1rm: e1rm,
         previousWeightKg: previousWeightKg,
@@ -141,8 +141,11 @@ LoadRecommendation buildRecommendation({
   // Step 5: Progression + gates clear
   if (delta == PerformanceDelta.progression) {
     if (e1rm != null) {
-      final rawPredicted =
-          predictLoad(e1rm: e1rm, targetReps: targets.targetRepsHigh, targetRpe: targets.targetRpe);
+      final rawPredicted = predictLoad(
+        e1rm: e1rm,
+        targetReps: targets.targetRepsHigh,
+        targetRpe: targets.targetRpe,
+      );
 
       // Apply gate modifier to the increment over previous weight
       double suggested;
@@ -173,8 +176,10 @@ LoadRecommendation buildRecommendation({
     // No e1rm but have previous weight - suggest a small increment
     if (previousWeightKg != null) {
       final increment = 2.5 * gate.modifier;
-      final suggested =
-          roundToEquipment(previousWeightKg + increment, equipment);
+      final suggested = roundToEquipment(
+        previousWeightKg + increment,
+        equipment,
+      );
       return LoadRecommendation(
         exerciseId: exerciseId,
         suggestedWeightKg: suggested,
@@ -192,7 +197,11 @@ LoadRecommendation buildRecommendation({
   if (delta == PerformanceDelta.maintenance) {
     if (previousWeightKg == null && e1rm == null) {
       return _noDataRecommendation(
-          exerciseId: exerciseId, targets: targets, gate: gate, e1rm: e1rm);
+        exerciseId: exerciseId,
+        targets: targets,
+        gate: gate,
+        e1rm: e1rm,
+      );
     }
 
     final suggested = previousWeightKg != null
@@ -208,7 +217,7 @@ LoadRecommendation buildRecommendation({
       previousWeightKg: previousWeightKg,
       explanation: suggested != null
           ? 'Maintain current load of ${suggested.toStringAsFixed(1)} kg. '
-              'Performance is within target range.'
+                'Performance is within target range.'
           : 'Not enough data to recommend a specific load.',
     );
   }
@@ -217,10 +226,13 @@ LoadRecommendation buildRecommendation({
   if (delta == PerformanceDelta.regression) {
     if (previousWeightKg == null) {
       return _noDataRecommendation(
-          exerciseId: exerciseId, targets: targets, gate: gate, e1rm: e1rm);
+        exerciseId: exerciseId,
+        targets: targets,
+        gate: gate,
+        e1rm: e1rm,
+      );
     }
-    final suggested =
-        roundToEquipment(previousWeightKg * 0.92, equipment);
+    final suggested = roundToEquipment(previousWeightKg * 0.92, equipment);
     return LoadRecommendation(
       exerciseId: exerciseId,
       suggestedWeightKg: suggested,
@@ -237,7 +249,11 @@ LoadRecommendation buildRecommendation({
 
   // Step 8: No data fallback
   return _noDataRecommendation(
-      exerciseId: exerciseId, targets: targets, gate: gate, e1rm: e1rm);
+    exerciseId: exerciseId,
+    targets: targets,
+    gate: gate,
+    e1rm: e1rm,
+  );
 }
 
 LoadRecommendation _noDataRecommendation({
@@ -263,8 +279,9 @@ String _deloadExplanation(GateResult gate, double factor, double? suggested) {
   final reason = gate.reason == GateReason.acwrDanger
       ? 'Training load is dangerously high (ACWR danger zone)'
       : _gateReasonDescription(gate.reason);
-  final weightStr =
-      suggested != null ? ' Suggested: ${suggested.toStringAsFixed(1)} kg.' : '';
+  final weightStr = suggested != null
+      ? ' Suggested: ${suggested.toStringAsFixed(1)} kg.'
+      : '';
   return '$reason. Deloading by $pct%.$weightStr';
 }
 
@@ -285,7 +302,10 @@ String _reduceLoadExplanation(GateResult gate, double? suggested) {
 }
 
 String _progressionExplanation(
-    double suggested, double? previous, GateResult gate) {
+  double suggested,
+  double? previous,
+  GateResult gate,
+) {
   final base =
       'Great performance! Suggested load: ${suggested.toStringAsFixed(1)} kg';
   if (previous != null) {
@@ -303,7 +323,8 @@ String _gateReasonDescription(GateReason? reason) {
   return switch (reason) {
     GateReason.muscleFatigue => 'Muscle fatigue is elevated',
     GateReason.acwrCaution => 'Training load is elevated (ACWR caution zone)',
-    GateReason.acwrDanger => 'Training load is dangerously high (ACWR danger zone)',
+    GateReason.acwrDanger =>
+      'Training load is dangerously high (ACWR danger zone)',
     GateReason.lowReadiness => 'Readiness score is low',
     null => 'Safety gate triggered',
   };
