@@ -1574,9 +1574,17 @@ String _setTitle(
   return '$baseTitle • RPE ${set.rpe!.toStringAsFixed(1)}';
 }
 
-String _previousPerformanceSubtitle(CompletedSet set) {
+class _PreviousPerformanceEntry {
+  const _PreviousPerformanceEntry({required this.set, required this.rpe});
+
+  final CompletedSet set;
+  final double? rpe;
+}
+
+String _previousPerformanceSubtitle(_PreviousPerformanceEntry entry) {
+  final set = entry.set;
   final date = AppFormatters.weekdayMonthDay(set.completedAt);
-  final rpe = set.rpe;
+  final rpe = entry.rpe;
   if (rpe == null) {
     return date;
   }
@@ -1652,10 +1660,17 @@ class _ExercisePage extends ConsumerWidget {
     final previousPerformance =
         state.completedSessions
             .where((item) => item.id != session.id)
-            .expand((item) => item.completedSets)
-            .where((set) => set.exerciseId == prescription.exerciseId)
+            .expand(
+              (item) => item.completedSets.map(
+                (set) => _PreviousPerformanceEntry(
+                  set: set,
+                  rpe: set.rpe ?? item.rpe,
+                ),
+              ),
+            )
+            .where((entry) => entry.set.exerciseId == prescription.exerciseId)
             .toList()
-          ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+          ..sort((a, b) => b.set.completedAt.compareTo(a.set.completedAt));
     final suggestion = ref
         .watch(
           routineEngineWeightSuggestionProvider(
@@ -1675,7 +1690,7 @@ class _ExercisePage extends ConsumerWidget {
         final lastSet = currentSets.isNotEmpty
             ? currentSets.last
             : previousPerformance.isNotEmpty
-            ? previousPerformance.first
+            ? previousPerformance.first.set
             : null;
         WidgetsBinding.instance.addPostFrameCallback((_) {
           weightController.text = lastSet != null
@@ -1708,7 +1723,7 @@ class _ExercisePage extends ConsumerWidget {
     final highestPrevWeight = previousPerformance.isEmpty
         ? 0.0
         : previousPerformance
-              .map((s) => s.weightKg)
+              .map((entry) => entry.set.weightKg)
               .reduce((a, b) => a > b ? a : b);
 
     return GestureDetector(
@@ -2121,7 +2136,8 @@ class _ExercisePage extends ConsumerWidget {
                     body: l10n.historyWillAppear,
                   )
                 : Column(
-                    children: previousPerformance.take(4).map((set) {
+                    children: previousPerformance.take(4).map((entry) {
+                      final set = entry.set;
                       final isPb =
                           set.weightKg == highestPrevWeight &&
                           highestPrevWeight > 0;
@@ -2163,7 +2179,7 @@ class _ExercisePage extends ConsumerWidget {
                               ],
                             ],
                           ),
-                          subtitle: Text(_previousPerformanceSubtitle(set)),
+                          subtitle: Text(_previousPerformanceSubtitle(entry)),
                         ),
                       );
                     }).toList(),

@@ -397,6 +397,67 @@ void main() {
     },
   );
 
+  testWidgets('previous performance falls back to session RPE', (tester) async {
+    tester.view.physicalSize = const Size(1200, 1400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    final completedAt = DateTime.utc(2026, 4, 1, 18, 0);
+    final completedSession = WorkoutSession(
+      id: 'session-rpe-history',
+      routineId: 'push_day',
+      status: WorkoutSessionStatus.completed,
+      startedAt: DateTime.utc(2026, 4, 1, 17, 0),
+      endedAt: completedAt,
+      lastActivityAt: completedAt,
+      currentExerciseIndex: 0,
+      completedSets: [
+        CompletedSet(
+          exerciseId: 'barbell_bench_press',
+          weightKg: 80,
+          reps: 8,
+          completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+          note: '',
+          setNumber: 1,
+        ),
+      ],
+      sessionNote: '',
+      rpe: 7.5,
+    );
+    final initialState = DemoSeedData.initialState().copyWith(
+      sessions: [completedSession],
+    );
+    final repository = MemoryAppStateRepository(initialState: initialState);
+    final container = ProviderContainer(
+      overrides: [
+        appStateRepositoryProvider.overrideWithValue(repository),
+        initialAppStateProvider.overrideWithValue(repository.state),
+        trainingEngineStateRepositoryProvider.overrideWithValue(
+          MemoryTrainingEngineStateRepository(),
+        ),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    container.read(routineControllerProvider).startSession('push_day');
+
+    await tester.pumpWidget(
+      UncontrolledProviderScope(
+        container: container,
+        child: MaterialApp(
+          theme: AppTheme.light(),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const ActiveWorkoutScreen(),
+        ),
+      ),
+    );
+    await _pumpFrames(tester);
+
+    expect(find.text('80 kg x 8'), findsOneWidget);
+    expect(find.textContaining('RPE 7.5'), findsOneWidget);
+  });
+
   testWidgets('timed previous performance is shown in minutes', (tester) async {
     tester.view.physicalSize = const Size(1200, 1400);
     tester.view.devicePixelRatio = 1.0;
