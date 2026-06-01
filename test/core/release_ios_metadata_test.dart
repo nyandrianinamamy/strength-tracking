@@ -63,6 +63,7 @@ void main() {
       workflow,
       contains(r'BUILD_NUMBER: ${{ steps.version.outputs.build }}'),
     );
+    expect(workflow, contains('flutter-version: 3.41.9'));
 
     expect(fastfile, contains('increment_version_number'));
     expect(fastfile, contains('version_number: ENV["BUILD_VERSION"]'));
