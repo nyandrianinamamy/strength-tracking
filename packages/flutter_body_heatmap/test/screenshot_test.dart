@@ -21,15 +21,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text(
-                          'FRONT',
-                          style: TextStyle(
-                            fontFamily: 'Ahem',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 2,
-                          ),
-                        ),
+                        _caption('FRONT'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -62,15 +54,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text(
-                          'BACK',
-                          style: TextStyle(
-                            fontFamily: 'Ahem',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 2,
-                          ),
-                        ),
+                        _caption('BACK'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -107,6 +91,8 @@ void main() {
       ),
     );
 
+    expect(find.bySemanticsLabel('FRONT'), findsOneWidget);
+    expect(find.bySemanticsLabel('BACK'), findsOneWidget);
     await expectLater(
       find.byType(Scaffold),
       matchesGoldenFile('screenshots/male_heatmap.png'),
@@ -131,15 +117,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text(
-                          'FRONT',
-                          style: TextStyle(
-                            fontFamily: 'Ahem',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 2,
-                          ),
-                        ),
+                        _caption('FRONT'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -171,15 +149,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text(
-                          'BACK',
-                          style: TextStyle(
-                            fontFamily: 'Ahem',
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                            letterSpacing: 2,
-                          ),
-                        ),
+                        _caption('BACK'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -214,9 +184,35 @@ void main() {
       ),
     );
 
+    expect(find.bySemanticsLabel('FRONT'), findsOneWidget);
+    expect(find.bySemanticsLabel('BACK'), findsOneWidget);
     await expectLater(
       find.byType(Scaffold),
       matchesGoldenFile('screenshots/female_heatmap.png'),
     );
   });
 }
+
+// Ahem only supplies regular weight. Synthetic bold and inherited Material line
+// height can rasterize differently across macOS versions. Keep the original
+// 17px caption slot so the body images stay fixed, and place regular glyphs on
+// integer pixels inside it (10px Ahem has an 8px ascent and 2px descent).
+// Four pixels of letter spacing preserve the original 70px/56px label widths.
+Widget _caption(String label) => SizedBox(
+  height: 17,
+  child: Padding(
+    padding: const EdgeInsets.only(top: 3),
+    child: Text(
+      label,
+      style: const TextStyle(
+        inherit: false,
+        color: Color(0xFF1D1B20),
+        fontFamily: 'Ahem',
+        fontWeight: FontWeight.w400,
+        fontSize: 10,
+        height: 1,
+        letterSpacing: 4,
+      ),
+    ),
+  ),
+);

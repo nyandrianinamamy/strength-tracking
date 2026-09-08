@@ -43,7 +43,7 @@ Within one runner invocation, each requested suite runs even if an earlier suite
 | App and engine unit/widget tests | Account ownership/outbox conflicts/capacity, deletion ordering, cache isolation, swaps, planner duration/adoption, replay equivalence, archived exercises, PR identity, UI regressions | Deterministic focused behavior; no external identity providers or Bluetooth |
 | Native Swift tests | Message ordering, stale/duplicate/reinstall handling, selection policy, scoped completion/rest cancellation and locale labels | Shared pure native logic; runtime acceptance is covered separately above |
 | Firestore rules verifier | Ten allowlist and ownership checks | Local emulators with production rules |
-| Heatmap goldens | Exact male/female image comparison with Ahem and fixed viewport | Pinned host Flutter renderer; no pixel tolerance |
+| Heatmap goldens | Exact male/female image comparison, fixed viewport, regular Ahem captions at integer pixel bounds and semantic label assertions | Pinned host Flutter renderer; no pixel tolerance |
 
 The UI suite uses bounded waits and requires hit-testable controls. It never replaces failed interactions with controller mutations. Lexend fonts and their license are bundled, so a fresh install does not download typography.
 
