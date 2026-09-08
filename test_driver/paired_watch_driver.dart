@@ -6,7 +6,6 @@ import 'package:flutter_driver/flutter_driver.dart';
 import 'package:integration_test/common.dart';
 
 const _watchBundleId = 'dev.mamy-r.kotrana.watchkitapp';
-const _cacheKey = 'cached_session_snapshot';
 
 Future<void> main() async {
   FlutterDriver? driver;
@@ -118,44 +117,52 @@ class _WatchHost {
         }
         _receivedSession = false;
         _lastObserved = {};
-        _cachePath = null;
-        // flutter drive reinstalls the phone app, which can remove its Watch
-        // companion. Install only after the phone has entered this checkpoint.
-        final watchApp = Directory(
-          Platform.environment['PAIRED_WATCH_APP_PATH'] ??
-              'build/ios/iphonesimulator/Runner.app/Watch/StrengthAppWatch Watch App.app',
-        ).absolute;
-        if (!await watchApp.exists()) {
-          throw StateError('The built Watch simulator companion is missing.');
+        // flutter drive installs the phone once before both scenarios. Install
+        // its companion once too; repeated installation invalidates the Watch
+        // accessibility connection even when the replacement UI is visible.
+        if (_cachePath == null) {
+          final watchApp = Directory(
+            Platform.environment['PAIRED_WATCH_APP_PATH'] ??
+                'build/ios/iphonesimulator/Runner.app/Watch/StrengthAppWatch Watch App.app',
+          ).absolute;
+          if (!await watchApp.exists()) {
+            throw StateError('The built Watch simulator companion is missing.');
+          }
+          final identifier = await Process.run('/usr/bin/plutil', [
+            '-extract',
+            'CFBundleIdentifier',
+            'raw',
+            '-o',
+            '-',
+            '${watchApp.path}/Info.plist',
+          ]).timeout(const Duration(seconds: 5));
+          if (identifier.exitCode != 0 ||
+              identifier.stdout.toString().trim() != _watchBundleId) {
+            throw StateError(
+              'The selected Watch app has an unexpected bundle ID.',
+            );
+          }
+          await _simctl([
+            'install',
+            watchId,
+            watchApp.path,
+          ], timeout: const Duration(seconds: 60));
+          await _simctl([
+            'launch',
+            '--terminate-running-process',
+            watchId,
+            _watchBundleId,
+          ]);
+          final container = await _simctl([
+            'get_app_container',
+            watchId,
+            _watchBundleId,
+            'data',
+          ]);
+          _cachePath = '$container/Library/Preferences/$_watchBundleId.plist';
+        } else {
+          await _simctl(['launch', watchId, _watchBundleId]);
         }
-        final identifier = await Process.run('/usr/bin/plutil', [
-          '-extract',
-          'CFBundleIdentifier',
-          'raw',
-          '-o',
-          '-',
-          '${watchApp.path}/Info.plist',
-        ]).timeout(const Duration(seconds: 5));
-        if (identifier.exitCode != 0 ||
-            identifier.stdout.toString().trim() != _watchBundleId) {
-          throw StateError(
-            'The selected Watch app has an unexpected bundle ID.',
-          );
-        }
-        await _simctl(['install', watchId, watchApp.path]);
-        await _simctl([
-          'launch',
-          '--terminate-running-process',
-          watchId,
-          _watchBundleId,
-        ]);
-        final container = await _simctl([
-          'get_app_container',
-          watchId,
-          _watchBundleId,
-          'data',
-        ]);
-        _cachePath = '$container/Library/Preferences/$_watchBundleId.plist';
       } else if (request['mode'] == 'relaunch') {
         if (_cachePath == null) {
           throw StateError('Watch preparation is missing.');
@@ -253,17 +260,18 @@ class _WatchHost {
   }
 
   Future<void> _expectAuthorizationSettled() async {
-    final deadline = DateTime.now().add(const Duration(seconds: 5));
+    // A dismissed system dialog can precede the persisted authorization update,
+    // especially while a fresh simulator is finishing its first-run setup.
+    final deadline = DateTime.now().add(const Duration(seconds: 25));
     do {
-      final status = await _readPreference('watch_health_authorization');
-      final pending = await _readPreference(
-        'watch_health_authorization_pending',
-      );
+      final preferences = await _readPreferences();
+      final status = preferences['healthAuthorization'];
+      final pending = preferences['healthAuthorizationPending'];
       _lastObserved['healthAuthorization'] = status;
       _lastObserved['healthAuthorizationPending'] = pending;
       // Health is optional. Both a real denial and a real grant must leave
       // transport and the workout UI working, with no pending permission flow.
-      if ((status == '1' || status == '2') && pending == 'false') return;
+      if ((status == 1 || status == 2) && pending == false) return;
       await Future<void>.delayed(const Duration(milliseconds: 200));
     } while (DateTime.now().isBefore(deadline));
     throw StateError('Watch Health authorization has not settled.');
@@ -285,18 +293,15 @@ class _WatchHost {
     DateTime? matchedAt;
     Map<String, Object?>? lastSummary;
     do {
-      final snapshot = await _readCache();
+      final preferences = await _readPreferences();
+      final snapshot = preferences['snapshot'] as Map<String, dynamic>?;
       final summary = snapshot == null ? null : _summary(snapshot);
       lastSummary = summary;
       _lastObserved = {
         ...?summary,
         if (summary == null) 'cache': 'idle or absent',
-        'healthAuthorization': await _readPreference(
-          'watch_health_authorization',
-        ),
-        'healthAuthorizationPending': await _readPreference(
-          'watch_health_authorization_pending',
-        ),
+        'healthAuthorization': preferences['healthAuthorization'],
+        'healthAuthorizationPending': preferences['healthAuthorizationPending'],
       };
       final observedID = _lastObserved['sessionId'];
       if (observedID is String && !observedID.startsWith('paired-watch-')) {
@@ -332,41 +337,20 @@ class _WatchHost {
     );
   }
 
-  Future<String?> _readPreference(String key) async {
-    final path = _cachePath;
-    if (path == null || !await File(path).exists()) return null;
-    final result = await Process.run('/usr/bin/plutil', [
-      '-extract',
-      key,
-      'raw',
-      '-o',
-      '-',
-      path,
-    ]).timeout(const Duration(seconds: 5));
-    return result.exitCode == 0 ? result.stdout.toString().trim() : null;
-  }
-
-  Future<Map<String, dynamic>?> _readCache() async {
-    final path = _cachePath!;
-    if (!await File(path).exists()) return null;
-    final result = await Process.run('/usr/bin/plutil', [
-      '-extract',
-      _cacheKey,
-      'raw',
-      '-o',
-      '-',
-      path,
+  Future<Map<String, dynamic>> _readPreferences() async {
+    // Read one coherent plist and distinguish a not-yet-delivered snapshot
+    // from malformed data without depending on plutil's diagnostic wording.
+    final result = await Process.run('python3', [
+      'tool/ci/read_watch_preferences.py',
+      _cachePath!,
     ]).timeout(const Duration(seconds: 5));
     if (result.exitCode != 0) {
-      if (result.stderr.toString().contains('No value at that key path')) {
-        return null;
-      }
       throw StateError(
-        'Cannot read the Watch cache plist (${result.exitCode}).',
+        'Cannot read Watch preferences (${result.exitCode}): '
+        '${result.stderr.toString().trim()}',
       );
     }
-    final bytes = base64.decode(result.stdout.toString().trim());
-    return jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
+    return jsonDecode(result.stdout.toString()) as Map<String, dynamic>;
   }
 
   static Map<String, Object?> _summary(Map<String, dynamic> snapshot) {
@@ -395,13 +379,24 @@ String _simulatorId(String variable) {
   return value;
 }
 
-Future<String> _simctl(List<String> arguments) async {
-  final result = await Process.run('xcrun', [
-    'simctl',
-    ...arguments,
-  ]).timeout(const Duration(seconds: 10));
-  if (result.exitCode != 0) {
-    throw StateError('simctl ${arguments.first} failed: ${result.stderr}');
+Future<String> _simctl(
+  List<String> arguments, {
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  final process = await Process.start('xcrun', ['simctl', ...arguments]);
+  final standardOutput = process.stdout.transform(utf8.decoder).join();
+  final standardError = process.stderr.transform(utf8.decoder).join();
+  final status = await process.exitCode.timeout(
+    timeout,
+    onTimeout: () {
+      process.kill(ProcessSignal.sigkill);
+      throw TimeoutException('simctl ${arguments.first} timed out.', timeout);
+    },
+  );
+  final outputText = await standardOutput;
+  final errorText = await standardError;
+  if (status != 0) {
+    throw StateError('simctl ${arguments.first} failed: $errorText');
   }
-  return result.stdout.toString().trim();
+  return outputText.trim();
 }
