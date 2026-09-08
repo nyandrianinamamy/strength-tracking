@@ -21,7 +21,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        _caption('FRONT'),
+                        _sideLabel('FRONT'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -54,7 +54,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        _caption('BACK'),
+                        _sideLabel('BACK'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -117,7 +117,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        _caption('FRONT'),
+                        _sideLabel('FRONT'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -149,7 +149,7 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        _caption('BACK'),
+                        _sideLabel('BACK'),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -193,26 +193,10 @@ void main() {
   });
 }
 
-// Ahem only supplies regular weight. Synthetic bold and inherited Material line
-// height can rasterize differently across macOS versions. Keep the original
-// 17px caption slot so the body images stay fixed, and place regular glyphs on
-// integer pixels inside it (10px Ahem has an 8px ascent and 2px descent).
-// Four pixels of letter spacing preserve the original 70px/56px label widths.
-Widget _caption(String label) => SizedBox(
-  height: 17,
-  child: Padding(
-    padding: const EdgeInsets.only(top: 3),
-    child: Text(
-      label,
-      style: const TextStyle(
-        inherit: false,
-        color: Color(0xFF1D1B20),
-        fontFamily: 'Ahem',
-        fontWeight: FontWeight.w400,
-        fontSize: 10,
-        height: 1,
-        letterSpacing: 4,
-      ),
-    ),
-  ),
+// These labels describe the test fixture; BodyHeatmap paints no text. Keep
+// them accessible without introducing platform font rasterization into the
+// golden, and retain the 17px label slot so the body geometry stays unchanged.
+Widget _sideLabel(String label) => Semantics(
+  label: label,
+  child: const SizedBox(height: 17, width: double.infinity),
 );
