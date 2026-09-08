@@ -9,9 +9,13 @@ on:
       release_tag:
         description: "Release tag to build and upload"
         required: true
-        default: "v1.0.31+314"
+        default: "v1.0.31+315"
       quality_only:
         description: "Run checks on the selected ref without signing or uploading"
+        type: boolean
+        default: false
+      run_ipad:
+        description: "Include iPad compatibility checks before upload"
         type: boolean
         default: false
 
@@ -35,6 +39,7 @@ jobs:
     uses: ./.github/workflows/ios-quality.yml
     with:
       source_ref: ${{ needs.source.outputs.sha }}
+      run_ipad: ${{ github.event_name == 'workflow_dispatch' && inputs.run_ipad || false }}
 
   # ─── TestFlight upload via Fastlane ───
   build-testflight:
@@ -48,6 +53,15 @@ jobs:
 
       - name: Select Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+
+      - name: Restore verified CocoaPods dependencies
+        uses: actions/cache/restore@v5
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods/repos
+          key: pods-${{ runner.os }}-${{ runner.arch }}-xcode26.3-flutter3.41.9-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'pubspec.lock') }}
 
       - uses: subosito/flutter-action@v2
         with:

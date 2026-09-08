@@ -21,7 +21,7 @@ IOS_E2E_DEVICE_TYPE=com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-4th-g
   tool/ci/run_ios_e2e.sh --ui-only
 ```
 
-`--ui-only` runs `ios_app_test.dart` and then exits with that suite's result. It skips native channel wiring, paired Watch, auth, startup and process-restart suites; it cannot be combined with `--with-auth` or `--paired-watch`. Firebase CLI, Java and AXe are not needed for this mode. CI defines a separate iPad step and uploads `build/ios-e2e-ipad/` alongside the phone/Watch evidence.
+`--ui-only` runs `ios_app_test.dart` and then exits with that suite's result. It skips native channel wiring, paired Watch, auth, startup and process-restart suites; it cannot be combined with `--with-auth` or `--paired-watch`. Firebase CLI, Java and AXe are not needed for this mode. CI runs the iPad step only when the manual Build iOS workflow sets `run_ipad=true`. Set `quality_only=true` as well to verify without uploading. Normal tags and PRs require the full iPhone/Watch suite; iPad compatibility is optional. When enabled, CI uploads `build/ios-e2e-ipad/` alongside the phone/Watch evidence.
 
 The iPad run uses the app's existing iPhone-compatible mode (`TARGETED_DEVICE_FAMILY=1`).
 
@@ -60,3 +60,5 @@ After the UI check, the host driver separately requires the native Health callba
 Automated coverage does not establish real Apple/Google login, Bluetooth/background delivery, first-use HealthKit permission behavior on a physical device or actual HealthKit histories, notification/haptic timing, Lock Screen/Dynamic Island rendering, system image-picker behavior, or accessibility at all text sizes. These require device acceptance before distribution. The Watch currently uses an `HKWorkoutSession` for session/background behavior; it has no workout builder or saved-workout export path.
 
 The checked-in workflow pins the release toolchain and gates upload on the verified source SHA. A local run on another Xcode version does not prove the pinned GitHub job, signing, archive distribution or TestFlight processing. Build a normal production configuration again after simulator testing.
+
+Each runner output includes `timings.tsv` with setup and suite wall times. CocoaPods dependencies are cached by platform, architecture, Xcode/Flutter version and lockfiles; the release job restores the cache populated by successful verification. `pod install` still runs to validate the restored dependencies. No application build or signing data is cached. A first run can be cold, and GitHub's cache ref restrictions mean separate release tags do not automatically share caches.

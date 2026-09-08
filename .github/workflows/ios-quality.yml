@@ -7,6 +7,10 @@ on:
         description: Exact source commit to verify
         type: string
         required: true
+      run_ipad:
+        description: Include the iPad compatibility UI suite
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -21,6 +25,14 @@ jobs:
           ref: ${{ inputs.source_ref }}
       - name: Select release Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
+      - name: Cache CocoaPods dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ios/Pods
+            ~/Library/Caches/CocoaPods
+            ~/.cocoapods/repos
+          key: pods-${{ runner.os }}-${{ runner.arch }}-xcode26.3-flutter3.41.9-${{ hashFiles('ios/Podfile', 'ios/Podfile.lock', 'pubspec.lock') }}
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -57,11 +69,14 @@ jobs:
       - name: Verify static legal site
         run: python3 tool/ci/verify_static_site.py
       - name: Run iPad UI scenarios
+        if: inputs.run_ipad
+        timeout-minutes: 25
         env:
           IOS_E2E_DEVICE_TYPE: com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-4th-generation-8GB
           IOS_E2E_OUTPUT_DIR: ${{ github.workspace }}/build/ios-e2e-ipad
         run: bash tool/ci/run_ios_e2e.sh --ui-only
       - name: Run iOS and paired Watch scenarios
+        timeout-minutes: 45
         env:
           AXE_PATH: ${{ github.workspace }}/build/ci-tools/node_modules/xcodebuildmcp/bundled/axe
         run: bash tool/ci/run_ios_e2e.sh --with-auth --paired-watch

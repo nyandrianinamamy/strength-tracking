@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+run_started=$SECONDS
 
 # macOS/Xcode and the repo's Flutter dependencies must already be installed.
 # Default: fresh iPhone simulator, always deleted on exit. An explicit UDID is
@@ -86,8 +87,10 @@ xcrun simctl list devices --json > "$output_dir/simulators.json"
 
 suite_failed=0
 printf 'suite\tstatus\texit_code\n' > "$output_dir/results.tsv"
+printf 'suite\telapsed_seconds\nsetup\t%s\n' "$((SECONDS - run_started))" > "$output_dir/timings.tsv"
 run_suite() {
   local suite_name="$1"
+  local suite_started=$SECONDS
   shift
   if "$@" 2>&1 | tee "$output_dir/$suite_name.log"; then
     printf '%s\tPASS\t0\n' "$suite_name" | tee -a "$output_dir/results.tsv"
@@ -96,6 +99,9 @@ run_suite() {
     printf '%s\tFAIL\t%s\n' "$suite_name" "$result" | tee -a "$output_dir/results.tsv"
     suite_failed=1
   fi
+  local elapsed=$((SECONDS - suite_started))
+  printf '%s\t%s\n' "$suite_name" "$elapsed" >> "$output_dir/timings.tsv"
+  printf '%s completed in %s seconds\n' "$suite_name" "$elapsed"
 }
 
 run_suite app-ui flutter test integration_test/ios_app_test.dart \
