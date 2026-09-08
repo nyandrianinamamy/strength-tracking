@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 import os
+import platform
 from pathlib import Path
 import re
 import subprocess
@@ -268,10 +269,22 @@ def validate_watch(inventory, udid):
     raise ResolutionError("The supplied Watch simulator was not found")
 
 
+def native_axe_prefix():
+    """Avoid inheriting Rosetta's Intel preference for universal AXe binaries."""
+    if platform.system() != "Darwin":
+        return []
+    result = subprocess.run(["/usr/sbin/sysctl", "-n", "hw.optional.arm64"],
+                            capture_output=True, text=True, timeout=5)
+    if result.returncode == 0 and result.stdout.strip() == "1":
+        return ["/usr/bin/arch", "-arm64"]
+    return []
+
+
 class Resolver:
     def __init__(self, axe, udid, expected, output, timeout=60, run=subprocess.run,
-                 monotonic=time.monotonic, sleep=time.sleep):
+                 monotonic=time.monotonic, sleep=time.sleep, axe_prefix=None):
         self.axe = Path(axe)
+        self.axe_prefix = native_axe_prefix() if axe_prefix is None else axe_prefix
         self.udid = udid
         self.expected = expected
         self.output = Path(output)
@@ -292,7 +305,8 @@ class Resolver:
         if remaining <= 0:
             raise ResolutionError("Watch UI resolution timed out")
         try:
-            result = self.run(args, capture_output=True, text=True, env=self.env,
+            command = self.axe_prefix + args if args[0] == str(self.axe) else args
+            result = self.run(command, capture_output=True, text=True, env=self.env,
                               timeout=min(10, remaining))
         except subprocess.TimeoutExpired as error:
             raise ResolutionError(f"Watch UI command timed out: {args[1]}") from error

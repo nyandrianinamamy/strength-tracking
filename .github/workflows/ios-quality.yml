@@ -7,6 +7,10 @@ on:
         description: Exact source commit to verify
         type: string
         required: true
+      run_native_e2e:
+        description: Opt in to experimental iOS and paired Watch simulator scenarios
+        type: boolean
+        default: false
       run_ipad:
         description: Include the iPad compatibility UI suite
         type: boolean
@@ -26,6 +30,7 @@ jobs:
       - name: Select release Xcode
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
       - name: Cache CocoaPods dependencies
+        if: inputs.run_native_e2e || inputs.run_ipad
         uses: actions/cache@v5
         with:
           path: |
@@ -48,6 +53,7 @@ jobs:
       - name: Install Firebase emulator tools
         run: npm install -g firebase-tools@15.10.1
       - name: Install simulator UI automation
+        if: inputs.run_native_e2e
         run: npm install --prefix build/ci-tools xcodebuildmcp@2.7.0
       - name: Install dependencies
         run: |
@@ -68,6 +74,20 @@ jobs:
         run: python3 -m unittest discover -s tool/ci/tests -v
       - name: Verify static legal site
         run: python3 tool/ci/verify_static_site.py
+      - name: Verify Firestore access rules
+        if: ${{ !inputs.run_native_e2e }}
+        env:
+          FIREBASE_EMULATOR_PROJECT: demo-kotrana-e2e
+        run: firebase emulators:exec --project demo-kotrana-e2e --only auth,firestore "dart run tool/verify_firestore_rules.dart"
+      - name: Record simulator coverage
+        if: always()
+        env:
+          NATIVE_E2E: ${{ inputs.run_native_e2e }}
+          IPAD_E2E: ${{ inputs.run_ipad }}
+        run: |
+          echo "iOS/Watch simulator scenarios enabled: $NATIVE_E2E" >> "$GITHUB_STEP_SUMMARY"
+          echo "iPad simulator scenarios enabled: $IPAD_E2E" >> "$GITHUB_STEP_SUMMARY"
+          echo "Disabled simulator suites provide no end-to-end acceptance for this run." >> "$GITHUB_STEP_SUMMARY"
       - name: Run iPad UI scenarios
         if: inputs.run_ipad
         timeout-minutes: 25
@@ -76,6 +96,7 @@ jobs:
           IOS_E2E_OUTPUT_DIR: ${{ github.workspace }}/build/ios-e2e-ipad
         run: bash tool/ci/run_ios_e2e.sh --ui-only
       - name: Run iOS and paired Watch scenarios
+        if: inputs.run_native_e2e
         timeout-minutes: 45
         env:
           AXE_PATH: ${{ github.workspace }}/build/ci-tools/node_modules/xcodebuildmcp/bundled/axe

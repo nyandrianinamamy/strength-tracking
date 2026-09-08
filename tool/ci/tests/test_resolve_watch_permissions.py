@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 SPEC = importlib.util.spec_from_file_location(
     'resolve_watch_permissions', Path(__file__).parents[1] / 'resolve_watch_permissions.py')
@@ -23,6 +24,33 @@ def screen(*children):
 
 
 class WatchUITests(unittest.TestCase):
+    def test_native_architecture_selected_from_hardware_even_under_rosetta(self):
+        with patch.object(helper.platform, 'system', return_value='Darwin'), \
+             patch.object(helper.subprocess, 'run', return_value=subprocess.CompletedProcess(
+                 [], 0, '1\n', '')) as probe:
+            self.assertEqual(helper.native_axe_prefix(), ['/usr/bin/arch', '-arm64'])
+            self.assertEqual(probe.call_args.args[0],
+                             ['/usr/sbin/sysctl', '-n', 'hw.optional.arm64'])
+
+    def test_intel_hardware_keeps_default_architecture(self):
+        with patch.object(helper.platform, 'system', return_value='Darwin'), \
+             patch.object(helper.subprocess, 'run', return_value=subprocess.CompletedProcess(
+                 [], 0, '0\n', '')):
+            self.assertEqual(helper.native_axe_prefix(), [])
+
+    def test_architecture_prefix_applies_only_to_axe(self):
+        calls = []
+        def run(args, **kwargs):
+            calls.append(args)
+            return subprocess.CompletedProcess(args, 0, '[]', '')
+        with tempfile.TemporaryDirectory() as directory:
+            resolver = helper.Resolver('/tmp/axe', WATCH, 'Expected', directory,
+                                       run=run, axe_prefix=['/usr/bin/arch', '-arm64'])
+            resolver.command(['/tmp/axe', 'describe-ui', '--udid', WATCH])
+            resolver.command(['xcrun', 'simctl', 'list', '--json'])
+        self.assertEqual(calls[0][:4], ['/usr/bin/arch', '-arm64', '/tmp/axe', 'describe-ui'])
+        self.assertEqual(calls[1][0], 'xcrun')
+
     def test_already_granted_workout_and_idle_are_observed(self):
         for label in ('Test strength exercise', 'Aucune séance active'):
             self.assertEqual(helper.inspect_ui(screen(node(label)), label)['state'], 'expected')
@@ -174,7 +202,7 @@ class WatchUITests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             resolver = helper.Resolver('/tmp/test-axe', WATCH, 'Test timed exercise', directory,
-                                       run=run, monotonic=lambda: clock[0],
+                                       axe_prefix=[], run=run, monotonic=lambda: clock[0],
                                        sleep=lambda delta: clock.__setitem__(0, clock[0] + delta))
             self.assertTrue(resolver.resolve()['ok'])
             actions = [args for args in commands if args[1] in {'tap', 'swipe'}]
@@ -211,7 +239,7 @@ class WatchUITests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             resolver = helper.Resolver('/tmp/test-axe', WATCH, 'Test timed exercise', directory, timeout=2,
-                                       run=run, monotonic=lambda: clock[0],
+                                       axe_prefix=[], run=run, monotonic=lambda: clock[0],
                                        sleep=lambda delta: clock.__setitem__(0, clock[0] + delta))
             with self.assertRaises(helper.ResolutionError):
                 resolver.resolve()
@@ -244,7 +272,7 @@ class WatchUITests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             resolver = helper.Resolver('/tmp/test-axe', WATCH, 'Aucune séance active', directory,
-                                       run=run, monotonic=lambda: clock[0],
+                                       axe_prefix=[], run=run, monotonic=lambda: clock[0],
                                        sleep=lambda delta: clock.__setitem__(0, clock[0] + delta))
             self.assertTrue(resolver.resolve()['ok'])
             taps = [args for args in commands if args[1] == 'tap']
@@ -307,7 +335,7 @@ class WatchUITests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             resolver = helper.Resolver('/tmp/test-axe', WATCH, 'Expected', directory,
-                                       run=run, monotonic=lambda: clock[0],
+                                       axe_prefix=[], run=run, monotonic=lambda: clock[0],
                                        sleep=lambda delta: clock.__setitem__(0, clock[0] + delta))
             result = resolver.resolve()
             self.assertTrue(result['ok'])
@@ -336,7 +364,7 @@ class WatchUITests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as directory:
             resolver = helper.Resolver('/tmp/test-axe', WATCH, 'Expected', directory, timeout=1,
-                                       run=run, monotonic=lambda: clock[0],
+                                       axe_prefix=[], run=run, monotonic=lambda: clock[0],
                                        sleep=lambda delta: clock.__setitem__(0, clock[0] + delta))
             with self.assertRaises(helper.ResolutionError):
                 resolver.resolve()

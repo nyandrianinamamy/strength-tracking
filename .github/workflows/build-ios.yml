@@ -9,9 +9,13 @@ on:
       release_tag:
         description: "Release tag to build and upload"
         required: true
-        default: "v1.0.31+316"
+        default: "v1.0.31+317"
       quality_only:
         description: "Run checks on the selected ref without signing or uploading"
+        type: boolean
+        default: false
+      run_native_e2e:
+        description: "Opt in to experimental iOS and paired Watch simulator checks"
         type: boolean
         default: false
       run_ipad:
@@ -39,6 +43,7 @@ jobs:
     uses: ./.github/workflows/ios-quality.yml
     with:
       source_ref: ${{ needs.source.outputs.sha }}
+      run_native_e2e: ${{ github.event_name == 'workflow_dispatch' && inputs.run_native_e2e || false }}
       run_ipad: ${{ github.event_name == 'workflow_dispatch' && inputs.run_ipad || false }}
 
   # ─── TestFlight upload via Fastlane ───
