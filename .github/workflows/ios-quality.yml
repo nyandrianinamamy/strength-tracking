@@ -76,4 +76,5 @@ jobs:
           path: |
             build/ios-e2e/
             build/ios-e2e-ipad/
+            packages/flutter_body_heatmap/test/failures/
           if-no-files-found: warn

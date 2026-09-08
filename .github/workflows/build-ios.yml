@@ -10,6 +10,10 @@ on:
         description: "Release tag to build and upload"
         required: true
         default: "v1.0.31+310"
+      quality_only:
+        description: "Run checks on the selected ref without signing or uploading"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -35,6 +39,7 @@ jobs:
   # ─── TestFlight upload via Fastlane ───
   build-testflight:
     needs: [source, quality]
+    if: github.event_name != 'workflow_dispatch' || !inputs.quality_only
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
