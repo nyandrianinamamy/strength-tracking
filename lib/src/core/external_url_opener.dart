@@ -1,5 +1,4 @@
-import 'external_url_opener_platform.dart'
-    if (dart.library.js_interop) 'external_url_opener_web.dart';
+import 'external_url_opener_platform.dart';
 
 class ExternalUrlOpener {
   const ExternalUrlOpener();

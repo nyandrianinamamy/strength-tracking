@@ -14,6 +14,8 @@ import 'package:strength_training_tracker/src/features/training_engine/training_
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:training_engine/training_engine.dart';
 
+late DateTime _fixtureNow;
+
 class _FakeHealthKitDataSource extends HealthKitDataSource {
   const _FakeHealthKitDataSource({
     this.status = HealthKitFetchStatus.noSamples,
@@ -86,21 +88,21 @@ Map<String, dynamic> _savedEngineState({
   engine.ingestSession(
     EngineSession(
       id: 'dashboard-session',
-      startedAt: DateTime.utc(2026, 4, 1, 17, 0),
-      endedAt: DateTime.utc(2026, 4, 1, 18, 0),
+      startedAt: _fixtureNow.subtract(const Duration(hours: 1)),
+      endedAt: _fixtureNow,
       sets: [
         LoggedSet(
           exerciseId: 'barbell_back_squat',
           weightKg: 100,
           reps: 8,
           rpe: 8.0,
-          completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+          completedAt: _fixtureNow.subtract(const Duration(minutes: 45)),
         ),
       ],
     ),
   );
 
-  final now = DateTime.now().toUtc();
+  final now = _fixtureNow;
   if (acuteSleepDeprivation) {
     engine.ingestSleep(
       SleepRecord(
@@ -137,9 +139,9 @@ AppState _appStateWithDashboardSession({bool healthKitEnabled = false}) {
         id: 'dashboard-session',
         routineId: 'routine-1',
         status: WorkoutSessionStatus.completed,
-        startedAt: DateTime.utc(2026, 4, 1, 17, 0),
-        endedAt: DateTime.utc(2026, 4, 1, 18, 0),
-        lastActivityAt: DateTime.utc(2026, 4, 1, 18, 0),
+        startedAt: _fixtureNow.subtract(const Duration(hours: 1)),
+        endedAt: _fixtureNow,
+        lastActivityAt: _fixtureNow,
         currentExerciseIndex: 0,
         completedSets: [
           CompletedSet(
@@ -148,7 +150,7 @@ AppState _appStateWithDashboardSession({bool healthKitEnabled = false}) {
             weightKg: 100,
             reps: 8,
             rpe: 8.0,
-            completedAt: DateTime.utc(2026, 4, 1, 17, 15),
+            completedAt: _fixtureNow.subtract(const Duration(minutes: 45)),
             note: '',
           ),
         ],
@@ -161,6 +163,11 @@ AppState _appStateWithDashboardSession({bool healthKitEnabled = false}) {
 }
 
 void main() {
+  setUp(() {
+    // Readiness uses the live clock; keep all fixture channels recent and aligned.
+    _fixtureNow = DateTime.now().toUtc();
+  });
+
   testWidgets('renders an empty state before any training engine data exists', (
     tester,
   ) async {

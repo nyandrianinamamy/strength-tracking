@@ -21,9 +21,9 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Kotrana uses HealthKit to track your strength training workouts and keep the app active during exercise.</string>
+	<string>Kotrana uses a HealthKit workout session to keep your workout visible on Apple Watch during exercise.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Kotrana saves your workout sessions to Apple Health so your training data stays in sync across apps.</string>
+	<string>Kotrana uses workout access to keep the Watch app active while you follow your workout.</string>
 	<key>UIDeviceFamily</key>
 	<array>
 		<integer>4</integer>

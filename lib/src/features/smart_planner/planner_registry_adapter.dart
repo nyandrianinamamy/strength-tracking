@@ -8,7 +8,15 @@ class PlannerRegistryAdapter {
   const PlannerRegistryAdapter._();
 
   static ExerciseRegistry buildRegistry(List<Exercise> appExercises) {
-    final registry = ExerciseRegistry.withDefaults();
+    final defaults = ExerciseRegistry.withDefaults();
+    final archivedIds = appExercises
+        .where((e) => e.archived)
+        .map((e) => e.id)
+        .toSet();
+    final registry = ExerciseRegistry.empty();
+    for (final exercise in defaults.all) {
+      if (!archivedIds.contains(exercise.id)) registry.addCustom(exercise);
+    }
     const adapter = TrainingEngineAdapter();
 
     for (final exercise in appExercises) {

@@ -1,0 +1,963 @@
+[
+  {
+    "AXLabel": "",
+    "type": "Application",
+    "role": "AXApplication",
+    "frame": {
+      "x": 0,
+      "width": 208,
+      "y": 0,
+      "height": 248
+    },
+    "AXFrame": "{{0, 0}, {208, 248}}",
+    "enabled": true,
+    "AXUniqueId": "Carousel",
+    "children": [
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "width": 208,
+          "y": 0,
+          "x": 0,
+          "height": 248
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "width": 208,
+              "y": 0,
+              "x": 0,
+              "height": 248
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "width": 208,
+                  "y": 0,
+                  "x": 0,
+                  "height": 248
+                },
+                "AXFrame": "{{0, 0}, {208, 248}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "width": 208,
+                      "y": 0,
+                      "x": 0,
+                      "height": 248
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "width": 208,
+                          "y": 0,
+                          "x": 0,
+                          "height": 248
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true,
+                        "children": [
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "width": 208,
+                              "y": 0,
+                              "x": 0,
+                              "height": 248
+                            },
+                            "AXFrame": "{{0, 0}, {208, 248}}",
+                            "enabled": true
+                          },
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "width": 208,
+                              "y": 0,
+                              "x": 0,
+                              "height": 248
+                            },
+                            "AXFrame": "{{0, 0}, {208, 248}}",
+                            "enabled": true,
+                            "children": [
+                              {
+                                "AXLabel": "09:31",
+                                "type": "Group",
+                                "role": "AXGroup",
+                                "frame": {
+                                  "width": 44,
+                                  "y": 15.5,
+                                  "x": 149,
+                                  "height": 20.5
+                                },
+                                "AXFrame": "{{149, 15.5}, {44, 20.5}}",
+                                "enabled": true,
+                                "children": [
+                                  {
+                                    "type": "Group",
+                                    "role": "AXGroup",
+                                    "frame": {
+                                      "width": 44,
+                                      "y": 15.5,
+                                      "x": 149,
+                                      "height": 20.5
+                                    },
+                                    "AXFrame": "{{149, 15.5}, {44, 20.5}}",
+                                    "enabled": true,
+                                    "children": [
+                                      {
+                                        "AXLabel": "09:31",
+                                        "type": "GenericElement",
+                                        "role": "AXGenericElement",
+                                        "frame": {
+                                          "width": 44,
+                                          "y": 15.5,
+                                          "x": 149,
+                                          "height": 20.5
+                                        },
+                                        "AXFrame": "{{149, 15.5}, {44, 20.5}}",
+                                        "enabled": true
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "width": 208,
+          "y": 0,
+          "x": 0,
+          "height": 248
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "width": 208,
+              "y": 0,
+              "x": 0,
+              "height": 248
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "height": 248,
+                  "width": 208
+                },
+                "AXFrame": "{{0, 0}, {208, 248}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "width": 208,
+                      "y": 0,
+                      "x": 0,
+                      "height": 248
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "width": 208,
+                          "y": 0,
+                          "x": 0,
+                          "height": 248
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "width": 208,
+                      "y": 0,
+                      "x": 0,
+                      "height": 248
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "width": 208,
+                          "y": 0,
+                          "x": 0,
+                          "height": 62
+                        },
+                        "AXFrame": "{{0, 0}, {208, 62}}",
+                        "enabled": true,
+                        "AXUniqueId": "Write Access",
+                        "children": [
+                          {
+                            "AXLabel": "Back",
+                            "type": "Button",
+                            "role": "AXButton",
+                            "frame": {
+                              "width": 35,
+                              "y": 18,
+                              "x": 14.999999999999998,
+                              "height": 35
+                            },
+                            "AXFrame": "{{14.999999999999998, 18}, {35, 35}}",
+                            "enabled": true,
+                            "AXUniqueId": "BackButton"
+                          },
+                          {
+                            "AXLabel": "Write Access",
+                            "type": "Heading",
+                            "role": "AXHeading",
+                            "frame": {
+                              "width": 137,
+                              "y": 36.5,
+                              "x": 56,
+                              "height": 19.5
+                            },
+                            "AXFrame": "{{56, 36.5}, {137, 19.5}}",
+                            "enabled": true
+                          }
+                        ]
+                      },
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "width": 208,
+                          "y": 0,
+                          "x": 0,
+                          "height": 248
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true,
+                        "children": [
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "width": 208,
+                              "y": 0,
+                              "x": 0,
+                              "height": 248
+                            },
+                            "AXFrame": "{{0, 0}, {208, 248}}",
+                            "enabled": true,
+                            "children": [
+                              {
+                                "type": "Group",
+                                "role": "AXGroup",
+                                "frame": {
+                                  "width": 208,
+                                  "y": 0,
+                                  "x": 0,
+                                  "height": 248
+                                },
+                                "AXFrame": "{{0, 0}, {208, 248}}",
+                                "enabled": true,
+                                "children": [
+                                  {
+                                    "type": "Group",
+                                    "role": "AXGroup",
+                                    "frame": {
+                                      "width": 208,
+                                      "y": 0,
+                                      "x": 0,
+                                      "height": 248
+                                    },
+                                    "AXFrame": "{{0, 0}, {208, 248}}",
+                                    "enabled": true,
+                                    "children": [
+                                      {
+                                        "type": "Group",
+                                        "role": "AXGroup",
+                                        "frame": {
+                                          "width": 208,
+                                          "y": 0,
+                                          "x": 0,
+                                          "height": 248
+                                        },
+                                        "AXFrame": "{{0, 0}, {208, 248}}",
+                                        "enabled": true,
+                                        "children": [
+                                          {
+                                            "type": "Group",
+                                            "role": "AXGroup",
+                                            "frame": {
+                                              "width": 208,
+                                              "y": 0,
+                                              "x": 0,
+                                              "height": 91.10000000000001
+                                            },
+                                            "AXFrame": "{{0, 0}, {208, 91.100000000000009}}",
+                                            "enabled": true
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "Group",
+                                        "role": "AXGroup",
+                                        "frame": {
+                                          "width": 208,
+                                          "y": 0,
+                                          "x": 0,
+                                          "height": 248
+                                        },
+                                        "AXFrame": "{{0, 0}, {208, 248}}",
+                                        "enabled": true
+                                      },
+                                      {
+                                        "AXLabel": "Allow Write Access",
+                                        "AXValue": "“Kotrana Watch” would like permission to write the following data to Health.",
+                                        "type": "GenericElement",
+                                        "role": "AXGenericElement",
+                                        "frame": {
+                                          "width": 204,
+                                          "y": 62,
+                                          "x": 2,
+                                          "height": 97
+                                        },
+                                        "AXFrame": "{{2, 62}, {204, 97}}",
+                                        "enabled": true,
+                                        "AXUniqueId": "UIA.Health.WatchAuthSheet.StaticText.Label",
+                                        "children": [
+                                          {
+                                            "AXLabel": "Allow Write Access",
+                                            "type": "StaticText",
+                                            "role": "AXStaticText",
+                                            "frame": {
+                                              "width": 188,
+                                              "y": 62,
+                                              "x": 10,
+                                              "height": 19.5
+                                            },
+                                            "AXFrame": "{{10, 62}, {188, 19.5}}",
+                                            "enabled": true
+                                          },
+                                          {
+                                            "AXLabel": "“Kotrana Watch” would like permission to write the following data to Health.",
+                                            "type": "StaticText",
+                                            "role": "AXStaticText",
+                                            "frame": {
+                                              "width": 188,
+                                              "y": 84,
+                                              "x": 10,
+                                              "height": 75
+                                            },
+                                            "AXFrame": "{{10, 84}, {188, 75}}",
+                                            "enabled": true
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "type": "Heading",
+                                        "role": "AXHeading",
+                                        "frame": {
+                                          "width": 208,
+                                          "y": 181,
+                                          "x": 0,
+                                          "height": 3.5
+                                        },
+                                        "AXFrame": "{{0, 181}, {208, 3.5}}",
+                                        "enabled": true
+                                      },
+                                      {
+                                        "AXLabel": "All Requested Data Below",
+                                        "AXValue": "0",
+                                        "type": "CheckBox",
+                                        "role": "AXCheckBox",
+                                        "frame": {
+                                          "width": 204,
+                                          "y": 184.5,
+                                          "x": 2,
+                                          "height": 55
+                                        },
+                                        "AXFrame": "{{2, 184.5}, {204, 55}}",
+                                        "enabled": true,
+                                        "AXUniqueId": "UIA.Health.WatchAuthSheet.SwitchCellALL_REQUESTED_DATA",
+                                        "children": [
+                                          {
+                                            "AXLabel": "All Requested Data Below",
+                                            "type": "StaticText",
+                                            "role": "AXStaticText",
+                                            "frame": {
+                                              "width": 137,
+                                              "y": 193.5,
+                                              "x": 15,
+                                              "height": 37
+                                            },
+                                            "AXFrame": "{{15, 193.5}, {137, 37}}",
+                                            "enabled": true
+                                          },
+                                          {
+                                            "AXValue": "0",
+                                            "type": "CheckBox",
+                                            "role": "AXCheckBox",
+                                            "frame": {
+                                              "width": 36,
+                                              "y": 201,
+                                              "x": 157,
+                                              "height": 22
+                                            },
+                                            "AXFrame": "{{157, 201}, {36, 22}}",
+                                            "enabled": true,
+                                            "AXUniqueId": "UIA.Health.WatchAuthSheet.SwitchOutlet"
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "height": 248,
+          "width": 208
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "height": 248,
+          "width": 208
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "height": 248,
+              "width": 208
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "height": 248,
+                  "width": 208
+                },
+                "AXFrame": "{{0, 0}, {208, 248}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "x": 0,
+                      "y": 0,
+                      "height": 248,
+                      "width": 208
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 0,
+                          "y": 0,
+                          "height": 248,
+                          "width": 208
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true
+                      },
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 0,
+                          "y": 0,
+                          "height": 248,
+                          "width": 208
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true
+                      },
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 0,
+                          "y": 0,
+                          "height": 248,
+                          "width": 208
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true
+                      },
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 0,
+                          "y": 0,
+                          "height": 248,
+                          "width": 208
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true
+                      },
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 0,
+                          "y": 0,
+                          "height": 248,
+                          "width": 208
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "height": 248,
+              "width": 208
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "height": 248,
+                  "width": 208
+                },
+                "AXFrame": "{{0, 0}, {208, 248}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "x": 0,
+                      "y": 0,
+                      "height": 248,
+                      "width": 208
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "height": 496,
+          "width": 416
+        },
+        "AXFrame": "{{0, 0}, {416, 496}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "height": 496,
+              "width": 416
+            },
+            "AXFrame": "{{0, 0}, {416, 496}}",
+            "enabled": true
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "height": 496,
+          "width": 416
+        },
+        "AXFrame": "{{0, 0}, {416, 496}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "height": 496,
+              "width": 416
+            },
+            "AXFrame": "{{0, 0}, {416, 496}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "height": 496,
+                  "width": 416
+                },
+                "AXFrame": "{{0, 0}, {416, 496}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "x": 0,
+                      "y": 0,
+                      "height": 496,
+                      "width": 416
+                    },
+                    "AXFrame": "{{0, 0}, {416, 496}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 0,
+                          "y": 0,
+                          "height": 496,
+                          "width": 416
+                        },
+                        "AXFrame": "{{0, 0}, {416, 496}}",
+                        "enabled": true,
+                        "children": [
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "x": 0,
+                              "y": 0,
+                              "height": 496,
+                              "width": 416
+                            },
+                            "AXFrame": "{{0, 0}, {416, 496}}",
+                            "enabled": true
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 200,
+          "y": 45,
+          "height": 46,
+          "width": 6
+        },
+        "AXFrame": "{{200, 45}, {6, 46}}",
+        "enabled": true
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 200,
+          "y": 45,
+          "height": 46,
+          "width": 6
+        },
+        "AXFrame": "{{200, 45}, {6, 46}}",
+        "enabled": true
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "height": 248,
+          "width": 208
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "height": 248,
+              "width": 208
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "width": 208,
+                  "y": 0,
+                  "height": 248
+                },
+                "AXFrame": "{{0, 0}, {208, 248}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "x": 0,
+                      "y": 0,
+                      "height": 248,
+                      "width": 208
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 0,
+                          "y": 0,
+                          "height": 248,
+                          "width": 208
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true,
+                        "children": [
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "x": 0,
+                              "y": 0,
+                              "height": 248,
+                              "width": 208
+                            },
+                            "AXFrame": "{{0, 0}, {208, 248}}",
+                            "enabled": true,
+                            "children": [
+                              {
+                                "type": "Group",
+                                "role": "AXGroup",
+                                "frame": {
+                                  "x": 0,
+                                  "y": 0,
+                                  "height": 248,
+                                  "width": 208
+                                },
+                                "AXFrame": "{{0, 0}, {208, 248}}",
+                                "enabled": true
+                              },
+                              {
+                                "type": "Group",
+                                "role": "AXGroup",
+                                "frame": {
+                                  "x": 0,
+                                  "y": 0,
+                                  "height": 248,
+                                  "width": 208
+                                },
+                                "AXFrame": "{{0, 0}, {208, 248}}",
+                                "enabled": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "x": 0,
+                      "width": 208,
+                      "y": 0,
+                      "height": 248
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "AXLabel": "09:31",
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "x": 149,
+                          "y": 15.5,
+                          "height": 20.5,
+                          "width": 44
+                        },
+                        "AXFrame": "{{149, 15.5}, {44, 20.5}}",
+                        "enabled": true,
+                        "children": [
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "x": 149,
+                              "width": 44,
+                              "y": 15.5,
+                              "height": 20.5
+                            },
+                            "AXFrame": "{{149, 15.5}, {44, 20.5}}",
+                            "enabled": true,
+                            "children": [
+                              {
+                                "AXLabel": "09:31",
+                                "type": "GenericElement",
+                                "role": "AXGenericElement",
+                                "frame": {
+                                  "x": 149,
+                                  "width": 44,
+                                  "y": 15.5,
+                                  "height": 20.5
+                                },
+                                "AXFrame": "{{149, 15.5}, {44, 20.5}}",
+                                "enabled": true
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "width": 208,
+          "y": 0,
+          "height": 248
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "width": 208,
+              "y": 0,
+              "height": 248
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true
+          }
+        ]
+      }
+    ]
+  }
+]

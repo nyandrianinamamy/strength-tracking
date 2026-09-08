@@ -3,16 +3,18 @@ import 'session_generator.dart';
 /// Returns a new [WeeklyPlan] with missed volume redistributed to remaining sessions.
 ///
 /// Rules:
-/// - If no sessions remain after [now], the plan is returned unchanged.
+/// - If no sessions have a larger numeric day-of-week than [missedDay],
+///   the plan is returned unchanged.
 /// - 75 % of missed sets are redistributed when ≥ 2 sessions remain,
 ///   50 % when only 1 session remains.
 /// - Extra sets go to sessions whose focus matches the missed session's focus.
 /// - If no match is found, extra sets go to the closest remaining session
 ///   (first in the remaining list).
 ///
-/// "Remaining" means sessions whose [PlannedSession.dayOfWeek] comes after
-/// the missed day **and** whose absolute date is after [now] (week-relative
-/// comparison via day-of-week ≥ missedDay threshold, adjusted for weekStart).
+/// "Remaining" means sessions whose [PlannedSession.dayOfWeek] is numerically
+/// larger than [missedDay]. [now] is retained for API compatibility but is not
+/// used for date filtering. This helper does not handle week wrapping or
+/// recompute durations. It is not called by the app.
 WeeklyPlan handleMissedSession(
   WeeklyPlan plan,
   int missedDay,

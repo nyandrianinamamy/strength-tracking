@@ -5,6 +5,7 @@ import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/progress/progress_service.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_adapter.dart';
 
 void main() {
   final service = ProgressService();
@@ -73,6 +74,99 @@ void main() {
       rpe: null,
     );
   }
+
+  test('a weaker recent set cannot become the historical personal record', () {
+    final oldDate = DateTime.utc(2026, 4, 1);
+    final recentDate = DateTime.utc(2026, 5, 1);
+    final state = progressStateWithSets(
+      sets: [
+        CompletedSet(
+          exerciseId: 'barbell_back_squat',
+          setNumber: 1,
+          weightKg: 100,
+          reps: 8,
+          rpe: 8,
+          completedAt: oldDate,
+          note: '',
+        ),
+        CompletedSet(
+          exerciseId: 'barbell_back_squat',
+          setNumber: 2,
+          weightKg: 40,
+          reps: 5,
+          rpe: 8,
+          completedAt: recentDate,
+          note: '',
+        ),
+      ],
+    );
+    final snapshot = service.progressSnapshot(
+      state,
+      currentE1rmsByExercise: {'barbell_back_squat': 120},
+    );
+    final record = snapshot.personalRecords.single;
+    expect(record.weightKg, 100);
+    expect(record.reps, 8);
+    expect(record.achievedAt, oldDate);
+  });
+
+  test('historical records use session RPE when set RPE is missing', () {
+    final older = DateTime.utc(2026, 4, 1);
+    final newer = DateTime.utc(2026, 5, 1);
+    final base = progressStateWithSets();
+    WorkoutSession session(String id, DateTime date, double sessionRpe) =>
+        base.sessions.single.copyWith(
+          id: id,
+          endedAt: date,
+          rpe: sessionRpe,
+          completedSets: [
+            CompletedSet(
+              exerciseId: 'barbell_back_squat',
+              setNumber: 1,
+              weightKg: 100,
+              reps: 5,
+              rpe: null,
+              completedAt: date,
+              note: '',
+            ),
+          ],
+        );
+    final state = base.copyWith(
+      sessions: [
+        session('older-easy', older, 5),
+        session('newer-maximal', newer, 10),
+      ],
+    );
+    final snapshot = service.progressSnapshot(
+      state,
+      currentE1rmsByExercise: {'barbell_back_squat': 120},
+    );
+    // The same load/reps performed with more reserve is the stronger set.
+    expect(snapshot.personalRecords.single.achievedAt, older);
+    expect(service.sessionPrs(state, 'older-easy'), hasLength(1));
+    expect(service.sessionPrs(state, 'newer-maximal'), isEmpty);
+  });
+
+  test(
+    'strength RPE resolution prefers valid set then session then default',
+    () {
+      const adapter = TrainingEngineAdapter();
+      expect(adapter.resolveStrengthRpe(7, 5), 7);
+      expect(adapter.resolveStrengthRpe(null, 5), 5);
+      expect(adapter.resolveStrengthRpe(null, 10), 10);
+      for (final invalid in [
+        null,
+        double.nan,
+        double.infinity,
+        double.negativeInfinity,
+        4.9,
+        10.1,
+      ]) {
+        expect(adapter.resolveStrengthRpe(invalid, 6), 6);
+        expect(adapter.resolveStrengthRpe(null, invalid), 8);
+      }
+    },
+  );
 
   test('dashboard snapshot exposes recent workouts and a next routine', () {
     final state = DemoSeedData.initialState();

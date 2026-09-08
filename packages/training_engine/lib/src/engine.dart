@@ -112,7 +112,8 @@ class TrainingEngine {
 
     // Group sets by exerciseId
     final setsByExercise = <String, List<LoggedSet>>{};
-    for (final set in session.sets) {
+    for (final original in session.sets) {
+      final set = _backfillEstimatedStrengthRpe(original, session.sessionRpe);
       setsByExercise.putIfAbsent(set.exerciseId, () => []).add(set);
     }
 
@@ -622,40 +623,13 @@ class TrainingEngine {
 
   /// Ingests a list of legacy sessions in chronological order.
   ///
-  /// Sets with [LoggedSet.rpeEstimated] == true have their RPE backfilled from
-  /// [EngineSession.sessionRpe] (or defaulted to 8.0).
+  /// Uses the same normalization as live ingestion. Already estimated typed
+  /// intensity is retained; only a missing strength channel is backfilled.
   void bootstrapFromHistory(List<EngineSession> legacySessions) {
     final sorted = List<EngineSession>.from(legacySessions)
       ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
-
     for (final session in sorted) {
-      final fallbackRpe = _isSupportedStrengthRpe(session.sessionRpe)
-          ? session.sessionRpe!
-          : 8.0;
-
-      final backfilledSets = session.sets.map((set) {
-        if (set.rpeEstimated) {
-          return LoggedSet(
-            exerciseId: set.exerciseId,
-            weightKg: set.weightKg,
-            reps: set.reps,
-            rpe: fallbackRpe,
-            completedAt: set.completedAt,
-            rpeEstimated: true,
-            durationSeconds: set.durationSeconds,
-          );
-        }
-        return set;
-      }).toList();
-
-      final patched = EngineSession(
-        id: session.id,
-        startedAt: session.startedAt,
-        endedAt: session.endedAt,
-        sets: backfilledSets,
-        sessionRpe: session.sessionRpe,
-      );
-      ingestSession(patched);
+      ingestSession(session);
     }
   }
 }
@@ -664,4 +638,22 @@ bool _isSupportedStrengthRpe(double? rpe) {
   return rpe != null &&
       rpe >= formula_lib.minStrengthRpe &&
       rpe <= formula_lib.maxStrengthRpe;
+}
+
+LoggedSet _backfillEstimatedStrengthRpe(LoggedSet set, double? sessionRpe) {
+  if (!set.rpeEstimated || !set.hasStrengthLoad || set.strengthRpe != null) {
+    return set;
+  }
+  return LoggedSet(
+    exerciseId: set.exerciseId,
+    weightKg: set.weightKg,
+    reps: set.reps,
+    completedAt: set.completedAt,
+    rpeEstimated: set.rpeEstimated,
+    durationSeconds: set.durationSeconds,
+    strengthRpe: _isSupportedStrengthRpe(sessionRpe) ? sessionRpe : 8.0,
+    localRpe: set.localRpe,
+    effortRpe: set.effortRpe,
+    intensityClass: set.intensityClass,
+  );
 }

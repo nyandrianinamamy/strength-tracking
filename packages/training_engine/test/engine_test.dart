@@ -696,8 +696,9 @@ void main() {
 
     test('ACWR-only tier after session ingestion', () {
       final engine = _engine();
-      engine.ingestSession(_session());
-      final readiness = engine.computeReadiness();
+      final session = _session();
+      engine.ingestSession(session);
+      final readiness = engine.computeReadiness(at: session.endedAt);
       // Should have at least ACWR data now
       expect(readiness.tier, isNot(equals(ReadinessTier.cold)));
     });

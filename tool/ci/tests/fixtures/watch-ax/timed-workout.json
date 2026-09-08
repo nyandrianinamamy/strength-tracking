@@ -1,0 +1,363 @@
+[
+  {
+    "AXLabel": "Kotrana Watch",
+    "type": "Application",
+    "role": "AXApplication",
+    "frame": {
+      "y": 0,
+      "x": 0,
+      "height": 248,
+      "width": 208
+    },
+    "AXFrame": "{{0, 0}, {208, 248}}",
+    "enabled": true,
+    "children": [
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "y": 0,
+          "x": 0,
+          "height": 248,
+          "width": 208
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "y": 0,
+              "x": 0,
+              "height": 248,
+              "width": 208
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "y": 0,
+                  "x": 0,
+                  "height": 248,
+                  "width": 208
+                },
+                "AXFrame": "{{0, 0}, {208, 248}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "y": 0,
+                      "x": 0,
+                      "height": 248,
+                      "width": 208
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "type": "Group",
+                        "role": "AXGroup",
+                        "frame": {
+                          "y": 0,
+                          "x": 0,
+                          "height": 248,
+                          "width": 208
+                        },
+                        "AXFrame": "{{0, 0}, {208, 248}}",
+                        "enabled": true,
+                        "children": [
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "y": 0,
+                              "x": 0,
+                              "height": 248,
+                              "width": 208
+                            },
+                            "AXFrame": "{{0, 0}, {208, 248}}",
+                            "enabled": true
+                          },
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "x": 0,
+                              "y": 0,
+                              "height": 248,
+                              "width": 208
+                            },
+                            "AXFrame": "{{0, 0}, {208, 248}}",
+                            "enabled": true
+                          },
+                          {
+                            "type": "Group",
+                            "role": "AXGroup",
+                            "frame": {
+                              "y": 0,
+                              "x": 0,
+                              "height": 248,
+                              "width": 208
+                            },
+                            "AXFrame": "{{0, 0}, {208, 248}}",
+                            "enabled": true,
+                            "AXUniqueId": "PUICPageViewController_collectionView",
+                            "children": [
+                              {
+                                "type": "Group",
+                                "role": "AXGroup",
+                                "frame": {
+                                  "x": 0,
+                                  "y": 0,
+                                  "height": 248,
+                                  "width": 208
+                                },
+                                "AXFrame": "{{0, 0}, {208, 248}}",
+                                "enabled": true,
+                                "children": [
+                                  {
+                                    "type": "Group",
+                                    "role": "AXGroup",
+                                    "frame": {
+                                      "x": 0,
+                                      "y": 0,
+                                      "height": 248,
+                                      "width": 208
+                                    },
+                                    "AXFrame": "{{0, 0}, {208, 248}}",
+                                    "enabled": true,
+                                    "children": [
+                                      {
+                                        "type": "Group",
+                                        "role": "AXGroup",
+                                        "frame": {
+                                          "x": 0,
+                                          "y": 0,
+                                          "height": 248,
+                                          "width": 208
+                                        },
+                                        "AXFrame": "{{0, 0}, {208, 248}}",
+                                        "enabled": true,
+                                        "children": [
+                                          {
+                                            "type": "Group",
+                                            "role": "AXGroup",
+                                            "frame": {
+                                              "y": 53,
+                                              "x": 6,
+                                              "height": 149,
+                                              "width": 196
+                                            },
+                                            "AXFrame": "{{6, 53}, {196, 149}}",
+                                            "enabled": true,
+                                            "children": [
+                                              {
+                                                "AXLabel": "2:00",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "y": 53,
+                                                  "x": 6,
+                                                  "height": 14.5,
+                                                  "width": 26.5
+                                                },
+                                                "AXFrame": "{{6, 53}, {26.5, 14.5}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "2/2",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "y": 54.25,
+                                                  "x": 185,
+                                                  "height": 12,
+                                                  "width": 17
+                                                },
+                                                "AXFrame": "{{185, 54.25}, {17, 12}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "SÉRIE 1/2",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "x": 80.25,
+                                                  "y": 77.5,
+                                                  "height": 12,
+                                                  "width": 47.5
+                                                },
+                                                "AXFrame": "{{80.25, 77.5}, {47.5, 12}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "Test timed exercise",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "x": 17.75,
+                                                  "y": 91.5,
+                                                  "height": 21.5,
+                                                  "width": 172.5
+                                                },
+                                                "AXFrame": "{{17.75, 91.5}, {172.5, 21.5}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "0:45",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "x": 65.75,
+                                                  "y": 120,
+                                                  "height": 43,
+                                                  "width": 76.5
+                                                },
+                                                "AXFrame": "{{65.75, 120}, {76.5, 43}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "Objectif",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "x": 6,
+                                                  "y": 170.25,
+                                                  "height": 11,
+                                                  "width": 37.5
+                                                },
+                                                "AXFrame": "{{6, 170.25}, {37.5, 11}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "45s / 30s Repos",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "x": 111.5,
+                                                  "y": 169,
+                                                  "height": 13.5,
+                                                  "width": 90.5
+                                                },
+                                                "AXFrame": "{{111.5, 169}, {90.5, 13.5}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "Dernier",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "x": 6,
+                                                  "y": 189.75,
+                                                  "height": 11,
+                                                  "width": 35
+                                                },
+                                                "AXFrame": "{{6, 189.75}, {35, 11}}",
+                                                "enabled": true
+                                              },
+                                              {
+                                                "AXLabel": "-",
+                                                "type": "StaticText",
+                                                "role": "AXStaticText",
+                                                "frame": {
+                                                  "y": 188.5,
+                                                  "x": 197,
+                                                  "height": 13.5,
+                                                  "width": 5
+                                                },
+                                                "AXFrame": "{{197, 188.5}, {5, 13.5}}",
+                                                "enabled": true
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "type": "Slider",
+                            "role": "AXSlider",
+                            "frame": {
+                              "x": 0,
+                              "y": 230,
+                              "height": 26,
+                              "width": 208
+                            },
+                            "AXFrame": "{{0, 230}, {208, 26}}",
+                            "enabled": true
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "height": 248,
+          "width": 208
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "y": 0,
+              "x": 0,
+              "height": 38,
+              "width": 208
+            },
+            "AXFrame": "{{0, 0}, {208, 38}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "height": 38,
+                  "width": 208
+                },
+                "AXFrame": "{{0, 0}, {208, 38}}",
+                "enabled": true
+              },
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "y": 0,
+                  "x": 0,
+                  "height": 38,
+                  "width": 208
+                },
+                "AXFrame": "{{0, 0}, {208, 38}}",
+                "enabled": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

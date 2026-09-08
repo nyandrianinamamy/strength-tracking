@@ -8,14 +8,20 @@ class ExerciseTranslations {
   ExerciseTranslations._();
 
   static String displayName(BuildContext context, Exercise exercise) {
-    if (exercise.translationKey != null) {
-      final l10n = AppLocalizations.of(context);
-      if (l10n != null) {
-        final resolved = _resolveKey(l10n, exercise.translationKey!);
-        if (resolved != null) return resolved;
-      }
-    }
-    return exercise.name;
+    final l10n = AppLocalizations.of(context);
+    return l10n == null
+        ? exercise.name
+        : displayNameForLocalizations(l10n, exercise);
+  }
+
+  static String displayNameForLocalizations(
+    AppLocalizations l10n,
+    Exercise exercise,
+  ) {
+    final key = exercise.translationKey;
+    return key == null
+        ? exercise.name
+        : _resolveKey(l10n, key) ?? exercise.name;
   }
 
   static String? _resolveKey(AppLocalizations l10n, String key) {
@@ -99,11 +105,16 @@ class ExerciseTranslations {
   };
 
   // Chest
-  static String _bbBenchPress(AppLocalizations l) => l.exercise_barbell_bench_press;
-  static String _incBbPress(AppLocalizations l) => l.exercise_incline_barbell_press;
-  static String _decBbPress(AppLocalizations l) => l.exercise_decline_barbell_press;
-  static String _dbBenchPress(AppLocalizations l) => l.exercise_dumbbell_bench_press;
-  static String _incDbPress(AppLocalizations l) => l.exercise_incline_dumbbell_press;
+  static String _bbBenchPress(AppLocalizations l) =>
+      l.exercise_barbell_bench_press;
+  static String _incBbPress(AppLocalizations l) =>
+      l.exercise_incline_barbell_press;
+  static String _decBbPress(AppLocalizations l) =>
+      l.exercise_decline_barbell_press;
+  static String _dbBenchPress(AppLocalizations l) =>
+      l.exercise_dumbbell_bench_press;
+  static String _incDbPress(AppLocalizations l) =>
+      l.exercise_incline_dumbbell_press;
   static String _cableFly(AppLocalizations l) => l.exercise_cable_fly;
   static String _pecDeck(AppLocalizations l) => l.exercise_pec_deck;
   static String _pushUp(AppLocalizations l) => l.exercise_push_up;
@@ -113,12 +124,14 @@ class ExerciseTranslations {
   static String _latPulldown(AppLocalizations l) => l.exercise_lat_pulldown;
   static String _pullUp(AppLocalizations l) => l.exercise_pull_up;
   static String _chinUp(AppLocalizations l) => l.exercise_chin_up;
-  static String _seatedCableRow(AppLocalizations l) => l.exercise_seated_cable_row;
+  static String _seatedCableRow(AppLocalizations l) =>
+      l.exercise_seated_cable_row;
   static String _tBarRow(AppLocalizations l) => l.exercise_t_bar_row;
   static String _facePull(AppLocalizations l) => l.exercise_face_pull;
   // Shoulders
   static String _ohp(AppLocalizations l) => l.exercise_overhead_press;
-  static String _dbShoulderPress(AppLocalizations l) => l.exercise_dumbbell_shoulder_press;
+  static String _dbShoulderPress(AppLocalizations l) =>
+      l.exercise_dumbbell_shoulder_press;
   static String _latRaise(AppLocalizations l) => l.exercise_lateral_raise;
   static String _frontRaise(AppLocalizations l) => l.exercise_front_raise;
   static String _rearDeltFly(AppLocalizations l) => l.exercise_rear_delt_fly;
@@ -130,25 +143,32 @@ class ExerciseTranslations {
   static String _preacherCurl(AppLocalizations l) => l.exercise_preacher_curl;
   static String _cableCurl(AppLocalizations l) => l.exercise_cable_curl;
   // Triceps
-  static String _tricepPushdown(AppLocalizations l) => l.exercise_tricep_pushdown;
-  static String _ohTricepExt(AppLocalizations l) => l.exercise_overhead_tricep_extension;
+  static String _tricepPushdown(AppLocalizations l) =>
+      l.exercise_tricep_pushdown;
+  static String _ohTricepExt(AppLocalizations l) =>
+      l.exercise_overhead_tricep_extension;
   static String _skullCrusher(AppLocalizations l) => l.exercise_skull_crusher;
   static String _dips(AppLocalizations l) => l.exercise_dips;
-  static String _cgBenchPress(AppLocalizations l) => l.exercise_close_grip_bench_press;
+  static String _cgBenchPress(AppLocalizations l) =>
+      l.exercise_close_grip_bench_press;
   // Quads
-  static String _bbBackSquat(AppLocalizations l) => l.exercise_barbell_back_squat;
+  static String _bbBackSquat(AppLocalizations l) =>
+      l.exercise_barbell_back_squat;
   static String _frontSquat(AppLocalizations l) => l.exercise_front_squat;
   static String _legPress(AppLocalizations l) => l.exercise_leg_press;
   static String _legExtension(AppLocalizations l) => l.exercise_leg_extension;
-  static String _bulgarianSplitSquat(AppLocalizations l) => l.exercise_bulgarian_split_squat;
+  static String _bulgarianSplitSquat(AppLocalizations l) =>
+      l.exercise_bulgarian_split_squat;
   static String _gobletSquat(AppLocalizations l) => l.exercise_goblet_squat;
   static String _hackSquat(AppLocalizations l) => l.exercise_hack_squat;
   static String _walkingLunge(AppLocalizations l) => l.exercise_walking_lunge;
   // Hamstrings
   static String _romanianDl(AppLocalizations l) => l.exercise_romanian_deadlift;
   static String _lyingLegCurl(AppLocalizations l) => l.exercise_lying_leg_curl;
-  static String _seatedLegCurl(AppLocalizations l) => l.exercise_seated_leg_curl;
-  static String _stiffLegDl(AppLocalizations l) => l.exercise_stiff_leg_deadlift;
+  static String _seatedLegCurl(AppLocalizations l) =>
+      l.exercise_seated_leg_curl;
+  static String _stiffLegDl(AppLocalizations l) =>
+      l.exercise_stiff_leg_deadlift;
   static String _goodMorning(AppLocalizations l) => l.exercise_good_morning;
   // Glutes
   static String _hipThrust(AppLocalizations l) => l.exercise_hip_thrust;
@@ -157,17 +177,21 @@ class ExerciseTranslations {
   static String _stepUp(AppLocalizations l) => l.exercise_step_up;
   // Abs
   static String _crunch(AppLocalizations l) => l.exercise_crunch;
-  static String _hangingLegRaise(AppLocalizations l) => l.exercise_hanging_leg_raise;
+  static String _hangingLegRaise(AppLocalizations l) =>
+      l.exercise_hanging_leg_raise;
   static String _plank(AppLocalizations l) => l.exercise_plank;
   static String _cableWoodchop(AppLocalizations l) => l.exercise_cable_woodchop;
-  static String _abWheelRollout(AppLocalizations l) => l.exercise_ab_wheel_rollout;
+  static String _abWheelRollout(AppLocalizations l) =>
+      l.exercise_ab_wheel_rollout;
   // Compound / Deadlifts
-  static String _conventionalDl(AppLocalizations l) => l.exercise_conventional_deadlift;
+  static String _conventionalDl(AppLocalizations l) =>
+      l.exercise_conventional_deadlift;
   static String _sumoDl(AppLocalizations l) => l.exercise_sumo_deadlift;
   static String _trapBarDl(AppLocalizations l) => l.exercise_trap_bar_deadlift;
   // Cardio
   static String _treadmill(AppLocalizations l) => l.exercise_treadmill;
-  static String _stationaryBike(AppLocalizations l) => l.exercise_stationary_bike;
+  static String _stationaryBike(AppLocalizations l) =>
+      l.exercise_stationary_bike;
   static String _rowingMachine(AppLocalizations l) => l.exercise_rowing_machine;
   static String _stairClimber(AppLocalizations l) => l.exercise_stair_climber;
   static String _elliptical(AppLocalizations l) => l.exercise_elliptical;

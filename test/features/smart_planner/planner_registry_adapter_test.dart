@@ -52,6 +52,29 @@ void main() {
       expect(found, isNotNull);
     });
 
+    test('excludes archived built-ins from lookup and selection', () {
+      final registry = PlannerRegistryAdapter.buildRegistry(const [
+        Exercise(
+          id: 'barbell_bench_press',
+          name: 'Bench',
+          primaryMuscles: ['Chest'],
+          secondaryMuscles: [],
+          equipment: [],
+          instructions: '',
+          archived: true,
+        ),
+      ]);
+      expect(registry.lookup('barbell_bench_press'), isNull);
+      expect(
+        registry.all.map((e) => e.id),
+        isNot(contains('barbell_bench_press')),
+      );
+      expect(
+        registry.exercisesForMuscle('pectorals').map((e) => e.id),
+        isNot(contains('barbell_bench_press')),
+      );
+    });
+
     test('skips archived exercises', () {
       final exercises = [
         const Exercise(

@@ -73,9 +73,9 @@
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Kotrana reads your sleep and heart rate variability data from Apple Health to personalize your training recommendations.</string>
+	<string>Kotrana reads sleep, heart rate variability, and resting heart rate from Apple Health to personalize your training recommendations.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Kotrana can write workout summaries to Apple Health.</string>
+	<string>Kotrana uses workout access to keep its Apple Watch companion active during your workout.</string>
 	<key>UIStatusBarHidden</key>
 	<false/>
 	<key>UISupportedInterfaceOrientations</key>

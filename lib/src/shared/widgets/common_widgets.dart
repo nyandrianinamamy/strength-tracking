@@ -64,6 +64,24 @@ class PageSection extends StatelessWidget {
 // MetricCard
 // ---------------------------------------------------------------------------
 
+/// Equal-width summary cards whose height follows their wrapped content.
+class MetricCardRow extends StatelessWidget {
+  const MetricCardRow({super.key, required this.children});
+
+  final List<MetricCard> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 12,
+        children: [for (final card in children) Expanded(child: card)],
+      ),
+    );
+  }
+}
+
 class MetricCard extends StatelessWidget {
   const MetricCard({
     super.key,
@@ -87,49 +105,55 @@ class MetricCard extends StatelessWidget {
     return Card(
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
-            const SizedBox(height: 8),
-            Text(
-              label.toUpperCase(),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.54),
-                    letterSpacing: 1.1,
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: 4),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
-              child: Text(
-                value,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                icon,
+                color: Theme.of(context).colorScheme.primary,
+                size: 22,
               ),
-            ),
-            const Spacer(),
-            if (badge != null)
-              badge!
-            else
+              const SizedBox(height: 8),
               Text(
-                detail,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                label.toUpperCase(),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.54),
+                  letterSpacing: 1.1,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
-          ],
+              const SizedBox(height: 4),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  value,
+                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              const SizedBox(height: 8),
+              if (badge != null)
+                badge!
+              else
+                Text(
+                  detail,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
       ),
     );
   }

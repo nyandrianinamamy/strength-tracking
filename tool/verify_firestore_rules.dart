@@ -3,9 +3,12 @@ import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
-const _projectId = 'myappv4';
-const _authEmulatorHost = '127.0.0.1:9099';
-const _firestoreEmulatorHost = '127.0.0.1:8081';
+final _projectId =
+    Platform.environment['FIREBASE_EMULATOR_PROJECT'] ?? 'myappv4';
+final _authEmulatorHost =
+    '127.0.0.1:${Platform.environment['FIREBASE_AUTH_EMULATOR_PORT'] ?? '9099'}';
+final _firestoreEmulatorHost =
+    '127.0.0.1:${Platform.environment['FIRESTORE_EMULATOR_PORT'] ?? '8081'}';
 
 Future<void> main() async {
   await _resetEmulators();
@@ -54,6 +57,28 @@ Future<void> main() async {
     ),
     403,
   );
+
+  await _expectStatus(
+    'allowed user reads own app state',
+    () => _getDocument(
+      'users/${allowed.localId}/data/state',
+      idToken: allowed.idToken,
+    ),
+    200,
+  );
+  await _expectStatus(
+    'denied user cannot read another user state',
+    () => _getDocument(
+      'users/${allowed.localId}/data/state',
+      idToken: denied.idToken,
+    ),
+    403,
+  );
+  await _expectStatus(
+    'unauthenticated client cannot read app state',
+    () => http.get(_documentUri('users/${allowed.localId}/data/state')),
+    403,
+  );
   await _expectStatus(
     'client cannot create allowlist entry',
     () => _patchDocument(
@@ -63,6 +88,27 @@ Future<void> main() async {
         'email': {'stringValue': 'denied@example.com'},
         'enabled': {'booleanValue': true},
       },
+    ),
+    403,
+  );
+
+  await _adminSetDocument('allowedEmails/allowed@example.com', {
+    'enabled': {'booleanValue': false},
+  });
+  await _expectStatus(
+    'disabled invitation blocks existing account reads',
+    () => _getDocument(
+      'users/${allowed.localId}/data/state',
+      idToken: allowed.idToken,
+    ),
+    403,
+  );
+  await _expectStatus(
+    'disabled invitation blocks existing account writes',
+    () => _patchDocument(
+      'users/${allowed.localId}/data/state',
+      idToken: allowed.idToken,
+      fields: _minimalStateFields(),
     ),
     403,
   );

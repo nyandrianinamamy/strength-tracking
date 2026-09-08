@@ -95,7 +95,7 @@ The latest local readiness pass completed successfully:
 - `firebase emulators:exec --only auth,firestore --project myappv4 "dart run tool/verify_firestore_rules.dart"`
 - `KOTRANA_FIREBASE_ACCESS_TOKEN="$(gcloud auth print-access-token)" dart run tool/verify_release_access.dart`
 - `flutter build ios --release --no-codesign`
-- `bash tool/ci/run_web_e2e.sh`
+- `bash tool/ci/run_ios_e2e.sh --with-auth --paired-watch`
 - `flutter test test/core/release_ios_metadata_test.dart test/core/release_version_test.dart` verifies release version, iPhone-only release targeting, HealthKit/Bluetooth entitlement hygiene, and the five `1290 x 2796` iPhone 6.9-inch screenshots.
 - Fastlane syntax check
 - App Store metadata workflow YAML parse

@@ -10,35 +10,19 @@ final trainingEngineControllerProvider = Provider<TrainingEngineController>(
 
 class TrainingEngineController {
   TrainingEngineController(this._ref);
-
   final Ref _ref;
 
-  Future<TrainingEngine> ingestSession(EngineSession session) {
-    return _mutate((engine) => engine.ingestSession(session));
-  }
-
-  Future<TrainingEngine> ingestSleep(SleepRecord record) {
-    return _mutate((engine) => engine.ingestSleep(record));
-  }
-
-  Future<TrainingEngine> ingestHrv(HrvRecord record) {
-    return _mutate((engine) => engine.ingestHrv(record));
-  }
-
-  Future<TrainingEngine> _mutate(
-    void Function(TrainingEngine engine) update,
-  ) async {
+  /// Derivatives are always rebuilt from the same persisted app facts that a
+  /// restart reads. Capturing the repository before awaiting keeps writes with
+  /// their originating account during a sign-out or account switch.
+  Future<TrainingEngine> refreshFromAppHistory() async {
+    final repository = _ref.read(activeTrainingEngineStateRepositoryProvider);
     final engine = await loadTrainingEngine(
       appState: _ref.read(appStateControllerProvider),
       adapter: _ref.read(trainingEngineAdapterProvider),
       healthKit: _ref.read(healthKitDataSourceProvider),
-      repository: _ref.read(trainingEngineStateRepositoryProvider),
+      repository: repository,
     );
-    update(engine);
-    await _ref
-        .read(trainingEngineStateRepositoryProvider)
-        .save(engine.serializeState());
-    _ref.invalidate(trainingEngineProvider);
     return engine;
   }
 }

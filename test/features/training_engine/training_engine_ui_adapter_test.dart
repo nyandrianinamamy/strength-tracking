@@ -284,7 +284,7 @@ void main() {
       addTearDown(container.dispose);
 
       final suggestion = await container.read(
-        engineWeightSuggestionProvider('barbell_bench_press').future,
+        routineEngineWeightSuggestionProvider(const RoutineLoadRecommendationParams(exerciseId: 'barbell_bench_press', targetReps: 8, targetRpe: 8)).future,
       );
 
       expect(suggestion, isNull);

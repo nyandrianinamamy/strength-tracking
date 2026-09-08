@@ -7,7 +7,6 @@ import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/routines/routine_group_controller.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_controller.dart';
-import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 
 final workoutControllerProvider = Provider<WorkoutController>(
   WorkoutController.new,
@@ -17,9 +16,6 @@ class WorkoutController {
   WorkoutController(this._ref);
 
   final Ref _ref;
-
-  WorkoutSession? resumeActive() =>
-      _ref.read(appStateControllerProvider).activeSession;
 
   WorkoutSession? logSet({
     required double weightKg,
@@ -179,30 +175,6 @@ class WorkoutController {
     );
   }
 
-  WorkoutSession? skipExercise() {
-    final state = _ref.read(appStateControllerProvider);
-    final session = state.activeSession;
-    if (session == null) {
-      return null;
-    }
-
-    final routine = state.routineById(session.routineId);
-    if (routine == null || routine.exercises.isEmpty) {
-      return null;
-    }
-
-    final nextIndex = (session.currentExerciseIndex + 1).clamp(
-      0,
-      routine.exercises.length - 1,
-    );
-    final updatedSession = session.copyWith(
-      lastActivityAt: DateTime.now(),
-      currentExerciseIndex: nextIndex,
-    );
-    _persistSession(updatedSession);
-    return updatedSession;
-  }
-
   WorkoutSession? goToExercise(int index) {
     final state = _ref.read(appStateControllerProvider);
     final session = state.activeSession;
@@ -242,8 +214,8 @@ class WorkoutController {
       rpe: rpe ?? session.rpe ?? 8.0,
     );
 
-    unawaited(_syncTrainingEngine(updatedSession));
     _persistSession(updatedSession);
+    unawaited(_syncTrainingEngine(updatedSession));
     _ref
         .read(routineGroupControllerProvider)
         .markRoutineCompleted(updatedSession.routineId);
@@ -275,28 +247,6 @@ class WorkoutController {
         );
   }
 
-  void updateSessionNote(String note) {
-    final session = _ref.read(appStateControllerProvider).activeSession;
-    if (session == null) {
-      return;
-    }
-
-    _persistSession(
-      session.copyWith(lastActivityAt: DateTime.now(), sessionNote: note),
-    );
-  }
-
-  void updateRpe(String sessionId, double rpe) {
-    final session = _ref
-        .read(appStateControllerProvider)
-        .sessionById(sessionId);
-    if (session == null) {
-      return;
-    }
-
-    _persistSession(session.copyWith(lastActivityAt: DateTime.now(), rpe: rpe));
-  }
-
   /// Swaps the exercise at [exerciseIndex] in the active session's routine
   /// with [newExerciseId]. This modifies the routine in-place for the current
   /// session; the user can always swap back or edit the routine later.
@@ -309,6 +259,18 @@ class WorkoutController {
     if (routine == null) return;
 
     if (exerciseIndex < 0 || exerciseIndex >= routine.exercises.length) return;
+
+    final replacement = state.exerciseById(newExerciseId);
+    if (replacement == null || replacement.archived) return;
+    final originalId = routine.exercises[exerciseIndex].exerciseId;
+    if (newExerciseId == originalId) return;
+    // Set numbers and timers belong to exercise IDs, so a replacement must
+    // not share either another prescription or sets logged earlier in this
+    // workout (including an exercise that was already swapped out).
+    if (routine.exercises.any((item) => item.exerciseId == newExerciseId) ||
+        session.completedSets.any((set) => set.exerciseId == newExerciseId)) {
+      return;
+    }
 
     final updatedExercises = List.of(routine.exercises);
     updatedExercises[exerciseIndex] = updatedExercises[exerciseIndex].copyWith(
@@ -357,14 +319,7 @@ class WorkoutController {
     }
 
     try {
-      final adapter = _ref.read(trainingEngineAdapterProvider);
-      final engineSession = adapter.toEngineSession(session);
-      if (engineSession == null) {
-        return;
-      }
-      await _ref
-          .read(trainingEngineControllerProvider)
-          .ingestSession(engineSession);
+      await _ref.read(trainingEngineControllerProvider).refreshFromAppHistory();
     } catch (error) {
       debugPrint(
         'Failed to sync completed workout into training engine: $error',

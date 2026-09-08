@@ -36,10 +36,7 @@ class GoalDurationStep extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        _GoalSegmentedButton(
-          goal: goal,
-          onGoalChanged: onGoalChanged,
-        ),
+        _GoalSegmentedButton(goal: goal, onGoalChanged: onGoalChanged),
         const SizedBox(height: 28),
         const Text(
           'Max Session Duration',
@@ -82,14 +79,8 @@ class GoalDurationStep extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
-              Text(
-                '30m',
-                style: TextStyle(fontSize: 12, color: _slate600),
-              ),
-              Text(
-                '120m',
-                style: TextStyle(fontSize: 12, color: _slate600),
-              ),
+              Text('30m', style: TextStyle(fontSize: 12, color: _slate600)),
+              Text('120m', style: TextStyle(fontSize: 12, color: _slate600)),
             ],
           ),
         ),
@@ -101,10 +92,7 @@ class GoalDurationStep extends StatelessWidget {
 /// Custom segmented button styled as a slate-100 rounded-xl container with
 /// the active option on a white background with a subtle shadow.
 class _GoalSegmentedButton extends StatelessWidget {
-  const _GoalSegmentedButton({
-    required this.goal,
-    required this.onGoalChanged,
-  });
+  const _GoalSegmentedButton({required this.goal, required this.onGoalChanged});
 
   final HypertrophyGoal goal;
   final ValueChanged<HypertrophyGoal> onGoalChanged;
@@ -140,7 +128,9 @@ class _GoalSegmentedButton extends StatelessWidget {
                       duration: const Duration(milliseconds: 150),
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       decoration: BoxDecoration(
-                        color: goal == value ? Colors.white : Colors.transparent,
+                        color: goal == value
+                            ? Colors.white
+                            : Colors.transparent,
                         borderRadius: BorderRadius.circular(9),
                         boxShadow: goal == value
                             ? [

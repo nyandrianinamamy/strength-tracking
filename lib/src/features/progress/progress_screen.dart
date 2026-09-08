@@ -54,13 +54,7 @@ class ProgressScreen extends ConsumerWidget {
                   ListView(
                     padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
                     children: [
-                      GridView.count(
-                        crossAxisCount: 2,
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
-                        childAspectRatio: 0.95,
+                      MetricCardRow(
                         children: [
                           MetricCard(
                             label: l10n.workoutDays,

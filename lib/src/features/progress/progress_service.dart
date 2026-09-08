@@ -8,6 +8,7 @@ import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/routine_group.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_adapter.dart';
 import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
 import 'package:training_engine/training_engine.dart' show compositeE1rm;
 
@@ -173,21 +174,29 @@ class ProgressService {
       if (exercise == null) continue;
 
       final isTimed = exercise.exerciseType == 'timed';
-      final e1rm = isTimed ? 0.0 : _singleSetEstimatedOneRepMax(set);
+      final e1rm = isTimed
+          ? 0.0
+          : _singleSetEstimatedOneRepMax(set, session.rpe);
       final allSets = state.completedSessions
           .where((item) => item.id != session.id)
-          .expand((item) => item.completedSets)
-          .where((item) => item.exerciseId == set.exerciseId);
+          .expand(
+            (item) =>
+                item.completedSets.map((set) => (set: set, rpe: item.rpe)),
+          )
+          .where((item) => item.set.exerciseId == set.exerciseId);
 
       final bool isPr;
       if (isTimed) {
         final priorBest = allSets.fold<int>(0, (best, item) {
-          return math.max(best, item.durationSeconds);
+          return math.max(best, item.set.durationSeconds);
         });
         isPr = set.durationSeconds > priorBest;
       } else {
         final priorBest = allSets.fold<double>(0, (best, item) {
-          return math.max(best, _singleSetEstimatedOneRepMax(item));
+          return math.max(
+            best,
+            _singleSetEstimatedOneRepMax(item.set, item.rpe),
+          );
         });
         isPr = e1rm > priorBest;
       }
@@ -338,12 +347,15 @@ class ProgressService {
     );
   }
 
-  double _singleSetEstimatedOneRepMax(CompletedSet set) {
+  double _singleSetEstimatedOneRepMax(CompletedSet set, double? sessionRpe) {
     if (set.reps <= 0 || set.weightKg <= 0) return 0;
     return compositeE1rm(
       weight: set.weightKg,
       reps: set.reps,
-      rpe: set.rpe ?? 8.0,
+      rpe: const TrainingEngineAdapter().resolveStrengthRpe(
+        set.rpe,
+        sessionRpe,
+      ),
     );
   }
 
@@ -352,6 +364,7 @@ class ProgressService {
     required Map<String, double> currentE1rmsByExercise,
   }) {
     final bestByExercise = <String, ExercisePersonalRecord>{};
+    final bestPerformanceByExercise = <String, double>{};
 
     for (final session in state.completedSessions) {
       for (final set in session.completedSets) {
@@ -363,6 +376,11 @@ class ProgressService {
             ? 0.0
             : currentE1rmsByExercise[set.exerciseId];
         if (!isTimed && engineE1rm == null) continue;
+
+        final performance = isTimed
+            ? set.durationSeconds.toDouble()
+            : _singleSetEstimatedOneRepMax(set, session.rpe);
+        if (performance <= 0) continue;
 
         final record = ExercisePersonalRecord(
           exerciseId: set.exerciseId,
@@ -376,20 +394,14 @@ class ProgressService {
         );
 
         final existing = bestByExercise[set.exerciseId];
-        if (existing == null) {
+        final bestPerformance = bestPerformanceByExercise[set.exerciseId];
+        if (existing == null ||
+            bestPerformance == null ||
+            performance > bestPerformance ||
+            (performance == bestPerformance &&
+                record.achievedAt.isAfter(existing.achievedAt))) {
           bestByExercise[set.exerciseId] = record;
-        } else if (isTimed) {
-          if (record.durationSeconds > existing.durationSeconds ||
-              (record.durationSeconds == existing.durationSeconds &&
-                  record.achievedAt.isAfter(existing.achievedAt))) {
-            bestByExercise[set.exerciseId] = record;
-          }
-        } else {
-          if (record.estimatedOneRepMax > existing.estimatedOneRepMax ||
-              (record.estimatedOneRepMax == existing.estimatedOneRepMax &&
-                  record.achievedAt.isAfter(existing.achievedAt))) {
-            bestByExercise[set.exerciseId] = record;
-          }
+          bestPerformanceByExercise[set.exerciseId] = performance;
         }
       }
     }

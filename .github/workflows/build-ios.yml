@@ -9,16 +9,37 @@ on:
       release_tag:
         description: "Release tag to build and upload"
         required: true
-        default: "v1.0.31"
+        default: "v1.0.31+310"
+
+permissions:
+  contents: read
 
 jobs:
-  # ─── TestFlight upload via Fastlane ───
-  build-testflight:
-    runs-on: macos-15
+  source:
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.source.outputs.sha }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
+      - id: source
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+  quality:
+    needs: source
+    uses: ./.github/workflows/ios-quality.yml
+    with:
+      source_ref: ${{ needs.source.outputs.sha }}
+
+  # ─── TestFlight upload via Fastlane ───
+  build-testflight:
+    needs: [source, quality]
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.source.outputs.sha }}
 
       - name: Select Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.3.app/Contents/Developer
@@ -30,6 +51,19 @@ jobs:
 
       - name: Flutter dependencies
         run: flutter pub get
+
+      - name: Verify release tag matches source version
+        env:
+          RELEASE_REF: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag || github.ref }}
+        run: |
+          python3 - <<'PYTAG'
+          import os, pathlib, re
+          source = pathlib.Path('pubspec.yaml').read_text()
+          version = re.search(r'^version:\s*(\S+)', source, re.MULTILINE).group(1)
+          tag = os.environ['RELEASE_REF'].removeprefix('refs/tags/')
+          if tag != 'v' + version:
+              raise SystemExit(f'Release tag {tag} does not match source version v{version}')
+          PYTAG
 
       - name: Install CocoaPods dependencies
         run: cd ios && pod install

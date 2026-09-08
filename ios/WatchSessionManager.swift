@@ -12,10 +12,18 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     private var eventSink: FlutterEventSink?
     private var pendingEvents: [[String: Any]] = []
     private var pendingOutboundMessage: [String: Any]?
+    private var latestOutboundMessage: [String: Any]?
+    private var pendingSyncRequestID: String?
+    private let senderID: String = {
+        let defaults = UserDefaults.standard
+        if let saved = defaults.string(forKey: "watch_sender_id_v2") { return saved }
+        let id = UUID().uuidString
+        defaults.set(id, forKey: "watch_sender_id_v2")
+        return id
+    }()
+    private var revision = UserDefaults.standard.object(forKey: "watch_revision_v2") as? Int64 ?? 0
     private let healthStore = HKHealthStore()
-    /// Tracks which session we already launched the watch app for,
-    /// so we only trigger once per workout.
-    private var lastLaunchedSessionId: String?
+    private var launchPolicy = WatchLaunchPolicy()
 
     private override init() {
         super.init()
@@ -58,13 +66,33 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
                 result(FlutterError(code: "INVALID_ARGS", message: "Expected dictionary", details: nil))
                 return
             }
-            let message = sanitizedMessage(args)
-            sendToWatch(message)
+            guard let sessionData = args["session"] as? [String: Any],
+                  let sessionID = sessionData["sessionId"] as? String, !sessionID.isEmpty else {
+                result(FlutterError(code: "INVALID_ARGS", message: "Missing session identity", details: nil))
+                return
+            }
+            var message = sanitizedMessage(args)
+            message["type"] = "session_update"
+            message["sessionId"] = sessionID
+            publish(message)
             result(nil)
 
         case "sendSessionEnd":
-            lastLaunchedSessionId = nil
-            sendToWatch(["type": "session_end"])
+            let args = call.arguments as? [String: Any] ?? [:]
+            let sessionID = args["sessionId"] as? String ?? latestOutboundMessage?["sessionId"] as? String
+            launchPolicy.reset()
+            var message = args
+            message["type"] = sessionID == nil ? "session_idle" : "session_end"
+            message["sessionId"] = sessionID
+            publish(message)
+            result(nil)
+
+        case "sendSessionIdle":
+            var message = call.arguments as? [String: Any] ?? [:]
+            message["type"] = "session_idle"
+            message.removeValue(forKey: "sessionId")
+            launchPolicy.reset()
+            publish(message)
             result(nil)
 
         case "isWatchPaired":
@@ -85,39 +113,35 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
     private func launchWatchAppIfNeeded(_ message: [String: Any]) {
         guard let sessionData = message["session"] as? [String: Any],
               let sessionId = sessionData["sessionId"] as? String,
-              sessionId != lastLaunchedSessionId,
               let wcSession = session, wcSession.isPaired,
               HKHealthStore.isHealthDataAvailable() else { return }
 
-        lastLaunchedSessionId = sessionId
+        guard launchPolicy.shouldLaunch(sessionID: sessionId, isReachable: wcSession.isReachable) else { return }
 
-        let workoutType = HKObjectType.workoutType()
-        healthStore.requestAuthorization(toShare: [workoutType], read: [workoutType]) { [weak self] authorized, error in
-            guard let self = self else { return }
-            if let error = error {
-                print("HealthKit authorization error: \(error)")
-                return
-            }
-            guard authorized else {
-                print("HealthKit workout authorization denied")
-                return
-            }
-
-            let config = HKWorkoutConfiguration()
-            config.activityType = .traditionalStrengthTraining
-            config.locationType = .indoor
-
-            self.healthStore.startWatchApp(with: config) { success, error in
-                if let error = error {
-                    print("Failed to launch watch app: \(error)")
-                } else {
-                    print("Watch app launch requested: \(success)")
-                }
-            }
+        let config = HKWorkoutConfiguration()
+        config.activityType = .traditionalStrengthTraining
+        config.locationType = .indoor
+        // This phone bridge does not read or save workouts. The Watch requests
+        // its own authorization when it starts a HealthKit workout session.
+        healthStore.startWatchApp(with: config) { _, error in
+            if let error { print("Failed to launch watch app: \(error)") }
         }
     }
 
     // MARK: - Send to Watch
+
+    private func publish(_ payload: [String: Any]) {
+        revision += 1
+        UserDefaults.standard.set(revision, forKey: "watch_revision_v2")
+        var message = sanitizedMessage(payload)
+        if let pendingSyncRequestID { message["syncRequestId"] = pendingSyncRequestID }
+        pendingSyncRequestID = nil
+        message["protocolVersion"] = 2
+        message["senderId"] = senderID
+        message["revision"] = revision
+        latestOutboundMessage = message
+        sendToWatch(message)
+    }
 
     private func sendToWatch(_ message: [String: Any]) {
         guard let session = session else {
@@ -133,35 +157,23 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
             return
         }
 
-        let isSessionEnd = (message["type"] as? String) == "session_end"
-        if !isSessionEnd {
+        if message["type"] as? String == "session_update" {
             launchWatchAppIfNeeded(message)
         }
-
-        // Try direct message if reachable
+        // Context is the authoritative latest state, including idle/end. It
+        // coalesces while disconnected; revision checks deduplicate direct
+        // delivery and prevent a later callback from restoring older context.
+        do {
+            try session.updateApplicationContext(message)
+            pendingOutboundMessage = nil
+        } catch {
+            queueOutboundMessage(message)
+            print("Failed to update application context: \(error)")
+        }
         if session.isReachable {
             session.sendMessage(message, replyHandler: nil) { error in
-                print("Direct send to Watch failed: \(error), using fallback")
-                if isSessionEnd {
-                    session.transferUserInfo(message)
-                } else {
-                    try? session.updateApplicationContext(message)
-                }
+                print("Direct send to Watch failed; latest application context remains queued: \(error)")
             }
-        } else if isSessionEnd {
-            // session_end must be delivered reliably
-            session.transferUserInfo(message)
-        } else {
-            do {
-                try session.updateApplicationContext(message)
-            } catch {
-                print("Failed to update application context: \(error)")
-            }
-        }
-
-        // Always send session_end via transferUserInfo as backup
-        if isSessionEnd {
-            session.transferUserInfo(message)
         }
     }
 
@@ -225,15 +237,18 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
 
     func session(_ session: WCSession, activationDidCompleteWith activationState: WCSessionActivationState, error: Error?) {
         print("WCSession activated: \(activationState.rawValue), error: \(String(describing: error))")
-        flushPendingOutboundMessage()
+        DispatchQueue.main.async { self.flushPendingOutboundMessage() }
     }
 
     func sessionReachabilityDidChange(_ session: WCSession) {
-        flushPendingOutboundMessage()
+        DispatchQueue.main.async {
+            if self.pendingOutboundMessage == nil { self.pendingOutboundMessage = self.latestOutboundMessage }
+            self.flushPendingOutboundMessage()
+        }
     }
 
     func sessionWatchStateDidChange(_ session: WCSession) {
-        flushPendingOutboundMessage()
+        DispatchQueue.main.async { self.flushPendingOutboundMessage() }
     }
 
     func sessionDidBecomeInactive(_ session: WCSession) {}
@@ -263,17 +278,20 @@ class WatchSessionManager: NSObject, WCSessionDelegate, FlutterStreamHandler {
 
         let forwardedMessage: [String: Any]
         switch type {
-        case "log_set", "log_timed_set":
-            forwardedMessage = message
-
         case "request_sync":
-            forwardedMessage = ["type": "request_sync"]
+            forwardedMessage = message
 
         default:
             return
         }
 
         DispatchQueue.main.async {
+            if type == "request_sync", let nonce = message["syncRequestId"] as? String {
+                self.pendingSyncRequestID = nonce
+                // Reply from the latest native state even if Flutter is still
+                // rebuilding its snapshot or has not attached its event sink.
+                if let latest = self.latestOutboundMessage { self.publish(latest) }
+            }
             if let sink = self.eventSink {
                 sink(forwardedMessage)
             } else {

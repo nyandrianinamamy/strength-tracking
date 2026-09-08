@@ -32,7 +32,7 @@ struct ContentView: View {
             if sessionManager.syncFailed {
                 VStack {
                     Spacer()
-                    Text(WatchL10n.string("sync_failed", locale: sessionManager.snapshot?.locale ?? "en"))
+                    Text(WorkoutStrings.string("sync_failed", locale: sessionManager.locale))
                         .font(.caption2)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
@@ -51,11 +51,11 @@ struct ContentView: View {
         VStack(spacing: 12) {
             Text("Kotrana")
                 .font(.headline)
-            Text(WatchL10n.string("no_active_workout", locale: "en"))
+            Text(WorkoutStrings.string("no_active_workout", locale: sessionManager.locale))
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-            Text(WatchL10n.string("start_on_iphone", locale: "en"))
+            Text(WorkoutStrings.string("start_on_iphone", locale: sessionManager.locale))
                 .font(.caption2)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -87,7 +87,7 @@ struct ContentView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.largeTitle)
                 .foregroundColor(.green)
-            Text(WatchL10n.string("workout_complete", locale: sessionManager.snapshot?.locale ?? "en"))
+            Text(WorkoutStrings.string("workout_complete", locale: sessionManager.locale))
                 .font(.headline)
                 .multilineTextAlignment(.center)
         }

@@ -283,6 +283,78 @@ Map<String, dynamic> _savedStateForSessions(List<WorkoutSession> sessions) {
 void main() {
   group('trainingEngineProvider', () {
     test(
+      'custom muscle edits invalidate cache while session IDs stay the same',
+      () async {
+        final initial = _appStateWithCompletedSession();
+        final session = initial.sessions.single;
+        final appState = initial.copyWith(
+          exercises: [
+            const Exercise(
+              id: 'custom',
+              name: 'Custom movement',
+              primaryMuscles: ['Biceps'],
+              secondaryMuscles: [],
+              equipment: [],
+              instructions: '',
+              archived: false,
+            ),
+          ],
+          sessions: [
+            session.copyWith(
+              completedSets: [
+                session.completedSets.single.copyWith(exerciseId: 'custom'),
+              ],
+            ),
+          ],
+        );
+        final repository = MemoryTrainingEngineStateRepository();
+        final before = await loadTrainingEngine(
+          appState: appState,
+          adapter: const TrainingEngineAdapter(),
+          healthKit: _FakeHealthKitDataSource(),
+          repository: repository,
+        );
+        expect(before.state.fatigueLog['biceps'], isNotEmpty);
+        final edited = appState.copyWith(
+          exercises: [
+            appState.exercises.single.copyWith(primaryMuscles: ['Quadriceps']),
+          ],
+        );
+        final after = await loadTrainingEngine(
+          appState: edited,
+          adapter: const TrainingEngineAdapter(),
+          healthKit: _FakeHealthKitDataSource(),
+          repository: repository,
+        );
+        expect(after.state.ingestedSessionIds, before.state.ingestedSessionIds);
+        expect(after.state.fatigueLog['biceps'], isNull);
+        expect(after.state.fatigueLog['quadriceps'], isNotEmpty);
+      },
+    );
+
+    test(
+      'unchanged canonical history restores without writing the cache',
+      () async {
+        final appState = _appStateWithCompletedSession();
+        final repository = MemoryTrainingEngineStateRepository();
+        await loadTrainingEngine(
+          appState: appState,
+          adapter: const TrainingEngineAdapter(),
+          healthKit: _FakeHealthKitDataSource(),
+          repository: repository,
+        );
+        final saved = repository.state;
+        await loadTrainingEngine(
+          appState: appState,
+          adapter: const TrainingEngineAdapter(),
+          healthKit: _FakeHealthKitDataSource(),
+          repository: repository,
+        );
+        expect(repository.state, saved);
+      },
+    );
+
+    test(
       'bootstraps from completed app sessions when no saved engine state exists',
       () async {
         final appState = _appStateWithCompletedSession();
@@ -339,7 +411,7 @@ void main() {
     });
 
     test(
-      'restores saved engine state without bootstrapping app sessions again',
+      'legacy cache with matching IDs but different contents rebuilds from app facts',
       () async {
         final appState = _appStateWithCompletedSession();
         final appRepository = MemoryAppStateRepository(initialState: appState);
@@ -387,8 +459,8 @@ void main() {
         final engine = await container.read(trainingEngineProvider.future);
 
         expect(engine.state.sessionsIngested, 1);
-        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
-        expect(engine.state.e1rmHistory['barbell_back_squat'], isNull);
+        expect(engine.state.e1rmHistory['barbell_bench_press'], isNull);
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
       },
     );
 
@@ -449,8 +521,8 @@ void main() {
         expect(engine.state.profile.bodyWeightKg, 68.5);
         expect(engine.state.profile.goal, HypertrophyGoal.strength);
         expect(engine.state.sessionsIngested, 1);
-        expect(engine.state.e1rmHistory['barbell_bench_press'], isNotEmpty);
-        expect(engine.state.lastTopSets['barbell_bench_press'], isNotNull);
+        expect(engine.state.e1rmHistory['barbell_back_squat'], isNotEmpty);
+        expect(engine.state.lastTopSets['barbell_back_squat'], isNotNull);
         expect(engineRepository.state?['profile']['age'], 44);
       },
     );
@@ -751,7 +823,13 @@ void main() {
         final appState = _appStateWithCompletedSession();
         final appRepository = MemoryAppStateRepository(initialState: appState);
         final engineRepository = MemoryTrainingEngineStateRepository(
-          initialState: _savedEngineStateWithBenchAndSquatData(),
+          initialState: {
+            ..._savedEngineStateWithBenchAndSquatData(),
+            'historyFingerprint': trainingHistoryFingerprint(
+              appState,
+              const TrainingEngineAdapter(),
+            ),
+          },
         );
         final container = _buildContainer(
           initialState: appState,
@@ -869,7 +947,13 @@ void main() {
         ),
       );
       final engineRepository = MemoryTrainingEngineStateRepository(
-        initialState: savedEngine.serializeState(),
+        initialState: {
+          ...savedEngine.serializeState(),
+          'historyFingerprint': trainingHistoryFingerprint(
+            appState,
+            const TrainingEngineAdapter(),
+          ),
+        },
       );
       final container = _buildContainer(
         initialState: appState,

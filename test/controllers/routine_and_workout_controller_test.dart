@@ -77,6 +77,149 @@ void main() {
     );
   }
 
+  test('swap rejects another prescription and a previously logged target', () {
+    final container = buildContainer();
+    addTearDown(container.dispose);
+    final workout = container.read(workoutControllerProvider);
+    container.read(routineControllerProvider).startSession('push_day');
+    final routine = container
+        .read(appStateControllerProvider)
+        .routineById('push_day')!;
+    final originalId = routine.exercises.first.exerciseId;
+    workout.logSet(weightKg: 80, reps: 8);
+    workout.swapExercise(0, routine.exercises[1].exerciseId);
+    expect(
+      container
+          .read(appStateControllerProvider)
+          .routineById('push_day')!
+          .exercises
+          .first
+          .exerciseId,
+      originalId,
+    );
+    final unused = container
+        .read(appStateControllerProvider)
+        .exercises
+        .firstWhere(
+          (e) =>
+              !e.archived &&
+              !routine.exercises.any((p) => p.exerciseId == e.id),
+        );
+    workout.swapExercise(0, unused.id);
+    expect(
+      container
+          .read(appStateControllerProvider)
+          .routineById('push_day')!
+          .exercises
+          .first
+          .exerciseId,
+      unused.id,
+    );
+    expect(
+      container
+          .read(appStateControllerProvider)
+          .activeSession!
+          .completedSets
+          .first
+          .exerciseId,
+      originalId,
+    );
+    workout.swapExercise(1, originalId);
+    expect(
+      container
+          .read(appStateControllerProvider)
+          .routineById('push_day')!
+          .exercises[1]
+          .exerciseId,
+      routine.exercises[1].exerciseId,
+    );
+  });
+
+  test(
+    'strength and timed swaps preserve logged sets and independent counts',
+    () {
+      final container = buildContainer();
+      addTearDown(container.dispose);
+      container.read(routineControllerProvider).startSession('push_day');
+      final workout = container.read(workoutControllerProvider);
+      final routine = container
+          .read(appStateControllerProvider)
+          .routineById('push_day')!;
+      final originalId = routine.exercises.first.exerciseId;
+      workout.logSet(weightKg: 80, reps: 8);
+      workout.swapExercise(0, 'plank');
+      final timed = workout.logTimedSet(durationSeconds: 45)!;
+      expect(timed.completedSets.last.exerciseId, 'plank');
+      expect(timed.completedSets.last.setNumber, 1);
+      expect(timed.completedSets.last.durationSeconds, 45);
+      expect(timed.completedSets.first.exerciseId, originalId);
+      final nextStrength = container
+          .read(appStateControllerProvider)
+          .exercises
+          .firstWhere(
+            (e) =>
+                !e.archived &&
+                e.exerciseType == 'strength' &&
+                e.id != originalId &&
+                !routine.exercises.any((p) => p.exerciseId == e.id),
+          );
+      workout.swapExercise(0, nextStrength.id);
+      final strength = workout.logSet(weightKg: 30, reps: 10)!;
+      expect(strength.completedSets.last.exerciseId, nextStrength.id);
+      expect(strength.completedSets.last.setNumber, 1);
+      expect(strength.completedSets.map((set) => set.exerciseId), [
+        originalId,
+        'plank',
+        nextStrength.id,
+      ]);
+    },
+  );
+
+  test(
+    'completed cardio has the same typed fatigue after cache loss and restart',
+    () async {
+      final seed = DemoSeedData.initialState();
+      final initial = seed.copyWith(sessions: []);
+      final repository = MemoryTrainingEngineStateRepository();
+      final container = buildContainer(
+        initialState: initial,
+        trainingEngineRepository: repository,
+      );
+      addTearDown(container.dispose);
+      container.read(routineControllerProvider).startSession('push_day');
+      final workout = container.read(workoutControllerProvider);
+      workout.swapExercise(0, 'treadmill');
+      workout.logTimedSet(durationSeconds: 1200);
+      workout.completeSession(rpe: 8);
+      final completedState = container.read(appStateControllerProvider);
+      final live = await container.read(trainingEngineProvider.future);
+      final adapter = container.read(trainingEngineAdapterProvider);
+      final mapped = adapter.toEngineSession(
+        completedState.completedSessions.single,
+        registry: live.registry,
+      )!;
+      expect(mapped.sets.single.effortRpe, 5);
+      final direct = TrainingEngine(
+        registry: live.registry,
+        profile: live.state.profile,
+      )..ingestSession(mapped);
+      expect(
+        live.state.fatigueLog['quadriceps']!.single.magnitude,
+        direct.state.fatigueLog['quadriceps']!.single.magnitude,
+      );
+      final restarted = buildContainer(
+        initialState: completedState,
+        trainingEngineRepository: MemoryTrainingEngineStateRepository(),
+      );
+      addTearDown(restarted.dispose);
+      final replayed = await restarted.read(trainingEngineProvider.future);
+      expect(
+        replayed.state.fatigueLog['quadriceps']!.single.magnitude,
+        live.state.fatigueLog['quadriceps']!.single.magnitude,
+      );
+    },
+  );
+
   test(
     'starting, logging, and completing a workout updates app state',
     () async {

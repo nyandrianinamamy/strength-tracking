@@ -2,7 +2,7 @@
 // ignore_for_file: type=lint
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kIsWeb, TargetPlatform;
+    show defaultTargetPlatform, TargetPlatform;
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -16,48 +16,11 @@ import 'package:flutter/foundation.dart'
 /// ```
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
-    if (kIsWeb) {
-      return web;
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
+      throw UnsupportedError('Kotrana Firebase is configured for iOS only.');
     }
-    switch (defaultTargetPlatform) {
-      case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.iOS:
-        return ios;
-      case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      default:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions are not supported for this platform.',
-        );
-    }
+    return ios;
   }
-
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyDyZ5pUeLVRJ8W60SVL2CRkmm98DvjLOFU',
-    appId: '1:642732716369:web:15b6cf99601ab04bc2a370',
-    messagingSenderId: '642732716369',
-    projectId: 'myappv4',
-    authDomain: 'myappv4.firebaseapp.com',
-    databaseURL: 'https://myappv4.firebaseio.com',
-    storageBucket: 'myappv4.firebasestorage.app',
-  );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAcjBZnkd14HSTDIblB9OrTu5X9xLyBECc',
@@ -66,8 +29,8 @@ class DefaultFirebaseOptions {
     projectId: 'myappv4',
     databaseURL: 'https://myappv4.firebaseio.com',
     storageBucket: 'myappv4.firebasestorage.app',
-    iosClientId: '642732716369-r3epuls5j2agmsicp0u4ufggpndaarqm.apps.googleusercontent.com',
+    iosClientId:
+        '642732716369-r3epuls5j2agmsicp0u4ufggpndaarqm.apps.googleusercontent.com',
     iosBundleId: 'dev.mamy-r.kotrana',
   );
-
 }

@@ -564,9 +564,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dataCleared => 'Exercises & routines cleared';
 
   @override
-  String get forceUpdateApp => 'Force Update App';
-
-  @override
   String get muscleHeatmap => 'Muscle Heatmap';
 
   @override
@@ -1567,4 +1564,91 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get autoLabel => 'Auto';
+
+  @override
+  String liveActivityTotalSets(int count) {
+    return '$count total sets';
+  }
+
+  @override
+  String liveActivitySetProgress(int completed, int total) {
+    return '$completed/$total sets';
+  }
+
+  @override
+  String liveActivityTimedTarget(int seconds) {
+    return '${seconds}s intervals';
+  }
+
+  @override
+  String liveActivityRepsTarget(int reps) {
+    return '$reps reps target';
+  }
+
+  @override
+  String plannerTimeLimitExceeded(int minutes) {
+    return 'This plan needs at least $minutes minutes. Increase your time limit or choose fewer exercises.';
+  }
+
+  @override
+  String get plannerExercisesUnavailable =>
+      'Some exercises are no longer available. Generate a new plan.';
+
+  @override
+  String get storageStatusTitle => 'Storage';
+
+  @override
+  String get storageSaving => 'Saving…';
+
+  @override
+  String get storageSaved => 'Saved';
+
+  @override
+  String get storageLocal => 'Saved on this device';
+
+  @override
+  String get storagePending => 'Saved on this device. Waiting to sync.';
+
+  @override
+  String get storageSyncFailed =>
+      'Sync failed. Your edits remain on this device.';
+
+  @override
+  String get storageLocalFailed =>
+      'Could not save on this device. Keep the app open and retry.';
+
+  @override
+  String get storageConflict =>
+      'Both copies changed the same data. Choose which version to keep.';
+
+  @override
+  String get storageRetry => 'Retry';
+
+  @override
+  String get storageKeepDevice => 'Keep this device’s version';
+
+  @override
+  String get storageUseAccount => 'Use account version';
+
+  @override
+  String get storageRecoveryCopy => 'Restore recovery copy';
+
+  @override
+  String get storageConflictRecovery =>
+      'The other version will be kept as a recovery copy on this device.';
+
+  @override
+  String get authUnavailable =>
+      'Sign-in is unavailable. Try again when the connection returns.';
+
+  @override
+  String get reauthenticateToDelete => 'Sign in again to delete this account.';
+
+  @override
+  String get accountDeletedProviderCleanupFailed =>
+      'Account deleted. The identity provider could not finish disconnecting.';
+
+  @override
+  String get storageCapacityExceeded =>
+      'Your account data is too large to sync. It is saved on this device. Remove exercise photos, then retry.';
 }

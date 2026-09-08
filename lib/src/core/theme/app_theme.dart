@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData light() {
-    final textTheme = GoogleFonts.lexendTextTheme(
-      ThemeData.light().textTheme,
-    ).apply(
+    final textTheme = ThemeData.light().textTheme.apply(
+      fontFamily: 'Lexend',
       bodyColor: const Color(0xFF0F172A),
       displayColor: const Color(0xFF0F172A),
     );
@@ -41,9 +39,7 @@ class AppTheme {
       ),
       chipTheme: ChipThemeData(
         side: BorderSide.none,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(999),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
@@ -70,7 +66,8 @@ class AppTheme {
         indicatorColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
-          return GoogleFonts.lexend(
+          return TextStyle(
+            fontFamily: 'Lexend',
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
@@ -93,12 +90,14 @@ class AppTheme {
         indicatorColor: Colors.transparent,
         selectedIconTheme: const IconThemeData(color: Color(0xFF257BF4)),
         unselectedIconTheme: const IconThemeData(color: Color(0xFF94A3B8)),
-        selectedLabelTextStyle: GoogleFonts.lexend(
+        selectedLabelTextStyle: TextStyle(
+          fontFamily: 'Lexend',
           color: const Color(0xFF257BF4),
           fontWeight: FontWeight.w700,
           fontSize: 10,
         ),
-        unselectedLabelTextStyle: GoogleFonts.lexend(
+        unselectedLabelTextStyle: TextStyle(
+          fontFamily: 'Lexend',
           color: const Color(0xFF94A3B8),
           fontWeight: FontWeight.w700,
           fontSize: 10,
@@ -108,9 +107,8 @@ class AppTheme {
   }
 
   static ThemeData dark() {
-    final textTheme = GoogleFonts.lexendTextTheme(
-      ThemeData.dark().textTheme,
-    ).apply(
+    final textTheme = ThemeData.dark().textTheme.apply(
+      fontFamily: 'Lexend',
       bodyColor: Colors.white,
       displayColor: Colors.white,
     );
@@ -155,7 +153,10 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: darkSurface,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: darkBorder),
@@ -174,7 +175,8 @@ class AppTheme {
         indicatorColor: Colors.transparent,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           final isSelected = states.contains(WidgetState.selected);
-          return GoogleFonts.lexend(
+          return TextStyle(
+            fontFamily: 'Lexend',
             fontSize: 10,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
@@ -197,12 +199,14 @@ class AppTheme {
         indicatorColor: Colors.transparent,
         selectedIconTheme: const IconThemeData(color: Color(0xFF257BF4)),
         unselectedIconTheme: const IconThemeData(color: Color(0xFF94A3B8)),
-        selectedLabelTextStyle: GoogleFonts.lexend(
+        selectedLabelTextStyle: TextStyle(
+          fontFamily: 'Lexend',
           color: const Color(0xFF257BF4),
           fontWeight: FontWeight.w700,
           fontSize: 10,
         ),
-        unselectedLabelTextStyle: GoogleFonts.lexend(
+        unselectedLabelTextStyle: TextStyle(
+          fontFamily: 'Lexend',
           color: const Color(0xFF94A3B8),
           fontWeight: FontWeight.w700,
           fontSize: 10,

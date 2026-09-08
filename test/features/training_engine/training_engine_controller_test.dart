@@ -9,7 +9,6 @@ import 'package:strength_training_tracker/src/data/repository/app_state_reposito
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_controller.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
-import 'package:training_engine/training_engine.dart';
 
 ProviderContainer _buildContainer({
   AppState initialState = const AppState(
@@ -75,119 +74,57 @@ AppState _appStateWithControllerSession() {
 }
 
 void main() {
-  group('TrainingEngineController', () {
-    test(
-      'ingestSession persists engine state and refreshes provider reads',
-      () async {
-        final engineRepository = MemoryTrainingEngineStateRepository();
-        final container = _buildContainer(
-          initialState: _appStateWithControllerSession(),
-          engineRepository: engineRepository,
-        );
-        addTearDown(container.dispose);
-
-        final initialEngine = await container.read(
-          trainingEngineProvider.future,
-        );
-        expect(initialEngine.state.sessionsIngested, 1);
-
-        await container
-            .read(trainingEngineControllerProvider)
-            .ingestSession(
-              EngineSession(
-                id: 'controller-session',
-                startedAt: DateTime.utc(2026, 4, 2, 17, 0),
-                endedAt: DateTime.utc(2026, 4, 2, 18, 0),
-                sets: [
-                  LoggedSet(
-                    exerciseId: 'barbell_back_squat',
-                    weightKg: 100,
-                    reps: 8,
-                    rpe: 8.0,
-                    completedAt: DateTime.utc(2026, 4, 2, 17, 15),
-                  ),
-                ],
-              ),
-            );
-
-        expect(engineRepository.state?['sessionsIngested'], 1);
-
-        final refreshedEngine = await container.read(
-          trainingEngineProvider.future,
-        );
-        expect(refreshedEngine.state.sessionsIngested, 1);
-        expect(
-          refreshedEngine.state.e1rmHistory['barbell_back_squat'],
-          isNotEmpty,
-        );
-      },
+  test('refresh persists canonical session data and is idempotent', () async {
+    final repository = MemoryTrainingEngineStateRepository();
+    final container = _buildContainer(
+      initialState: _appStateWithControllerSession(),
+      engineRepository: repository,
     );
+    addTearDown(container.dispose);
+    final controller = container.read(trainingEngineControllerProvider);
+    await controller.refreshFromAppHistory();
+    await controller.refreshFromAppHistory();
+    final refreshed = await container.read(trainingEngineProvider.future);
+    expect(refreshed.state.ingestedSessionIds, {'controller-session'});
+    expect(refreshed.state.e1rmHistory['barbell_back_squat'], hasLength(1));
+    expect(repository.state?['sessionsIngested'], 1);
+    expect(repository.state?['historyFingerprint'], isNotEmpty);
+  });
 
-    test('ingestSession is idempotent for duplicate session ids', () async {
-      final engineRepository = MemoryTrainingEngineStateRepository();
+  test(
+    'refresh reconstructs an edited set without changing its session ID',
+    () async {
+      final repository = MemoryTrainingEngineStateRepository();
+      final initial = _appStateWithControllerSession();
       final container = _buildContainer(
-        initialState: _appStateWithControllerSession(),
-        engineRepository: engineRepository,
+        initialState: initial,
+        engineRepository: repository,
       );
       addTearDown(container.dispose);
-
-      final session = EngineSession(
-        id: 'controller-session',
-        startedAt: DateTime.utc(2026, 4, 2, 17, 0),
-        endedAt: DateTime.utc(2026, 4, 2, 18, 0),
-        sets: [
-          LoggedSet(
-            exerciseId: 'barbell_back_squat',
-            weightKg: 100,
-            reps: 8,
-            rpe: 8.0,
-            completedAt: DateTime.utc(2026, 4, 2, 17, 15),
-          ),
-        ],
-      );
-
-      await container
-          .read(trainingEngineControllerProvider)
-          .ingestSession(session);
-      await container
-          .read(trainingEngineControllerProvider)
-          .ingestSession(session);
-
-      final refreshedEngine = await container.read(
-        trainingEngineProvider.future,
-      );
-      expect(refreshedEngine.state.sessionsIngested, 1);
-      expect(refreshedEngine.state.ingestedSessionIds, {'controller-session'});
-      expect(
-        refreshedEngine.state.e1rmHistory['barbell_back_squat'],
-        hasLength(1),
-      );
-    });
-
-    test('ingestSleep persists readiness inputs', () async {
-      final engineRepository = MemoryTrainingEngineStateRepository();
-      final container = _buildContainer(engineRepository: engineRepository);
-      addTearDown(container.dispose);
-
-      await container.read(trainingEngineProvider.future);
-
-      await container
-          .read(trainingEngineControllerProvider)
-          .ingestSleep(
-            SleepRecord(
-              date: DateTime.utc(2026, 4, 2),
-              totalSleep: const Duration(hours: 8),
-              deepSleep: const Duration(hours: 1, minutes: 20),
-              remSleep: const Duration(hours: 1, minutes: 40),
-              coreSleep: const Duration(hours: 5),
+      final controller = container.read(trainingEngineControllerProvider);
+      final before = await controller.refreshFromAppHistory();
+      final original = initial.sessions.single;
+      container
+          .read(appStateControllerProvider.notifier)
+          .updateState(
+            (state) => state.copyWith(
+              sessions: [
+                original.copyWith(
+                  completedSets: [
+                    original.completedSets.single.copyWith(weightKg: 120),
+                  ],
+                ),
+              ],
             ),
           );
-
-      final refreshedEngine = await container.read(
-        trainingEngineProvider.future,
+      final after = await controller.refreshFromAppHistory();
+      expect(after.state.ingestedSessionIds, before.state.ingestedSessionIds);
+      expect(after.state.lastTopSets['barbell_back_squat']!.weightKg, 120);
+      expect(
+        after.currentE1rm('barbell_back_squat'),
+        greaterThan(before.currentE1rm('barbell_back_squat')!),
       );
-      expect(refreshedEngine.state.sleepHistory, hasLength(1));
-      expect(engineRepository.state?['sleepHistory'], isNotEmpty);
-    });
-  });
+      expect(after.state.e1rmHistory['barbell_back_squat'], hasLength(1));
+    },
+  );
 }

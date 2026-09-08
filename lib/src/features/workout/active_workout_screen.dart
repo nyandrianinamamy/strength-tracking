@@ -17,7 +17,6 @@ import 'package:strength_training_tracker/src/features/workout/workout_controlle
 import 'package:strength_training_tracker/src/features/workout/stale_session_service.dart';
 import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
-import 'package:strength_training_tracker/src/features/notifications/rest_timer_notification_service.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_ui_adapter.dart';
 import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
@@ -46,7 +45,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   final _setNoteController = TextEditingController();
   late final Timer _ticker;
   late final PageController _pageController;
-  final _restTimerNotificationService = RestTimerNotificationService();
   final _staleSessionService = const StaleSessionService();
   String? _lastExerciseId;
   int _currentPage = 0;
@@ -131,7 +129,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     _pageController = PageController(initialPage: _currentPage);
 
     // Check Watch connectivity on iOS
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       _checkWatchStatus();
     }
 
@@ -152,7 +150,6 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   @override
   void dispose() {
     _ticker.cancel();
-    _restTimerNotificationService.cancel();
     _weightController.dispose();
     _repsController.dispose();
     _setNoteController.dispose();
@@ -294,7 +291,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   Future<void> _checkWatchStatus() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) return;
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
     if (!mounted) return;
     try {
       final service = ref.read(watchSyncServiceProvider);
@@ -353,14 +350,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
   }
 
   Future<void> _playRestClickHaptic() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
       return;
     }
     await HapticFeedback.selectionClick();
   }
 
   Future<void> _playRestCompleteHaptic() async {
-    if (kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+    if (defaultTargetPlatform != TargetPlatform.iOS) {
       return;
     }
     await HapticFeedback.heavyImpact();
@@ -368,39 +365,10 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
 
   void _resetRestTimer(int restSeconds) {
     if (restSeconds > 0) {
-      if (kIsWeb) {
-        final state = ref.read(appStateControllerProvider);
-        final session = state.activeSession;
-        if (session != null) {
-          final routine = state.routineById(session.routineId);
-          if (routine != null && routine.exercises.isNotEmpty) {
-            final nextExerciseIndex = session.currentExerciseIndex.clamp(
-              0,
-              routine.exercises.length - 1,
-            );
-            final nextExercise = state.exerciseById(
-              routine.exercises[nextExerciseIndex].exerciseId,
-            );
-            final exerciseName = nextExercise == null
-                ? 'your workout'
-                : ExerciseTranslations.displayName(context, nextExercise);
-            final l10n = AppLocalizations.of(context)!;
-            unawaited(_restTimerNotificationService.primePermission());
-            _restTimerNotificationService.scheduleRestEnd(
-              duration: Duration(seconds: restSeconds),
-              exerciseName: exerciseName,
-              notificationTitle: l10n.restTimerComplete,
-              notificationBody: l10n.restCompleteBody(exerciseName),
-            );
-          }
-        }
-      }
-
       _lastHapticRestSetCount = _currentSetCount;
       _lastHapticRestSecond = restSeconds;
       unawaited(_playRestClickHaptic());
     } else {
-      _restTimerNotificationService.cancel();
       _lastHapticRestSetCount = null;
       _lastHapticRestSecond = null;
     }
@@ -555,6 +523,8 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final sessionId = ref.read(appStateControllerProvider).activeSession?.id;
     final completedSessionId = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -562,75 +532,80 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
         final sheetColors = sheetContext.appColors;
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: sheetColors.border,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Icon(
-                  Icons.flag_rounded,
-                  size: 48,
-                  color: Theme.of(sheetContext).colorScheme.primary,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  l10n.finishWorkout,
-                  style: Theme.of(
-                    sheetContext,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.sessionSaved,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(sheetContext).textTheme.bodyMedium?.copyWith(
-                    color: sheetColors.subtleText,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: () {
-                    final completed = controller.completeSession();
-                    Navigator.of(sheetContext).pop(completed?.id ?? sessionId);
-                  },
-                  style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: Text(l10n.finishSave),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton(
-                  onPressed: () => Navigator.of(sheetContext).pop(),
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size.fromHeight(52),
-                  ),
-                  child: Text(l10n.keepTraining),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(sheetContext).pop();
-                    controller.discardDraft();
-                    context.go('/');
-                  },
-                  child: Text(
-                    l10n.discardSession,
-                    style: TextStyle(
-                      color: Theme.of(sheetContext).colorScheme.error,
-                      fontWeight: FontWeight.w600,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(sheetContext).bottom,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: sheetColors.border,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  Icon(
+                    Icons.flag_rounded,
+                    size: 48,
+                    color: Theme.of(sheetContext).colorScheme.primary,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.finishWorkout,
+                    style: Theme.of(sheetContext).textTheme.titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    l10n.sessionSaved,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(sheetContext).textTheme.bodyMedium
+                        ?.copyWith(color: sheetColors.subtleText),
+                  ),
+                  const SizedBox(height: 24),
+                  FilledButton.icon(
+                    onPressed: () {
+                      final completed = controller.completeSession();
+                      Navigator.of(
+                        sheetContext,
+                      ).pop(completed?.id ?? sessionId);
+                    },
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                    ),
+                    icon: const Icon(Icons.check_circle_outline),
+                    label: Text(l10n.finishSave),
+                  ),
+                  const SizedBox(height: 12),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(sheetContext).pop(),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(52),
+                    ),
+                    child: Text(l10n.keepTraining),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(sheetContext).pop();
+                      controller.discardDraft();
+                      context.go('/');
+                    },
+                    child: Text(
+                      l10n.discardSession,
+                      style: TextStyle(
+                        color: Theme.of(sheetContext).colorScheme.error,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -656,7 +631,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
     final currentMuscles = currentExercise?.primaryMuscles ?? [];
 
     final alternatives = state.exercises.where((e) {
-      if (e.archived || e.id == currentExercise?.id) return false;
+      if (e.archived ||
+          routine.exercises.any((p) => p.exerciseId == e.id) ||
+          (state.activeSession?.completedSets.any(
+                (set) => set.exerciseId == e.id,
+              ) ??
+              false)) {
+        return false;
+      }
       return e.primaryMuscles.any((m) => currentMuscles.contains(m));
     }).toList();
 
@@ -786,6 +768,14 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                                       final controller = ref.read(
                                         workoutControllerProvider,
                                       );
+                                      if (_activeTimedExerciseId ==
+                                          prescription.exerciseId) {
+                                        _pauseTimedExercise();
+                                        _timedExerciseStates.remove(
+                                          prescription.exerciseId,
+                                        );
+                                        _activeTimedExerciseId = null;
+                                      }
                                       controller.swapExercise(
                                         pageIndex,
                                         exercise.id,
@@ -1032,7 +1022,7 @@ class _ActiveWorkoutScreenState extends ConsumerState<ActiveWorkoutScreen>
                   ],
                 ),
           actions: [
-            if (!kIsWeb && _watchReachable)
+            if (_watchReachable)
               Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: Icon(Icons.watch, size: 18, color: colorScheme.primary),

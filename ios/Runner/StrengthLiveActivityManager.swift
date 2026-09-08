@@ -7,7 +7,10 @@ final class StrengthLiveActivityManager: NSObject {
     static let shared = StrengthLiveActivityManager()
 
     private let notificationCenter = UNUserNotificationCenter.current()
-    private let notificationIdentifier = "strengthapp.rest-timer"
+    private var lifecycle = WorkoutLifecycle()
+    private var activityTask: Task<Void, Never>?
+    private var notificationTask: Task<Void, Never>?
+    private var notificationIdentifiers = Set(UserDefaults.standard.stringArray(forKey: "rest_notification_ids") ?? ["strengthapp.rest-timer"])
     private let isoFormatterWithFractionalSeconds: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -65,16 +68,50 @@ final class StrengthLiveActivityManager: NSObject {
                 return
             }
 
-            Task {
-                await sync(payload: payload)
-                result(nil)
+            let token = beginChange(sessionID: payload.sessionId)
+            let previous = activityTask
+            activityTask = Task { @MainActor in
+                await previous?.value
+                guard lifecycle.isCurrent(token) else { result(nil); return }
+                do {
+                    try await syncActivity(payload: payload, token: token)
+                    result(nil)
+                } catch {
+                    result(FlutterError(code: "ACTIVITY_ERROR", message: error.localizedDescription, details: nil))
+                }
+            }
+            notificationTask = Task { @MainActor in
+                await scheduleRestNotification(for: payload, token: token)
             }
 
         case "endWorkout":
-            Task {
-                await endAllActivities()
+            let token = beginChange(sessionID: nil)
+            let previous = activityTask
+            activityTask = Task { @MainActor in
+                await previous?.value
+                await endAllActivities(token: token)
                 result(nil)
             }
+
+#if DEBUG
+        case "getWorkoutState":
+            Task { @MainActor in
+                let requests = await notificationCenter.pendingNotificationRequests()
+                var activities: [[String: Any]] = []
+                if #available(iOS 16.2, *) {
+                    activities = Activity<StrengthLiveActivityAttributes>.activities.map {
+                        ["sessionId": $0.attributes.sessionId,
+                         "currentExerciseName": $0.content.state.currentExerciseName,
+                         "currentExerciseIndex": $0.content.state.currentExerciseIndex,
+                         "completedSetsText": $0.content.state.completedSetsText,
+                         "currentExerciseProgressText": $0.content.state.currentExerciseProgressText,
+                         "locale": $0.content.state.locale ?? "en"]
+                    }
+                }
+                result(["activities": activities,
+                        "pendingRestNotifications": requests.filter { $0.identifier.hasPrefix("strengthapp.rest-timer") }.map { $0.identifier }])
+            }
+#endif
 
         default:
             result(FlutterMethodNotImplemented)
@@ -88,9 +125,16 @@ final class StrengthLiveActivityManager: NSObject {
         }
     }
 
-    private func sync(payload: StrengthLiveActivityPayload) async {
+    private func beginChange(sessionID: String?) -> WorkoutLifecycle.Token {
+        let token = lifecycle.advance(sessionID: sessionID)
+        notificationTask?.cancel()
+        cancelRestNotification()
+        return token
+    }
+
+    private func syncActivity(payload: StrengthLiveActivityPayload, token: WorkoutLifecycle.Token) async throws {
         guard #available(iOS 16.2, *) else { return }
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        guard lifecycle.isCurrent(token), ActivityAuthorizationInfo().areActivitiesEnabled else { return }
 
         let attributes = StrengthLiveActivityAttributes(
             sessionId: payload.sessionId,
@@ -108,7 +152,8 @@ final class StrengthLiveActivityManager: NSObject {
             updatedAt: payload.updatedAt,
             restEndAt: payload.restEndAt,
             restSeconds: payload.restSeconds,
-            hasActiveRest: payload.hasActiveRest
+            hasActiveRest: payload.hasActiveRest,
+            locale: payload.locale
         )
         let content = ActivityContent(
             state: contentState,
@@ -119,34 +164,30 @@ final class StrengthLiveActivityManager: NSObject {
             await activity.update(content)
         } else {
             for activity in Activity<StrengthLiveActivityAttributes>.activities {
+                guard lifecycle.isCurrent(token) else { return }
                 await activity.end(nil, dismissalPolicy: .immediate)
             }
-            _ = try? Activity.request(
+            guard lifecycle.isCurrent(token) else { return }
+            _ = try Activity.request(
                 attributes: attributes,
                 content: content,
                 pushType: nil
             )
         }
 
-        await scheduleRestNotification(for: payload)
     }
 
-    private func endAllActivities() async {
-        cancelRestNotification()
-
+    private func endAllActivities(token: WorkoutLifecycle.Token) async {
         guard #available(iOS 16.2, *) else { return }
         for activity in Activity<StrengthLiveActivityAttributes>.activities {
+            guard lifecycle.isCurrent(token) else { return }
             await activity.end(nil, dismissalPolicy: .immediate)
         }
     }
 
-    private func scheduleRestNotification(for payload: StrengthLiveActivityPayload) async {
-        cancelRestNotification()
-
-        guard let restEndAt = payload.restEndAt else { return }
-
-        let interval = restEndAt.timeIntervalSinceNow
-        guard interval > 1 else { return }
+    private func scheduleRestNotification(for payload: StrengthLiveActivityPayload, token: WorkoutLifecycle.Token) async {
+        guard let restEndAt = payload.restEndAt,
+              lifecycle.restInterval(token: token, endsAt: restEndAt, now: Date()) != nil else { return }
 
         do {
             let granted = try await notificationCenter.requestAuthorization(options: [.alert, .sound])
@@ -155,9 +196,12 @@ final class StrengthLiveActivityManager: NSObject {
             return
         }
 
+        guard !Task.isCancelled,
+              let interval = lifecycle.restInterval(token: token, endsAt: restEndAt, now: Date()) else { return }
+        let identifier = "strengthapp.rest-timer." + UUID().uuidString
         let content = UNMutableNotificationContent()
-        content.title = "Rest timer complete"
-        content.body = "Back to \(payload.currentExerciseName)."
+        content.title = WorkoutStrings.string("rest_complete", locale: payload.locale)
+        content.body = WorkoutStrings.notificationBody(exercise: payload.currentExerciseName, locale: payload.locale)
         content.sound = .default
 
         let trigger = UNTimeIntervalNotificationTrigger(
@@ -165,16 +209,40 @@ final class StrengthLiveActivityManager: NSObject {
             repeats: false
         )
         let request = UNNotificationRequest(
-            identifier: notificationIdentifier,
+            identifier: identifier,
             content: content,
             trigger: trigger
         )
 
-        try? await notificationCenter.add(request)
+        notificationIdentifiers.insert(identifier)
+        persistNotificationIdentifiers()
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            removeRestNotification(identifier)
+            return
+        }
+        // add() can finish after endWorkout has cancelled this task. Its
+        // identifier is unique, so removing it cannot delete a newer alert.
+        if Task.isCancelled || !lifecycle.isCurrent(token) {
+            removeRestNotification(identifier)
+        }
+    }
+
+    private func persistNotificationIdentifiers() {
+        UserDefaults.standard.set(Array(notificationIdentifiers), forKey: "rest_notification_ids")
+    }
+
+    private func removeRestNotification(_ identifier: String) {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+        notificationIdentifiers.remove(identifier)
+        persistNotificationIdentifiers()
     }
 
     private func cancelRestNotification() {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [notificationIdentifier])
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: Array(notificationIdentifiers))
+        notificationIdentifiers.removeAll()
+        persistNotificationIdentifiers()
     }
 
     fileprivate func parseDate(_ rawValue: Any?) -> Date? {
@@ -233,6 +301,7 @@ private struct StrengthLiveActivityPayload {
     let restEndAt: Date?
     let restSeconds: Int
     let hasActiveRest: Bool
+    let locale: String
 
     init?(dictionary: [String: Any]) {
         let parser = StrengthLiveActivityManager.shared
@@ -267,6 +336,7 @@ private struct StrengthLiveActivityPayload {
         self.restEndAt = parser.parseDate(dictionary["restEndAt"])
         self.restSeconds = restSeconds
         self.hasActiveRest = hasActiveRest
+        self.locale = WorkoutStrings.locale(dictionary["locale"] as? String ?? "en")
     }
 
     private static func stringValue(_ value: Any?) -> String? {

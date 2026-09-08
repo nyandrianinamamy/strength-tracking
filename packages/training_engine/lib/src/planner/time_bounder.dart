@@ -10,7 +10,14 @@ class BoundedSession {
   /// Human-readable descriptions of adjustments made (empty if none needed).
   final List<String> adjustments;
 
-  const BoundedSession({required this.session, required this.adjustments});
+  /// False when the supported adjustments cannot meet the requested limit.
+  final bool fitsWithinLimit;
+
+  const BoundedSession({
+    required this.session,
+    required this.adjustments,
+    required this.fitsWithinLimit,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -18,25 +25,6 @@ class BoundedSession {
 // ---------------------------------------------------------------------------
 
 const int _minIsolationRest = 90;
-const int _avgSetDurationCompound = 45; // seconds
-const int _avgSetDurationIsolation = 30; // seconds
-
-// ---------------------------------------------------------------------------
-// Duration estimation (internal)
-// ---------------------------------------------------------------------------
-
-int _setDurationFor(PlannedExercise ex) =>
-    ex.restSeconds >= 120 ? _avgSetDurationCompound : _avgSetDurationIsolation;
-
-int _effectiveRestFor(PlannedExercise ex) =>
-    ex.isSupersetPair ? ex.restSeconds ~/ 2 : ex.restSeconds;
-
-int _exerciseDurationSeconds(PlannedExercise ex) =>
-    ex.targetSets * (_setDurationFor(ex) + _effectiveRestFor(ex));
-
-int _totalDurationSeconds(List<PlannedExercise> exercises) =>
-    exercises.fold(0, (sum, ex) => sum + _exerciseDurationSeconds(ex));
-
 // ---------------------------------------------------------------------------
 // Main function
 // ---------------------------------------------------------------------------
@@ -49,31 +37,51 @@ int _totalDurationSeconds(List<PlannedExercise> exercises) =>
 ///      paired sets; marks [PlannedExercise.isSupersetPair]).
 ///   3. Trim 1 set from the lowest-priority isolation exercises.
 ///
+/// Set [allowSupersets] to false when the consumer does not execute paired
+/// rests; existing pair flags are then removed before estimating.
+///
 /// Returns a [BoundedSession] that includes the (possibly adjusted) session
 /// and a list of human-readable adjustment descriptions.
 BoundedSession boundSessionToTime(
   PlannedSession session,
-  Duration maxDuration,
-) {
+  Duration maxDuration, {
+  bool allowSupersets = true,
+}) {
   final maxSeconds = maxDuration.inSeconds;
   final adjustments = <String>[];
 
-  var exercises = List<PlannedExercise>.from(session.exercises);
+  var exercises = session.exercises
+      .map(
+        (exercise) => allowSupersets
+            ? exercise
+            : exercise.copyWith(isSupersetPair: false),
+      )
+      .toList();
+
+  BoundedSession result() {
+    final duration = estimateSessionDuration(exercises);
+    return BoundedSession(
+      session: session.copyWith(
+        exercises: exercises,
+        estimatedDuration: duration,
+      ),
+      adjustments: adjustments,
+      fitsWithinLimit: duration.inSeconds <= maxSeconds,
+    );
+  }
 
   // Short-circuit: already within budget
-  if (_totalDurationSeconds(exercises) <= maxSeconds) {
-    return BoundedSession(
-      session: session,
-      adjustments: adjustments,
-    );
+  if (estimateSessionDuration(exercises).inSeconds <= maxSeconds) {
+    return result();
   }
 
   // ── Pass 1: reduce isolation rest to 90 s ────────────────────────────────
   bool pass1Applied = false;
   exercises = exercises.map((ex) {
     if (ex.restSeconds > _minIsolationRest &&
-        ex.restSeconds < 120 // isolation proxy: rest < 2 min
-        ) {
+        ex.restSeconds <
+            120 // isolation proxy: rest < 2 min
+            ) {
       pass1Applied = true;
       return ex.copyWith(restSeconds: _minIsolationRest);
     }
@@ -84,11 +92,8 @@ BoundedSession boundSessionToTime(
     adjustments.add('Reduced rest on isolation exercises');
   }
 
-  if (_totalDurationSeconds(exercises) <= maxSeconds) {
-    return BoundedSession(
-      session: session.copyWith(exercises: exercises),
-      adjustments: adjustments,
-    );
+  if (estimateSessionDuration(exercises).inSeconds <= maxSeconds) {
+    return result();
   }
 
   // ── Pass 2: superset pairing ──────────────────────────────────────────────
@@ -96,7 +101,9 @@ BoundedSession boundSessionToTime(
   bool pass2Applied = false;
   final paired = <PlannedExercise>[];
   for (int i = 0; i < exercises.length; i++) {
-    if (i < exercises.length - 1 && !exercises[i].isSupersetPair) {
+    if (allowSupersets &&
+        i < exercises.length - 1 &&
+        !exercises[i].isSupersetPair) {
       // Pair this exercise with the next one
       paired.add(exercises[i].copyWith(isSupersetPair: true));
       paired.add(exercises[i + 1].copyWith(isSupersetPair: true));
@@ -112,11 +119,8 @@ BoundedSession boundSessionToTime(
     exercises = paired;
   }
 
-  if (_totalDurationSeconds(exercises) <= maxSeconds) {
-    return BoundedSession(
-      session: session.copyWith(exercises: exercises),
-      adjustments: adjustments,
-    );
+  if (estimateSessionDuration(exercises).inSeconds <= maxSeconds) {
+    return result();
   }
 
   // ── Pass 3: trim sets from isolation exercises ────────────────────────────
@@ -129,7 +133,7 @@ BoundedSession boundSessionToTime(
     if (ex.restSeconds < 120 && ex.targetSets > 1) {
       trimmed[i] = ex.copyWith(targetSets: ex.targetSets - 1);
       pass3Applied = true;
-      if (_totalDurationSeconds(trimmed) <= maxSeconds) break;
+      if (estimateSessionDuration(trimmed).inSeconds <= maxSeconds) break;
     }
   }
 
@@ -138,8 +142,5 @@ BoundedSession boundSessionToTime(
     exercises = trimmed;
   }
 
-  return BoundedSession(
-    session: session.copyWith(exercises: exercises),
-    adjustments: adjustments,
-  );
+  return result();
 }

@@ -6,7 +6,6 @@ struct TimedExerciseView: View {
     let totalExercises: Int
     let nextExerciseName: String?
     let sessionStartedAt: String
-    let activeRest: WatchRestState?
     let activeRestRemaining: Int
     let locale: String
 
@@ -30,7 +29,7 @@ struct TimedExerciseView: View {
 
                 Spacer().frame(height: activeRestRemaining > 0 ? 5 : 10)
 
-                Text(WatchL10n.setOf(nextSetNumber, exercise.targetSets, locale: locale))
+                Text(WorkoutStrings.setOf(nextSetNumber, exercise.targetSets, locale: locale))
                     .font(.system(size: 10, weight: .bold))
                     .textCase(.uppercase)
                     .foregroundColor(Color(white: 0.63))
@@ -49,8 +48,8 @@ struct TimedExerciseView: View {
                     .foregroundColor(activeTimedRemaining(now: context.date) == nil ? .primary : .blue)
 
                 VStack(spacing: 6) {
-                    TimedInfoRow(label: "Target", value: targetText)
-                    TimedInfoRow(label: "Last", value: lastSetText)
+                    TimedInfoRow(label: WorkoutStrings.string("target", locale: locale), value: targetText)
+                    TimedInfoRow(label: WorkoutStrings.string("last", locale: locale), value: lastSetText)
                 }
                 .padding(.top, 6)
 
@@ -80,13 +79,13 @@ struct TimedExerciseView: View {
             return formatDurationLabel(targetDuration)
         }
 
-        return "\(formatDurationLabel(targetDuration)) / \(formatDurationLabel(exercise.restSeconds)) rest"
+        return "\(formatDurationLabel(targetDuration)) / \(formatDurationLabel(exercise.restSeconds)) \(WorkoutStrings.string("rest", locale: locale))"
     }
 
     private var restPill: some View {
         HStack {
             Spacer(minLength: 0)
-            Text("Rest \(formatTime(activeRestRemaining))")
+            Text("\(WorkoutStrings.string("rest", locale: locale)) \(formatTime(activeRestRemaining))")
                 .font(.system(size: 12, weight: .black, design: .rounded))
                 .monospacedDigit()
             Spacer(minLength: 0)
@@ -109,7 +108,7 @@ struct TimedExerciseView: View {
         HStack {
             if let nextExerciseName {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(WatchL10n.string("next", locale: locale))
+                    Text(WorkoutStrings.string("next", locale: locale))
                         .font(.system(size: 8, weight: .bold))
                         .textCase(.uppercase)
                         .foregroundColor(Color(white: 0.63))

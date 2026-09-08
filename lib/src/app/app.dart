@@ -29,15 +29,18 @@ class StrengthTrainingApp extends ConsumerStatefulWidget {
       _StrengthTrainingAppState();
 }
 
-class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
+class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp>
+    with WidgetsBindingObserver {
   late final StreamSubscription<List<ConnectivityResult>> _connectivitySub;
   bool _wasOffline = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _connectivitySub = Connectivity().onConnectivityChanged.listen((results) {
       final isOffline = results.contains(ConnectivityResult.none);
+      if (!isOffline) unawaited(_retryPendingWrites());
       final messenger = _messengerKey.currentState;
       if (messenger == null) return;
 
@@ -65,8 +68,23 @@ class _StrengthTrainingAppState extends ConsumerState<StrengthTrainingApp> {
     });
   }
 
+  Future<void> _retryPendingWrites() async {
+    if (!mounted) return;
+    try {
+      await ref.read(appStateControllerProvider.notifier).retrySave();
+    } catch (_) {
+      // The controller keeps the durable outbox and exposes save status in UI.
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_retryPendingWrites());
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _connectivitySub.cancel();
     super.dispose();
   }

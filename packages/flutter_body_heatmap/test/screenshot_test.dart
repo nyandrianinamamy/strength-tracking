@@ -4,6 +4,10 @@ import 'package:flutter_body_heatmap/flutter_body_heatmap.dart';
 
 void main() {
   testWidgets('male front screenshot', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 600);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -17,7 +21,15 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text('FRONT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 2)),
+                        const Text(
+                          'FRONT',
+                          style: TextStyle(
+                            fontFamily: 'Ahem',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 2,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -50,7 +62,15 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text('BACK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 2)),
+                        const Text(
+                          'BACK',
+                          style: TextStyle(
+                            fontFamily: 'Ahem',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 2,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -94,6 +114,10 @@ void main() {
   });
 
   testWidgets('female front screenshot', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(800, 600);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -107,7 +131,15 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text('FRONT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 2)),
+                        const Text(
+                          'FRONT',
+                          style: TextStyle(
+                            fontFamily: 'Ahem',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 2,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(
@@ -139,7 +171,15 @@ void main() {
                   Expanded(
                     child: Column(
                       children: [
-                        const Text('BACK', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 2)),
+                        const Text(
+                          'BACK',
+                          style: TextStyle(
+                            fontFamily: 'Ahem',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                            letterSpacing: 2,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         Expanded(
                           child: BodyHeatmap(

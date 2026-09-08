@@ -55,6 +55,7 @@ void main() {
 
       await liveActivityChannel.invokeMethod<void>('syncWorkout', {
         'sessionId': 'native-smoke-live-activity',
+        'locale': 'fr',
         'routineName': 'Native Smoke Push Day',
         'currentExerciseName': 'Incline Dumbbell Press',
         'currentExerciseType': 'strength',
@@ -75,7 +76,24 @@ void main() {
         'hasActiveRest': true,
       });
 
+      final activeState = await liveActivityChannel
+          .invokeMapMethod<String, dynamic>('getWorkoutState');
+      final activities = activeState!['activities'] as List<dynamic>;
+      expect(
+        activities,
+        hasLength(1),
+        reason: 'The native Activity must actually exist.',
+      );
+      final activity = activities.single as Map<dynamic, dynamic>;
+      expect(activity['sessionId'], 'native-smoke-live-activity');
+      expect(activity['currentExerciseIndex'], 2);
+      expect(activity['locale'], 'fr');
+
       await liveActivityChannel.invokeMethod<void>('endWorkout');
+      final endedState = await liveActivityChannel
+          .invokeMapMethod<String, dynamic>('getWorkoutState');
+      expect(endedState!['activities'], isEmpty);
+      expect(endedState['pendingRestNotifications'], isEmpty);
     });
   });
 }
@@ -134,6 +152,5 @@ Map<String, Object?> _watchSnapshot({
     },
     'locale': 'en',
     'unit': 'kg',
-    'weightIncrement': 2.5,
   };
 }

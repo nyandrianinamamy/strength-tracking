@@ -1,22 +1,25 @@
-name: Deploy to Firebase Hosting
+name: Deploy static legal and support pages
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'site/**'
+      - 'firebase.json'
+      - 'tool/ci/verify_static_site.py'
+      - '.github/workflows/firebase-deploy.yml'
+
+permissions:
+  contents: read
+  checks: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-
-      - run: flutter pub get
-      - run: flutter build web --release
-
+      - name: Verify legal and support pages
+        run: python3 tool/ci/verify_static_site.py
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

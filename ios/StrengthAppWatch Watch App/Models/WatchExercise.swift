@@ -14,7 +14,6 @@ struct WatchExercise: Codable, Identifiable {
 
     var id: String { exerciseId }
 
-    var isStrength: Bool { exerciseType == "strength" }
     var isTimed: Bool { exerciseType == "timed" }
 
     enum CodingKeys: String, CodingKey {

@@ -1,4 +1,6 @@
 // test/features/smart_planner/smart_planner_controller_test.dart
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
@@ -7,6 +9,7 @@ import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/smart_planner/smart_planner_controller.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:training_engine/training_engine.dart';
 
 ProviderContainer _buildContainer() {
@@ -66,6 +69,185 @@ TrainingEngine _engineWithFatigue(Map<String, double> fatigueByMuscle) {
 
 void main() {
   group('SmartPlannerController', () {
+    test(
+      'account binding clears the previous account planner preview',
+      () async {
+        final container = _buildContainer();
+        addTearDown(container.dispose);
+        final ownership = container.read(
+          accountTrainingEngineRepositoryProvider.notifier,
+        );
+        ownership.state = MemoryTrainingEngineStateRepository();
+        final controller = container.read(
+          smartPlannerControllerProvider.notifier,
+        );
+        controller.toggleDay(1);
+        await controller.generatePlan([]);
+        expect(
+          container.read(smartPlannerControllerProvider).generatedPlan,
+          isNotNull,
+        );
+
+        ownership.state = MemoryTrainingEngineStateRepository();
+        final next = container.read(smartPlannerControllerProvider);
+        expect(next.generatedPlan, isNull);
+        expect(next.selectedDays, isEmpty);
+        expect(
+          controller.adopt(container.read(appStateControllerProvider.notifier)),
+          isFalse,
+        );
+        expect(container.read(appStateControllerProvider).routines, isEmpty);
+      },
+    );
+
+    test('pending generation cannot publish into another account', () async {
+      final engine = Completer<TrainingEngine>();
+      final container = ProviderContainer(
+        overrides: [
+          trainingEngineProvider.overrideWith((ref) => engine.future),
+        ],
+      );
+      addTearDown(container.dispose);
+      final ownership = container.read(
+        accountTrainingEngineRepositoryProvider.notifier,
+      );
+      ownership.state = MemoryTrainingEngineStateRepository();
+      final controller = container.read(
+        smartPlannerControllerProvider.notifier,
+      );
+      controller.toggleDay(1);
+      final pending = controller.generatePlan([]);
+
+      ownership.state = MemoryTrainingEngineStateRepository();
+      // Rebuild and configure B before A's engine result returns.
+      container.read(smartPlannerControllerProvider);
+      controller.toggleDay(3);
+      engine.complete(_engineWithFatigue({'pectorals': 86}));
+      await pending;
+      final next = container.read(smartPlannerControllerProvider);
+      expect(next.generatedPlan, isNull);
+      expect(next.selectedDays, {3});
+    });
+
+    test(
+      'preview, adoption and persistence use ordinary rests and actual estimates',
+      () async {
+        final container = _buildContainer();
+        addTearDown(container.dispose);
+        final controller = container.read(
+          smartPlannerControllerProvider.notifier,
+        );
+        controller.toggleDay(1);
+        controller.setMaxDuration(1);
+        await controller.generatePlan([]);
+        final plan = container
+            .read(smartPlannerControllerProvider)
+            .generatedPlan!;
+        expect(
+          plan.sessions.any(
+            (s) => s.estimatedDuration > const Duration(minutes: 1),
+          ),
+          isTrue,
+        );
+        for (final session in plan.sessions) {
+          expect(session.exercises.every((e) => !e.isSupersetPair), isTrue);
+          expect(
+            session.estimatedDuration,
+            estimateSessionDuration(session.exercises),
+          );
+        }
+        expect(
+          controller.adopt(container.read(appStateControllerProvider.notifier)),
+          isTrue,
+        );
+        final restored = AppState.fromJson(
+          container.read(appStateControllerProvider).toJson(),
+        );
+        for (var i = 0; i < plan.sessions.length; i++) {
+          final planned = plan.sessions[i];
+          final adopted = restored.routines[i];
+          expect(
+            adopted.estimatedDurationMin,
+            planned.estimatedDuration.inMinutes,
+          );
+          expect(
+            adopted.exercises.map((e) => e.restSeconds),
+            planned.exercises.map((e) => e.restSeconds),
+          );
+          expect(
+            adopted.exercises.map((e) => e.targetSets),
+            planned.exercises.map((e) => e.targetSets),
+          );
+        }
+      },
+    );
+
+    test(
+      'archiving after generation blocks manual replacement and adoption',
+      () async {
+        final container = _buildContainer();
+        addTearDown(container.dispose);
+        final controller = container.read(
+          smartPlannerControllerProvider.notifier,
+        );
+        controller.toggleDay(1);
+        await controller.generatePlan([]);
+        final plan = container
+            .read(smartPlannerControllerProvider)
+            .generatedPlan!;
+        final id = plan.sessions.first.exercises.first.exerciseId;
+        final app = container.read(appStateControllerProvider.notifier);
+        app.updateState(
+          (state) => state.copyWith(
+            exercises: [
+              Exercise(
+                id: id,
+                name: 'Archived',
+                primaryMuscles: ['Chest'],
+                equipment: [],
+                instructions: '',
+                archived: true,
+              ),
+            ],
+          ),
+        );
+        final originalSecond = plan.sessions.first.exercises[1].exerciseId;
+        controller.updateExercise(
+          sessionIndex: 0,
+          exerciseIndex: 1,
+          exerciseId: id,
+        );
+        expect(
+          container
+              .read(smartPlannerControllerProvider)
+              .generatedPlan!
+              .sessions
+              .first
+              .exercises[1]
+              .exerciseId,
+          originalSecond,
+        );
+        expect(controller.adopt(app), isFalse);
+        expect(container.read(appStateControllerProvider).routines, isEmpty);
+        await controller.generatePlan(
+          container.read(appStateControllerProvider).exercises,
+        );
+        expect(
+          container
+              .read(smartPlannerControllerProvider)
+              .generatedPlan!
+              .sessions
+              .expand((s) => s.exercises)
+              .map((e) => e.exerciseId),
+          isNot(contains(id)),
+        );
+        expect(
+          container.read(appStateControllerProvider).exercises.single.archived,
+          isTrue,
+        );
+      },
+    );
+
     test('1. initial state has empty days and default config', () {
       final container = _buildContainer();
       addTearDown(container.dispose);

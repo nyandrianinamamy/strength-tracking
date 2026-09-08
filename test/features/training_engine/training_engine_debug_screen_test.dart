@@ -10,6 +10,7 @@ import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_debug_screen.dart';
+import 'package:strength_training_tracker/src/features/training_engine/training_engine_adapter.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 import 'package:training_engine/training_engine.dart';
@@ -30,7 +31,19 @@ Widget _buildDebugScreenApp({
       initialAppStateProvider.overrideWithValue(initialState),
       trainingEngineStateRepositoryProvider.overrideWithValue(
         trainingEngineRepository ??
-            MemoryTrainingEngineStateRepository(initialState: savedEngineState),
+            MemoryTrainingEngineStateRepository(
+              initialState: savedEngineState == null
+                  ? null
+                  : {
+                      ...savedEngineState,
+                      // Synthetic current-cache fixture for rendering, not a cache
+                      // equivalence test (covered by training_engine_provider_test).
+                      'historyFingerprint': trainingHistoryFingerprint(
+                        initialState,
+                        const TrainingEngineAdapter(),
+                      ),
+                    },
+            ),
       ),
     ],
     child: const MaterialApp(home: TrainingEngineDebugScreen()),
@@ -348,7 +361,15 @@ void main() {
           ),
           initialAppStateProvider.overrideWithValue(appState),
           trainingEngineStateRepositoryProvider.overrideWithValue(
-            MemoryTrainingEngineStateRepository(initialState: savedEngineState),
+            MemoryTrainingEngineStateRepository(
+              initialState: {
+                ...savedEngineState,
+                'historyFingerprint': trainingHistoryFingerprint(
+                  appState,
+                  const TrainingEngineAdapter(),
+                ),
+              },
+            ),
           ),
         ],
       );

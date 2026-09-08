@@ -1,3 +1,5 @@
+> Feature snapshot from before the iOS-only cleanup. Use [current coverage](ios-e2e-coverage.md) and the [implementation record](reviews/2026-09-08-implementation-record.md) for current support and verification.
+
 # App Feature Inventory
 
 Date: 2026-05-11
@@ -492,7 +494,7 @@ Recent local verification:
 - Task 19 final verification on 2026-05-12 passed
   `cd packages/training_engine && dart test` (`+453`), `flutter test`
   (`+188`), `flutter analyze` (`No issues found!`), and
-  `bash tool/ci/run_web_e2e.sh` (`All tests passed.`). Root Browser visual
+  `bash tool/ci/run_ios_e2e.sh --with-auth --paired-watch` (`All tests passed.`). Root Browser visual
   verification passed on onboarding demo, dashboard, engine debug, routines,
   Smart Planner generation/adoption, exercises, and progress.
 

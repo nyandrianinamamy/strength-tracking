@@ -58,6 +58,20 @@ void main() {
   }
 
   group('WorkoutLiveActivityPayload', () {
+    test('French payload localizes companion labels and exercise names', () {
+      final state = DemoSeedData.initialState().copyWith(
+        sessions: [activeSession()],
+        preferredLanguage: 'fr',
+      );
+      final payload = WorkoutLiveActivityPayload.fromState(state)!;
+      expect(payload.locale, 'fr');
+      expect(payload.completedSetsText, contains('séries'));
+      expect(payload.currentExerciseProgressText, contains('séries'));
+      expect(payload.exerciseDetailText, contains('répétitions'));
+      expect(payload.currentExerciseName, isNot('Incline Dumbbell Press'));
+      expect(payload.toMap()['locale'], 'fr');
+    });
+
     test('returns null when there is no active session', () {
       final state = DemoSeedData.initialState();
 

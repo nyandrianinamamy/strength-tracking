@@ -42,9 +42,11 @@ class PlanPreview extends StatelessWidget {
     required this.onExerciseSwapRequested,
     required this.onRegenerate,
     required this.onAdopt,
+    this.maxDurationMinutes,
   });
 
   final WeeklyPlan plan;
+  final int? maxDurationMinutes;
 
   /// Keys of exercises that have been manually edited (format: "sessionIdx:exerciseIdx").
   final Set<String> editedKeys;
@@ -108,6 +110,20 @@ class PlanPreview extends StatelessWidget {
                       l10n.sessionsPerWeek(sessionCount),
                       style: const TextStyle(fontSize: 14, color: _slate500),
                     ),
+                    if (maxDurationMinutes != null &&
+                        plan.sessions.any(
+                          (s) =>
+                              s.estimatedDuration >
+                              Duration(minutes: maxDurationMinutes!),
+                        )) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        l10n.plannerTimeLimitExceeded(maxDurationMinutes!),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                      ),
+                    ],
                     if (plan.engineContextApplied) ...[
                       const SizedBox(height: 6),
                       const Text(

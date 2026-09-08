@@ -11,9 +11,12 @@ import 'package:strength_training_tracker/src/data/models/exercise.dart';
 import 'package:strength_training_tracker/src/data/models/routine.dart';
 import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
+import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 
 final watchSyncServiceProvider = Provider<WatchSyncService>((ref) {
-  return WatchSyncService(ref);
+  final service = WatchSyncService(ref);
+  ref.onDispose(service.dispose);
+  return service;
 });
 
 class WatchSyncService {
@@ -29,7 +32,10 @@ class WatchSyncService {
   bool _isListening = false;
   String? _lastSentSessionId;
   Timer? _pendingSyncRetry;
-  Map<String, dynamic>? _pendingSnapshot;
+  int _generation = 0;
+  bool _hasPublishedIdle = false;
+  String? _idleLocale;
+  ProviderSubscription<AppState>? _stateSubscription;
 
   // Active timed exercise timer state (set by active_workout_screen)
   String? _activeTimerExerciseId;
@@ -38,9 +44,10 @@ class WatchSyncService {
   /// Start listening for state changes and Watch events.
   /// Call this once during app initialization.
   void initialize() {
-    if (kIsWeb) return;
+    if (defaultTargetPlatform != TargetPlatform.iOS) return;
     if (_isListening) return;
     _isListening = true;
+    _hasPublishedIdle = false;
 
     // Listen for Watch → Phone messages
     _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
@@ -51,7 +58,10 @@ class WatchSyncService {
     );
 
     // Listen for state changes and push to Watch
-    _ref.listen<AppState>(appStateControllerProvider, (previous, next) {
+    _stateSubscription = _ref.listen<AppState>(appStateControllerProvider, (
+      previous,
+      next,
+    ) {
       unawaited(_onStateChanged(next));
     });
 
@@ -64,6 +74,9 @@ class WatchSyncService {
     _eventSubscription?.cancel();
     _pendingSyncRetry?.cancel();
     _isListening = false;
+    _generation++;
+    _stateSubscription?.close();
+    _stateSubscription = null;
   }
 
   /// Called by active_workout_screen when a timed exercise timer starts or stops.
@@ -80,25 +93,47 @@ class WatchSyncService {
 
   // MARK: - State → Watch
 
-  Future<void> _onStateChanged(AppState state) async {
+  Future<void> _onStateChanged(
+    AppState state, {
+    String? syncRequestId,
+    bool force = false,
+  }) async {
+    final locale = _locale(state);
     final session = state.activeSession;
+    if (session == null &&
+        _hasPublishedIdle &&
+        _idleLocale == locale &&
+        !force) {
+      return;
+    }
+    final generation = ++_generation;
+    _pendingSyncRetry?.cancel();
     if (session == null) {
-      _pendingSyncRetry?.cancel();
-      _pendingSnapshot = null;
-      // If we previously had a session, send session_end
-      if (_lastSentSessionId != null) {
-        _sendSessionEnd();
-        _lastSentSessionId = null;
-      }
+      final endedSessionId = _lastSentSessionId;
+      _lastSentSessionId = null;
+      _activeTimerExerciseId = null;
+      _activeTimerStartedAt = null;
+      _hasPublishedIdle = true;
+      _idleLocale = locale;
+      await _sendStateWithRetry(
+        endedSessionId == null ? 'sendSessionIdle' : 'sendSessionEnd',
+        {
+          'sessionId': ?endedSessionId,
+          'locale': locale,
+          'syncRequestId': ?syncRequestId,
+        },
+        generation,
+      );
       return;
     }
 
+    _hasPublishedIdle = false;
     _lastSentSessionId = session.id;
-
     final routine = state.routineById(session.routineId);
     if (routine == null) return;
     final snapshot = await _buildSessionSnapshot(state, session, routine);
-    _sendSessionUpdateWithRetry(snapshot, session.id);
+    if (syncRequestId != null) snapshot['syncRequestId'] = syncRequestId;
+    await _sendStateWithRetry('sendSessionUpdate', snapshot, generation);
   }
 
   Future<Map<String, dynamic>> _buildSessionSnapshot(
@@ -106,26 +141,29 @@ class WatchSyncService {
     WorkoutSession session,
     Routine routine,
   ) async {
-    final locale = state.preferredLanguage.isNotEmpty
-        ? state.preferredLanguage
-        : 'en';
+    final locale = _locale(state);
     final unit = state.preferredUnit;
-    final weightIncrement = unit == 'lbs' ? 5.0 : 2.5;
 
     final exercises = <Map<String, dynamic>>[];
     for (final re in routine.exercises) {
+      if (!_isListening) return {};
       final exercise = state.exerciseById(re.exerciseId);
       final name = exercise != null
           ? _localizedExerciseName(exercise, locale)
           : 'Unknown';
-      final suggestion = await _ref.read(
-        routineEngineWeightSuggestionProvider(
-          RoutineLoadRecommendationParams(
-            exerciseId: re.exerciseId,
-            targetReps: re.targetReps,
-          ),
-        ).future,
-      );
+      final suggestion = await _ref
+          .read(
+            routineEngineWeightSuggestionProvider(
+              RoutineLoadRecommendationParams(
+                exerciseId: re.exerciseId,
+                targetReps: re.targetReps,
+              ),
+            ).future,
+          )
+          .catchError((Object error) {
+            debugPrint('Watch weight recommendation unavailable: $error');
+            return null;
+          });
       final completedSets =
           session.completedSets
               .where((s) => s.exerciseId == re.exerciseId)
@@ -184,7 +222,6 @@ class WatchSyncService {
       'session': sessionData,
       'locale': locale,
       'unit': unit,
-      'weightIncrement': weightIncrement,
     };
   }
 
@@ -224,135 +261,47 @@ class WatchSyncService {
   }
 
   String _localizedExerciseName(Exercise exercise, String locale) {
-    if (exercise.translationKey != null &&
-        exercise.translationKey!.isNotEmpty) {
-      try {
-        final l10n = lookupAppLocalizations(Locale(locale));
-        final resolvers = <String, String Function(AppLocalizations)>{
-          'exercise_barbell_bench_press': (l) => l.exercise_barbell_bench_press,
-          'exercise_incline_barbell_press': (l) =>
-              l.exercise_incline_barbell_press,
-          'exercise_decline_barbell_press': (l) =>
-              l.exercise_decline_barbell_press,
-          'exercise_dumbbell_bench_press': (l) =>
-              l.exercise_dumbbell_bench_press,
-          'exercise_incline_dumbbell_press': (l) =>
-              l.exercise_incline_dumbbell_press,
-          'exercise_cable_fly': (l) => l.exercise_cable_fly,
-          'exercise_pec_deck': (l) => l.exercise_pec_deck,
-          'exercise_push_up': (l) => l.exercise_push_up,
-          'exercise_barbell_row': (l) => l.exercise_barbell_row,
-          'exercise_dumbbell_row': (l) => l.exercise_dumbbell_row,
-          'exercise_lat_pulldown': (l) => l.exercise_lat_pulldown,
-          'exercise_pull_up': (l) => l.exercise_pull_up,
-          'exercise_chin_up': (l) => l.exercise_chin_up,
-          'exercise_seated_cable_row': (l) => l.exercise_seated_cable_row,
-          'exercise_t_bar_row': (l) => l.exercise_t_bar_row,
-          'exercise_face_pull': (l) => l.exercise_face_pull,
-          'exercise_overhead_press': (l) => l.exercise_overhead_press,
-          'exercise_dumbbell_shoulder_press': (l) =>
-              l.exercise_dumbbell_shoulder_press,
-          'exercise_lateral_raise': (l) => l.exercise_lateral_raise,
-          'exercise_front_raise': (l) => l.exercise_front_raise,
-          'exercise_rear_delt_fly': (l) => l.exercise_rear_delt_fly,
-          'exercise_arnold_press': (l) => l.exercise_arnold_press,
-          'exercise_barbell_curl': (l) => l.exercise_barbell_curl,
-          'exercise_dumbbell_curl': (l) => l.exercise_dumbbell_curl,
-          'exercise_hammer_curl': (l) => l.exercise_hammer_curl,
-          'exercise_preacher_curl': (l) => l.exercise_preacher_curl,
-          'exercise_cable_curl': (l) => l.exercise_cable_curl,
-          'exercise_tricep_pushdown': (l) => l.exercise_tricep_pushdown,
-          'exercise_overhead_tricep_extension': (l) =>
-              l.exercise_overhead_tricep_extension,
-          'exercise_skull_crusher': (l) => l.exercise_skull_crusher,
-          'exercise_dips': (l) => l.exercise_dips,
-          'exercise_close_grip_bench_press': (l) =>
-              l.exercise_close_grip_bench_press,
-          'exercise_barbell_back_squat': (l) => l.exercise_barbell_back_squat,
-          'exercise_front_squat': (l) => l.exercise_front_squat,
-          'exercise_leg_press': (l) => l.exercise_leg_press,
-          'exercise_leg_extension': (l) => l.exercise_leg_extension,
-          'exercise_bulgarian_split_squat': (l) =>
-              l.exercise_bulgarian_split_squat,
-          'exercise_goblet_squat': (l) => l.exercise_goblet_squat,
-          'exercise_hack_squat': (l) => l.exercise_hack_squat,
-          'exercise_walking_lunge': (l) => l.exercise_walking_lunge,
-          'exercise_romanian_deadlift': (l) => l.exercise_romanian_deadlift,
-          'exercise_lying_leg_curl': (l) => l.exercise_lying_leg_curl,
-          'exercise_seated_leg_curl': (l) => l.exercise_seated_leg_curl,
-          'exercise_stiff_leg_deadlift': (l) => l.exercise_stiff_leg_deadlift,
-          'exercise_good_morning': (l) => l.exercise_good_morning,
-          'exercise_hip_thrust': (l) => l.exercise_hip_thrust,
-          'exercise_glute_bridge': (l) => l.exercise_glute_bridge,
-          'exercise_cable_kickback': (l) => l.exercise_cable_kickback,
-          'exercise_step_up': (l) => l.exercise_step_up,
-          'exercise_crunch': (l) => l.exercise_crunch,
-          'exercise_hanging_leg_raise': (l) => l.exercise_hanging_leg_raise,
-          'exercise_plank': (l) => l.exercise_plank,
-          'exercise_cable_woodchop': (l) => l.exercise_cable_woodchop,
-          'exercise_ab_wheel_rollout': (l) => l.exercise_ab_wheel_rollout,
-          'exercise_conventional_deadlift': (l) =>
-              l.exercise_conventional_deadlift,
-          'exercise_sumo_deadlift': (l) => l.exercise_sumo_deadlift,
-          'exercise_trap_bar_deadlift': (l) => l.exercise_trap_bar_deadlift,
-          'exercise_treadmill': (l) => l.exercise_treadmill,
-          'exercise_stationary_bike': (l) => l.exercise_stationary_bike,
-          'exercise_rowing_machine': (l) => l.exercise_rowing_machine,
-          'exercise_stair_climber': (l) => l.exercise_stair_climber,
-          'exercise_elliptical': (l) => l.exercise_elliptical,
-        };
-        final resolver = resolvers[exercise.translationKey!];
-        if (resolver != null) return resolver(l10n);
-      } catch (_) {}
-    }
-    return exercise.name;
+    final language = locale.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+    return ExerciseTranslations.displayNameForLocalizations(
+      lookupAppLocalizations(Locale(language)),
+      exercise,
+    );
   }
 
-  Future<void> _sendSessionUpdateWithRetry(
-    Map<String, dynamic> snapshot,
-    String sessionId,
-  ) async {
-    if (!_isCurrentActiveSession(sessionId)) return;
-
-    final success = await _sendSessionUpdate(snapshot);
-    if (success) {
-      _pendingSyncRetry?.cancel();
-      _pendingSnapshot = null;
-      return;
-    }
-
-    if (!_isCurrentActiveSession(sessionId)) return;
-    _pendingSnapshot = snapshot;
-    _pendingSyncRetry?.cancel();
-    _pendingSyncRetry = Timer(_initialSyncRetryDelay, () {
-      final pending = _pendingSnapshot;
-      if (pending == null || !_isCurrentActiveSession(sessionId)) return;
-      _sendSessionUpdateWithRetry(pending, sessionId);
-    });
+  String _locale(AppState state) {
+    final raw = state.preferredLanguage.isNotEmpty
+        ? state.preferredLanguage
+        : PlatformDispatcher.instance.locale.languageCode;
+    return raw.toLowerCase().startsWith('fr') ? 'fr' : 'en';
   }
 
-  bool _isCurrentActiveSession(String sessionId) {
-    return _lastSentSessionId == sessionId &&
-        _ref.read(appStateControllerProvider).activeSession?.id == sessionId;
-  }
-
-  Future<bool> _sendSessionUpdate(Map<String, dynamic> snapshot) async {
+  Future<void> _sendStateWithRetry(
+    String method,
+    Map<String, dynamic> payload,
+    int generation, {
+    int attempt = 0,
+  }) async {
+    if (!_isListening || generation != _generation) return;
     try {
-      await _methodChannel.invokeMethod('sendSessionUpdate', snapshot);
-      return true;
-    } catch (e) {
-      debugPrint('Failed to send session update to Watch: $e');
-      return false;
-    }
-  }
-
-  Future<void> _sendSessionEnd() async {
-    try {
+      await _methodChannel.invokeMethod<void>(method, payload);
+    } catch (error) {
+      if (!_isListening || generation != _generation) return;
+      if (attempt >= 7) {
+        debugPrint('Watch channel unavailable after retries: $error');
+        return;
+      }
       _pendingSyncRetry?.cancel();
-      _pendingSnapshot = null;
-      await _methodChannel.invokeMethod('sendSessionEnd');
-    } catch (e) {
-      debugPrint('Failed to send session end to Watch: $e');
+      _pendingSyncRetry = Timer(
+        _initialSyncRetryDelay * (1 << attempt.clamp(0, 3)),
+        () => unawaited(
+          _sendStateWithRetry(
+            method,
+            payload,
+            generation,
+            attempt: attempt + 1,
+          ),
+        ),
+      );
     }
   }
 
@@ -365,21 +314,23 @@ class WatchSyncService {
 
     switch (type) {
       case 'request_sync':
-        _handleSyncRequest();
+        _handleSyncRequest(data['syncRequestId'] as String?);
       default:
         debugPrint('Unknown Watch event type: $type');
     }
   }
 
-  void _handleSyncRequest() {
+  void _handleSyncRequest(String? syncRequestId) {
     final state = _ref.read(appStateControllerProvider);
-    _onStateChanged(state);
+    unawaited(
+      _onStateChanged(state, syncRequestId: syncRequestId, force: true),
+    );
   }
 
   // MARK: - Query methods
 
   Future<bool> isWatchPaired() async {
-    if (kIsWeb) return false;
+    if (defaultTargetPlatform != TargetPlatform.iOS) return false;
     try {
       final result = await _methodChannel.invokeMethod<bool>('isWatchPaired');
       return result ?? false;
@@ -389,7 +340,7 @@ class WatchSyncService {
   }
 
   Future<bool> isWatchReachable() async {
-    if (kIsWeb) return false;
+    if (defaultTargetPlatform != TargetPlatform.iOS) return false;
     try {
       final result = await _methodChannel.invokeMethod<bool>(
         'isWatchReachable',

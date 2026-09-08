@@ -116,9 +116,7 @@ class TrainingEngineAdapter {
       );
     }
 
-    final strengthRpe = _isSupportedStrengthRpe(set.rpe)
-        ? set.rpe!
-        : (sessionRpe ?? _defaultStrengthRpe);
+    final strengthRpe = resolveStrengthRpe(set.rpe, sessionRpe);
     return LoggedSet(
       exerciseId: set.exerciseId,
       weightKg: set.weightKg,
@@ -242,8 +240,18 @@ class TrainingEngineAdapter {
     return set.reps > 0 || set.durationSeconds > 0;
   }
 
+  /// Uses the same supported strength channel for replay and historical PRs.
+  double resolveStrengthRpe(double? setRpe, double? sessionRpe) {
+    if (_isSupportedStrengthRpe(setRpe)) return setRpe!;
+    if (_isSupportedStrengthRpe(sessionRpe)) return sessionRpe!;
+    return _defaultStrengthRpe;
+  }
+
   bool _isSupportedStrengthRpe(double? rpe) {
-    return rpe != null && rpe >= _minStrengthRpe && rpe <= _maxStrengthRpe;
+    return rpe != null &&
+        rpe.isFinite &&
+        rpe >= _minStrengthRpe &&
+        rpe <= _maxStrengthRpe;
   }
 
   bool _isSupportedEffortRpe(double? rpe) {

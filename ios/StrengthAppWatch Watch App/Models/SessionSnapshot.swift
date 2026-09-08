@@ -10,11 +10,10 @@ struct SessionSnapshot: Codable {
     let activeRest: WatchRestState?
     var locale: String
     var unit: String
-    var weightIncrement: Double
 
     enum CodingKeys: String, CodingKey {
         case sessionId, routineId, routineName, startedAt, currentExerciseIndex, exercises, activeRest
-        case locale, unit, weightIncrement
+        case locale, unit
     }
 
     init(from decoder: Decoder) throws {
@@ -28,10 +27,9 @@ struct SessionSnapshot: Codable {
         activeRest = try container.decodeIfPresent(WatchRestState.self, forKey: .activeRest)
         locale = try container.decodeIfPresent(String.self, forKey: .locale) ?? "en"
         unit = try container.decodeIfPresent(String.self, forKey: .unit) ?? "kg"
-        weightIncrement = try container.decodeIfPresent(Double.self, forKey: .weightIncrement) ?? 2.5
     }
 
-    init(sessionId: String, routineId: String, routineName: String, startedAt: String, currentExerciseIndex: Int, exercises: [WatchExercise], activeRest: WatchRestState? = nil, locale: String, unit: String, weightIncrement: Double) {
+    init(sessionId: String, routineId: String, routineName: String, startedAt: String, currentExerciseIndex: Int, exercises: [WatchExercise], activeRest: WatchRestState? = nil, locale: String, unit: String) {
         self.sessionId = sessionId
         self.routineId = routineId
         self.routineName = routineName
@@ -41,7 +39,6 @@ struct SessionSnapshot: Codable {
         self.activeRest = activeRest
         self.locale = locale
         self.unit = unit
-        self.weightIncrement = weightIncrement
     }
 }
 

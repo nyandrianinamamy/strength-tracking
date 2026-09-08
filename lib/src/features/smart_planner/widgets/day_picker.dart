@@ -100,9 +100,7 @@ class _DayChip extends StatelessWidget {
         color: selected ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0),
         width: 1.5,
       ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       labelStyle: TextStyle(
         color: selected ? const Color(0xFF1D4ED8) : const Color(0xFF475569),
         fontWeight: selected ? FontWeight.w700 : FontWeight.w500,

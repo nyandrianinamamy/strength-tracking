@@ -10,6 +10,8 @@ import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 import 'package:strength_training_tracker/src/features/auth/invite_access.dart';
+import 'package:strength_training_tracker/src/features/auth/account_session_controller.dart';
+import 'package:strength_training_tracker/src/data/repository/account_app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_provider.dart';
 import 'package:strength_training_tracker/src/features/training_engine/training_engine_state_repository.dart';
 
@@ -19,118 +21,71 @@ class AppBootstrapResult {
     required this.trainingEngineStateRepository,
     required this.initialState,
     required this.auth,
+    this.accountFactory,
+    this.accessAvailable = false,
   });
   final AppStateRepository repository;
   final TrainingEngineStateRepository trainingEngineStateRepository;
   final AppState initialState;
-  final FirebaseAuth auth;
+  final FirebaseAuth? auth;
+  final AccountRepositoryFactory? accountFactory;
+  final bool accessAvailable;
 }
 
 Future<AppBootstrapResult> initializeApp({
   FirebaseFirestore? firestore,
   FirebaseAuth? auth,
+  FirebaseOptions? firebaseOptions,
+  Future<void> Function()? firebaseInitializer,
+  SharedPreferences? preferences,
 }) async {
-  AppStateRepository repository;
-  late TrainingEngineStateRepository trainingEngineStateRepository;
-  AppState initialState;
-  final injectedAuth = auth;
-
+  final local = preferences ?? await SharedPreferences.getInstance();
+  FirebaseAuth? availableAuth = auth;
+  FirebaseFirestore? availableFirestore = firestore;
   try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-
-    final firebaseAuth = injectedAuth ?? FirebaseAuth.instance;
-
-    // Set auth persistence explicitly for Safari compatibility
-    // Only when using default auth (not injected for tests)
-    if (kIsWeb && injectedAuth == null) {
-      await firebaseAuth.setPersistence(Persistence.LOCAL);
-    }
-
-    final firestoreInstance = firestore ?? FirebaseFirestore.instance;
-    final preferences = await SharedPreferences.getInstance();
-    final currentUser = firebaseAuth.currentUser;
-    var usesCloudRepository = false;
-    if (currentUser == null) {
-      repository = MemoryAppStateRepository(initialState: AppState.empty());
+    if (firebaseInitializer != null) {
+      await firebaseInitializer();
     } else {
-      try {
-        await InviteAccessService(
-          firestore: firestoreInstance,
-        ).requireAllowed(currentUser);
-        repository = FirestoreAppStateRepository(
-          auth: firebaseAuth,
-          firestore: firestoreInstance,
-        );
-        usesCloudRepository = true;
-      } on InviteAccessDeniedException catch (e) {
-        debugPrint('Invite-only access denied, signing out: $e');
-        await firebaseAuth.signOut();
-        repository = MemoryAppStateRepository(initialState: AppState.empty());
-      }
+      await Firebase.initializeApp(
+        options: firebaseOptions ?? DefaultFirebaseOptions.currentPlatform,
+      );
     }
-
-    // Migrate from SharedPreferences if data exists
-    trainingEngineStateRepository =
-        SharedPreferencesTrainingEngineStateRepository(preferences);
-    const migrationKey = 'strength_training_tracker_state_v1';
-    final localData = preferences.getString(migrationKey);
-    if (usesCloudRepository && localData != null && localData.isNotEmpty) {
-      final localRepo = SharedPreferencesAppStateRepository(preferences);
-      final localState = await localRepo.load();
-      // Only migrate if Firestore is empty (don't overwrite cloud data)
-      final cloudState = await repository.load();
-      if (cloudState.exercises.isEmpty && cloudState.routines.isEmpty) {
-        await repository.save(localState);
-      }
-      await preferences.remove(migrationKey);
-    }
-
-    initialState = await repository.load();
-
-    // Migrate old compound muscle names to specific 1:1 names
-    final originalState = initialState;
-    initialState = migrateMuscleNames(initialState);
-    if (initialState.exercises != originalState.exercises) {
-      await repository.save(initialState);
-    }
-
-    return AppBootstrapResult(
-      repository: repository,
-      trainingEngineStateRepository: trainingEngineStateRepository,
-      initialState: initialState,
-      auth: firebaseAuth,
-    );
-  } catch (e) {
-    // Fallback to SharedPreferences if Firebase fails
-    debugPrint('Firebase init failed, falling back to local storage: $e');
-    final preferences = await SharedPreferences.getInstance();
-    trainingEngineStateRepository =
-        SharedPreferencesTrainingEngineStateRepository(preferences);
-    repository = SharedPreferencesAppStateRepository(preferences);
-    initialState = await repository.load();
-
-    // Migrate old compound muscle names to specific 1:1 names
-    final originalState = initialState;
-    initialState = migrateMuscleNames(initialState);
-    if (initialState.exercises != originalState.exercises) {
-      await repository.save(initialState);
-    }
-
-    return AppBootstrapResult(
-      repository: repository,
-      trainingEngineStateRepository: trainingEngineStateRepository,
-      initialState: initialState,
-      auth: injectedAuth ?? FirebaseAuth.instance,
-    );
+    availableAuth ??= FirebaseAuth.instance;
+    availableFirestore ??= FirebaseFirestore.instance;
+  } catch (_) {
+    // Do not touch Firebase singletons again after an initialization failure.
+    // Existing local account data is retained; unknown legacy ownership is
+    // never assigned to whichever account happens to sign in next.
   }
+  final factory = AccountRepositoryFactory(
+    preferences: local,
+    auth: availableAuth,
+    firestore: availableFirestore,
+  );
+  AccountContext context;
+  try {
+    context = await factory.open(availableAuth?.currentUser);
+  } on InviteAccessDeniedException {
+    await availableAuth?.signOut();
+    context = await factory.open(null);
+  }
+  final migrated = migrateMuscleNames(context.state);
+  if (migrated.exercises != context.state.exercises) {
+    await context.repository.save(migrated);
+  }
+  return AppBootstrapResult(
+    repository: context.repository,
+    trainingEngineStateRepository: context.engineRepository,
+    initialState: migrated,
+    auth: availableAuth,
+    accountFactory: factory,
+    accessAvailable: context.accessAvailable,
+  );
 }
 
 @visibleForTesting
-AppStateRepository buildUnauthenticatedRepositoryForTest() {
-  return MemoryAppStateRepository(initialState: AppState.empty());
-}
+AppStateRepository buildUnauthenticatedRepositoryForTest() =>
+    MemoryAppStateRepository(initialState: AppState.empty());
 
 ProviderContainer buildContainer(AppBootstrapResult result) {
   return ProviderContainer(
@@ -141,6 +96,39 @@ ProviderContainer buildContainer(AppBootstrapResult result) {
         result.trainingEngineStateRepository,
       ),
       authServiceProvider.overrideWithValue(AuthService(result.auth)),
+      accountRepositoryFactoryProvider.overrideWithValue(result.accountFactory),
+      appRepositoryDidSyncProvider.overrideWith(
+        (ref) => (repository) {
+          if (repository is AccountAppStateRepository) {
+            ref.read(accountAccessAvailableProvider.notifier).state =
+                result.accountFactory?.hasVerifiedAccess(repository) ?? false;
+          }
+        },
+      ),
+      accountAccessAvailableProvider.overrideWith(
+        (ref) => result.accessAvailable,
+      ),
+      boundAccountIdProvider.overrideWith(
+        (ref) => result.repository is AccountAppStateRepository
+            ? (result.repository as AccountAppStateRepository).accountId
+            : null,
+      ),
+      appSaveStatusProvider.overrideWith(
+        (ref) => result.repository is AccountAppStateRepository
+            ? switch ((result.repository as AccountAppStateRepository)
+                  .syncStatus) {
+                RepositorySyncStatus.local => AppSaveStatus.local,
+                RepositorySyncStatus.synced => AppSaveStatus.saved,
+                RepositorySyncStatus.pending => AppSaveStatus.pending,
+                RepositorySyncStatus.failed =>
+                  (result.repository as AccountAppStateRepository).lastError
+                          is StatePayloadTooLarge
+                      ? AppSaveStatus.capacityExceeded
+                      : AppSaveStatus.syncFailed,
+                RepositorySyncStatus.conflict => AppSaveStatus.conflict,
+              }
+            : AppSaveStatus.saved,
+      ),
     ],
   );
 }

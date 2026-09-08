@@ -10,9 +10,13 @@ abstract class TrainingEngineStateRepository {
 
 class SharedPreferencesTrainingEngineStateRepository
     implements TrainingEngineStateRepository {
-  SharedPreferencesTrainingEngineStateRepository(this._preferences);
+  SharedPreferencesTrainingEngineStateRepository(
+    this._preferences, {
+    String? accountId,
+  }) : _storageKey =
+           'training_engine_state_v2_${(accountId == null ? "guest" : "user_${Uri.encodeComponent(accountId)}")}';
 
-  static const _storageKey = 'training_engine_state_v1';
+  final String _storageKey;
 
   final SharedPreferences _preferences;
 
@@ -39,7 +43,7 @@ class SharedPreferencesTrainingEngineStateRepository
 class MemoryTrainingEngineStateRepository
     implements TrainingEngineStateRepository {
   MemoryTrainingEngineStateRepository({Map<String, dynamic>? initialState})
-      : _state = _clone(initialState);
+    : _state = _clone(initialState);
 
   Map<String, dynamic>? _state;
 

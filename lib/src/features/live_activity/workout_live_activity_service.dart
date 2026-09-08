@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
+import 'package:strength_training_tracker/l10n/app_localizations.dart';
+import 'package:strength_training_tracker/src/l10n/exercise_translations.dart';
 import 'package:strength_training_tracker/src/data/models/app_state.dart';
 import 'package:strength_training_tracker/src/data/models/completed_set.dart';
 import 'package:strength_training_tracker/src/data/models/exercise.dart';
@@ -26,7 +29,7 @@ class WorkoutLiveActivityService {
   bool _initialized = false;
 
   void initialize() {
-    if (_initialized || kIsWeb || defaultTargetPlatform != TargetPlatform.iOS) {
+    if (_initialized || defaultTargetPlatform != TargetPlatform.iOS) {
       return;
     }
 
@@ -69,9 +72,11 @@ class WorkoutLiveActivityPayload {
     required this.restEndAt,
     required this.restSeconds,
     required this.lastSetAt,
+    this.locale = 'en',
   });
 
   final String sessionId;
+  final String locale;
   final String routineName;
   final String currentExerciseName;
   final String currentExerciseType;
@@ -91,6 +96,7 @@ class WorkoutLiveActivityPayload {
   Map<String, Object?> toMap() {
     return {
       'sessionId': sessionId,
+      'locale': locale,
       'routineName': routineName,
       'currentExerciseName': currentExerciseName,
       'currentExerciseType': currentExerciseType,
@@ -131,6 +137,11 @@ class WorkoutLiveActivityPayload {
       return null;
     }
 
+    final rawLocale = state.preferredLanguage.isNotEmpty
+        ? state.preferredLanguage
+        : PlatformDispatcher.instance.locale.languageCode;
+    final locale = rawLocale.toLowerCase().startsWith('fr') ? 'fr' : 'en';
+    final l10n = lookupAppLocalizations(Locale(locale));
     final currentExerciseSets = session.completedSets
         .where((set) => set.exerciseId == currentRoutineExercise.exerciseId)
         .length;
@@ -147,17 +158,26 @@ class WorkoutLiveActivityPayload {
 
     return WorkoutLiveActivityPayload(
       sessionId: session.id,
+      locale: locale,
       routineName: routine.name,
-      currentExerciseName: currentExercise.name,
+      currentExerciseName: ExerciseTranslations.displayNameForLocalizations(
+        l10n,
+        currentExercise,
+      ),
       currentExerciseType: currentExercise.exerciseType,
       currentExerciseIndex: clampedIndex + 1,
       totalExercises: routine.exercises.length,
-      completedSetsText: '${session.completedSets.length} total sets',
-      currentExerciseProgressText:
-          '$currentExerciseSets/${currentRoutineExercise.targetSets} sets',
+      completedSetsText: l10n.liveActivityTotalSets(
+        session.completedSets.length,
+      ),
+      currentExerciseProgressText: l10n.liveActivitySetProgress(
+        currentExerciseSets,
+        currentRoutineExercise.targetSets,
+      ),
       exerciseDetailText: _exerciseDetailText(
         currentRoutineExercise,
         currentExercise,
+        l10n,
       ),
       startedAt: session.startedAt,
       updatedAt: now,
@@ -200,12 +220,15 @@ class WorkoutLiveActivityPayload {
   static String _exerciseDetailText(
     RoutineExercise routineExercise,
     Exercise exercise,
+    AppLocalizations l10n,
   ) {
     if (exercise.exerciseType == 'timed') {
-      return '${routineExercise.targetDurationSeconds}s intervals';
+      return l10n.liveActivityTimedTarget(
+        routineExercise.targetDurationSeconds,
+      );
     }
 
-    return '${routineExercise.targetReps} reps target';
+    return l10n.liveActivityRepsTarget(routineExercise.targetReps);
   }
 }
 

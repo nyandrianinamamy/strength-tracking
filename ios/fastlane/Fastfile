@@ -104,25 +104,19 @@ platform :ios do
       bundle_identifier: "dev.mamy-r.kotrana.watchkitapp",
     )
 
-    # Set version from tag (CI passes BUILD_VERSION env var)
-    if ENV["BUILD_VERSION"]
-      increment_version_number(
-        version_number: ENV["BUILD_VERSION"],
-        xcodeproj: "Runner.xcodeproj",
-      )
-    end
-    if ENV["BUILD_NUMBER"]
-      increment_build_number(
-        build_number: ENV["BUILD_NUMBER"],
-        xcodeproj: "Runner.xcodeproj",
-      )
-    end
+    # Override this archive's Flutter version without replacing source plist
+    # placeholders, so subsequent local builds still follow pubspec.yaml.
+    version_settings = {
+      "FLUTTER_BUILD_NAME" => ENV["BUILD_VERSION"],
+      "FLUTTER_BUILD_NUMBER" => ENV["BUILD_NUMBER"],
+    }.compact
 
     # Build the Xcode archive with proper signing
     build_app(
       workspace: "Runner.xcworkspace",
       scheme: "Runner",
       configuration: "Release",
+      xcargs: version_settings,
       export_method: "app-store",
       export_options: {
         provisioningProfiles: {

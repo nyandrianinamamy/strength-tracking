@@ -1,9 +1,9 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/debug_surface.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
+import 'package:strength_training_tracker/src/features/auth/account_session_controller.dart';
 import 'package:strength_training_tracker/src/features/dashboard/dashboard_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercise_editor_screen.dart';
 import 'package:strength_training_tracker/src/features/exercises/exercises_screen.dart';
@@ -21,15 +21,7 @@ import 'package:strength_training_tracker/src/features/smart_planner/smart_plann
 import 'package:strength_training_tracker/src/shared/widgets/app_shell_scaffold.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  bool hasSignedInUser() {
-    try {
-      return ref.read(authServiceProvider).currentUser != null;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  return GoRouter(
+  final router = GoRouter(
     redirect: (context, state) {
       final appState = ref.read(appStateControllerProvider);
       final isOnboarding = state.uri.toString() == '/onboarding';
@@ -43,8 +35,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/onboarding',
         builder: (context, state) {
-          final showProfileSetup = (kIsWeb && kDebugMode) || hasSignedInUser();
-          return OnboardingScreen(showProfileSetup: showProfileSetup);
+          return Consumer(
+            builder: (context, ref, child) => OnboardingScreen(
+              showProfileSetup:
+                  ref.watch(accountAccessAvailableProvider) &&
+                  ref.watch(authServiceProvider).currentUser != null,
+            ),
+          );
         },
       ),
       ShellRoute(
@@ -133,4 +130,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
   );
+  ref.listen(
+    appStateControllerProvider.select((state) => state.userName.isEmpty),
+    (previous, next) => router.refresh(),
+  );
+  ref.onDispose(router.dispose);
+  return router;
 });

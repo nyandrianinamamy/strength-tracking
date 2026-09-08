@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,7 +29,9 @@ void main() {
     List<Override> overrides = const [],
   }) {
     final repository = MemoryAppStateRepository(
-      initialState: initialState ?? DemoSeedData.initialState(),
+      initialState: (initialState ?? DemoSeedData.initialState()).copyWith(
+        healthKitEnabled: false,
+      ),
     );
 
     return ProviderContainer(
@@ -160,6 +163,7 @@ void main() {
     var failNextUpdate = false;
 
     setUp(() {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       messenger =
           TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
       methodCalls = <MethodCall>[];
@@ -195,9 +199,79 @@ void main() {
     });
 
     tearDown(() {
+      debugDefaultTargetPlatformOverride = null;
       messenger.setMockMethodCallHandler(methodChannel, null);
       messenger.setMockStreamHandler(eventChannel, null);
     });
+
+    test(
+      'cold idle initialization and nonce sync send authoritative idle',
+      () async {
+        final container = buildContainer(initialState: AppState.empty());
+        addTearDown(container.dispose);
+        container.read(watchSyncServiceProvider).initialize();
+        await pumpEvents();
+        expect(methodCalls.single.method, 'sendSessionIdle');
+        methodCalls.clear();
+        watchEvents!.success({
+          'type': 'request_sync',
+          'syncRequestId': 'new-phone-nonce',
+        });
+        await pumpEvents();
+        expect(methodCalls.single.method, 'sendSessionIdle');
+        expect(
+          (methodCalls.single.arguments as Map)['syncRequestId'],
+          'new-phone-nonce',
+        );
+      },
+    );
+
+    test('dispose suppresses an in-flight snapshot and retry', () async {
+      final engineCompleter = Completer<TrainingEngine>();
+      final container = buildContainer(
+        initialState: DemoSeedData.initialState().copyWith(
+          sessions: [buildActiveSession('pull_day')],
+        ),
+        overrides: [
+          trainingEngineProvider.overrideWith((ref) => engineCompleter.future),
+        ],
+      );
+      addTearDown(container.dispose);
+      final service = container.read(watchSyncServiceProvider);
+      service.initialize();
+      await pumpEvents();
+      service.dispose();
+      engineCompleter.complete(emptyTrainingEngine());
+      await pumpEvents();
+      expect(methodCalls, isEmpty);
+    });
+
+    test(
+      'only the latest same-session snapshot survives deferred recommendations',
+      () async {
+        final engineCompleter = Completer<TrainingEngine>();
+        final container = buildContainer(
+          initialState: DemoSeedData.initialState().copyWith(
+            sessions: [buildActiveSession('push_day')],
+          ),
+          overrides: [
+            trainingEngineProvider.overrideWith(
+              (ref) => engineCompleter.future,
+            ),
+          ],
+        );
+        addTearDown(container.dispose);
+        container.read(watchSyncServiceProvider).initialize();
+        await pumpEvents();
+        container.read(workoutControllerProvider).logSet(weightKg: 20, reps: 8);
+        engineCompleter.complete(emptyTrainingEngine());
+        await pumpEvents();
+        expect(methodCalls, hasLength(1));
+        final payload = methodCalls.single.arguments as Map;
+        final exercises = (payload['session'] as Map)['exercises'] as List;
+        expect((exercises.first as Map)['completedSets'], hasLength(1));
+      },
+    );
 
     test(
       'initializing with an active session sends a watch snapshot',
@@ -294,7 +368,13 @@ void main() {
       container.read(watchSyncServiceProvider).initialize();
       await pumpEvents();
       final defaultSuggestion = await container.read(
-        engineWeightSuggestionProvider('barbell_bench_press').future,
+        routineEngineWeightSuggestionProvider(
+          const RoutineLoadRecommendationParams(
+            exerciseId: 'barbell_bench_press',
+            targetReps: 8,
+            targetRpe: 8,
+          ),
+        ).future,
       );
       final routineSuggestion = await container.read(
         routineEngineWeightSuggestionProvider(
@@ -401,6 +481,7 @@ void main() {
 
       expect(methodCalls, hasLength(1));
       expect(methodCalls.single.method, 'sendSessionEnd');
+      expect((methodCalls.single.arguments as Map)['sessionId'], isNotEmpty);
     });
 
     test('completion suppresses a stale in-flight active snapshot', () async {

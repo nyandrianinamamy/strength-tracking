@@ -1,0 +1,164 @@
+[
+  {
+    "AXLabel": "Kotrana Watch",
+    "type": "Application",
+    "role": "AXApplication",
+    "frame": {
+      "x": 0,
+      "y": 0,
+      "width": 208,
+      "height": 248
+    },
+    "AXFrame": "{{0, 0}, {208, 248}}",
+    "enabled": true,
+    "children": [
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 208,
+          "height": 248
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "width": 208,
+              "height": 248
+            },
+            "AXFrame": "{{0, 0}, {208, 248}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 208,
+                  "height": 248
+                },
+                "AXFrame": "{{0, 0}, {208, 248}}",
+                "enabled": true,
+                "children": [
+                  {
+                    "type": "Group",
+                    "role": "AXGroup",
+                    "frame": {
+                      "x": 0,
+                      "y": 0,
+                      "width": 208,
+                      "height": 248
+                    },
+                    "AXFrame": "{{0, 0}, {208, 248}}",
+                    "enabled": true,
+                    "children": [
+                      {
+                        "AXLabel": "Kotrana",
+                        "type": "StaticText",
+                        "role": "AXStaticText",
+                        "frame": {
+                          "x": 72.25,
+                          "y": 82.75,
+                          "width": 63.5,
+                          "height": 20.5
+                        },
+                        "AXFrame": "{{72.25, 82.75}, {63.5, 20.5}}",
+                        "enabled": true
+                      },
+                      {
+                        "AXLabel": "Aucune séance active",
+                        "type": "StaticText",
+                        "role": "AXStaticText",
+                        "frame": {
+                          "x": 24,
+                          "y": 115.25,
+                          "width": 160,
+                          "height": 19.5
+                        },
+                        "AXFrame": "{{24, 115.25}, {160, 19.5}}",
+                        "enabled": true
+                      },
+                      {
+                        "AXLabel": "Lancez-en une sur votre iPhone",
+                        "type": "StaticText",
+                        "role": "AXStaticText",
+                        "frame": {
+                          "x": 38.25,
+                          "y": 146.75,
+                          "width": 131.5,
+                          "height": 35.5
+                        },
+                        "AXFrame": "{{38.25, 146.75}, {131.5, 35.5}}",
+                        "enabled": true
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "Group",
+        "role": "AXGroup",
+        "frame": {
+          "x": 0,
+          "y": 0,
+          "width": 208,
+          "height": 248
+        },
+        "AXFrame": "{{0, 0}, {208, 248}}",
+        "enabled": true,
+        "children": [
+          {
+            "type": "Group",
+            "role": "AXGroup",
+            "frame": {
+              "x": 0,
+              "y": 0,
+              "width": 208,
+              "height": 38
+            },
+            "AXFrame": "{{0, 0}, {208, 38}}",
+            "enabled": true,
+            "children": [
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 208,
+                  "height": 38
+                },
+                "AXFrame": "{{0, 0}, {208, 38}}",
+                "enabled": true
+              },
+              {
+                "type": "Group",
+                "role": "AXGroup",
+                "frame": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 208,
+                  "height": 38
+                },
+                "AXFrame": "{{0, 0}, {208, 38}}",
+                "enabled": true
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]

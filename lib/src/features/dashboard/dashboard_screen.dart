@@ -41,6 +41,64 @@ String _workoutCardMetricLabel(AppLocalizations l10n, double totalVolumeKg) {
   return totalVolumeKg > 0 ? l10n.volume : l10n.time;
 }
 
+/// A wrapping profile header that reserves space for the Settings control.
+class DashboardProfileHeader extends StatelessWidget {
+  const DashboardProfileHeader({super.key, required this.userName});
+
+  final String userName;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final appColors = context.appColors;
+    final displayName = userName.isEmpty ? l10n.athlete : userName;
+
+    return Row(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: colorScheme.primary, width: 2),
+          ),
+          child: CircleAvatar(
+            radius: 24,
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+            child: Icon(Icons.person, color: colorScheme.primary),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.welcomeBack,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: appColors.subtleText),
+              ),
+              Text(
+                displayName,
+                softWrap: true,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ],
+          ),
+        ),
+        IconButton(
+          tooltip: l10n.settings,
+          onPressed: () => context.push('/settings'),
+          icon: const Icon(Icons.settings_outlined),
+        ),
+      ],
+    );
+  }
+}
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -64,129 +122,77 @@ class DashboardScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
           children: [
             // Step 1: Profile header
-            Row(
-              children: [
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: colorScheme.primary, width: 2),
-                  ),
-                  child: CircleAvatar(
-                    radius: 24,
-                    backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
-                    child: Icon(Icons.person, color: colorScheme.primary),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Builder(
-                  builder: (context) {
-                    final userName = state.userName.isEmpty
-                        ? l10n.athlete
-                        : state.userName;
-                    return Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          l10n.welcomeBack,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: appColors.subtleText),
-                        ),
-                        Text(
-                          userName,
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => context.push('/settings'),
-                  icon: const Icon(Icons.settings_outlined),
-                ),
-              ],
-            ),
+            DashboardProfileHeader(userName: state.userName),
             const SizedBox(height: 24),
 
             // Step 2: Stats grid with MetricCard + badge
-            LayoutBuilder(
-              builder: (context, constraints) {
-                return GridView.count(
-                  crossAxisCount: 2,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: constraints.maxWidth >= 420 ? 1.35 : 1.1,
-                  children: [
-                    MetricCard(
-                      label: l10n.workouts,
-                      value: '${snapshot.totalWorkouts}',
-                      detail: snapshot.workoutDelta >= 0
-                          ? l10n.vsLastWeek('+${snapshot.workoutDelta}')
-                          : l10n.vsLastWeek('${snapshot.workoutDelta}'),
-                      icon: Icons.local_fire_department_rounded,
-                      badge: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.trending_up,
-                              size: 14,
-                              color: colorScheme.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              snapshot.workoutDelta >= 0
-                                  ? '+${snapshot.workoutDelta}'
-                                  : '${snapshot.workoutDelta}',
-                              style: TextStyle(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+            MetricCardRow(
+              children: [
+                MetricCard(
+                  label: l10n.workouts,
+                  value: '${snapshot.totalWorkouts}',
+                  detail: snapshot.workoutDelta >= 0
+                      ? l10n.vsLastWeek('+${snapshot.workoutDelta}')
+                      : l10n.vsLastWeek('${snapshot.workoutDelta}'),
+                  icon: Icons.local_fire_department_rounded,
+                  badge: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
                     ),
-                    MetricCard(
-                      label: l10n.recentPrs,
-                      value: '${snapshot.personalRecordCount}',
-                      detail: l10n.estimated1rmTracked,
-                      icon: Icons.workspace_premium_rounded,
-                      onTap: () => context.go('/progress'),
-                      badge: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.trending_up,
+                          size: 14,
                           color: colorScheme.primary,
-                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Text(
-                          l10n.newBadge,
+                        const SizedBox(width: 4),
+                        Text(
+                          snapshot.workoutDelta >= 0
+                              ? '+${snapshot.workoutDelta}'
+                              : '${snapshot.workoutDelta}',
                           style: TextStyle(
-                            color: colorScheme.onPrimary,
+                            color: colorScheme.primary,
                             fontWeight: FontWeight.w700,
                             fontSize: 12,
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                ),
+                MetricCard(
+                  label: l10n.recentPrs,
+                  value: '${snapshot.personalRecordCount}',
+                  detail: l10n.estimated1rmTracked,
+                  icon: Icons.workspace_premium_rounded,
+                  onTap: () => context.go('/progress'),
+                  badge: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      l10n.newBadge,
+                      style: TextStyle(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 12,
                       ),
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
             PageSection(

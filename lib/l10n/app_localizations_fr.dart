@@ -566,9 +566,6 @@ class AppLocalizationsFr extends AppLocalizations {
   String get dataCleared => 'Exercices et routines effacés';
 
   @override
-  String get forceUpdateApp => 'Forcer la mise à jour';
-
-  @override
   String get muscleHeatmap => 'Carte musculaire';
 
   @override
@@ -1575,4 +1572,93 @@ class AppLocalizationsFr extends AppLocalizations {
 
   @override
   String get autoLabel => 'Auto';
+
+  @override
+  String liveActivityTotalSets(int count) {
+    return '$count séries au total';
+  }
+
+  @override
+  String liveActivitySetProgress(int completed, int total) {
+    return '$completed/$total séries';
+  }
+
+  @override
+  String liveActivityTimedTarget(int seconds) {
+    return 'Intervalles de $seconds s';
+  }
+
+  @override
+  String liveActivityRepsTarget(int reps) {
+    return 'Objectif : $reps répétitions';
+  }
+
+  @override
+  String plannerTimeLimitExceeded(int minutes) {
+    return 'Ce programme nécessite au moins $minutes minutes. Augmentez la durée ou choisissez moins d’exercices.';
+  }
+
+  @override
+  String get plannerExercisesUnavailable =>
+      'Certains exercices ne sont plus disponibles. Générez un nouveau programme.';
+
+  @override
+  String get storageStatusTitle => 'Stockage';
+
+  @override
+  String get storageSaving => 'Enregistrement…';
+
+  @override
+  String get storageSaved => 'Enregistré';
+
+  @override
+  String get storageLocal => 'Enregistré sur cet appareil';
+
+  @override
+  String get storagePending =>
+      'Enregistré sur cet appareil. Synchronisation en attente.';
+
+  @override
+  String get storageSyncFailed =>
+      'Échec de la synchronisation. Vos modifications restent sur cet appareil.';
+
+  @override
+  String get storageLocalFailed =>
+      'Impossible d’enregistrer sur cet appareil. Gardez l’application ouverte et réessayez.';
+
+  @override
+  String get storageConflict =>
+      'Les deux copies ont modifié les mêmes données. Choisissez la version à conserver.';
+
+  @override
+  String get storageRetry => 'Réessayer';
+
+  @override
+  String get storageKeepDevice => 'Conserver la version de cet appareil';
+
+  @override
+  String get storageUseAccount => 'Utiliser la version du compte';
+
+  @override
+  String get storageRecoveryCopy => 'Restaurer la copie de récupération';
+
+  @override
+  String get storageConflictRecovery =>
+      'L’autre version sera conservée comme copie de récupération sur cet appareil.';
+
+  @override
+  String get authUnavailable =>
+      'Connexion indisponible. Réessayez lorsque la connexion revient.';
+
+  @override
+  String get reauthenticateToDelete =>
+      'Reconnectez-vous pour supprimer ce compte.';
+
+  @override
+  String get accountDeletedProviderCleanupFailed =>
+      'Compte supprimé. Le fournisseur d’identité n’a pas pu terminer la déconnexion.';
+
+  @override
+  String get storageCapacityExceeded =>
+      'Les données du compte sont trop volumineuses pour être synchronisées. Elles sont enregistrées sur cet appareil. Supprimez des photos d’exercices, puis réessayez.';
 }

@@ -1,0 +1,20 @@
+# Lexend
+
+Bundled for offline use. SIL Open Font License: [OFL.txt](OFL.txt).
+
+Source: https://github.com/googlefonts/lexend/tree/7894f02b2e7eabc48595f1d4eff3b17b48c6e651
+
+SHA-256:
+
+```text
+OFL.txt: 5da8505887d0fa7fe963445fd58852707fda34adfeb65af25c99d152bab285bd
+Lexend-Thin.ttf: 7c757cfed0b61551466ac6f153d743a5c4629240fc2b86e0811fbf630fc81949
+Lexend-ExtraLight.ttf: 9e1f5de7170f77f4ffde04997b52ceb59d85b87145da95d23ee98c70c474f387
+Lexend-Light.ttf: 07bf6dcb02fed0e414b268695c54089b9081aae30887da49fec61a60942ca567
+Lexend-Regular.ttf: e2082c28389e9871d5d77ae9163d5c0c1c259fe39bdac91f73d56a600b61f60f
+Lexend-Medium.ttf: ac109d3848ff23f1dda6cdb2f5e5bdb335811967fc4fb60b5f7b9df5a301c5ba
+Lexend-SemiBold.ttf: 204875848cc7981290a75f8be0e64b335b6d8f6ec6cc3ea05d907a37adab8b7b
+Lexend-Bold.ttf: 4509838acc21f2c066e9874c9c5eb52b9b8cdac1771a9c1fe9e7e2cda41ce082
+Lexend-ExtraBold.ttf: 5c54e7f1617d93426ba207c7f4ffc0516039e1113ac9247ea19f7ed5b34d5dac
+Lexend-Black.ttf: ae94e5b8fa66956a3155c601510584d166443365d8e4e0269b9973f084b9631a
+```

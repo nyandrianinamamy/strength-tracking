@@ -1,7 +1,6 @@
 {
   "@@locale": "fr",
   "appTitle": "Kotrana: Musculation",
-
   "welcomeBack": "Bon retour,",
   "athlete": "Athlète",
   "workouts": "SÉANCES",
@@ -26,20 +25,17 @@
   "noPrsYet": "Aucun record détecté",
   "prsWillAppear": "Vos meilleures performances apparaîtront après une séance.",
   "volume": "Volume",
-
   "exercises": "Exercices",
   "newExercise": "Nouvel exercice",
   "searchExercises": "Rechercher exercices ou muscles",
   "noExercisesFound": "Aucun exercice trouvé",
   "adjustFilter": "Ajustez le filtre ou créez un mouvement personnalisé.",
-
   "workoutLibrary": "Bibliothèque",
   "searchRoutines": "Rechercher des routines",
   "createNewRoutine": "Créer une routine",
   "designPlan": "Concevez votre propre programme d'entraînement",
   "noRoutinesMatch": "Aucune routine ne correspond",
   "clearSearchPrompt": "Effacez la recherche ou créez un nouveau modèle.",
-
   "performanceLab": "Performances",
   "overview": "Vue d'ensemble",
   "lifts": "Mouvements",
@@ -64,7 +60,6 @@
   "weeklyVolume": "Volume hebdomadaire",
   "noVolumeData": "Aucune donnée de volume",
   "completeWorkoutsPrompt": "Terminez des séances pour remplir le graphique.",
-
   "letsGetStarted": "C'est parti !",
   "whatShouldWeCallYou": "Comment devons-nous vous appeler ?",
   "yourName": "Votre nom",
@@ -83,7 +78,6 @@
   "continueWithGoogle": "Continuer avec Google",
   "continueWithApple": "Continuer avec Apple",
   "signInFailed": "Échec de la connexion",
-
   "workoutComplete": "Séance terminée",
   "newPersonalRecord": "Nouveau record personnel !",
   "time": "Temps",
@@ -102,7 +96,6 @@
   "deleteWorkoutConfirm": "Cela supprimera définitivement cette séance et tous ses sets.",
   "cancel": "Annuler",
   "delete": "Supprimer",
-
   "noActiveSession": "Aucune session active",
   "startFromDashboard": "Démarrez une routine depuis le tableau de bord pour commencer.",
   "backToDashboard": "Retour au tableau de bord",
@@ -114,7 +107,11 @@
   "pause": "Pause",
   "reset": "Réinitialiser",
   "weightUnit": "POIDS ({unit})",
-  "@weightUnit": { "placeholders": { "unit": {} } },
+  "@weightUnit": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
   "reps": "REPS",
   "log": "LOG",
   "manualMin": "MANUEL (MIN)",
@@ -141,7 +138,6 @@
   "deleteSet": "Supprimer le set",
   "save": "Sauvegarder",
   "swapExercise": "Changer d'exercice",
-
   "newRoutine": "Nouvelle routine",
   "editRoutine": "Modifier la routine",
   "routineName": "Nom de la routine",
@@ -160,7 +156,6 @@
   "saveChanges": "Enregistrer",
   "searchExercisesEllipsis": "Rechercher...",
   "added": "Ajouté",
-
   "newExerciseTitle": "Nouvel exercice",
   "editExercise": "Modifier l'exercice",
   "exerciseName": "Nom de l'exercice",
@@ -171,7 +166,6 @@
   "equipment": "Équipement",
   "instructionsFormTips": "Instructions et conseils",
   "instructionsHint": "Décrivez la mise en place, les repères d'exécution et les erreurs courantes.",
-
   "linkedAccount": "Compte lié",
   "dataSynced": "Vos données sont synchronisées sur tous vos appareils.",
   "switchAccount": "ou connectez-vous à un compte existant",
@@ -197,8 +191,6 @@
   "clearDataConfirm": "Cela supprimera tous les exercices et routines. Votre historique sera conservé.",
   "clear": "Effacer",
   "dataCleared": "Exercices et routines effacés",
-  "forceUpdateApp": "Forcer la mise à jour",
-
   "muscleHeatmap": "Carte musculaire",
   "activeMuscles": "Muscles actifs",
   "activeMusclesDesc": "Muscles ciblés par cet exercice (pulsation)",
@@ -207,9 +199,7 @@
   "recovered": "Récupéré",
   "fatigued": "Fatigué",
   "fatigueDecayNote": "Les couleurs s'estompent avec la récupération (~48h)",
-
   "all": "Tous",
-
   "muscleChest": "Pectoraux",
   "muscleBack": "Dos",
   "muscleShoulders": "Épaules",
@@ -220,7 +210,6 @@
   "muscleHamstrings": "Ischio-jambiers",
   "muscleGlutes": "Fessiers",
   "muscleLegs": "Jambes",
-
   "equipBarbell": "Barre",
   "equipDumbbells": "Haltères",
   "equipBench": "Banc",
@@ -229,7 +218,6 @@
   "equipCableMachine": "Poulie",
   "equipPullUpBar": "Barre de traction",
   "equipPlate": "Disque",
-
   "exercise_barbell_bench_press": "Développé couché barre",
   "exercise_incline_barbell_press": "Développé incliné barre",
   "exercise_decline_barbell_press": "Développé décliné barre",
@@ -238,7 +226,6 @@
   "exercise_cable_fly": "Écarté à la poulie",
   "exercise_pec_deck": "Pec deck",
   "exercise_push_up": "Pompes",
-
   "exercise_barbell_row": "Rowing barre",
   "exercise_dumbbell_row": "Rowing haltère",
   "exercise_lat_pulldown": "Tirage vertical",
@@ -247,26 +234,22 @@
   "exercise_seated_cable_row": "Tirage horizontal assis",
   "exercise_t_bar_row": "Rowing T-bar",
   "exercise_face_pull": "Face pull",
-
   "exercise_overhead_press": "Développé militaire",
   "exercise_dumbbell_shoulder_press": "Développé épaules haltères",
   "exercise_lateral_raise": "Élévation latérale",
   "exercise_front_raise": "Élévation frontale",
   "exercise_rear_delt_fly": "Oiseau",
   "exercise_arnold_press": "Arnold press",
-
   "exercise_barbell_curl": "Curl barre",
   "exercise_dumbbell_curl": "Curl haltère",
   "exercise_hammer_curl": "Curl marteau",
   "exercise_preacher_curl": "Curl pupitre",
   "exercise_cable_curl": "Curl poulie",
-
   "exercise_tricep_pushdown": "Pushdown triceps",
   "exercise_overhead_tricep_extension": "Extension triceps au-dessus",
   "exercise_skull_crusher": "Barre au front",
   "exercise_dips": "Dips",
   "exercise_close_grip_bench_press": "Développé couché prise serrée",
-
   "exercise_barbell_back_squat": "Squat barre",
   "exercise_front_squat": "Squat avant",
   "exercise_leg_press": "Presse à cuisses",
@@ -275,36 +258,29 @@
   "exercise_goblet_squat": "Goblet squat",
   "exercise_hack_squat": "Hack squat",
   "exercise_walking_lunge": "Fentes marchées",
-
   "exercise_romanian_deadlift": "Soulevé de terre roumain",
   "exercise_lying_leg_curl": "Leg curl allongé",
   "exercise_seated_leg_curl": "Leg curl assis",
   "exercise_stiff_leg_deadlift": "Soulevé jambes tendues",
   "exercise_good_morning": "Good morning",
-
   "exercise_hip_thrust": "Hip thrust",
   "exercise_glute_bridge": "Pont fessier",
   "exercise_cable_kickback": "Kickback poulie",
   "exercise_step_up": "Step-up",
-
   "exercise_crunch": "Crunch",
   "exercise_hanging_leg_raise": "Relevé de jambes suspendu",
   "exercise_plank": "Planche",
   "exercise_cable_woodchop": "Woodchop poulie",
   "exercise_ab_wheel_rollout": "Roue abdominale",
-
   "exercise_conventional_deadlift": "Soulevé de terre conventionnel",
   "exercise_sumo_deadlift": "Soulevé de terre sumo",
   "exercise_trap_bar_deadlift": "Soulevé de terre trap bar",
-
   "exercise_treadmill": "Tapis de course",
   "exercise_stationary_bike": "Vélo stationnaire",
   "exercise_rowing_machine": "Rameur",
   "exercise_stair_climber": "Escalier",
   "exercise_elliptical": "Elliptique",
-
   "language": "Langue",
-
   "front": "AVANT",
   "back": "ARRIÈRE",
   "muscleFatigueMap": "Carte de fatigue musculaire",
@@ -319,11 +295,9 @@
   "addExercise": "Ajouter un exercice",
   "takePhoto": "Prendre une photo",
   "chooseFromGallery": "Choisir dans la galerie",
-
   "archiveRoutine": "Archiver la routine",
   "archiveRoutineTitle": "Archiver cette routine ?",
   "archiveRoutineConfirm": "La routine sera masquée de votre bibliothèque, mais tout l'historique des séances sera conservé.",
-
   "smartPlannerTitle": "Planificateur intelligent",
   "generateSmartPlan": "Générer un plan intelligent",
   "smartPlanSubtitle": "Plan d'entraînement hebdomadaire assisté par IA",
@@ -342,7 +316,11 @@
   "adoptPlan": "Adopter le plan",
   "yourPlan": "Votre plan",
   "sessionsPerWeek": "{count} séances par semaine",
-  "@sessionsPerWeek": { "placeholders": { "count": {} } },
+  "@sessionsPerWeek": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "noAlternatives": "Aucune alternative disponible",
   "skip": "Passer",
   "general": "Général",
@@ -354,12 +332,23 @@
   "readinessLimitedData": "Données limitées",
   "syncedJustNow": "Synchronisé à l'instant",
   "syncedMinutesAgo": "Synchronisé il y a {minutes}m",
-  "@syncedMinutesAgo": { "placeholders": { "minutes": {} } },
+  "@syncedMinutesAgo": {
+    "placeholders": {
+      "minutes": {}
+    }
+  },
   "syncedHoursAgo": "Synchronisé il y a {hours}h",
-  "@syncedHoursAgo": { "placeholders": { "hours": {} } },
+  "@syncedHoursAgo": {
+    "placeholders": {
+      "hours": {}
+    }
+  },
   "syncedDaysAgo": "Synchronisé il y a {days}j",
-  "@syncedDaysAgo": { "placeholders": { "days": {} } },
-
+  "@syncedDaysAgo": {
+    "placeholders": {
+      "days": {}
+    }
+  },
   "settings": "Paramètres",
   "profile": "Profil",
   "sex": "Sexe",
@@ -385,21 +374,21 @@
   "account": "Compte",
   "aboutYou": "À propos de vous",
   "years": "ans",
-
   "navDashboard": "Tableau de bord",
   "navRoutines": "Routines",
   "navProgress": "Progression",
-
   "offlineMessage": "Vous êtes hors ligne — modifications enregistrées localement",
   "backOnline": "De retour en ligne",
-
   "workoutSummary": "Résumé de la séance",
   "summaryUnavailable": "Résumé indisponible",
   "workoutNotFound": "Cette séance est introuvable.",
-
   "resumeStaleSession": "Reprendre la session inactive ?",
   "staleSessionMessage": "Cette séance est inactive depuis {duration}. Vous pouvez la reprendre, la terminer ou l'abandonner.",
-  "@staleSessionMessage": { "placeholders": { "duration": {} } },
+  "@staleSessionMessage": {
+    "placeholders": {
+      "duration": {}
+    }
+  },
   "finishNow": "Terminer maintenant",
   "discard": "Abandonner",
   "noMatchingExercises": "Aucun exercice correspondant",
@@ -410,7 +399,11 @@
   "personalBest": "RP",
   "durationMin": "Durée (min)",
   "weightWithUnit": "Poids ({unit})",
-  "@weightWithUnit": { "placeholders": { "unit": {} } },
+  "@weightWithUnit": {
+    "placeholders": {
+      "unit": {}
+    }
+  },
   "repsLabel": "Reps",
   "rpeLabel": "RPE",
   "rpeHint": "Optionnel, 1-10",
@@ -418,8 +411,11 @@
   "sessionNoValidRoutine": "La session n'a pas de routine valide",
   "routineDeletedMessage": "La routine de cette session a peut-être été supprimée. Abandonnez cette session pour continuer.",
   "editSetNumber": "Modifier set {number}",
-  "@editSetNumber": { "placeholders": { "number": {} } },
-
+  "@editSetNumber": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "newGroup": "Nouveau groupe",
   "editGroup": "Modifier le groupe",
   "groupName": "Nom du groupe",
@@ -438,7 +434,6 @@
   "deleteGroupConfirm": "Supprimer le groupe ?",
   "deleteGroupMessage": "Cela supprime la séquence, mais conserve toutes les routines et l'historique.",
   "addRoutineSheet": "Ajouter une routine",
-
   "routineGroups": "Groupes de routines",
   "newGroupTooltip": "Nouveau groupe",
   "routineGroupsDescription": "Créez des splits ordonnés comme PPL ou Haut/Bas et choisissez lequel guide la recommandation du tableau de bord.",
@@ -446,22 +441,36 @@
   "createGroupToSequence": "Créez un groupe pour transformer l'entraînement suivant en une vraie séquence.",
   "activeLabel": "Actif",
   "nRoutines": "{count} routines",
-  "@nRoutines": { "placeholders": { "count": {} } },
+  "@nRoutines": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "currentCycle": "Cycle actuel : {names}",
-  "@currentCycle": { "placeholders": { "names": {} } },
-
+  "@currentCycle": {
+    "placeholders": {
+      "names": {}
+    }
+  },
   "groups": "Groupes",
   "noActiveGroup": "Aucun groupe actif",
   "createGroupPrompt": "Créez un groupe de routines pour gérer votre séquence.",
   "nRoutinesInRotation": "{count} routines en rotation",
-  "@nRoutinesInRotation": { "placeholders": { "count": {} } },
+  "@nRoutinesInRotation": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "createLabel": "Créer",
   "manageLabel": "Gérer",
-
   "sleepAndHrv": "Sommeil et VFC",
   "sleepHrvDescription": "Lire les données de sommeil et de variabilité cardiaque pour améliorer les recommandations.",
   "failedError": "Échec : {error}",
-  "@failedError": { "placeholders": { "error": {} } },
+  "@failedError": {
+    "placeholders": {
+      "error": {}
+    }
+  },
   "clearWorkoutHistory": "Effacer l'historique des séances",
   "clearWorkoutHistoryConfirm": "Effacer l'historique des séances ?",
   "clearWorkoutHistoryMessage": "Cela supprimera toutes les séances et données de performance. Vos exercices et routines seront conservés.",
@@ -471,7 +480,6 @@
   "legal": "Mentions légales",
   "privacyPolicy": "Politique de confidentialité",
   "termsOfUse": "Conditions d'utilisation",
-
   "muscleFatigue": "Fatigue musculaire",
   "engineDebug": "Debug moteur",
   "skipForNow": "Passer pour le moment",
@@ -479,9 +487,12 @@
   "workoutLabel": "Séance",
   "reviewSession": "Revoir la session",
   "nExercisesRemaining": "{count} exercices restants",
-  "@nExercisesRemaining": { "placeholders": { "count": {} } },
+  "@nExercisesRemaining": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "estimated1rmTracked": "1RM glissant moteur suivi automatiquement",
-
   "trainingReadiness": "Préparation à l'entraînement",
   "adaptiveGuidanceUnavailable": "Les conseils adaptatifs sont temporairement indisponibles.",
   "sleepLabel": "SOMMEIL",
@@ -503,25 +514,30 @@
   "moderateValue": "Modéré",
   "highValue": "Élevé",
   "recoveringStatus": "En récupération",
-
   "edit": "Modifier",
   "archiveLabel": "Archiver",
   "timedType": "Chronométré",
   "machinePhoto": "Photo de la machine",
   "addMachinePhoto": "Ajoutez une photo de la machine",
-
   "bestTime": "Meilleur temps",
   "bestSet": "Meilleur set",
   "estimated1rmLong": "1RM glissant moteur",
   "achievedLabel": "Atteint",
   "volumeData": "Données de volume",
   "weekOf": "Semaine du {date}",
-  "@weekOf": { "placeholders": { "date": {} } },
-
+  "@weekOf": {
+    "placeholders": {
+      "date": {}
+    }
+  },
   "whichDaysCommit": "Quels jours pouvez-vous vous entraîner ?",
   "detectedSplit": "Split détecté",
   "nDaysSelected": "{count} jours sélectionnés",
-  "@nDaysSelected": { "placeholders": { "count": {} } },
+  "@nDaysSelected": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "whatTrainingFor": "Quel est votre objectif et combien de temps pouvez-vous vous entraîner ?",
   "optionalCustomise": "Optionnel — personnalisez les exercices de votre plan.",
   "backButton": "Retour",
@@ -531,7 +547,6 @@
   "exercisesPrioritised": "Ces exercices seront priorisés dans votre plan.",
   "exercisesNeverAppear": "Ces exercices n'apparaîtront jamais dans votre plan.",
   "swapExerciseTitle": "Changer d'exercice",
-
   "dayMon": "Lun",
   "dayTue": "Mar",
   "dayWed": "Mer",
@@ -539,32 +554,133 @@
   "dayFri": "Ven",
   "daySat": "Sam",
   "daySun": "Dim",
-
   "restTimerComplete": "Repos terminé",
   "restCompleteBody": "Repos terminé. Retour à {exercise}.",
-  "@restCompleteBody": { "placeholders": { "exercise": {} } },
-
+  "@restCompleteBody": {
+    "placeholders": {
+      "exercise": {}
+    }
+  },
   "nSets": "{count} séries",
-  "@nSets": { "placeholders": { "count": {} } },
-
+  "@nSets": {
+    "placeholders": {
+      "count": {}
+    }
+  },
   "setNColon": "Set {number} :",
-  "@setNColon": { "placeholders": { "number": {} } },
+  "@setNColon": {
+    "placeholders": {
+      "number": {}
+    }
+  },
   "setNOfM": "SET {current} SUR {total}",
-  "@setNOfM": { "placeholders": { "current": {}, "total": {} } },
+  "@setNOfM": {
+    "placeholders": {
+      "current": {},
+      "total": {}
+    }
+  },
   "saveAndLogSet": "Sauver et enregistrer",
   "allExercisesCompleteExcl": "Tous les exercices terminés !",
   "addAnotherOrFinishWorkout": "Ajoutez un exercice ou terminez votre séance.",
   "exerciseFallback": "Exercice",
   "routineFallback": "Routine",
   "vsLastWeek": "{delta} vs semaine dernière",
-  "@vsLastWeek": { "placeholders": { "delta": {} } },
+  "@vsLastWeek": {
+    "placeholders": {
+      "delta": {}
+    }
+  },
   "est1rmValue": "1RM est. : {value}",
-  "@est1rmValue": { "placeholders": { "value": {} } },
+  "@est1rmValue": {
+    "placeholders": {
+      "value": {}
+    }
+  },
   "setTimedSummary": "Set {number} : {duration} min",
-  "@setTimedSummary": { "placeholders": { "number": {}, "duration": {} } },
+  "@setTimedSummary": {
+    "placeholders": {
+      "number": {},
+      "duration": {}
+    }
+  },
   "setWeightSummary": "Set {number} : {weight} x {reps}",
-  "@setWeightSummary": { "placeholders": { "number": {}, "weight": {}, "reps": {} } },
+  "@setWeightSummary": {
+    "placeholders": {
+      "number": {},
+      "weight": {},
+      "reps": {}
+    }
+  },
   "setWeightRpeSummary": "Set {number} : {weight} x {reps} • RPE {rpe}",
-  "@setWeightRpeSummary": { "placeholders": { "number": {}, "weight": {}, "reps": {}, "rpe": {} } },
-  "autoLabel": "Auto"
+  "@setWeightRpeSummary": {
+    "placeholders": {
+      "number": {},
+      "weight": {},
+      "reps": {},
+      "rpe": {}
+    }
+  },
+  "autoLabel": "Auto",
+  "liveActivityTotalSets": "{count} séries au total",
+  "@liveActivityTotalSets": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "liveActivitySetProgress": "{completed}/{total} séries",
+  "@liveActivitySetProgress": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "liveActivityTimedTarget": "Intervalles de {seconds} s",
+  "@liveActivityTimedTarget": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "liveActivityRepsTarget": "Objectif : {reps} répétitions",
+  "@liveActivityRepsTarget": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "plannerTimeLimitExceeded": "Ce programme nécessite au moins {minutes} minutes. Augmentez la durée ou choisissez moins d’exercices.",
+  "@plannerTimeLimitExceeded": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "plannerExercisesUnavailable": "Certains exercices ne sont plus disponibles. Générez un nouveau programme.",
+  "storageStatusTitle": "Stockage",
+  "storageSaving": "Enregistrement…",
+  "storageSaved": "Enregistré",
+  "storageLocal": "Enregistré sur cet appareil",
+  "storagePending": "Enregistré sur cet appareil. Synchronisation en attente.",
+  "storageSyncFailed": "Échec de la synchronisation. Vos modifications restent sur cet appareil.",
+  "storageLocalFailed": "Impossible d’enregistrer sur cet appareil. Gardez l’application ouverte et réessayez.",
+  "storageConflict": "Les deux copies ont modifié les mêmes données. Choisissez la version à conserver.",
+  "storageRetry": "Réessayer",
+  "storageKeepDevice": "Conserver la version de cet appareil",
+  "storageUseAccount": "Utiliser la version du compte",
+  "storageRecoveryCopy": "Restaurer la copie de récupération",
+  "storageConflictRecovery": "L’autre version sera conservée comme copie de récupération sur cet appareil.",
+  "authUnavailable": "Connexion indisponible. Réessayez lorsque la connexion revient.",
+  "reauthenticateToDelete": "Reconnectez-vous pour supprimer ce compte.",
+  "accountDeletedProviderCleanupFailed": "Compte supprimé. Le fournisseur d’identité n’a pas pu terminer la déconnexion.",
+  "storageCapacityExceeded": "Les données du compte sont trop volumineuses pour être synchronisées. Elles sont enregistrées sur cet appareil. Supprimez des photos d’exercices, puis réessayez."
 }

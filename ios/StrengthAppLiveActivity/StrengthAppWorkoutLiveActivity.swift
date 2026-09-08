@@ -50,7 +50,7 @@ struct StrengthAppWorkoutLiveActivity: Widget {
 
                         if let restEndAt = context.state.restEndAt, context.state.hasActiveRest,
                            restEndAt > context.state.updatedAt {
-                            Text("Rest:")
+                            Text(WorkoutStrings.string("rest", locale: context.state.locale ?? "en") + ":")
                                 .font(.caption.weight(.semibold))
                                 .foregroundColor(.gray)
                             Text(timerInterval: context.state.updatedAt...restEndAt, countsDown: true)
@@ -58,7 +58,7 @@ struct StrengthAppWorkoutLiveActivity: Widget {
                                 .monospacedDigit()
                                 .foregroundColor(.white)
                         } else {
-                            Text("Ready for next set")
+                            Text(WorkoutStrings.string("ready", locale: context.state.locale ?? "en"))
                                 .font(.caption.weight(.semibold))
                                 .foregroundColor(.green)
                         }
@@ -116,7 +116,7 @@ private struct WorkoutLiveActivityView: View {
                 Spacer(minLength: 8)
 
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("SESSION")
+                    Text(WorkoutStrings.string("session", locale: context.state.locale ?? "en").uppercased())
                         .font(.caption2.weight(.semibold))
                         .foregroundColor(.gray)
 
@@ -130,7 +130,7 @@ private struct WorkoutLiveActivityView: View {
             // Metrics row
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("PROGRESS")
+                    Text(WorkoutStrings.string("progress", locale: context.state.locale ?? "en").uppercased())
                         .font(.caption2.weight(.semibold))
                         .foregroundColor(.gray)
                     Text(context.state.currentExerciseProgressText)
@@ -143,13 +143,13 @@ private struct WorkoutLiveActivityView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("TARGET")
+                    Text(WorkoutStrings.string("target", locale: context.state.locale ?? "en").uppercased())
                         .font(.caption2.weight(.semibold))
                         .foregroundColor(.gray)
                     Text(context.state.exerciseDetailText)
                         .font(.subheadline.weight(.bold))
                         .foregroundColor(.white)
-                    Text("Exercise \(context.state.currentExerciseIndex) of \(context.state.totalExercises)")
+                    Text(String(format: WorkoutStrings.string("exercise_of", locale: context.state.locale ?? "en"), context.state.currentExerciseIndex, context.state.totalExercises))
                         .font(.caption2)
                         .foregroundColor(.gray)
                 }
@@ -164,7 +164,7 @@ private struct WorkoutLiveActivityView: View {
 
                 if let restEndAt = context.state.restEndAt, context.state.hasActiveRest,
                    restEndAt > context.state.updatedAt {
-                    Text("Rest:")
+                    Text(WorkoutStrings.string("rest", locale: context.state.locale ?? "en") + ":")
                         .font(.caption.weight(.semibold))
                         .foregroundColor(.gray)
                     Text(timerInterval: context.state.updatedAt...restEndAt, countsDown: true)
@@ -172,7 +172,7 @@ private struct WorkoutLiveActivityView: View {
                         .monospacedDigit()
                         .foregroundColor(.white)
                 } else {
-                    Text("Ready for next set")
+                    Text(WorkoutStrings.string("ready", locale: context.state.locale ?? "en"))
                         .font(.caption.weight(.semibold))
                         .foregroundColor(.green)
                 }

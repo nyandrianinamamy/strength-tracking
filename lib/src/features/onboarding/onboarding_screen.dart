@@ -5,10 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:strength_training_tracker/src/core/app_state_controller.dart';
 import 'package:strength_training_tracker/src/core/theme/app_colors.dart';
-import 'package:strength_training_tracker/src/data/repository/app_state_repository.dart';
 import 'package:strength_training_tracker/src/data/seed/demo_seed_data.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
-import 'package:strength_training_tracker/src/features/auth/invite_access.dart';
+import 'package:strength_training_tracker/src/features/auth/account_session_controller.dart';
 import 'package:strength_training_tracker/src/shared/widgets/app_loading_screen.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -67,44 +66,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _signInWith(String provider) async {
     setState(() => _isSigningIn = true);
     try {
-      final authService = ref.read(authServiceProvider);
-      if (provider == 'google') {
-        await authService.signInWithGoogle();
-      } else if (provider == 'email') {
-        await authService.signInWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-        );
-      } else {
-        await authService.signInWithApple();
-      }
-
-      await InviteAccessService().requireAllowed(authService.currentUser);
-
-      // Load data from the signed-in user's Firestore
-      final repository = FirestoreAppStateRepository(
-        auth: authService.firebaseAuth,
-      );
-      final cloudState = await repository.load();
-
-      // Update the app state with the cloud data
-      ref.read(appStateControllerProvider.notifier).replaceState(cloudState);
-
+      final auth = ref.read(authServiceProvider);
+      await ref.read(accountSessionControllerProvider).signIn(() {
+        return switch (provider) {
+          'google' => auth.signInWithGoogle(),
+          'email' => auth.signInWithEmailAndPassword(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+          ),
+          _ => auth.signInWithApple(),
+        };
+      });
       if (mounted) context.go('/');
-    } catch (e) {
-      await ref.read(authServiceProvider).signOut();
+    } on AuthOperationCancelled {
+      // Cancellation leaves the previous account and its durable state intact.
+    } catch (error) {
       if (mounted) {
-        setState(() => _isSigningIn = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('${AppLocalizations.of(context)!.signInFailed}: $e'),
+            content: Text(
+              '${AppLocalizations.of(context)!.signInFailed}: $error',
+            ),
           ),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isSigningIn = false);
     }
   }
 
   void _startTraining() {
+    if (!ref.read(accountAccessAvailableProvider)) return;
     final age = int.tryParse(_ageController.text.trim());
     final weight = double.tryParse(_weightController.text.trim());
     ref

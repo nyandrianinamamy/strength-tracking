@@ -49,7 +49,7 @@ class InviteAccessService {
     final snapshot = await _firestore
         .collection('allowedEmails')
         .doc(normalizedEmail)
-        .get();
+        .get(const GetOptions(source: Source.server));
     return InviteAccess.fromSnapshot(normalizedEmail, snapshot);
   }
 

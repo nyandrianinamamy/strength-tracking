@@ -102,8 +102,20 @@ final smartPlannerControllerProvider =
 // ---------------------------------------------------------------------------
 
 class SmartPlannerController extends Notifier<SmartPlannerState> {
+  int _generation = 0;
+  bool _disposed = false;
+
   @override
-  SmartPlannerState build() => const SmartPlannerState();
+  SmartPlannerState build() {
+    ref.watch(accountTrainingEngineRepositoryProvider);
+    _generation++;
+    _disposed = false;
+    ref.onDispose(() {
+      _disposed = true;
+      _generation++;
+    });
+    return const SmartPlannerState();
+  }
 
   // ── Wizard config mutations ───────────────────────────────────────────────
 
@@ -140,24 +152,36 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
   // ── Plan generation ───────────────────────────────────────────────────────
 
   Future<void> generatePlan(List<Exercise> appExercises) async {
+    final configuration = state;
+    final generation = ++_generation;
+    final owner = ref.read(accountTrainingEngineRepositoryProvider);
     final registry = PlannerRegistryAdapter.buildRegistry(appExercises);
     final engineContext = await _readPlannerEngineContext();
+    if (_disposed || generation != _generation) return;
+    if (!identical(owner, ref.read(accountTrainingEngineRepositoryProvider)) ||
+        !identical(configuration, state)) {
+      return;
+    }
 
     final config = PlannerConfig(
-      availableDays: state.selectedDays.toList(),
-      maxSessionDuration: Duration(minutes: state.maxDurationMinutes),
-      goal: state.goal,
-      preferredExercises: state.preferredExercises,
-      excludedExercises: state.excludedExercises,
+      availableDays: configuration.selectedDays.toList(),
+      maxSessionDuration: Duration(minutes: configuration.maxDurationMinutes),
+      goal: configuration.goal,
+      preferredExercises: configuration.preferredExercises,
+      excludedExercises: configuration.excludedExercises,
       engineContext: engineContext,
     );
 
     final rawPlan = generateWeeklyPlan(config, registry);
 
     // Apply time-bounding per session
-    final maxDuration = Duration(minutes: state.maxDurationMinutes);
+    final maxDuration = Duration(minutes: configuration.maxDurationMinutes);
     final boundedSessions = rawPlan.sessions.map((session) {
-      final bounded = boundSessionToTime(session, maxDuration);
+      final bounded = boundSessionToTime(
+        session,
+        maxDuration,
+        allowSupersets: false,
+      );
       return bounded.session;
     }).toList();
 
@@ -188,11 +212,23 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
   }) {
     final plan = state.generatedPlan;
     if (plan == null) return;
-    if (sessionIndex >= plan.sessions.length) return;
+    if (sessionIndex < 0 || sessionIndex >= plan.sessions.length) return;
 
     final session = plan.sessions[sessionIndex];
-    if (exerciseIndex >= session.exercises.length) return;
+    if (exerciseIndex < 0 || exerciseIndex >= session.exercises.length) return;
 
+    if (exerciseId != null) {
+      final registry = PlannerRegistryAdapter.buildRegistry(
+        ref.read(appStateControllerProvider).exercises,
+      );
+      if (registry.lookup(exerciseId) == null ||
+          session.exercises.indexed.any(
+            (entry) =>
+                entry.$1 != exerciseIndex && entry.$2.exerciseId == exerciseId,
+          )) {
+        return;
+      }
+    }
     final original = session.exercises[exerciseIndex];
     final updated = original.copyWith(
       exerciseId: exerciseId,
@@ -229,10 +265,10 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
   void removeExercise({required int sessionIndex, required int exerciseIndex}) {
     final plan = state.generatedPlan;
     if (plan == null) return;
-    if (sessionIndex >= plan.sessions.length) return;
+    if (sessionIndex < 0 || sessionIndex >= plan.sessions.length) return;
 
     final session = plan.sessions[sessionIndex];
-    if (exerciseIndex >= session.exercises.length) return;
+    if (exerciseIndex < 0 || exerciseIndex >= session.exercises.length) return;
 
     final newExercises = List<PlannedExercise>.from(session.exercises)
       ..removeAt(exerciseIndex);
@@ -257,9 +293,20 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
 
   // ── Adoption ──────────────────────────────────────────────────────────────
 
-  void adopt(AppStateController appStateController) {
+  bool adopt(AppStateController appStateController) {
     final plan = state.generatedPlan;
-    if (plan == null) return;
+    if (plan == null) return false;
+    // The library can change while a generated preview remains open. Refuse
+    // adoption if any selected exercise has since been archived or removed.
+    final available = PlannerRegistryAdapter.buildRegistry(
+      appStateController.state.exercises,
+    );
+    if (plan.sessions.any(
+      (session) =>
+          session.exercises.any((e) => available.lookup(e.exerciseId) == null),
+    )) {
+      return false;
+    }
 
     const uuid = Uuid();
 
@@ -379,6 +426,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
         activeRoutineGroupId: group.id,
       );
     });
+    return true;
   }
 
   Map<String, dynamic> _plannerMetadataFor(PlannedExercise exercise) {
@@ -414,6 +462,7 @@ class SmartPlannerController extends Notifier<SmartPlannerState> {
   // ── Reset ─────────────────────────────────────────────────────────────────
 
   void reset() {
+    _generation++;
     state = const SmartPlannerState();
   }
 }

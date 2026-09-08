@@ -6,7 +6,6 @@ struct StrengthExerciseView: View {
     let totalExercises: Int
     let nextExerciseName: String?
     let sessionStartedAt: String
-    let activeRest: WatchRestState?
     let activeRestRemaining: Int
     let locale: String
     let unit: String
@@ -27,7 +26,7 @@ struct StrengthExerciseView: View {
 
                 Spacer().frame(height: activeRestRemaining > 0 ? 5 : 10)
 
-                Text(WatchL10n.setOf(nextSetNumber, exercise.targetSets, locale: locale))
+                Text(WorkoutStrings.setOf(nextSetNumber, exercise.targetSets, locale: locale))
                     .font(.system(size: 10, weight: .bold))
                     .textCase(.uppercase)
                     .foregroundColor(Color(white: 0.63))
@@ -41,10 +40,10 @@ struct StrengthExerciseView: View {
                 Spacer().frame(height: 7)
 
                 VStack(spacing: 6) {
-                    StrengthInfoRow(label: "Target", value: "\(exercise.targetReps) reps / \(exercise.restSeconds)s rest")
-                    StrengthInfoRow(label: "Last", value: lastSetText)
+                    StrengthInfoRow(label: WorkoutStrings.string("target", locale: locale), value: "\(exercise.targetReps) \(WorkoutStrings.string("reps", locale: locale)) / \(exercise.restSeconds)s \(WorkoutStrings.string("rest", locale: locale))")
+                    StrengthInfoRow(label: WorkoutStrings.string("last", locale: locale), value: lastSetText)
                     if exercise.suggestedWeightKg > 0 {
-                        StrengthInfoRow(label: "Next", value: formatWeight(exercise.suggestedWeightKg, unit: unit))
+                        StrengthInfoRow(label: WorkoutStrings.string("next", locale: locale), value: formatWeight(exercise.suggestedWeightKg, unit: unit))
                     }
                 }
 
@@ -72,7 +71,7 @@ struct StrengthExerciseView: View {
     private var restPill: some View {
         HStack {
             Spacer(minLength: 0)
-            Text("Rest \(formatTime(activeRestRemaining))")
+            Text("\(WorkoutStrings.string("rest", locale: locale)) \(formatTime(activeRestRemaining))")
                 .font(.system(size: 12, weight: .black, design: .rounded))
                 .monospacedDigit()
             Spacer(minLength: 0)
@@ -94,7 +93,7 @@ struct StrengthExerciseView: View {
         HStack {
             if let nextExerciseName {
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(WatchL10n.string("next", locale: locale))
+                    Text(WorkoutStrings.string("next", locale: locale))
                         .font(.system(size: 8, weight: .bold))
                         .textCase(.uppercase)
                         .foregroundColor(Color(white: 0.63))

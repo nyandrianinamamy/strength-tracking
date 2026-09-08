@@ -57,6 +57,7 @@ class SmartPlannerScreen extends ConsumerWidget {
           plan: plan,
           editedKeys: plannerState.editedExerciseKeys,
           exerciseNameResolver: exerciseNameResolver,
+          maxDurationMinutes: plannerState.maxDurationMinutes,
           onExerciseUpdated:
               ({
                 required int sessionIndex,
@@ -82,7 +83,13 @@ class SmartPlannerScreen extends ConsumerWidget {
               ({required int sessionIndex, required int exerciseIndex}) {
                 final session = plan.sessions[sessionIndex];
                 final exerciseId = session.exercises[exerciseIndex].exerciseId;
-                final alternatives = registry.substitutesFor(exerciseId);
+                final alternatives = registry
+                    .substitutesFor(exerciseId)
+                    .where(
+                      (e) =>
+                          !session.exercises.any((p) => p.exerciseId == e.id),
+                    )
+                    .toList();
 
                 showModalBottomSheet<void>(
                   context: context,
@@ -164,7 +171,12 @@ class SmartPlannerScreen extends ConsumerWidget {
             await notifier.generatePlan(exercises);
           },
           onAdopt: () {
-            notifier.adopt(appStateController);
+            if (!notifier.adopt(appStateController)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.plannerExercisesUnavailable)),
+              );
+              return;
+            }
             notifier.reset();
             context.go('/routines');
           },

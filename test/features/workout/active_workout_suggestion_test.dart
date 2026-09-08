@@ -85,7 +85,7 @@ WorkoutSession _completedSession({
   );
 }
 
-Map<String, dynamic> _savedBenchEngineState({
+TrainingEngine _benchEngineFixture({
   required String sessionId,
   required DateTime completedAt,
 }) {
@@ -120,20 +120,22 @@ Map<String, dynamic> _savedBenchEngineState({
     ),
   );
 
-  return engine.serializeState();
+  return engine;
 }
 
 ProviderContainer _containerFor(
   AppState appState, {
-  TrainingEngineStateRepository? engineRepository,
+  TrainingEngine? engineFixture,
 }) {
   final appRepository = MemoryAppStateRepository(initialState: appState);
   return ProviderContainer(
     overrides: [
       appStateRepositoryProvider.overrideWithValue(appRepository),
       initialAppStateProvider.overrideWithValue(appRepository.state),
+      if (engineFixture != null)
+        trainingEngineProvider.overrideWith((ref) async => engineFixture),
       trainingEngineStateRepositoryProvider.overrideWithValue(
-        engineRepository ?? MemoryTrainingEngineStateRepository(),
+        MemoryTrainingEngineStateRepository(),
       ),
     ],
   );
@@ -219,11 +221,9 @@ void main() {
       );
       final container = _containerFor(
         appState,
-        engineRepository: MemoryTrainingEngineStateRepository(
-          initialState: _savedBenchEngineState(
-            sessionId: 'engine-history',
-            completedAt: completedAt,
-          ),
+        engineFixture: _benchEngineFixture(
+          sessionId: 'engine-history',
+          completedAt: completedAt,
         ),
       );
       addTearDown(container.dispose);

@@ -1148,12 +1148,6 @@ abstract class AppLocalizations {
   /// **'Exercises & routines cleared'**
   String get dataCleared;
 
-  /// No description provided for @forceUpdateApp.
-  ///
-  /// In en, this message translates to:
-  /// **'Force Update App'**
-  String get forceUpdateApp;
-
   /// No description provided for @muscleHeatmap.
   ///
   /// In en, this message translates to:
@@ -2982,6 +2976,144 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Auto'**
   String get autoLabel;
+
+  /// No description provided for @liveActivityTotalSets.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} total sets'**
+  String liveActivityTotalSets(int count);
+
+  /// No description provided for @liveActivitySetProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'{completed}/{total} sets'**
+  String liveActivitySetProgress(int completed, int total);
+
+  /// No description provided for @liveActivityTimedTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{seconds}s intervals'**
+  String liveActivityTimedTarget(int seconds);
+
+  /// No description provided for @liveActivityRepsTarget.
+  ///
+  /// In en, this message translates to:
+  /// **'{reps} reps target'**
+  String liveActivityRepsTarget(int reps);
+
+  /// No description provided for @plannerTimeLimitExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'This plan needs at least {minutes} minutes. Increase your time limit or choose fewer exercises.'**
+  String plannerTimeLimitExceeded(int minutes);
+
+  /// No description provided for @plannerExercisesUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Some exercises are no longer available. Generate a new plan.'**
+  String get plannerExercisesUnavailable;
+
+  /// No description provided for @storageStatusTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Storage'**
+  String get storageStatusTitle;
+
+  /// No description provided for @storageSaving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get storageSaving;
+
+  /// No description provided for @storageSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved'**
+  String get storageSaved;
+
+  /// No description provided for @storageLocal.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device'**
+  String get storageLocal;
+
+  /// No description provided for @storagePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved on this device. Waiting to sync.'**
+  String get storagePending;
+
+  /// No description provided for @storageSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed. Your edits remain on this device.'**
+  String get storageSyncFailed;
+
+  /// No description provided for @storageLocalFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save on this device. Keep the app open and retry.'**
+  String get storageLocalFailed;
+
+  /// No description provided for @storageConflict.
+  ///
+  /// In en, this message translates to:
+  /// **'Both copies changed the same data. Choose which version to keep.'**
+  String get storageConflict;
+
+  /// No description provided for @storageRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get storageRetry;
+
+  /// No description provided for @storageKeepDevice.
+  ///
+  /// In en, this message translates to:
+  /// **'Keep this device’s version'**
+  String get storageKeepDevice;
+
+  /// No description provided for @storageUseAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Use account version'**
+  String get storageUseAccount;
+
+  /// No description provided for @storageRecoveryCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Restore recovery copy'**
+  String get storageRecoveryCopy;
+
+  /// No description provided for @storageConflictRecovery.
+  ///
+  /// In en, this message translates to:
+  /// **'The other version will be kept as a recovery copy on this device.'**
+  String get storageConflictRecovery;
+
+  /// No description provided for @authUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in is unavailable. Try again when the connection returns.'**
+  String get authUnavailable;
+
+  /// No description provided for @reauthenticateToDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in again to delete this account.'**
+  String get reauthenticateToDelete;
+
+  /// No description provided for @accountDeletedProviderCleanupFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted. The identity provider could not finish disconnecting.'**
+  String get accountDeletedProviderCleanupFailed;
+
+  /// No description provided for @storageCapacityExceeded.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account data is too large to sync. It is saved on this device. Remove exercise photos, then retry.'**
+  String get storageCapacityExceeded;
 }
 
 class _AppLocalizationsDelegate
