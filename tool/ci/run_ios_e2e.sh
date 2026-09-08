@@ -6,6 +6,7 @@ run_started=$SECONDS
 # Default: fresh iPhone simulator, always deleted on exit. An explicit UDID is
 # permitted only if simctl confirms it is an existing simulator; it is retained.
 cd "$(dirname "$0")/../.."
+suite_args=("$@")
 with_auth=false
 with_watch=false
 ui_only=false
@@ -31,6 +32,7 @@ if "$with_auth"; then command -v firebase >/dev/null; fi
 
 output_dir="${IOS_E2E_OUTPUT_DIR:-$PWD/build/ios-e2e}"
 mkdir -p "$output_dir"
+export IOS_E2E_OUTPUT_DIR="$output_dir"
 simulator=''
 simulator_manifest="$(mktemp "$output_dir/owned-simulators.XXXXXX")"
 plist_backup=''
@@ -85,45 +87,8 @@ pathlib.Path(sys.argv[1]).write_text(json.dumps(manifest, indent=2) + '\n')
 PYSOURCE
 xcrun simctl list devices --json > "$output_dir/simulators.json"
 
-suite_failed=0
-printf 'suite\tstatus\texit_code\n' > "$output_dir/results.tsv"
 printf 'suite\telapsed_seconds\nsetup\t%s\n' "$((SECONDS - run_started))" > "$output_dir/timings.tsv"
-run_suite() {
-  local suite_name="$1"
-  local suite_started=$SECONDS
-  shift
-  if "$@" 2>&1 | tee "$output_dir/$suite_name.log"; then
-    printf '%s\tPASS\t0\n' "$suite_name" | tee -a "$output_dir/results.tsv"
-  else
-    local result=$?
-    printf '%s\tFAIL\t%s\n' "$suite_name" "$result" | tee -a "$output_dir/results.tsv"
-    suite_failed=1
-  fi
-  local elapsed=$((SECONDS - suite_started))
-  printf '%s\t%s\n' "$suite_name" "$elapsed" >> "$output_dir/timings.tsv"
-  printf '%s completed in %s seconds\n' "$suite_name" "$elapsed"
-}
-
-run_suite app-ui flutter test integration_test/ios_app_test.dart \
-  -d "$simulator" --dart-define=E2E_DISPOSABLE_SIMULATOR=true \
-  --timeout 10m --reporter expanded
-if "$ui_only"; then exit "$suite_failed"; fi
-
-run_suite native-wiring flutter test integration_test/native_runtime_wiring_test.dart \
-  -d "$simulator" --timeout 5m --reporter expanded
-
-if "$with_watch"; then
-  # Flutter reinstalls the phone app; the host driver installs its companion
-  # after that step, when the phone has reached the preparation checkpoint.
-  run_suite paired-watch flutter drive --driver=test_driver/paired_watch_driver.dart \
-    --target=integration_test/paired_watch_test.dart -d "$simulator" \
-    --dart-define=E2E_DISPOSABLE_SIMULATOR=true \
-    --dart-define=E2E_PHONE_SIMULATOR_UDID="$simulator"
-fi
-
 if "$with_auth"; then
-  # simctl UDIDs have a constrained form, so this is safe to pass as the
-  # emulators:exec command. The Firebase project can never resolve to production.
   python3 - "$PWD/firestore.rules" "$output_dir/firebase-emulators.json" <<'PYCONFIG'
 import json, sys
 with open(sys.argv[2], "w") as stream:
@@ -134,18 +99,10 @@ PYCONFIG
   export FIREBASE_EMULATOR_PROJECT=demo-kotrana-e2e
   export FIREBASE_AUTH_EMULATOR_PORT=19099
   export FIRESTORE_EMULATOR_PORT=18081
-  run_suite firestore-rules firebase emulators:exec --config "$output_dir/firebase-emulators.json" \
-    --project demo-kotrana-e2e --only auth,firestore \
-    "dart run tool/verify_firestore_rules.dart"
-  run_suite invite-auth firebase emulators:exec --config "$output_dir/firebase-emulators.json" \
-    --project demo-kotrana-e2e --only auth,firestore \
-    "flutter test integration_test/ios_invite_auth_test.dart -d $simulator --dart-define=E2E_DISPOSABLE_SIMULATOR=true --timeout 10m --reporter expanded"
-  run_suite startup firebase emulators:exec --config "$output_dir/firebase-emulators.json" \
-    --project demo-kotrana-e2e --only auth,firestore \
-    "flutter test integration_test/ios_startup_test.dart -d $simulator --dart-define=E2E_DISPOSABLE_SIMULATOR=true --timeout 10m --reporter expanded"
-  run_suite persistence-restart firebase emulators:exec --config "$output_dir/firebase-emulators.json" \
-    --project demo-kotrana-e2e --only auth,firestore \
-    "bash tool/ci/run_persistence_restart.sh"
+  suite_command='bash tool/ci/run_ios_e2e_suites.sh --with-auth'
+  if "$with_watch"; then suite_command+=' --paired-watch'; fi
+  firebase emulators:exec --config "$output_dir/firebase-emulators.json" \
+    --project demo-kotrana-e2e --only auth,firestore "$suite_command"
+else
+  bash tool/ci/run_ios_e2e_suites.sh "${suite_args[@]}"
 fi
-
-exit "$suite_failed"

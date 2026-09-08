@@ -152,7 +152,7 @@ class _WatchHost {
             '--terminate-running-process',
             watchId,
             _watchBundleId,
-          ]);
+          ], timeout: const Duration(seconds: 30));
           final container = await _simctl([
             'get_app_container',
             watchId,
@@ -161,7 +161,11 @@ class _WatchHost {
           ]);
           _cachePath = '$container/Library/Preferences/$_watchBundleId.plist';
         } else {
-          await _simctl(['launch', watchId, _watchBundleId]);
+          await _simctl([
+            'launch',
+            watchId,
+            _watchBundleId,
+          ], timeout: const Duration(seconds: 30));
         }
       } else if (request['mode'] == 'relaunch') {
         if (_cachePath == null) {
@@ -172,7 +176,7 @@ class _WatchHost {
           '--terminate-running-process',
           watchId,
           _watchBundleId,
-        ]);
+        ], timeout: const Duration(seconds: 30));
       } else {
         if (_cachePath == null) {
           throw StateError('Watch preparation is missing.');

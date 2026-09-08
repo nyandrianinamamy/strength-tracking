@@ -9,10 +9,14 @@ import 'package:strength_training_tracker/src/features/routines/routines_screen.
 import 'ios_fixtures.dart';
 import 'ios_app_helpers.dart';
 
-void main() {
+void main() => registerTests();
+
+void registerTests({bool configurePreferences = true}) {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   WidgetController.hitTestWarningShouldBeFatal = true;
-  SharedPreferences.setPrefix('kotrana_ios_e2e.');
+  if (configurePreferences) {
+    SharedPreferences.setPrefix('kotrana_ios_e2e.');
+  }
 
   setUpAll(() {
     if (kIsWeb ||

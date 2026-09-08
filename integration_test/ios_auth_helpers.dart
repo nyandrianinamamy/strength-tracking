@@ -14,8 +14,15 @@ const inviteTestOptions = FirebaseOptions(
   projectId: inviteTestProject,
 );
 
-Future<({FirebaseAuth auth, FirebaseFirestore firestore})>
-connectInviteEmulators() async {
+typedef InviteEmulators = ({FirebaseAuth auth, FirebaseFirestore firestore});
+Future<InviteEmulators>? _inviteEmulators;
+
+// The combined suite shares one native Firebase instance. Configure its emulator
+// endpoints before first use, once per process; each test still resets its data.
+Future<InviteEmulators> connectInviteEmulators() =>
+    _inviteEmulators ??= _connectInviteEmulators();
+
+Future<InviteEmulators> _connectInviteEmulators() async {
   final app = await Firebase.initializeApp(options: inviteTestOptions);
   expect(app.options.projectId, inviteTestProject);
   final auth = FirebaseAuth.instance;

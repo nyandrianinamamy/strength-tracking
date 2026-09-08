@@ -15,6 +15,7 @@ import 'package:strength_training_tracker/src/data/models/workout_session.dart';
 import 'package:strength_training_tracker/src/data/repository/account_app_state_repository.dart';
 import 'package:strength_training_tracker/src/features/auth/auth_service.dart';
 
+import 'host_checkpoint.dart';
 import 'ios_app_helpers.dart';
 import 'ios_auth_helpers.dart';
 import 'ios_fixtures.dart';
@@ -65,7 +66,7 @@ void main() {
       );
       await tester.pump();
 
-      await binding.checkpoint('prepare', {
+      await binding.checkpoint(tester, 'prepare', {
         'mode': 'prepare',
         'phoneSimulatorId': simulatorId,
         'isPhysicalDevice': device?['isPhysicalDevice'],
@@ -88,9 +89,11 @@ void main() {
           // A freshly installed Watch can activate before wcd has indexed its
           // companion metadata. Retry that process only; require real reachability.
           launchRetries++;
-          await binding.checkpoint('watch-activation-retry-$launchRetries', {
-            'mode': 'relaunch',
-          });
+          await binding.checkpoint(
+            tester,
+            'watch-activation-retry-$launchRetries',
+            {'mode': 'relaunch'},
+          );
           retryAt = DateTime.now().add(const Duration(seconds: 5));
         }
         await tester.pump(const Duration(milliseconds: 500));
@@ -111,7 +114,7 @@ void main() {
         'sendSessionUpdate',
         _snapshot(sessionA, exerciseIndex: 0, completedSets: 0),
       );
-      await binding.checkpoint('session-a-start', {
+      await binding.checkpoint(tester, 'session-a-start', {
         'mode': 'snapshot',
         'expected': _expected(sessionA, exerciseIndex: 0, completedSets: 0),
         'expectedVisibleText': 'Test strength exercise',
@@ -121,7 +124,7 @@ void main() {
         'sendSessionUpdate',
         _snapshot(sessionA, exerciseIndex: 1, completedSets: 1),
       );
-      await binding.checkpoint('session-a-next-exercise', {
+      await binding.checkpoint(tester, 'session-a-next-exercise', {
         'mode': 'snapshot',
         'expected': _expected(sessionA, exerciseIndex: 1, completedSets: 1),
         'expectedVisibleText': 'Test timed exercise',
@@ -133,7 +136,7 @@ void main() {
         'sendSessionUpdate',
         _snapshot(sessionB, exerciseIndex: 0, completedSets: 0),
       );
-      await binding.checkpoint('session-b-survives-prior-end', {
+      await binding.checkpoint(tester, 'session-b-survives-prior-end', {
         'mode': 'snapshot',
         'expected': _expected(sessionB, exerciseIndex: 0, completedSets: 0),
         'expectedVisibleText': 'Test strength exercise',
@@ -141,7 +144,7 @@ void main() {
       });
 
       await _watchChannel.invokeMethod<void>('sendSessionEnd');
-      await binding.checkpoint('session-b-ended', {
+      await binding.checkpoint(tester, 'session-b-ended', {
         'mode': 'idle',
         'stableForSeconds': 1,
         'expectedVisibleText': 'Aucune séance active',
@@ -213,7 +216,7 @@ void main() {
       expect(container.read(appStateControllerProvider).activeSession, isNull);
       await _expectActivity(tester, sessionId: null);
 
-      await binding.checkpoint('app-prepare', {
+      await binding.checkpoint(tester, 'app-prepare', {
         'mode': 'prepare',
         'phoneSimulatorId': simulatorId,
         'isPhysicalDevice': device?['isPhysicalDevice'],
@@ -228,7 +231,7 @@ void main() {
       expect(session.routineId, 'e2e_push_routine');
       expect(session.completedSets, isEmpty);
       await _expectActivity(tester, sessionId: sessionId, completedSets: 0);
-      await binding.checkpoint('app-workout-started', {
+      await binding.checkpoint(tester, 'app-workout-started', {
         'mode': 'snapshot',
         'expected': _appExpected(sessionId, completedSets: 0),
         'expectedVisibleText': 'Flow Bench Press',
@@ -245,7 +248,7 @@ void main() {
       expect(logged.reps, 6);
       expect(logged.rpe, 8);
       await _expectActivity(tester, sessionId: sessionId, completedSets: 1);
-      await binding.checkpoint('app-strength-set-logged', {
+      await binding.checkpoint(tester, 'app-strength-set-logged', {
         'mode': 'snapshot',
         'expected': _appExpected(sessionId, completedSets: 1),
         'expectedVisibleText': '80 kg x 6',
@@ -254,7 +257,7 @@ void main() {
       await finishUi(tester);
       expect(container.read(appStateControllerProvider).activeSession, isNull);
       await _expectActivity(tester, sessionId: null);
-      await binding.checkpoint('app-workout-finished', {
+      await binding.checkpoint(tester, 'app-workout-finished', {
         'mode': 'idle',
         'stableForSeconds': 1,
         'expectedVisibleText': 'No active workout',
@@ -317,7 +320,7 @@ Future<void> _waitForAppWatch(
     if (paired == true && reachable == true) return;
     if (reachable != true && retries < 2 && DateTime.now().isAfter(retryAt)) {
       retries++;
-      await binding.checkpoint('app-watch-activation-retry-$retries', {
+      await binding.checkpoint(tester, 'app-watch-activation-retry-$retries', {
         'mode': 'relaunch',
       });
       retryAt = DateTime.now().add(const Duration(seconds: 5));
@@ -464,7 +467,11 @@ class _PairedWatchBinding extends IntegrationTestWidgetsFlutterBinding {
   Completer<Map<String, dynamic>>? _acknowledgment;
   String? _pendingName;
 
-  Future<void> checkpoint(String name, Map<String, Object?> request) async {
+  Future<void> checkpoint(
+    WidgetTester tester,
+    String name,
+    Map<String, Object?> request,
+  ) async {
     if (_acknowledgment != null) {
       throw StateError('A Watch checkpoint is already waiting.');
     }
@@ -473,9 +480,7 @@ class _PairedWatchBinding extends IntegrationTestWidgetsFlutterBinding {
     _acknowledgment = acknowledgment;
     _next.complete({'name': name, ...request});
     try {
-      final result = await acknowledgment.future.timeout(
-        const Duration(seconds: 120),
-      );
+      final result = await pumpUntilHostResponse(tester, acknowledgment.future);
       reportData ??= {};
       final checkpoints =
           reportData!.putIfAbsent('watchCheckpoints', () => <Object?>[])

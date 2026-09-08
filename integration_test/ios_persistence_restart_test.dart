@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -12,21 +14,24 @@ import 'ios_auth_helpers.dart';
 import 'ios_fixtures.dart';
 
 void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+  final binding = _PersistenceBinding();
   WidgetController.hitTestWarningShouldBeFatal = true;
   SharedPreferences.setPrefix('kotrana_ios_process_restart.');
-  const phase = String.fromEnvironment('E2E_RESTART_PHASE');
 
-  testWidgets('durable workout across a terminated app process: $phase', (
+  testWidgets('durable workout across a terminated app process', (
     tester,
   ) async {
+    final phase = await binding.phase.future.timeout(
+      const Duration(seconds: 60),
+    );
+    binding.reportData = {'phase': phase};
     expect(defaultTargetPlatform, TargetPlatform.iOS);
     expect(kIsWeb, isFalse);
     expect(const bool.fromEnvironment('E2E_DISPOSABLE_SIMULATOR'), isTrue);
     expect(
       ['write', 'read'],
       contains(phase),
-      reason: 'Use E2E_RESTART_PHASE=write then read',
+      reason: 'The host must select write then read on the same built app',
     );
     final connected = await connectInviteEmulators();
     final auth = connected.auth;
@@ -125,4 +130,28 @@ void main() {
       );
     }
   });
+}
+
+/// Select a phase at runtime so both fresh processes run the exact same binary.
+class _PersistenceBinding extends IntegrationTestWidgetsFlutterBinding {
+  final phase = Completer<String>();
+
+  @override
+  Future<Map<String, dynamic>> callback(Map<String, String> params) async {
+    final message = params['message'];
+    if (params['command'] != 'request_data' ||
+        message == null ||
+        !message.startsWith('persistence:phase:')) {
+      return super.callback(params);
+    }
+    final selected = message.substring('persistence:phase:'.length);
+    if (phase.isCompleted || !['write', 'read'].contains(selected)) {
+      throw StateError('Invalid or duplicate persistence phase.');
+    }
+    phase.complete(selected);
+    return {
+      'isError': false,
+      'response': {'message': selected},
+    };
+  }
 }

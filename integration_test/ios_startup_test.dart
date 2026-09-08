@@ -24,10 +24,14 @@ import 'ios_auth_helpers.dart';
 /// Exercises the entry path called by main(), including its loading UI, font
 /// license, production container and native service initialization. Firebase
 /// failure below is injected; it does not claim an operating-system outage.
-void main() {
+void main() => registerTests();
+
+void registerTests({bool configurePreferences = true}) {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   WidgetController.hitTestWarningShouldBeFatal = true;
-  SharedPreferences.setPrefix('kotrana_ios_startup_e2e.');
+  if (configurePreferences) {
+    SharedPreferences.setPrefix('kotrana_ios_startup_e2e.');
+  }
 
   setUpAll(() async {
     if (kIsWeb ||

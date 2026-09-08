@@ -27,7 +27,15 @@ The iPad run uses the app's existing iPhone-compatible mode (`TARGETED_DEVICE_FA
 
 The runner temporarily replaces the bundled Firebase plist with a demo configuration and restores the source on exit. Do not build concurrently in that checkout or distribute its test binaries. The runner targets simulators; paired acceptance also verifies native device identity before proceeding. Auth/Firestore use only `demo-kotrana-e2e`, with emulator ports 19099 and 18081. No production access data is seeded.
 
-Within one runner invocation, each requested suite runs even if an earlier suite fails. `results.tsv` in the selected output directory records their exit codes; the runner fails if any requested suite fails. Logs, toolchain versions, simulator identities, source commit and working-tree status accompany the results.
+The runner stops at the first failing suite, preserving its log and exit code in `results.tsv`. A successful full run must pass Firestore rules, combined phone acceptance, paired Watch and process restart. Logs, toolchain versions, simulator identities, source commit and working-tree status accompany the results.
+
+The normal phone run builds three test applications:
+
+1. `ios_acceptance_test.dart` groups all phone UI, native wiring, invitation/auth and startup assertions in one build. Suite hooks remain group-scoped. These tests use a shared test-only preference prefix and clear their data as before; emulator connections are configured once per process.
+2. `paired_watch_test.dart` uses its dedicated host driver for Watch receipt/UI checks. The phone continues pumping foreground frames while awaiting the host.
+3. `ios_persistence_restart_test.dart` selects write/read at runtime through the host driver. After verified process termination, the read launch uses the exact same prebuilt app, with no second build or read-phase seeding.
+
+Dependencies are resolved before the runner. Every Flutter test/drive invocation uses `--no-pub`; all Firebase-backed suites share one emulator lifetime. Individual source suites remain directly runnable for diagnosis, and the optional iPad mode still runs the eleven UI scenarios alone.
 
 ## Coverage and boundaries
 

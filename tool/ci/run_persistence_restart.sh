@@ -3,10 +3,9 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 : "${IOS_E2E_SIMULATOR_UDID:?Use the disposable simulator created by run_ios_e2e.sh}"
 
-flutter drive --keep-app-running --driver=test_driver/persistence_restart_driver.dart \
+E2E_RESTART_PHASE=write flutter drive --no-pub --keep-app-running --driver=test_driver/persistence_restart_driver.dart \
   --target=integration_test/ios_persistence_restart_test.dart \
-  -d "$IOS_E2E_SIMULATOR_UDID" --dart-define=E2E_DISPOSABLE_SIMULATOR=true \
-  --dart-define=E2E_RESTART_PHASE=write
+  -d "$IOS_E2E_SIMULATOR_UDID" --dart-define=E2E_DISPOSABLE_SIMULATOR=true
 
 python3 - "$IOS_E2E_SIMULATOR_UDID" <<'PY'
 import json, subprocess, sys
@@ -23,7 +22,7 @@ for row in processes.splitlines():
 print('Confirmed Kotrana is stopped before the persistence read phase.')
 PY
 
-flutter drive --keep-app-running --driver=test_driver/persistence_restart_driver.dart \
+E2E_RESTART_PHASE=read flutter drive --no-pub --keep-app-running \
+  --use-application-binary="$PWD/build/ios/iphonesimulator/Runner.app" --driver=test_driver/persistence_restart_driver.dart \
   --target=integration_test/ios_persistence_restart_test.dart \
-  -d "$IOS_E2E_SIMULATOR_UDID" --dart-define=E2E_DISPOSABLE_SIMULATOR=true \
-  --dart-define=E2E_RESTART_PHASE=read
+  -d "$IOS_E2E_SIMULATOR_UDID" --dart-define=E2E_DISPOSABLE_SIMULATOR=true

@@ -15,10 +15,14 @@ import 'package:strength_training_tracker/src/data/repository/app_state_reposito
 import 'ios_app_helpers.dart';
 import 'ios_auth_helpers.dart';
 
-void main() {
+void main() => registerTests();
+
+void registerTests({bool configurePreferences = true}) {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   WidgetController.hitTestWarningShouldBeFatal = true;
-  SharedPreferences.setPrefix('kotrana_ios_invite_e2e.');
+  if (configurePreferences) {
+    SharedPreferences.setPrefix('kotrana_ios_invite_e2e.');
+  }
   late FirebaseAuth auth;
   late FirebaseFirestore firestore;
 
